@@ -88,12 +88,12 @@ function Editor() {
             <AutoFocusPlugin />
             <RichTextPlugin
                 contentEditable={
-                    <div ref={onRef} className='m-4'>
+                    <div ref={onRef} className="relative">
                         <ContentEditable className='w-full h-96 outline-none' />
                     </div>
                 }
                 // absolute positioning is the Lexical team's official recommendation for placeholders
-                placeholder={<div className='absolute top-7 left-7'>Start typing here...</div>} 
+                placeholder={<div className='absolute top-7 left-8'>Start typing here...</div>} 
                 ErrorBoundary={LexicalErrorBoundary}
             />
             <ListPlugin />

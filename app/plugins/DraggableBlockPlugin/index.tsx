@@ -28,7 +28,7 @@ import {isHTMLElement} from '../../utils/guard';
 import {Point} from '../../utils/point';
 import {Rect} from '../../utils/rect';
 
-const SPACE = 4;
+const SPACE = -18;
 const TARGET_LINE_HALF_HEIGHT = 2;
 const DRAGGABLE_BLOCK_MENU_CLASSNAME = 'draggable-block-menu';
 const DRAG_DATA_FORMAT = 'application/x-lexical-drag-block';
@@ -198,9 +198,9 @@ function setMenuPosition(
 
   const left = SPACE;
 
+  console.log("left: " + left + " top: " + top);
   floatingElem.style.opacity = '1';
   floatingElem.style.transform = `translate(${left}px, ${top}px)`;
-  floatingElem.style.height = `${targetRect.height}px`;
 }
 
 function setDragImage(
