@@ -4,7 +4,9 @@ export default function Home() {
   return (
     <div className="flex h-screen justify-center items-center">
       <div className="relative w-full h-96">
-        <Editor />
+        <div className="border-solid border-2 border-indigo-600 m-4 p-6 w-full">
+          <Editor />
+        </div>
       </div>
     </div>
   );
