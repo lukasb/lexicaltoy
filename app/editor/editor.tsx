@@ -1,6 +1,5 @@
 'use client';
 
-import {$getRoot, $getSelection} from 'lexical';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import React, { useState } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
@@ -93,7 +92,7 @@ function Editor() {
                     </div>
                 }
                 // absolute positioning is the Lexical team's official recommendation for placeholders
-                placeholder={<div className='absolute top-7 left-8'>Start typing here...</div>} 
+                placeholder={<div className='absolute top-10 left-10'>Start typing here...</div>} 
                 ErrorBoundary={LexicalErrorBoundary}
             />
             <ListPlugin />

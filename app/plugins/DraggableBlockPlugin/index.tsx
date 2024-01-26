@@ -198,7 +198,6 @@ function setMenuPosition(
 
   const left = SPACE;
 
-  console.log("left: " + left + " top: " + top);
   floatingElem.style.opacity = '1';
   floatingElem.style.transform = `translate(${left}px, ${top}px)`;
 }
