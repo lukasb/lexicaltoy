@@ -10,14 +10,13 @@ import type { EditorState } from 'lexical';
 import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
-import { ListNode, ListItemNode } from '@lexical/list';
+import { ListNode, ListItemNode, $createListNode, $createListItemNode } from '@lexical/list';
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import { UNORDERED_LIST } from '@lexical/markdown';
-import { HorizontalRuleNode } from '@lexical/react/LexicalHorizontalRuleNode';
-import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import { LinkNode } from '@lexical/link'
-import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
+import { CustomTabIndentationPlugin } from '../plugins/CustomTabIndentationPlugin';
 import DraggableBlockPlugin from '../plugins/DraggableBlockPlugin';
+import {KEY_DOWN_COMMAND, COMMAND_PRIORITY_LOW, $getRoot, $createTextNode} from 'lexical';
 
 const theme = {
     blockCursor: 'PlaygroundEditorTheme__blockCursor',
@@ -39,6 +38,19 @@ const theme = {
       }
 }
 
+function prepopulatedRichText() {
+    const root = $getRoot();
+    if (root.getFirstChild() === null) {
+      const list = $createListNode('bullet');
+      list.append(
+        $createListItemNode().append(
+          $createTextNode(``),
+        )
+      );
+      root.append(list);
+    }
+  }
+
 function OnChangePlugin({ onChange }: { onChange: (editorState: EditorState) => void }) {
     const [editor] = useLexicalComposerContext();
     useEffect(() => {
@@ -49,6 +61,26 @@ function OnChangePlugin({ onChange }: { onChange: (editorState: EditorState) => 
     return null;
 }
 
+function MoveItemsPlugin(props: any) {
+    const [editor] = useLexicalComposerContext();
+    useEffect(() => {
+        const removeListener = editor.registerCommand(KEY_DOWN_COMMAND, (event: KeyboardEvent) => {
+            if (event.key == 'ArrowDown' && event.ctrlKey) {
+                console.log("ctrl+downarrow");
+            } else if (event.key == 'ArrowUp' && event.ctrlKey) {
+                console.log("ctrl+uparrow");
+            }
+            return false;
+        }, COMMAND_PRIORITY_LOW);
+
+        return () => {
+            removeListener();
+        };
+    }, [editor]);
+
+    return null;
+}
+
 function onError(error: Error) {
     console.error(error);
 }
@@ -56,9 +88,10 @@ function onError(error: Error) {
 function Editor() {
     
     const initialConfig = {
+        editorState: prepopulatedRichText,
         namespace: 'MyEditor',
         theme,
-        nodes: [HorizontalRuleNode, HeadingNode, LinkNode, ListNode, ListItemNode, QuoteNode],
+        nodes: [LinkNode, ListNode, ListItemNode],
         onError
     }
 
@@ -78,7 +111,6 @@ function Editor() {
         const editorStateJSON = editorState.toJSON();
         const editorStateJSONString = JSON.stringify(editorStateJSON);
         setEditorState(editorStateJSONString);
-        console.log("hello");
         console.log(editorStateJSONString);
     }
 
@@ -98,7 +130,8 @@ function Editor() {
             <ListPlugin />
             <OnChangePlugin onChange={onChange} />
             <MarkdownShortcutPlugin transformers={[UNORDERED_LIST]} />
-            <TabIndentationPlugin />
+            <CustomTabIndentationPlugin />
+            <MoveItemsPlugin />
             {floatingAnchorElem && (
                 <>
                     <DraggableBlockPlugin anchorElem={floatingAnchorElem} />

@@ -336,12 +336,12 @@ body {
 }
 .PlaygroundEditorTheme__ul {
   padding: 0;
-  margin: 0;
+  margin: 0 4px;
   list-style-position: inside;
   list-style-type: disc;
 }
 .PlaygroundEditorTheme__listItem {
-  margin: 0 32px;
+  margin: 0;
 }
 .PlaygroundEditorTheme__listItemChecked,
 .PlaygroundEditorTheme__listItemUnchecked {
@@ -405,6 +405,7 @@ body {
 }
 .PlaygroundEditorTheme__nestedListItem {
   list-style-type: none;
+  margin-left: 20px;
 }
 .PlaygroundEditorTheme__nestedListItem:before,
 .PlaygroundEditorTheme__nestedListItem:after {
