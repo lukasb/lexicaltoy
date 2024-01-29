@@ -38,19 +38,6 @@ const theme = {
       }
 }
 
-function prepopulatedRichText() {
-    const root = $getRoot();
-    if (root.getFirstChild() === null) {
-      const list = $createListNode('bullet');
-      list.append(
-        $createListItemNode().append(
-          $createTextNode(``),
-        )
-      );
-      root.append(list);
-    }
-  }
-
 function OnChangePlugin({ onChange }: { onChange: (editorState: EditorState) => void }) {
     const [editor] = useLexicalComposerContext();
     useEffect(() => {
@@ -85,10 +72,10 @@ function onError(error: Error) {
     console.error(error);
 }
 
-function Editor() {
+function Editor({initialPageContent}: {initialPageContent: string}) {
     
     const initialConfig = {
-        editorState: prepopulatedRichText,
+        editorState: initialPageContent,
         namespace: 'MyEditor',
         theme,
         nodes: [LinkNode, ListNode, ListItemNode],
