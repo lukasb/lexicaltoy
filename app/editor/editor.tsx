@@ -17,6 +17,8 @@ import { LinkNode } from '@lexical/link'
 import { CustomTabIndentationPlugin } from '../plugins/CustomTabIndentationPlugin';
 import DraggableBlockPlugin from '../plugins/DraggableBlockPlugin';
 import {KEY_DOWN_COMMAND, COMMAND_PRIORITY_LOW, $getRoot, $createTextNode} from 'lexical';
+import { useDebouncedCallback } from 'use-debounce';
+import { updatePage } from '../lib/actions';
 
 const theme = {
     blockCursor: 'PlaygroundEditorTheme__blockCursor',
@@ -72,7 +74,7 @@ function onError(error: Error) {
     console.error(error);
 }
 
-function Editor({initialPageContent}: {initialPageContent: string}) {
+function Editor({initialPageContent, pageId, userId}: {initialPageContent: string, pageId: string, userId: string}) {
     
     const initialConfig = {
         editorState: initialPageContent,
@@ -93,10 +95,16 @@ function Editor({initialPageContent}: {initialPageContent: string}) {
         
     const [editorState, setEditorState] = useState<any>(null);
 
+    const storePage = useDebouncedCallback((outline) => {
+        console.log(`Storing page`);
+        updatePage(pageId, outline, userId);
+      }, 500);
+
     function onChange(editorState: EditorState) {
         if (!editorState) return;
         const editorStateJSON = editorState.toJSON();
         const editorStateJSONString = JSON.stringify(editorStateJSON);
+        storePage(editorStateJSONString);
         setEditorState(editorStateJSONString);
         console.log(editorStateJSONString);
     }
