@@ -341,7 +341,7 @@ body {
   list-style-type: disc;
 }
 .PlaygroundEditorTheme__listItem {
-  margin: 0 0px;
+  margin: 0 12px;
 }
 .PlaygroundEditorTheme__listItemChecked,
 .PlaygroundEditorTheme__listItemUnchecked {
