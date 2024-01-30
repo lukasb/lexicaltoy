@@ -3,16 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
+  --foreground-rgb: 50, 50, 50;
+  --background-start-rgb: 224, 229, 230;
   --background-end-rgb: 255, 255, 255;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    --foreground-rgb: 245, 245, 245;
+    --background-start-rgb: 30, 30, 30;
+    --background-end-rgb: 30, 30, 30;
   }
 }
 
@@ -80,7 +80,7 @@ body {
   content: ''; /* Required for a pseudo-element */
   position: absolute; /* Position relative to the list item */
   left: 0rem; /* Adjust if necessary */
-  top: 0.4rem;
+  top: 0.44rem;
   width: .5rem; /* Size of the disc */
   height: .5rem; /* Size of the disc */
   background-color: gray; /* Color of the disc */
@@ -91,7 +91,7 @@ body {
   margin-left: .75rem;
 }
 .PlaygroundEditorTheme__ul > li + li {
-  margin-top: 0.25em; /* Adjust as needed */
+  margin-top: 0.35em; /* Adjust as needed */
 }
 .PlaygroundEditorTheme__nestedListItem:before,
 .PlaygroundEditorTheme__nestedListItem:after {
