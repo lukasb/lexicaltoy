@@ -20,6 +20,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import { updatePage } from '../lib/actions';
 import MoveItemsPlugin from '../plugins/MoveItemsPlugin';
 import { theme } from './editor-theme';
+import { FloatingMenuPlugin } from '../plugins/FloatingMenuPlugin';
 
 function OnChangePlugin({ onChange }: { onChange: (editorState: EditorState) => void }) {
     const [editor] = useLexicalComposerContext();
@@ -65,7 +66,6 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
         if (!editorState) return;
         const editorStateJSONString = JSON.stringify(editorState);
         storePage(editorStateJSONString);
-        console.log(editorStateJSONString);
     }
 
     return (
@@ -88,6 +88,7 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
             <MoveItemsPlugin />
             {floatingAnchorElem && (
                 <>
+                    <FloatingMenuPlugin anchorElem={floatingAnchorElem} /> 
                     <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
                 </>
             )}
