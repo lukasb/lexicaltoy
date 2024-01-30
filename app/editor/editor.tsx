@@ -76,7 +76,7 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
             <RichTextPlugin
                 contentEditable={
                     <div ref={onRef} className="relative">
-                        <ContentEditable className='w-full outline-none' />
+                        <ContentEditable className='w-full outline-none h-full max-h-96 overflow-auto' />
                     </div>
                 }
                 // absolute positioning is the Lexical team's official recommendation for placeholders
