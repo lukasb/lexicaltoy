@@ -70,9 +70,8 @@ body {
 .PlaygroundEditorTheme__listItem::before {
   content: ''; /* Required for a pseudo-element */
   position: absolute; /* Position relative to the list item */
-  left: -2px; /* Adjust as needed for positioning */
-  top: 50%;
-  transform: translateY(-45%); /* Center align vertically */
+  left: 0rem; /* Adjust if necessary */
+  top: 0.55rem;
   width: .5rem; /* Size of the disc */
   height: .5rem; /* Size of the disc */
   background-color: gray; /* Color of the disc */
