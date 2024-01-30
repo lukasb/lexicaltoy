@@ -63,10 +63,8 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
 
     function onChange(editorState: EditorState) {
         if (!editorState) return;
-        const editorStateJSON = editorState.toJSON();
-        const editorStateJSONString = JSON.stringify(editorStateJSON);
+        const editorStateJSONString = JSON.stringify(editorState);
         storePage(editorStateJSONString);
-        setEditorState(editorStateJSONString);
         console.log(editorStateJSONString);
     }
 
