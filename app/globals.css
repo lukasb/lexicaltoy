@@ -56,22 +56,23 @@ body {
 }
 .PlaygroundEditorTheme__ul {
   padding: 0;
-  margin: 0 4px;
+  margin: 0 .25rem;
   list-style-position: inside;
   list-style-type: none; /* Remove default list style */
 }
 
 .PlaygroundEditorTheme__listItem {
   margin: 0;
-  padding-left: 1rem;
+  padding-left: 1.2rem;
   position: relative; /* Needed for positioning the pseudo-element */
+  line-height: 1.2;
 }
 
 .PlaygroundEditorTheme__listItem::before {
   content: ''; /* Required for a pseudo-element */
   position: absolute; /* Position relative to the list item */
   left: 0rem; /* Adjust if necessary */
-  top: 0.55rem;
+  top: 0.4rem;
   width: .5rem; /* Size of the disc */
   height: .5rem; /* Size of the disc */
   background-color: gray; /* Color of the disc */
@@ -79,7 +80,10 @@ body {
 }
 .PlaygroundEditorTheme__nestedListItem {
   list-style-type: none;
-  margin-left: 8px;
+  margin-left: .75rem;
+}
+.PlaygroundEditorTheme__ul > li + li {
+  margin-top: 0.25em; /* Adjust as needed */
 }
 .PlaygroundEditorTheme__nestedListItem:before,
 .PlaygroundEditorTheme__nestedListItem:after {
