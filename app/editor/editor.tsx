@@ -21,6 +21,7 @@ import { updatePage } from '../lib/actions';
 import MoveItemsPlugin from '../plugins/MoveItemsPlugin';
 import { theme } from './editor-theme';
 import { FloatingMenuPlugin } from '../plugins/FloatingMenuPlugin';
+import { CAN_USE_DOM } from '../lib/dom-helpers';
 
 function OnChangePlugin({ onChange }: { onChange: (editorState: EditorState) => void }) {
     const [editor] = useLexicalComposerContext();
@@ -49,6 +50,9 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
     const [floatingAnchorElem, setFloatingAnchorElem] =
         useState<HTMLDivElement | null>(null);
 
+    const [isSmallWidthViewport, setIsSmallWidthViewport] =
+        useState<boolean>(false);
+
     const onRef = (_floatingAnchorElem: HTMLDivElement) => {
         if (_floatingAnchorElem !== null) {
             setFloatingAnchorElem(_floatingAnchorElem);
@@ -68,6 +72,23 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
         storePage(editorStateJSONString);
     }
 
+    useEffect(() => {
+        const updateViewPortWidth = () => {
+          const isNextSmallWidthViewport =
+            CAN_USE_DOM && window.matchMedia('(max-width: 768px)').matches;
+    
+          if (isNextSmallWidthViewport !== isSmallWidthViewport) {
+            setIsSmallWidthViewport(isNextSmallWidthViewport);
+          }
+        };
+        updateViewPortWidth();
+        window.addEventListener('resize', updateViewPortWidth);
+    
+        return () => {
+          window.removeEventListener('resize', updateViewPortWidth);
+        };
+      }, [isSmallWidthViewport]);
+    
     return (
         <LexicalComposer initialConfig={initialConfig}>
             <AutoFocusPlugin />
@@ -86,10 +107,14 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
             <MarkdownShortcutPlugin transformers={[UNORDERED_LIST]} />
             <CustomTabIndentationPlugin />
             <MoveItemsPlugin />
-            {floatingAnchorElem && (
+            {floatingAnchorElem && !isSmallWidthViewport && (
+                <>
+                    <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
+                </>
+            )}
+            {floatingAnchorElem && isSmallWidthViewport && (
                 <>
                     <FloatingMenuPlugin anchorElem={floatingAnchorElem} /> 
-                    <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
                 </>
             )}
         </LexicalComposer>
