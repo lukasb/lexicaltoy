@@ -11,13 +11,10 @@ import type { LexicalCommand, LexicalEditor } from "lexical";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $getSelection,
-  $isRangeSelection,
   COMMAND_PRIORITY_EDITOR,
   COMMAND_PRIORITY_NORMAL,
-  INDENT_CONTENT_COMMAND,
   KEY_BACKSPACE_COMMAND,
   KEY_TAB_COMMAND,
-  OUTDENT_CONTENT_COMMAND,
   KEY_DOWN_COMMAND,
 } from "lexical";
 import { useEffect } from "react";
@@ -41,7 +38,6 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
       (event) => {
         const selection = $getSelection();
         const listItem = $getActiveListItem(selection);
-        console.log("listItem", listItem);
         if (!listItem) return false;
         event.preventDefault();
         const command: LexicalCommand<{listItem: ListItemNode}> = event.shiftKey

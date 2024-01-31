@@ -68,3 +68,8 @@ export function $canIndent(selection: BaseSelection | null): boolean {
    const listItemNode = $getActiveListItem(selection);
    return $canOutdentListItem(listItemNode);
  }
+
+ export function $isNestedListItem(listItem: ListItemNode): boolean {
+  const grandparent = listItem.getParent().getParent();
+  return grandparent && $isListItemNode(grandparent);
+ }
