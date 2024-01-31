@@ -34,7 +34,7 @@ export function $getActiveListItem(
   return null;
 }
 
-function $canIndentListItem(listItemNode: ListItemNode | null): boolean {
+export function $canIndentListItem(listItemNode: ListItemNode | null): boolean {
   if (!listItemNode) return false;
   // we can indent if we're a list item and we're not the first child of our parent
   if (listItemNode.getIndexWithinParent() > 0) {
@@ -43,7 +43,7 @@ function $canIndentListItem(listItemNode: ListItemNode | null): boolean {
   return false;
 }
 
-function $canOutdentListItem(listItemNode: ListItemNode | null): boolean {
+export function $canOutdentListItem(listItemNode: ListItemNode | null): boolean {
   if (!listItemNode) return false;
   const parent = listItemNode.getParent();
   // we can outdent if we're in a nested list
@@ -56,14 +56,4 @@ function $canOutdentListItem(listItemNode: ListItemNode | null): boolean {
 export function $isListItemActive(selection: BaseSelection | null): boolean {
   const listItemNode = $getActiveListItem(selection);
   return listItemNode ? true : false;
-}
-
-export function $canIndent(selection: BaseSelection | null): boolean {
-  const listItemNode = $getActiveListItem(selection);
-  return $canIndentListItem(listItemNode);
-}
-
-export function $canOutdent(selection: BaseSelection | null): boolean {
-  const listItemNode = $getActiveListItem(selection);
-  return $canOutdentListItem(listItemNode);
 }

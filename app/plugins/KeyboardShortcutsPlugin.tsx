@@ -25,9 +25,12 @@ import { mergeRegister } from "@lexical/utils";
 import { $getActiveListItem } from "../lib/list-utils";
 import {
   DELETE_LISTITEM_COMMAND,
+  INDENT_LISTITEM_COMMAND,
   MOVE_LISTITEM_DOWN_COMMAND,
   MOVE_LISTITEM_UP_COMMAND,
+  OUTDENT_LISTITEM_COMMAND,
 } from "../lib/list-commands";
+import { ListItemNode } from "@lexical/list";
 
 // TODO accessibility implications of tab handling?
 
@@ -37,12 +40,13 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
       KEY_TAB_COMMAND,
       (event) => {
         const selection = $getSelection();
-        if (!$isRangeSelection(selection)) return false;
+        const listItem = $getActiveListItem(selection);
+        if (!listItem) return false;
         event.preventDefault();
-        const command: LexicalCommand<void> = event.shiftKey
-          ? OUTDENT_CONTENT_COMMAND
-          : INDENT_CONTENT_COMMAND;
-        return editor.dispatchCommand(command, undefined);
+        const command: LexicalCommand<{listItem: ListItemNode}> = event.shiftKey
+          ? OUTDENT_LISTITEM_COMMAND
+          : INDENT_LISTITEM_COMMAND;
+        return editor.dispatchCommand(command, { listItem });
       },
       COMMAND_PRIORITY_EDITOR
     ),
