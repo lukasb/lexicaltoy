@@ -21,7 +21,7 @@ import { updatePage } from '../lib/actions';
 import MoveItemsPlugin from '../plugins/MoveItemsPlugin';
 import { theme } from './editor-theme';
 import { FloatingMenuPlugin } from '../plugins/FloatingMenuPlugin';
-import { CAN_USE_DOM } from '../lib/dom-helpers';
+import { useBreakpoint } from '../lib/window-helpers';
 
 function OnChangePlugin({ onChange }: { onChange: (editorState: EditorState) => void }) {
     const [editor] = useLexicalComposerContext();
@@ -53,6 +53,8 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
     const [isSmallWidthViewport, setIsSmallWidthViewport] =
         useState<boolean>(false);
 
+    useBreakpoint(768, isSmallWidthViewport, setIsSmallWidthViewport);
+
     const onRef = (_floatingAnchorElem: HTMLDivElement) => {
         if (_floatingAnchorElem !== null) {
             setFloatingAnchorElem(_floatingAnchorElem);
@@ -71,23 +73,6 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
         const editorStateJSONString = JSON.stringify(editorState);
         storePage(editorStateJSONString);
     }
-
-    useEffect(() => {
-        const updateViewPortWidth = () => {
-          const isNextSmallWidthViewport =
-            CAN_USE_DOM && window.matchMedia('(max-width: 768px)').matches;
-    
-          if (isNextSmallWidthViewport !== isSmallWidthViewport) {
-            setIsSmallWidthViewport(isNextSmallWidthViewport);
-          }
-        };
-        updateViewPortWidth();
-        window.addEventListener('resize', updateViewPortWidth);
-    
-        return () => {
-          window.removeEventListener('resize', updateViewPortWidth);
-        };
-      }, [isSmallWidthViewport]);
     
     return (
         <LexicalComposer initialConfig={initialConfig}>
