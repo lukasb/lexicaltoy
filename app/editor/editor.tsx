@@ -14,14 +14,14 @@ import { ListNode, ListItemNode, $createListNode, $createListItemNode } from '@l
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import { UNORDERED_LIST } from '@lexical/markdown';
 import { LinkNode } from '@lexical/link'
-import { CustomTabIndentationPlugin } from '../plugins/CustomTabIndentationPlugin';
+import { KeyboardShortcutsPlugin } from '../plugins/KeyboardShortcutsPlugin';
 import DraggableBlockPlugin from '../plugins/DraggableBlockPlugin';
 import { useDebouncedCallback } from 'use-debounce';
 import { updatePage } from '../lib/actions';
-import MoveItemsPlugin from '../plugins/MoveItemsPlugin';
 import { theme } from './editor-theme';
 import { FloatingMenuPlugin } from '../plugins/FloatingMenuPlugin';
 import { useBreakpoint } from '../lib/window-helpers';
+import { ListCommandsPlugin } from '../plugins/ListCommandsPlugin';
 
 function OnChangePlugin({ onChange }: { onChange: (editorState: EditorState) => void }) {
     const [editor] = useLexicalComposerContext();
@@ -90,8 +90,8 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
             <ListPlugin />
             <OnChangePlugin onChange={onChange} />
             <MarkdownShortcutPlugin transformers={[UNORDERED_LIST]} />
-            <CustomTabIndentationPlugin />
-            <MoveItemsPlugin />
+            <KeyboardShortcutsPlugin />
+            <ListCommandsPlugin />
             {floatingAnchorElem && !isSmallWidthViewport && (
                 <>
                     <DraggableBlockPlugin anchorElem={floatingAnchorElem} />

@@ -1,4 +1,4 @@
-import { BaseSelection, $isRootNode } from "lexical";
+import { BaseSelection, $isRootNode, LexicalCommand, createCommand } from "lexical";
 import { $isListItemNode, ListItemNode } from "@lexical/list";
 import { LexicalNode } from "lexical";
 
@@ -16,7 +16,7 @@ function $isNodeWithinListItem(node: LexicalNode): boolean {
 // only allow indent/outdent if the selection is collapsed (nothing is selected)
 // I don't feel like tackling all the edge cases involved in selection right now
 
-function $getActiveListItem(
+export function $getActiveListItem(
   selection: BaseSelection | null
 ): ListItemNode | null {
   if (!selection || !selection.isCollapsed()) return null;
