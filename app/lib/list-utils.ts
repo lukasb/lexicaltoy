@@ -1,5 +1,5 @@
 import { BaseSelection, $isRootNode, LexicalCommand, createCommand } from "lexical";
-import { $isListItemNode, ListItemNode } from "@lexical/list";
+import { $isListItemNode, $isListNode, ListItemNode } from "@lexical/list";
 import { LexicalNode } from "lexical";
 
 function $isNodeWithinListItem(node: LexicalNode): boolean {
@@ -73,3 +73,17 @@ export function $canIndent(selection: BaseSelection | null): boolean {
   const grandparent = listItem.getParent().getParent();
   return grandparent && $isListItemNode(grandparent);
  }
+
+ // if a node ABC has a child DEF, it's represented like this
+ // <li>ABC</li>
+ // <li id="2"><ul><li>DEF</li></ul></li>
+ // in this example, we return the <li> with id="2"
+ export function $getListItemContainingChildren(listItem: ListItemNode): ListItemNode | null {
+  const parent = listItem.getParent();
+  const nextSibling = parent.getChildAtIndex(listItem.getIndexWithinParent() + 1);
+  if (!nextSibling) return null;
+  if ($isListNode(nextSibling.getChildAtIndex(0))) {
+    return nextSibling;
+  }
+  return null;
+}

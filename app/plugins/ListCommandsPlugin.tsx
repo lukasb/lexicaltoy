@@ -13,6 +13,7 @@ import {
 import {
   $canIndentListItem,
   $canOutdentListItem,
+  $getListItemContainingChildren,
   $isNestedListItem,
 } from "../lib/list-utils";
 
@@ -46,17 +47,17 @@ export function registerListCommands(editor: LexicalEditor) {
       DELETE_LISTITEM_COMMAND,
       (payload) => {
         const { listItem } = payload;
-        // nested lists are stored in a sibling <li> to the parent list item
-        // so if we're in a nested list it looks like <li><ul><li>
         // if the list item is the first item in a nested list and has no siblings remove the grandparent <li>
+        // see getListItemContainingChildren for more info
         if ($isNestedListItem(listItem) && 
             listItem.getIndexWithinParent() === 0 &&
             listItem.getParent().getChildrenSize() === 1
         ) {
-          console.log("byebye");
           listItem.getParent().getParent().remove();
         } else {
+          const childrenNode = $getListItemContainingChildren(listItem);
           listItem.remove();
+          if (childrenNode) childrenNode.remove();
         }
         return false;
       },
