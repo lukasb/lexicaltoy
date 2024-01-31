@@ -42,7 +42,7 @@ export function registerListCommands(editor: LexicalEditor) {
       DELETE_LISTITEM_COMMAND,
       (payload) => {
         const { listItem } = payload;
-        console.log("delete", listItem);
+        listItem.remove();
         return false;
       },
       COMMAND_PRIORITY_EDITOR
