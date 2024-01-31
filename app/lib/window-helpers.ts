@@ -13,7 +13,7 @@ export function useBreakpoint(
   useEffect(() => {
     const updateViewPortWidth = () => {
       const isNextSmallWidthViewport =
-        CAN_USE_DOM && window.matchMedia('(max-width: ${breakpoint}px)').matches;
+        CAN_USE_DOM && window.matchMedia(`(max-width: ${breakpoint}px)`).matches;
 
       if (isNextSmallWidthViewport !== isSmallWidthViewport) {
         setIsSmallWidthViewport(isNextSmallWidthViewport);
@@ -25,5 +25,5 @@ export function useBreakpoint(
     return () => {
       window.removeEventListener('resize', updateViewPortWidth);
     };
-  }, [isSmallWidthViewport, setIsSmallWidthViewport]);
+  }, [breakpoint, isSmallWidthViewport, setIsSmallWidthViewport]);
 }
