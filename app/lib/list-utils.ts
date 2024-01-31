@@ -23,6 +23,7 @@ export function $getActiveListItem(
   const nodes = selection.getNodes();
   // TODO I think with a collapsed selection, we only need to check the first node
   for (const node of nodes) {
+    if ($isListItemNode(node)) return node;
     let parent = node.getParent();
     while (parent && !$isRootNode(parent)) {
       if ($isListItemNode(parent)) {
@@ -57,3 +58,13 @@ export function $isListItemActive(selection: BaseSelection | null): boolean {
   const listItemNode = $getActiveListItem(selection);
   return listItemNode ? true : false;
 }
+
+export function $canIndent(selection: BaseSelection | null): boolean {
+   const listItemNode = $getActiveListItem(selection);
+   return $canIndentListItem(listItemNode);
+ }
+ 
+ export function $canOutdent(selection: BaseSelection | null): boolean {
+   const listItemNode = $getActiveListItem(selection);
+   return $canOutdentListItem(listItemNode);
+ }
