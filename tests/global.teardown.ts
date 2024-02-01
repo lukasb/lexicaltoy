@@ -27,7 +27,7 @@ async function cleanUp(client: { sql: any; }, users: any[]) {
       users.map(async (user) => {
         return client.sql`
         DELETE FROM pages
-        WHERE pageId = ${user.id};
+        WHERE userId = ${user.id};
       `;
       }),
     );
