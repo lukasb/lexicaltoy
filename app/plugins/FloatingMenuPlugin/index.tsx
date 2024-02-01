@@ -26,12 +26,6 @@ export function FloatingMenuPlugin({
 
     const listItem = $getActiveListItem(selection);
     if (!listItem) return setCoords(undefined);
-    const listItemFirstChild = listItem.getFirstChild();
-    const listItemLastChild = listItem.getLastChild();
-    if (!listItemFirstChild || !listItemLastChild) return setCoords(undefined);
-    const listItemRange = createDOMRange(editor, listItemFirstChild, 0, listItemLastChild, 0);
-    if (!listItemRange) return setCoords(undefined);
-    console.log('listItemRange rect', listItemRange.getBoundingClientRect());
     const listItemDOM = editor.getElementByKey(listItem.getKey()) as HTMLLIElement;
 
     computePosition(listItemDOM, ref.current, { placement: "bottom-end" })
