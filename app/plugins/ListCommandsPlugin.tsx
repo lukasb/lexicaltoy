@@ -1,6 +1,6 @@
 import type { LexicalEditor } from "lexical";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { COMMAND_PRIORITY_EDITOR, COMMAND_PRIORITY_NORMAL } from "lexical";
+import { COMMAND_PRIORITY_EDITOR } from "lexical";
 import { useEffect } from "react";
 import { mergeRegister } from "@lexical/utils";
 import {
@@ -16,6 +16,23 @@ import {
   $getListItemContainingChildren,
   $isNestedListItem,
 } from "../lib/list-utils";
+import { $isListNode, ListItemNode } from "@lexical/list";
+
+function changeChildrenIndent(childrenListItem: ListItemNode | null, change: number, skipFirst: boolean) {
+  if (childrenListItem) {
+    let list = childrenListItem.getFirstChild();
+    if (list && $isListNode(list)) {
+      const children = list.getChildren();
+      for (let i = 0; i < children.length; i++) {
+        if (i === 0 && skipFirst) continue;
+        const child = children[i];
+        if (child instanceof ListItemNode) {
+          child.setIndent(child.getIndent() + change);
+        }
+      }
+    }
+  }
+}
 
 export function registerListCommands(editor: LexicalEditor) {
   return mergeRegister(
@@ -25,7 +42,9 @@ export function registerListCommands(editor: LexicalEditor) {
         const { listItem } = payload;
         const indent = listItem.getIndent();
         if ($canOutdentListItem(listItem)) {
+          const childrenListItem = $getListItemContainingChildren(listItem);
           listItem.setIndent(indent - 1);
+          changeChildrenIndent(childrenListItem, -1, false);
         }
         return true;
       },
@@ -37,7 +56,10 @@ export function registerListCommands(editor: LexicalEditor) {
         const { listItem } = payload;
         const indent = listItem.getIndent();
         if ($canIndentListItem(listItem)) {
+          const childrenListItem = $getListItemContainingChildren(listItem);
           listItem.setIndent(indent + 1);
+          // skip the first child here because the node we just indented is now that child
+          changeChildrenIndent(childrenListItem, 1, true);
         }
         return false;
       },
