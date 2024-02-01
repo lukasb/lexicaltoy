@@ -22,6 +22,7 @@ import { theme } from './editor-theme';
 import { FloatingMenuPlugin } from '../plugins/FloatingMenuPlugin';
 import { useBreakpoint } from '../lib/window-helpers';
 import { ListCommandsPlugin } from '../plugins/ListCommandsPlugin';
+import {HistoryPlugin} from '@lexical/react/LexicalHistoryPlugin';
 
 function OnChangePlugin({ onChange }: { onChange: (editorState: EditorState) => void }) {
     const [editor] = useLexicalComposerContext();
@@ -92,6 +93,7 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
             <MarkdownShortcutPlugin transformers={[UNORDERED_LIST]} />
             <KeyboardShortcutsPlugin />
             <ListCommandsPlugin />
+            <HistoryPlugin />
             {floatingAnchorElem && !isSmallWidthViewport && (
                 <>
                     <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
