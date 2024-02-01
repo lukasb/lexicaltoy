@@ -23,8 +23,7 @@ function changeChildrenIndent(childrenListItem: ListItemNode | null, change: num
     let list = childrenListItem.getFirstChild();
     if (list && $isListNode(list)) {
       const children = list.getChildren();
-      for (let i = 0; i < children.length; i++) {
-        if (i === 0 && skipFirst) continue;
+      for (let i = skipFirst ? 1 : 0; i < children.length; i++) {
         const child = children[i];
         if (child instanceof ListItemNode) {
           child.setIndent(child.getIndent() + change);
