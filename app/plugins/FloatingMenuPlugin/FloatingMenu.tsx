@@ -1,13 +1,20 @@
-import { forwardRef, useEffect, useState } from 'react';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $getSelection, $isRangeSelection, INDENT_CONTENT_COMMAND, OUTDENT_CONTENT_COMMAND } from 'lexical';
-import { $canIndent, $canOutdent } from '@/app/lib/list-utils';
+import { forwardRef, useEffect, useState } from "react";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { $getSelection, $isRangeSelection } from "lexical";
+import { $canIndent, $canOutdent } from "@/app/lib/list-utils";
+import {
+  INDENT_LISTITEM_COMMAND,
+  OUTDENT_LISTITEM_COMMAND,
+} from "@/app/lib/list-commands";
+import { $getActiveListItem } from "@/app/lib/list-utils";
+import { ListItemNode } from "@lexical/list";
 
 export type FloatingMenuCoords = { x: number; y: number } | undefined;
 
 type FloatingMenuState = {
   canIndent: boolean;
   canOutdent: boolean;
+  listItem: ListItemNode | null;
 };
 
 type FloatingMenuProps = {
@@ -24,6 +31,7 @@ export const FloatingMenu = forwardRef<HTMLDivElement, FloatingMenuProps>(
     const [state, setState] = useState<FloatingMenuState>({
       canIndent: false,
       canOutdent: false,
+      listItem: null,
     });
 
     useEffect(() => {
@@ -32,10 +40,12 @@ export const FloatingMenu = forwardRef<HTMLDivElement, FloatingMenuProps>(
           editorState.read(() => {
             const selection = $getSelection();
             if (!$isRangeSelection(selection)) return;
+            const listItem = $getActiveListItem(selection);
 
             setState({
               canIndent: $canIndent(selection),
-              canOutdent: $canOutdent(selection)
+              canOutdent: $canOutdent(selection),
+              listItem,
             });
           });
         }
@@ -45,38 +55,42 @@ export const FloatingMenu = forwardRef<HTMLDivElement, FloatingMenuProps>(
 
     return (
       <div
-      ref={ref}
-      className="flex items-start px-2 py-1 rounded"
+        ref={ref}
+        className="flex items-start px-2 py-1 rounded"
         aria-hidden={!shouldShow}
         style={{
-            position: 'absolute',
-            top: coords?.y,
-            left: coords?.x,
-            visibility: shouldShow ? 'visible' : 'hidden',
-            opacity: shouldShow ? 1 : 0,
-          }}
-          >
-      <button 
-        aria-label="Outdent"
-        className="px-3 py-1 mr-2 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none" 
-        disabled={!state.canOutdent}
-        onClick={() => {
-            editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
-          }}
+          position: "absolute",
+          top: coords?.y,
+          left: coords?.x,
+          visibility: shouldShow ? "visible" : "hidden",
+          opacity: shouldShow ? 1 : 0,
+        }}
       >
-        {'<'}
-      </button>
-      <button 
-        aria-label="Indent"
-        className="px-3 py-1 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none" 
-        disabled={!state.canIndent}
-        onClick={() => {
-            editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined);
+        <button
+          aria-label="Outdent"
+          className="px-3 py-1 mr-2 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none"
+          disabled={!state.canOutdent}
+          onClick={() => {
+            const listItem = state.listItem;
+            if (listItem === null) return;
+            editor.dispatchCommand(OUTDENT_LISTITEM_COMMAND, {listItem});
           }}
-      >
-        {'>'}
-      </button>
-    </div>
+        >
+          {"<"}
+        </button>
+        <button
+          aria-label="Indent"
+          className="px-3 py-1 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none"
+          disabled={!state.canIndent}
+          onClick={() => {
+            const listItem = state.listItem;
+            if (listItem === null) return;
+            editor.dispatchCommand(INDENT_LISTITEM_COMMAND, {listItem});
+          }}
+        >
+          {">"}
+        </button>
+      </div>
     );
   }
 );
