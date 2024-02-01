@@ -50,6 +50,7 @@ export function FloatingMenuPlugin({
     const selection = $getSelection();
 
     if ($isListItemActive(selection)) {
+      if (!selection) return setCoords(undefined);
       calculatePosition(selection);
     } else {
       setCoords(undefined);
