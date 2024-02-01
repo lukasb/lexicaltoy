@@ -5,7 +5,10 @@ import { computePosition } from '@floating-ui/dom';
 import { $getSelection } from 'lexical';
 
 import { FloatingMenu, FloatingMenuCoords } from "./FloatingMenu";
-import { $isListItemActive } from "@/app/lib/list-utils";
+import { $getActiveListItem, $isListItemActive } from "@/app/lib/list-utils";
+import { BaseSelection } from "lexical";
+
+import { createDOMRange } from '@lexical/selection';
 
 export function FloatingMenuPlugin({
     anchorElem = document.body,
@@ -17,14 +20,21 @@ export function FloatingMenuPlugin({
   const [coords, setCoords] = useState<FloatingMenuCoords>(undefined);
   const [editor] = useLexicalComposerContext();
 
-  const calculatePosition = useCallback(() => {
-    const domSelection = getSelection();
-    const domRange =
-      domSelection?.rangeCount !== 0 && domSelection?.getRangeAt(0);
+  const calculatePosition = useCallback((selection: BaseSelection) => {
 
-    if (!domRange || !ref.current) return setCoords(undefined);
+    if (!selection || !ref.current) return setCoords(undefined);
 
-    computePosition(domRange, ref.current, { placement: "bottom" })
+    const listItem = $getActiveListItem(selection);
+    if (!listItem) return setCoords(undefined);
+    const listItemFirstChild = listItem.getFirstChild();
+    const listItemLastChild = listItem.getLastChild();
+    if (!listItemFirstChild || !listItemLastChild) return setCoords(undefined);
+    const listItemRange = createDOMRange(editor, listItemFirstChild, 0, listItemLastChild, 0);
+    if (!listItemRange) return setCoords(undefined);
+    console.log('listItemRange rect', listItemRange.getBoundingClientRect());
+    const listItemDOM = editor.getElementByKey(listItem.getKey()) as HTMLLIElement;
+
+    computePosition(listItemDOM, ref.current, { placement: "bottom-end" })
       .then((pos) => {
         console.log('pos', pos);
         setCoords({ x: pos.x, y: pos.y + 10 });
@@ -46,7 +56,7 @@ export function FloatingMenuPlugin({
     const selection = $getSelection();
 
     if ($isListItemActive(selection)) {
-      calculatePosition();
+      calculatePosition(selection);
     } else {
       setCoords(undefined);
     }
