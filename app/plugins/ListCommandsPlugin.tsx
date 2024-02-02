@@ -60,7 +60,7 @@ export function registerListCommands(editor: LexicalEditor) {
           // skip the first child here because the node we just indented is now that child
           changeChildrenIndent(childrenListItem, 1, true);
         }
-        return false;
+        return true;
       },
       COMMAND_PRIORITY_EDITOR
     ),
@@ -80,7 +80,7 @@ export function registerListCommands(editor: LexicalEditor) {
           listItem.remove();
           if (childrenNode) childrenNode.remove();
         }
-        return false;
+        return true;
       },
       COMMAND_PRIORITY_EDITOR
     ),
@@ -89,7 +89,7 @@ export function registerListCommands(editor: LexicalEditor) {
       (payload) => {
         const { listItem } = payload;
         console.log("down", listItem);
-        return false;
+        return true;
       },
       COMMAND_PRIORITY_EDITOR
     ),
@@ -98,7 +98,7 @@ export function registerListCommands(editor: LexicalEditor) {
       (payload) => {
         const { listItem } = payload;
         console.log("up", listItem);
-        return false;
+        return true;
       },
       COMMAND_PRIORITY_EDITOR
     )

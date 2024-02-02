@@ -106,4 +106,15 @@ describe('ListCommandsPlugin', () => {
     );
   });
   
+  test('OUTDENT_LISTITEM_COMMAND outdents nested list item', async () => {
+    await testEditorCommand(
+      editor,
+      OUTDENT_LISTITEM_COMMAND,
+      { listItem: node2 },
+      (editorState) => {
+        expect(node2.getIndent()).toBe(0);
+      }
+    );
+  });
+
 });
