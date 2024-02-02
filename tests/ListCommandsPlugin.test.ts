@@ -1,6 +1,6 @@
 import { LexicalEditor, createEditor } from "lexical";
 import { ListNode, ListItemNode, $createListNode, $createListItemNode } from "@lexical/list";
-import { $getRoot } from "lexical";
+import { $getRoot, $createTextNode } from "lexical";
 import { registerListCommands } from "../app/plugins/ListCommandsPlugin";
 import { 
   DELETE_LISTITEM_COMMAND,
@@ -61,8 +61,11 @@ describe('ListCommandsPlugin', () => {
       parentList = $createListNode("bullet");
       childList = $createListNode("bullet");
       node1 = $createListItemNode();
+      node1.append($createTextNode("node1"));
       node2 = $createListItemNode();
+      node2.append($createTextNode("node2"));
       node3 = $createListItemNode();
+      node3.append($createTextNode("node3"));
       parentList.append(node1);
       parentList.append(childList);
       childList.append(node2);
@@ -80,6 +83,11 @@ describe('ListCommandsPlugin', () => {
       { listItem: node3 },
       (editorState) => {
         expect(parentList.getChildrenSize()).toBe(2);
+        const secondChild = parentList.getChildren()[1] as ListItemNode;
+        const nestedList = secondChild.getChildren()[0] as ListNode;
+        const nestedChild = nestedList.getChildren()[0] as ListItemNode;
+        const textNode = nestedChild.getChildren()[0];
+        expect(textNode.getTextContent()).toBe("node2");
       }
     );
   });
@@ -91,6 +99,9 @@ describe('ListCommandsPlugin', () => {
       { listItem: node2 },
       (editorState) => {
         expect(parentList.getChildrenSize()).toBe(2);
+        const secondChild = parentList.getChildren()[1] as ListItemNode;
+        const textNode = secondChild.getChildren()[0];
+        expect(textNode.getTextContent()).toBe("node3");
       }
     );
   });
