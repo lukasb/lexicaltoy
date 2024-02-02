@@ -2,12 +2,33 @@ import Editor from "../editor/editor";
 import { fetchPages } from "../lib/db";
 import { signOut } from '@/auth';
 import { Button } from "../ui/button";
-
+import { auth } from "@/auth";
 export const maxDuration = 60;
 
 export default async function Home() {
-  const userId = "410544b2-4001-4271-9855-fec4b6a6442a";
-  const initialPage = await fetchPages(userId);
+  const session = await auth();
+  if (!session || !session.user || !session.user.id) {
+    if (session) {
+      console.log("Problem with authetication", session);
+    }
+    return (
+      <div className="flex justify-center items-center">
+        <h1>Problem with authetication</h1>
+        <form
+      action={async () => {
+        "use server";
+        await signOut();
+      }}
+    >
+      <Button className="m-4">
+        <div>Sign Out</div>
+      </Button>
+    </form>
+      </div>
+    );
+  }
+  
+  const initialPage = await fetchPages(session.user.id);
   const initialPageContent = initialPage[0].value;
   const pageId = initialPage[0].id;
 
@@ -19,7 +40,7 @@ export default async function Home() {
           <Editor
             initialPageContent={initialPageContent}
             pageId={pageId}
-            userId={userId}
+            userId={session.user.id}
           />
         </div>
       </div>
