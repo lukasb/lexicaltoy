@@ -34,7 +34,7 @@ export const authConfig = {
       return token;
     },
     session(sessionArgs) {
-      // token only exists when the strategy is jwt and not database, so sessionArgs here will be { session, token }
+     // token only exists when the strategy is jwt and not database, so sessionArgs here will be { session, token }
      // with a database strategy it would be { session, user } 
      if ("token" in sessionArgs) {
         let session = sessionArgs.session;
@@ -48,18 +48,6 @@ export const authConfig = {
      }
      return sessionArgs.session;
     },
-    /*session({ session, newSession, trigger }) {
-      console.log('session and newsession', session, newSession);
-      if ( session === undefined) {
-        console.log('session is undefined');
-      }
-      if (newSession === undefined) {
-        console.log('newSession is undefined');
-      }
-      const token = newSession?.user?.token;
-      session.user = token.user as OTUser;
-      return session;
-    }*/
   },
   providers: [], // Add providers with an empty array for now
 } satisfies NextAuthConfig;
