@@ -10,6 +10,7 @@ import {
   OUTDENT_LISTITEM_COMMAND
 } from '../app/lib/list-commands';
 
+// there's gotta be a better way, but this works ...
 async function testEditorCommand(
   editor: LexicalEditor,
   command: any,
@@ -73,26 +74,25 @@ describe('ListCommandsPlugin', () => {
   });
 
   test('DELETE_LISTITEM_COMMAND removes a non-nested item', async () => {
-    // Promisify the update listener
-    const waitForUpdate = new Promise<void>((resolve, reject) => {
-      const unregisterListener = editor.registerUpdateListener(({editorState}) => {
-        try {
-          editor.getEditorState().read(() => {
-            expect(parentList.getChildrenSize()).toBe(2);
-          });
-          resolve();
-        } catch (error) {
-          reject(error);
-        } finally {
-          unregisterListener();
-        }
-      });
-    });
+    await testEditorCommand(
+      editor,
+      DELETE_LISTITEM_COMMAND,
+      { listItem: node3 },
+      (editorState) => {
+        expect(parentList.getChildrenSize()).toBe(2);
+      }
+    );
+  });
   
-    editor.dispatchCommand(DELETE_LISTITEM_COMMAND, { listItem: node3 });
-  
-    // Wait for the update listener to be called
-    await waitForUpdate;
+  test('DELETE_LISTITEM_COMMAND removes a nested item', async () => {
+    await testEditorCommand(
+      editor,
+      DELETE_LISTITEM_COMMAND,
+      { listItem: node2 },
+      (editorState) => {
+        expect(parentList.getChildrenSize()).toBe(2);
+      }
+    );
   });
   
 });
