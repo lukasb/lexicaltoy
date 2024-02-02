@@ -9,7 +9,7 @@ export default async function Home() {
   const session = await auth();
   if (!session || !session.user || !session.user.id) {
     if (session) {
-      console.log("Problem with authetication", session.user);
+      console.log("Problem with authetication", session);
     }
     return (
       <div className="flex justify-center items-center">
