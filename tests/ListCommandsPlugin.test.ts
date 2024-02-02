@@ -37,7 +37,7 @@ async function testEditorCommand({
 
       const unregisterListener = editor.registerUpdateListener(({editorState}) => {
         clearTimeout(timeoutId); // Clear the timeout if the listener is called
-        if (timeoutOccurred && expectTimeout) {
+        if (expectTimeout) {
           reject("Update listener was called, but expected a timeout.");
         } else {
           try {
