@@ -14,12 +14,15 @@ setup('seed db', async () => {
   await seedUsers(client, users);
   await seedPages(client, pages);
   
+  console.log('Seeded db');
+
   await client.end();
 });
 
 setup('do login', async ({ page }) => {
   await page.goto('/');
-  await page.getByLabel('Email').fill('user@nextmail.com');
+  await page.getByText('Log in').click();
+  await page.getByLabel('Email').fill('test@nextmail.com');
   await page.getByLabel('Password').fill('123456');
   await page.getByText('Log in').click();
 

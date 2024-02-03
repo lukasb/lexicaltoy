@@ -20,12 +20,13 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }: { auth: any, request: { nextUrl: any } }) {
       const isLoggedIn = !!auth?.user;
-      const isOnEditorPage = nextUrl.pathname.startsWith('/page');
-      if (isOnEditorPage) {
+      const isRequestingEditorPage = nextUrl.pathname.startsWith('/page');
+      if (isRequestingEditorPage) {
         if (isLoggedIn) return true;
         return false; // Redirect unauthenticated users to login page
       } else if (isLoggedIn) {
         return Response.redirect(new URL('/page', nextUrl));
+        return true;
       }
       return true;
     },

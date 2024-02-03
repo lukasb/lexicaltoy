@@ -1,14 +1,14 @@
 import { LexicalEditor, createEditor } from "lexical";
 import { ListNode, ListItemNode, $createListNode, $createListItemNode } from "@lexical/list";
 import { $getRoot, $createTextNode } from "lexical";
-import { registerListCommands } from "../app/plugins/ListCommandsPlugin";
+import { registerListCommands } from "./ListCommandsPlugin";
 import { 
   DELETE_LISTITEM_COMMAND,
   MOVE_LISTITEM_UP_COMMAND,
   MOVE_LISTITEM_DOWN_COMMAND,
   INDENT_LISTITEM_COMMAND,
   OUTDENT_LISTITEM_COMMAND
-} from '../app/lib/list-commands';
+} from '../lib/list-commands';
 
 // there's gotta be a better way, but this works ...
 async function testEditorCommand({
