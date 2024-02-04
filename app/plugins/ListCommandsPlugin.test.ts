@@ -11,7 +11,7 @@ import {
 } from '../lib/list-commands';
 
 // TODO apparently updates are synchronous, so if we need a test that expects
-// a comando to not update the editor, we can disptach the command and follow it up
+// a comannd to not update the editor, we can disptach the command and follow it up
 // with an update to force a reconciliation (rather than this expectTimeout nonsense)
 
 async function testEditorCommand({
