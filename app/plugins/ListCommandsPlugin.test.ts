@@ -10,7 +10,10 @@ import {
   OUTDENT_LISTITEM_COMMAND
 } from '../lib/list-commands';
 
-// there's gotta be a better way, but this works ...
+// TODO apparently updates are synchronous, so if we need a test that expects
+// a comando to not update the editor, we can disptach the command and follow it up
+// with an update to force a reconciliation (rather than this expectTimeout nonsense)
+
 async function testEditorCommand({
   editor,
   command,
