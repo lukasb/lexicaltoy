@@ -17,7 +17,7 @@ import { LinkNode } from '@lexical/link'
 import { KeyboardShortcutsPlugin } from '../plugins/KeyboardShortcutsPlugin';
 import DraggableBlockPlugin from '../plugins/DraggableBlockPlugin';
 import { useDebouncedCallback } from 'use-debounce';
-import { updatePage } from '../lib/actions';
+import { updatePageContents } from '../lib/actions';
 import { theme } from './editor-theme';
 import { FloatingMenuPlugin } from '../plugins/FloatingMenuPlugin';
 import { useBreakpoint } from '../lib/window-helpers';
@@ -66,7 +66,7 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
 
     const storePage = useDebouncedCallback((outline) => {
         console.log(`Storing page`);
-        updatePage(pageId, outline, userId);
+        updatePageContents(pageId, outline);
       }, 500);
 
     function onChange(editorState: EditorState) {

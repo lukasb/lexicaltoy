@@ -53,7 +53,8 @@ async function seedPages(client, pages) {
     CREATE TABLE IF NOT EXISTS pages (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     value TEXT NOT NULL,
-    userId UUID NOT NULL
+    userId UUID NOT NULL,
+    title TEXT NOT NULL
   );
 `;
 
@@ -63,8 +64,8 @@ async function seedPages(client, pages) {
     const insertedPages = await Promise.all(
       pages.map(
         (page) => client.sql`
-        INSERT INTO pages (id, value, userId)
-        VALUES (${page.id}, ${page.value}, ${page.userId})
+        INSERT INTO pages (id, value, userId, title)
+        VALUES (${page.id}, ${page.value}, ${page.userId}, ${page.title})
         ON CONFLICT (id) DO NOTHING;
       `,
       ),

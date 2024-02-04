@@ -9,4 +9,5 @@ export type User = {
     id: string;
     value: string;
     userId: string;
+    title: string;
   }
