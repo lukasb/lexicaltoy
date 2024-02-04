@@ -36,7 +36,7 @@ export default async function Home() {
     <div className="flex justify-center items-center">
       <div className="relative w-full">
       <div className="flex flex-col items-start">
-        <div className="border-solid border-4 border-indigo-300 rounded-lg m-4 p-7 w-full max-w-7xl">
+        <div className="border-solid border-4 border-indigo-300 rounded-lg m-0 md:m-4 p-7 w-full max-w-7xl">
           <Editor
             initialPageContent={initialPageContent}
             pageId={pageId}
