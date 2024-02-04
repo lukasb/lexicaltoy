@@ -1,4 +1,4 @@
-import { LexicalEditor, createEditor } from "lexical";
+import { EditorState, LexicalEditor, createEditor } from "lexical";
 import { ListNode, ListItemNode, $createListNode, $createListItemNode } from "@lexical/list";
 import { $getRoot, $createTextNode } from "lexical";
 import { registerListCommands } from "./ListCommandsPlugin";
@@ -18,48 +18,19 @@ async function testEditorCommand({
   editor,
   command,
   commandArgs,
-  expectationFunction,
-  expectTimeout = false,
-  timeout = 100
+  expectationFunction
 }: {
   editor: LexicalEditor,
   command: any,
   commandArgs: any,
-  expectationFunction: (editorState: any) => void,
-  expectTimeout?: boolean,
-  timeout?: number
+  expectationFunction: (editorState: any) => void
 }) {
-  let timeoutOccurred = false;
-
-  const waitForUpdateOrTimeout = new Promise<void>((resolve, reject) => {
-    if (expectTimeout) {
-      const timeoutId = setTimeout(() => {
-        timeoutOccurred = true;
-        resolve(); // Resolve if we are expecting a timeout
-      }, timeout);
-
-      const unregisterListener = editor.registerUpdateListener(({editorState}) => {
-        clearTimeout(timeoutId); // Clear the timeout if the listener is called
-        if (expectTimeout) {
-          reject("Update listener was called, but expected a timeout.");
-        } else {
-          try {
-            editor.getEditorState().read(() => {
-              expectationFunction(editorState);
-            });
-            resolve();
-          } catch (error) {
-            reject(error);
-          } finally {
-            unregisterListener();
-          }
-        }
-      });
-    } else {
-      // If we are not expecting a timeout, set up the listener without a timeout mechanism
-      const unregisterListener = editor.registerUpdateListener(({editorState}) => {
+  const waitForUpdate = new Promise<void>((resolve, reject) => {
+    const unregisterListener = editor.registerUpdateListener(
+      ({ editorState }) => {
         try {
-          editor.getEditorState().read(() => {
+          const editorState = editor.getEditorState();
+          editorState.read(() => {
             expectationFunction(editorState);
           });
           resolve();
@@ -68,18 +39,18 @@ async function testEditorCommand({
         } finally {
           unregisterListener();
         }
-      });
-    }
+      }
+    );
   });
 
   editor.dispatchCommand(command, commandArgs);
 
-  await waitForUpdateOrTimeout.catch((error) => {
-    if (!(expectTimeout && timeoutOccurred)) {
-      // If not expecting a timeout or if another error occurred, rethrow the error
-      throw error;
-    }
+  editor.update(() => {
+    $getRoot().append($createListNode("bullet")); // force an update
   });
+
+  // Wait for the update listener to be called
+  await waitForUpdate;
 }
 
 describe('ListCommandsPlugin', () => {
@@ -169,9 +140,8 @@ describe('ListCommandsPlugin', () => {
       command: OUTDENT_LISTITEM_COMMAND,
       commandArgs: { listItem: node1 },
       expectationFunction: (editorState) => {
-        //expect(node1.getIndent()).toBe(0);
-      },
-      expectTimeout: true // this should no-op, so no update, so it times out
+        expect(node1.getIndent()).toBe(0);
+      }
     });
   });
 
@@ -192,9 +162,8 @@ describe('ListCommandsPlugin', () => {
       command: INDENT_LISTITEM_COMMAND,
       commandArgs: { listItem: node1 },
       expectationFunction: (editorState) => {
-        //expect(node3.getIndent()).toBe(0);
-      },
-      expectTimeout: true // this should no-op, so no update, so it times out
+        expect(node3.getIndent()).toBe(0);
+      }
     });
   });
 
@@ -204,9 +173,8 @@ describe('ListCommandsPlugin', () => {
       command: INDENT_LISTITEM_COMMAND,
       commandArgs: { listItem: node2 },
       expectationFunction: (editorState) => {
-        //expect(node2.getIndent()).toBe(1);
-      },
-      expectTimeout: true // this should no-op, so no update, so it times out
+        expect(node2.getIndent()).toBe(1);
+      }
     });
   });
   
