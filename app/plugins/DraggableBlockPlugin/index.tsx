@@ -250,6 +250,7 @@ function hideTargetLine(targetLineElem: HTMLElement | null) {
   if (targetLineElem) {
     targetLineElem.style.opacity = '0';
     targetLineElem.style.transform = 'translate(-10000px, -10000px)';
+    targetLineElem.style.width = '0';
   }
 }
 
