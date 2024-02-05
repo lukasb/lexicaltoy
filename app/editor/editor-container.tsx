@@ -4,7 +4,6 @@ import Editor from "../editor/editor";
 import EditablePageTitle from "./pageTitle";
 import { Button } from "../ui/button";
 import { useState } from "react";
-import { signOut } from "@/auth";
 
 function EditorContainer({
   pageId,

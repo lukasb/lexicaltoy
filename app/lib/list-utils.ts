@@ -1,5 +1,5 @@
 import { BaseSelection, $isRootNode, LexicalCommand, createCommand } from "lexical";
-import { $isListItemNode, $isListNode, ListItemNode } from "@lexical/list";
+import { $isListItemNode, $isListNode, ListItemNode, ListNode } from "@lexical/list";
 import { LexicalNode } from "lexical";
 
 function $isNodeWithinListItem(node: LexicalNode): boolean {
@@ -84,6 +84,26 @@ export function $canIndent(selection: BaseSelection | null): boolean {
   if (!nextSibling) return null;
   if ($isListNode(nextSibling.getChildAtIndex(0))) {
     return nextSibling;
+  }
+  return null;
+}
+
+// get the first "actual" child of a list item, which is stored as a child of the next sibling
+export function $getFirstLogicalChild(node: ListItemNode): ListItemNode | null {
+  const childrenListItem = $getListItemContainingChildren(node);
+  if (childrenListItem) {
+    const childrenList = childrenListItem.getChildAtIndex(0);
+    if (childrenList && childrenList instanceof ListNode) {
+      return childrenList.getChildAtIndex(0);
+    }
+  }
+  return null;
+}
+
+export function $getListContainingChildren(listItem: ListItemNode): ListNode | null {
+  const listItemContainingChildren = $getListItemContainingChildren(listItem);
+  if (listItemContainingChildren) {
+    return listItemContainingChildren.getChildAtIndex(0) as ListNode;
   }
   return null;
 }

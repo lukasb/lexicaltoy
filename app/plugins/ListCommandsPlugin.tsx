@@ -13,23 +13,34 @@ import {
 import {
   $canIndentListItem,
   $canOutdentListItem,
+  $getFirstLogicalChild,
+  $getListContainingChildren,
   $getListItemContainingChildren,
   $isNestedListItem,
 } from "../lib/list-utils";
 import { $isListNode, ListItemNode } from "@lexical/list";
 
-function changeChildrenIndent(childrenListItem: ListItemNode | null, change: number, skipFirst: boolean) {
-  if (childrenListItem) {
-    let list = childrenListItem.getFirstChild();
-    if (list && $isListNode(list)) {
-      const children = list.getChildren();
-      for (let i = skipFirst ? 1 : 0; i < children.length; i++) {
-        const child = children[i];
-        if (child instanceof ListItemNode) {
-          child.setIndent(child.getIndent() + change);
-        }
-      }
-    }
+function indentOutdentListItemAndChildren(listItem: ListItemNode, indentChange: number) {
+  let nodesToOutdent: ListItemNode[] = [];
+  nodesToOutdent.push(listItem);
+  const childrenList = $getListContainingChildren(listItem);
+  if (childrenList && childrenList.getChildren()) {
+    nodesToOutdent.push(...childrenList.getChildren() as ListItemNode[]);
+  }
+  for (let node of nodesToOutdent) {
+    node.setIndent(node.getIndent() + indentChange);
+  }
+}
+
+function removeListItemAndChildren(listItem: ListItemNode) {
+  let nodesToRemove: ListItemNode[] = [];
+  nodesToRemove.push(listItem);
+  const childrenList = $getListContainingChildren(listItem);
+  if (childrenList && childrenList.getChildren()) {
+    nodesToRemove.push(...childrenList.getChildren() as ListItemNode[]);
+  }
+  for (let node of nodesToRemove) {
+    node.remove();
   }
 }
 
@@ -41,9 +52,7 @@ export function registerListCommands(editor: LexicalEditor) {
         const { listItem } = payload;
         const indent = listItem.getIndent();
         if ($canOutdentListItem(listItem)) {
-          const childrenListItem = $getListItemContainingChildren(listItem);
-          listItem.setIndent(indent - 1);
-          changeChildrenIndent(childrenListItem, -1, false);
+          indentOutdentListItemAndChildren(listItem, -1);
         }
         return true;
       },
@@ -55,10 +64,7 @@ export function registerListCommands(editor: LexicalEditor) {
         const { listItem } = payload;
         const indent = listItem.getIndent();
         if ($canIndentListItem(listItem)) {
-          const childrenListItem = $getListItemContainingChildren(listItem);
-          listItem.setIndent(indent + 1);
-          // skip the first child here because the node we just indented is now that child
-          changeChildrenIndent(childrenListItem, 1, true);
+          indentOutdentListItemAndChildren(listItem, 1);
         }
         return true;
       },
@@ -76,9 +82,7 @@ export function registerListCommands(editor: LexicalEditor) {
         ) {
           listItem.getParent().getParent().remove();
         } else {
-          const childrenNode = $getListItemContainingChildren(listItem);
-          listItem.remove();
-          if (childrenNode) childrenNode.remove();
+          removeListItemAndChildren(listItem);
         }
         return true;
       },
