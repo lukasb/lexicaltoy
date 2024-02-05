@@ -22,7 +22,8 @@ import { theme } from './editor-theme';
 import { FloatingMenuPlugin } from '../plugins/FloatingMenuPlugin';
 import { useBreakpoint } from '../lib/window-helpers';
 import { ListCommandsPlugin } from '../plugins/ListCommandsPlugin';
-import {HistoryPlugin} from '@lexical/react/LexicalHistoryPlugin';
+import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
+import TreeViewPlugin from "../plugins/TreeViewPlugin/TreeViewPlugin";
 
 function OnChangePlugin({ onChange }: { onChange: (editorState: EditorState) => void }) {
     const [editor] = useLexicalComposerContext();
@@ -54,6 +55,8 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
     const [isSmallWidthViewport, setIsSmallWidthViewport] =
         useState<boolean>(false);
 
+    const [showDebug, setShowDebug] = useState(false);
+
     useBreakpoint(768, isSmallWidthViewport, setIsSmallWidthViewport);
 
     const onRef = (_floatingAnchorElem: HTMLDivElement) => {
@@ -76,6 +79,13 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
     }
     
     return (
+        <div>
+        <button
+        style={{ position: 'absolute', top: 0, right: 0 }}
+        onClick={() => setShowDebug(!showDebug)}
+      >
+        {showDebug ? 'Hide Debug Info' : 'Show Debug Info'}
+      </button>
         <LexicalComposer initialConfig={initialConfig}>
             <AutoFocusPlugin />
             <RichTextPlugin
@@ -104,7 +114,9 @@ function Editor({initialPageContent, pageId, userId}: {initialPageContent: strin
                     <FloatingMenuPlugin anchorElem={floatingAnchorElem} /> 
                 </>
             )}
+            {showDebug && <TreeViewPlugin /> }
         </LexicalComposer>
+        </div>
     )
 }
 

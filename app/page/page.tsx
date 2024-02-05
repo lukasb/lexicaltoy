@@ -4,6 +4,7 @@ import { signOut } from '@/auth';
 import { Button } from "../ui/button";
 import { auth } from "@/auth";
 import EditablePageTitle from "./pageTitle";
+
 export const maxDuration = 60;
 
 export default async function Home() {
