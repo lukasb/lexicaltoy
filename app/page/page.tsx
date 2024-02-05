@@ -1,13 +1,13 @@
-import Editor from "../editor/editor";
 import { fetchPages } from "../lib/db";
-import { signOut } from '@/auth';
 import { Button } from "../ui/button";
 import { auth } from "@/auth";
-import EditablePageTitle from "./pageTitle";
+import EditorContainer from "../editor/editor-container";
+import { signOut } from '@/auth';
 
 export const maxDuration = 60;
 
 export default async function Home() {
+
   const session = await auth();
   if (!session || !session.user || !session.user.id) {
     if (session) {
@@ -38,17 +38,12 @@ export default async function Home() {
   return (
     <div className="flex justify-center items-center">
       <div className="relative w-full">
-      <div className="flex flex-col items-start md:p-4 lg:p-10 xl:p-20 2xl:p-30 transition-spacing ease-linear duration-75">
-        <div className="border-solid border-4 border-indigo-300 rounded-lg m-0 p-7 w-full max-w-7xl">
-          <EditablePageTitle initialTitle={initialPagetitle} pageId={pageId} />
-          <Editor
-            initialPageContent={initialPageContent}
-            pageId={pageId}
-            userId={session.user.id}
-          />
-        </div>
-      </div>
-      <form
+    <EditorContainer
+      pageId={pageId}
+      initialPagetitle={initialPagetitle}
+      initialPageContent={initialPageContent}
+    />
+          <form
       action={async () => {
         "use server";
         await signOut();
@@ -60,5 +55,6 @@ export default async function Home() {
     </form>
     </div>
     </div>
+
   );
 }
