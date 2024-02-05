@@ -44,6 +44,33 @@ function removeListItemAndChildren(listItem: ListItemNode) {
   }
 }
 
+// return true if we're the only child of our parent
+// (if we have children they will appear as the grandchildren of a sibling of ours)
+function isOnlyChild(listItem: ListItemNode): boolean {
+  if (
+    $isNestedListItem(listItem) &&
+    listItem.getIndexWithinParent() === 0 &&
+    listItem.getParent().getChildrenSize() === 1
+  ) {
+    return true;
+  }
+  if (
+    $isNestedListItem(listItem) &&
+    listItem.getIndexWithinParent() === 0 &&
+    listItem.getParent().getChildrenSize() === 2
+  ) {
+    const nextSibling = listItem.getNextSibling() as ListItemNode;
+    if (nextSibling &&
+      nextSibling.getChildrenSize() === 1) {
+        const siblingChild = nextSibling.getChildAtIndex(0);
+        if (siblingChild && siblingChild.getType() === "list") {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
 export function registerListCommands(editor: LexicalEditor) {
   return mergeRegister(
     editor.registerCommand(
@@ -72,13 +99,10 @@ export function registerListCommands(editor: LexicalEditor) {
       DELETE_LISTITEM_COMMAND,
       (payload) => {
         const { listItem } = payload;
-        if ($isNestedListItem(listItem) && 
-            listItem.getIndexWithinParent() === 0 &&
-            listItem.getParent().getChildrenSize() === 1
-        ) {
+        if (isOnlyChild(listItem)) {
           // if we're an only child and we don't delete our grantparent list item, removal
           // leaves an empty listitem
-          listItem.getParent().getParent().remove();
+          removeListItemAndChildren(listItem.getParent().getParent());
         } else {
           removeListItemAndChildren(listItem);
         }

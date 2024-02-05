@@ -56,10 +56,12 @@ async function testEditorCommand({
 describe('ListCommandsPlugin', () => {
   let editor: LexicalEditor;
   let parentList: ListNode;
-  let childList: ListNode;
+  let childList1: ListNode;
+  let childList2: ListNode;
   let node1: ListItemNode;
   let node2: ListItemNode;
   let node3: ListItemNode;
+  let node4: ListItemNode;
 
   beforeEach(() => {
     const initialEditorStateString = '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
@@ -74,18 +76,24 @@ describe('ListCommandsPlugin', () => {
       // Create a list that looks like
       // - node1
       //   - node2
+      //    - node4
       // - node3
       parentList = $createListNode("bullet");
-      childList = $createListNode("bullet");
+      childList1 = $createListNode("bullet");
+      childList2 = $createListNode("bullet");
       node1 = $createListItemNode();
       node1.append($createTextNode("node1"));
       node2 = $createListItemNode();
       node2.append($createTextNode("node2"));
       node3 = $createListItemNode();
       node3.append($createTextNode("node3"));
+      node4 = $createListItemNode();
+
       parentList.append(node1);
-      parentList.append(childList);
-      childList.append(node2);
+      parentList.append(childList1); // lexical will automatically insert this inside a ListItemNode
+      childList1.append(node2);
+      childList1.append(childList2);
+      childList2.append(node4);
       parentList.append(node3);
       $getRoot().append(parentList);
     });
