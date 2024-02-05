@@ -123,6 +123,17 @@ describe('ListCommandsPlugin', () => {
     });
   });
 
+  test('DELETE_LISTITEM_COMMAND removing parent removes child', async () => {
+    await testEditorCommand({
+      editor: editor,
+      command: DELETE_LISTITEM_COMMAND,
+      commandArgs: { listItem: node1 },
+      expectationFunction: (editorState) => {
+        expect(parentList.getChildrenSize()).toBe(1);
+      }
+    });
+  });
+
   test('OUTDENT_LISTITEM_COMMAND outdents nested list item', async () => {
     await testEditorCommand({
       editor: editor,

@@ -14,6 +14,7 @@ import {
   $canIndentListItem,
   $canOutdentListItem,
   $getListContainingChildren,
+  $getListItemContainingChildren,
   $isNestedListItem,
 } from "../lib/list-utils";
 import { ListItemNode } from "@lexical/list";
@@ -35,6 +36,7 @@ function removeListItemAndChildren(listItem: ListItemNode) {
   nodesToRemove.push(listItem);
   const childrenList = $getListContainingChildren(listItem);
   if (childrenList && childrenList.getChildren()) {
+    nodesToRemove.push($getListItemContainingChildren(listItem) as ListItemNode);
     nodesToRemove.push(...childrenList.getChildren() as ListItemNode[]);
   }
   for (let node of nodesToRemove) {
