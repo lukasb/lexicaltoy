@@ -1,6 +1,6 @@
 import type { LexicalEditor } from "lexical";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { COMMAND_PRIORITY_EDITOR } from "lexical";
+import { $setSelection, COMMAND_PRIORITY_EDITOR } from "lexical";
 import { useEffect } from "react";
 import { mergeRegister } from "@lexical/utils";
 import {
@@ -15,6 +15,7 @@ import {
   $canOutdentListItem,
   $getListContainingChildren,
   $getListItemContainingChildren,
+  $getPreviousListItem,
   $isNestedListItem,
 } from "../lib/list-utils";
 import { ListItemNode } from "@lexical/list";
@@ -97,14 +98,21 @@ export function registerListCommands(editor: LexicalEditor) {
     ),
     editor.registerCommand(
       DELETE_LISTITEM_COMMAND,
-      (payload) => {
+      (payload, fixSelection) => {
         const { listItem } = payload;
         if (isOnlyChild(listItem)) {
-          // if we're an only child and we don't delete our grantparent list item, removal
+          // if we're an only child and we don't delete our grandparent list item, removal
           // leaves an empty listitem
           removeListItemAndChildren(listItem.getParent().getParent());
         } else {
+          let previousListItem: ListItemNode | null = null;
+          if (fixSelection) {
+            previousListItem = $getPreviousListItem(listItem);
+          }
           removeListItemAndChildren(listItem);
+          if (fixSelection && previousListItem) {
+            previousListItem.selectEnd();
+          }
         }
         return true;
       },

@@ -95,3 +95,25 @@ export function $getListContainingChildren(listItem: ListItemNode): ListNode | n
   }
   return null;
 }
+
+function containsList(listItem: ListItemNode): boolean {
+  return $isListNode(listItem.getChildAtIndex(0));
+}
+
+function getLastDescendant(listItem: ListItemNode): ListItemNode | null {
+  const childList = listItem.getChildAtIndex(0) as ListNode;
+  if (!childList) return null;
+  const lastChild = childList.getChildAtIndex(childList.getChildrenSize() - 1) as ListItemNode;
+  if (!lastChild) return null;
+  if (lastChild.getChildrenSize() > 0 && containsList(lastChild)) return getLastDescendant(lastChild);
+  return lastChild;
+}
+
+// get the previous list item regardless of indentation
+// (what you would expect to reach by hitting up arrow)
+export function $getPreviousListItem(listItem: ListItemNode): ListItemNode | null {
+  const previousSibling = listItem.getPreviousSibling() as ListItemNode;
+  if (!previousSibling) return null;
+  if (previousSibling.getChildrenSize() === 0) return previousSibling;
+  return getLastDescendant(previousSibling);
+}

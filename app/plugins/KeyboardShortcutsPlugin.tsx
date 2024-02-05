@@ -53,9 +53,10 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
         if (!event.ctrlKey) return false;
         const selection = $getSelection();
         const listItem = $getActiveListItem(selection);
+        const fixSelection = true;
         if (!listItem) return false;
         event.preventDefault();
-        editor.dispatchCommand(DELETE_LISTITEM_COMMAND, { listItem });
+        editor.dispatchCommand(DELETE_LISTITEM_COMMAND, { listItem, fixSelection });
         return true;
       },
       COMMAND_PRIORITY_NORMAL
