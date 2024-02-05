@@ -88,18 +88,6 @@ export function $canIndent(selection: BaseSelection | null): boolean {
   return null;
 }
 
-// get the first "actual" child of a list item, which is stored as a child of the next sibling
-export function $getFirstLogicalChild(node: ListItemNode): ListItemNode | null {
-  const childrenListItem = $getListItemContainingChildren(node);
-  if (childrenListItem) {
-    const childrenList = childrenListItem.getChildAtIndex(0);
-    if (childrenList && childrenList instanceof ListNode) {
-      return childrenList.getChildAtIndex(0);
-    }
-  }
-  return null;
-}
-
 export function $getListContainingChildren(listItem: ListItemNode): ListNode | null {
   const listItemContainingChildren = $getListItemContainingChildren(listItem);
   if (listItemContainingChildren) {

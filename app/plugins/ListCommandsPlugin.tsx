@@ -13,12 +13,10 @@ import {
 import {
   $canIndentListItem,
   $canOutdentListItem,
-  $getFirstLogicalChild,
   $getListContainingChildren,
-  $getListItemContainingChildren,
   $isNestedListItem,
 } from "../lib/list-utils";
-import { $isListNode, ListItemNode } from "@lexical/list";
+import { ListItemNode } from "@lexical/list";
 
 function indentOutdentListItemAndChildren(listItem: ListItemNode, indentChange: number) {
   let nodesToOutdent: ListItemNode[] = [];
@@ -50,7 +48,6 @@ export function registerListCommands(editor: LexicalEditor) {
       OUTDENT_LISTITEM_COMMAND,
       (payload) => {
         const { listItem } = payload;
-        const indent = listItem.getIndent();
         if ($canOutdentListItem(listItem)) {
           indentOutdentListItemAndChildren(listItem, -1);
         }
@@ -62,7 +59,6 @@ export function registerListCommands(editor: LexicalEditor) {
       INDENT_LISTITEM_COMMAND,
       (payload) => {
         const { listItem } = payload;
-        const indent = listItem.getIndent();
         if ($canIndentListItem(listItem)) {
           indentOutdentListItemAndChildren(listItem, 1);
         }
@@ -74,12 +70,12 @@ export function registerListCommands(editor: LexicalEditor) {
       DELETE_LISTITEM_COMMAND,
       (payload) => {
         const { listItem } = payload;
-        // if the list item is the first item in a nested list and has no siblings remove the grandparent <li>
-        // see getListItemContainingChildren for more info
         if ($isNestedListItem(listItem) && 
             listItem.getIndexWithinParent() === 0 &&
             listItem.getParent().getChildrenSize() === 1
         ) {
+          // if we're an only child and we don't delete our grantparent list item, removal
+          // leaves an empty listitem
           listItem.getParent().getParent().remove();
         } else {
           removeListItemAndChildren(listItem);
