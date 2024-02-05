@@ -58,10 +58,12 @@ describe('ListCommandsPlugin', () => {
   let parentList: ListNode;
   let childList1: ListNode;
   let childList2: ListNode;
+  let childList3: ListNode;
   let node1: ListItemNode;
   let node2: ListItemNode;
   let node3: ListItemNode;
   let node4: ListItemNode;
+  let node5: ListItemNode;
 
   beforeEach(() => {
     const initialEditorStateString = '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
@@ -78,9 +80,11 @@ describe('ListCommandsPlugin', () => {
       //   - node2
       //    - node4
       // - node3
+      //   - node5
       parentList = $createListNode("bullet");
       childList1 = $createListNode("bullet");
       childList2 = $createListNode("bullet");
+      childList3 = $createListNode("bullet");
       node1 = $createListItemNode();
       node1.append($createTextNode("node1"));
       node2 = $createListItemNode();
@@ -88,6 +92,9 @@ describe('ListCommandsPlugin', () => {
       node3 = $createListItemNode();
       node3.append($createTextNode("node3"));
       node4 = $createListItemNode();
+      node4.append($createTextNode("node4"));
+      node5 = $createListItemNode();
+      node5.append($createTextNode("node5"));
 
       parentList.append(node1);
       parentList.append(childList1); // lexical will automatically insert this inside a ListItemNode
@@ -95,6 +102,8 @@ describe('ListCommandsPlugin', () => {
       childList1.append(childList2);
       childList2.append(node4);
       parentList.append(node3);
+      parentList.append(childList3);
+      childList3.append(node5);
       $getRoot().append(parentList);
     });
 
@@ -123,7 +132,7 @@ describe('ListCommandsPlugin', () => {
       command: DELETE_LISTITEM_COMMAND,
       commandArgs: { listItem: node2 },
       expectationFunction: (editorState) => {
-        expect(parentList.getChildrenSize()).toBe(2);
+        expect(parentList.getChildrenSize()).toBe(3);
         const secondChild = parentList.getChildren()[1] as ListItemNode;
         const textNode = secondChild.getChildren()[0];
         expect(textNode.getTextContent()).toBe("node3");
@@ -137,7 +146,7 @@ describe('ListCommandsPlugin', () => {
       command: DELETE_LISTITEM_COMMAND,
       commandArgs: { listItem: node1 },
       expectationFunction: (editorState) => {
-        expect(parentList.getChildrenSize()).toBe(1);
+        expect(parentList.getChildrenSize()).toBe(2);
       }
     });
   });
@@ -164,6 +173,17 @@ describe('ListCommandsPlugin', () => {
     });
   });
 
+  test('OUTDENT_LISTITEM_COMMAND outdenting parent outdents child', async () => {
+    await testEditorCommand({
+      editor: editor,
+      command: OUTDENT_LISTITEM_COMMAND,
+      commandArgs: { listItem: node2 },
+      expectationFunction: (editorState) => {
+        expect(node4.getIndent()).toBe(1);
+      }
+    });
+  });
+
   test('INDENT_LISTITEM_COMMAND indents node with elder sibling', async () => {
     await testEditorCommand({
       editor: editor,
@@ -171,6 +191,17 @@ describe('ListCommandsPlugin', () => {
       commandArgs: { listItem: node3 },
       expectationFunction: (editorState) => {
         expect(node3.getIndent()).toBe(1);
+      }
+    });
+  });
+
+  test('INDENT_LISTITEM_COMMAND indenting parent indents child', async () => {
+    await testEditorCommand({
+      editor: editor,
+      command: INDENT_LISTITEM_COMMAND,
+      commandArgs: { listItem: node3 },
+      expectationFunction: (editorState) => {
+        expect(node5.getIndent()).toBe(2);
       }
     });
   });
