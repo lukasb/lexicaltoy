@@ -11,6 +11,7 @@ function Omnibar({ pages } : {pages: Page[]}){
   const [displayValue, setDisplayValue] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const ulRef = useRef<HTMLUListElement>(null);
   const skipAutocompleteRef = useRef(false);
 
   useEffect(() => {
@@ -48,6 +49,13 @@ function Omnibar({ pages } : {pages: Page[]}){
     }
   }, [displayValue, term, pages]); 
 
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside as EventListener);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside as EventListener);
+    };
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setTerm(newValue);
@@ -80,8 +88,16 @@ function Omnibar({ pages } : {pages: Page[]}){
     }
   }
 
+  const handleClickOutside = (event: { target: Node | null; }) => {
+    if (ulRef.current && !ulRef.current.contains(event.target)) {
+      setDisplayValue('');
+      setResults([]);
+      setSelectedIndex(-1);
+    }
+  };
+
   return (
-    <div className="relative my-4">
+    <div className="relative my-4 max-w-7xl">
       <input
         ref={inputRef}
         type="text"
@@ -92,7 +108,9 @@ function Omnibar({ pages } : {pages: Page[]}){
         placeholder="Search or Create"
       />
       {results.length > 0 && (
-        <ul className="absolute z-10 w-full max-w-5xl bg-white shadow-md max-h-60 overflow-auto mt-1 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+        <ul 
+        ref={ulRef}
+        className="absolute z-10 w-full max-w-5xl bg-white shadow-md max-h-60 overflow-auto mt-1 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
           {results.map((result, index) => (
             <li
               key={index}
