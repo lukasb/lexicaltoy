@@ -54,11 +54,33 @@ async function seedPages(client, pages) {
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     value TEXT NOT NULL,
     userId UUID NOT NULL,
-    title TEXT NOT NULL
+    title TEXT NOT NULL,
+    last_modified TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
   );
 `;
 
-    console.log(`Created "pages" table`);
+  console.log(`Created "pages" table`);
+
+    const createLastModified = await client.sql`
+    CREATE OR REPLACE FUNCTION update_last_modified_column()
+    RETURNS TRIGGER AS $$
+    BEGIN
+    NEW.last_modified = CURRENT_TIMESTAMP;
+    RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+    `;
+
+    console.log(`Created "update_last_modified_column" function`);
+
+    const createTrigger = await client.sql`
+    CREATE TRIGGER update_pages_last_modified
+    BEFORE UPDATE ON pages
+    FOR EACH ROW
+    EXECUTE FUNCTION update_last_modified_column();
+    `;
+
+    console.log(`Created "update_pages_last_modified" trigger`);
 
     // Insert data into the "pages" table
     const insertedPages = await Promise.all(

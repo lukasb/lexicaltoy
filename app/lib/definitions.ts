@@ -10,4 +10,5 @@ export type User = {
     value: string;
     userId: string;
     title: string;
+    lastModified: Date;
   }
