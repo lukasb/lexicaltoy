@@ -1,29 +1,23 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useDebouncedCallback } from 'use-debounce';
 import { searchPages } from '../lib/pages-helpers';
 import { Page } from '../lib/definitions';
 
 function Omnibar({ pages } : {pages: Page[]}){
-  
+
   const [term, setTerm] = useState('');
   const [results, setResults] = useState<Page[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const handleSearch = useDebouncedCallback((pages, term) => {
-    console.log(`Searching... ${term}`);
-    const filteredPages = searchPages(pages, term);
-    setResults(filteredPages);
-  }, 300);
-
   useEffect(() => {
     if (term) {
-      handleSearch(pages, term);
+      const filteredPages = searchPages(pages, term);
+      setResults(filteredPages);
     } else {
       setResults([]);
     }
-  }, [term]);
+  }, [term, pages]);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'ArrowDown') {
@@ -38,10 +32,10 @@ function Omnibar({ pages } : {pages: Page[]}){
   };
 
   return (
-    <div>
+    <div className='max-w-5xl my-4'>
       <input
         type="text"
-        className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
+        className="w-full rounded-md border border-gray-200 py-[9px] pl-3 text-md outline-none placeholder:text-gray-500"
         value={term}
         onChange={(e) => setTerm(e.target.value)}
         onKeyDown={handleKeyDown}

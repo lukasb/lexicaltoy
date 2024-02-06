@@ -13,7 +13,7 @@ function EditingArea({
   const initialPage = pages[0];
 
   return (
-    <div>
+    <div className="md:p-4 lg:p-10 xl:p-20 2xl:p-30 transition-spacing ease-linear duration-75">
       <Omnibar pages={pages} />
       <EditorContainer
           pageId={initialPage.id}
