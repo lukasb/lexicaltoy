@@ -15,9 +15,9 @@ function Omnibar({ pages } : {pages: Page[]}){
   useEffect(() => {
     if (term) {
       const filteredPages = searchPages(pages, term);
-      const exactMatch = filteredPages.find(page => page.title.toLowerCase().startsWith(term.toLowerCase()));
-      if (exactMatch && inputRef.current) {
-        setDisplayValue(exactMatch.title);
+      const startMatch = filteredPages.find(page => page.title.toLowerCase().startsWith(term.toLowerCase()));
+      if (startMatch && inputRef.current) {
+        setDisplayValue(startMatch.title);
       } else {
         setDisplayValue(term);
       }
@@ -29,13 +29,26 @@ function Omnibar({ pages } : {pages: Page[]}){
   }, [term, pages]);
 
   useEffect(() => {
-    if (inputRef.current && displayValue.startsWith(term)) {
-      const startPos = term.length;
-      const endPos = displayValue.length;
-      inputRef.current.setSelectionRange(startPos, endPos);
+    if (displayValue !== term && displayValue.startsWith(term)) {
+      const filteredPages = searchPages(pages, displayValue);
+      const exactMatchIndex = filteredPages.findIndex(page => page.title.toLowerCase() === displayValue.toLowerCase());
+      if (inputRef.current && exactMatchIndex !== -1) {
+        const startPos = term.length;
+        const endPos = displayValue.length;
+        inputRef.current.setSelectionRange(startPos, endPos);
+        setSelectedIndex(exactMatchIndex);
+      } else {
+        setSelectedIndex(-1);
+      }
     }
-  }, [displayValue, term]);
-  
+  }, [displayValue, term, pages]); 
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setTerm(newValue);
+    setDisplayValue(newValue);
+  };
+
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "ArrowDown") {
       setSelectedIndex((prevIndex) =>
@@ -48,18 +61,17 @@ function Omnibar({ pages } : {pages: Page[]}){
     } else if (event.key === "Enter" && results.length > 0) {
       if (selectedIndex > -1) {
         console.log("Selected:", results[selectedIndex]);
+      } else {
+        console.log("Create:", term);
       }
       event.preventDefault();
+    } else if (event.key === "Backspace" || event.key === "Delete") {
+      setSelectedIndex(-1);
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTerm(e.target.value);
-    setDisplayValue(e.target.value);
-  };
+  }
 
   return (
-    <div className="my-4">
+    <div className="relative my-4">
       <input
         ref={inputRef}
         type="text"
