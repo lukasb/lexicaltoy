@@ -14,6 +14,7 @@ function Omnibar({ pages } : {pages: Page[]}){
     if (term) {
       const filteredPages = searchPages(pages, term);
       setResults(filteredPages);
+      
     } else {
       setResults([]);
     }
@@ -22,17 +23,20 @@ function Omnibar({ pages } : {pages: Page[]}){
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'ArrowDown') {
       setSelectedIndex((prevIndex) => Math.min(prevIndex + 1, results.length - 1));
+      event.preventDefault();
     } else if (event.key === 'ArrowUp') {
       setSelectedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+      event.preventDefault();
     } else if (event.key === 'Enter' && results.length > 0) {
-      // Handle selection
-      console.log('Selected:', results[selectedIndex]);
-      // Implement the action you want to take on selection
+      if (selectedIndex > -1) {
+        console.log('Selected:', results[selectedIndex]);
+      }
+      event.preventDefault();
     }
   };
 
   return (
-    <div className='max-w-5xl my-4'>
+    <div className='my-4'>
       <input
         type="text"
         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
@@ -40,7 +44,6 @@ function Omnibar({ pages } : {pages: Page[]}){
         onChange={(e) => setTerm(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Search or Create"
-        style={{ width: '100%' }}
       />
       {results.length > 0 && (
         <ul className="absolute z-10 w-full max-w-5xl bg-white shadow-md max-h-60 overflow-auto mt-1 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
