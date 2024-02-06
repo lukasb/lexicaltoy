@@ -73,6 +73,9 @@ function Omnibar({ pages } : {pages: Page[]}){
     } else if (event.key === "Backspace" || event.key === "Delete") {
       skipAutocompleteRef.current = true;
       setSelectedIndex(-1);
+    } else if (event.key === "Escape") {
+      setDisplayValue('');
+      setResults([]);
     }
   }
 
