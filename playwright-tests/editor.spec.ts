@@ -50,6 +50,5 @@ test('renaming page reflected in search results', async ({ page }) => {
   await title.fill('NewTitle');
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('new');
-  const isSelectedItemPresent = await page.$('.selected-item') !== null;
-  expect(isSelectedItemPresent).toBeTruthy();
+  await expect(page.getByTestId('search-result')).toHaveText('NewTitle');
 });
