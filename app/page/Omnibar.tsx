@@ -76,6 +76,7 @@ function Omnibar({ pages } : {pages: Page[]}){
     } else if (event.key === "Escape") {
       setDisplayValue('');
       setResults([]);
+      setSelectedIndex(-1);
     }
   }
 
