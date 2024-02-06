@@ -43,3 +43,13 @@ test('escape closes search results', async ({ page }) => {
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('search-result')).not.toBeVisible();
 });
+
+test('renaming page reflected in search results', async ({ page }) => {
+  const title = page.getByText('TestPage1');
+  await title.focus();
+  await title.fill('NewTitle');
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.fill('new');
+  const isSelectedItemPresent = await page.$('.selected-item') !== null;
+  expect(isSelectedItemPresent).toBeTruthy();
+});

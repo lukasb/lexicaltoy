@@ -42,7 +42,7 @@ function Omnibar({ pages }: { pages: Page[] }) {
   }, [term, pages]);
 
   useEffect(() => {
-    if (displayValue !== term && displayValue.startsWith(term)) {
+    if (displayValue !== term && displayValue.toLowerCase().startsWith(term.toLowerCase())) {
       const filteredPages = searchPages(pages, displayValue);
       const exactMatchIndex = filteredPages.findIndex(
         (page) => page.title.toLowerCase() === displayValue.toLowerCase()
