@@ -100,13 +100,15 @@ function containsList(listItem: ListItemNode): boolean {
   return $isListNode(listItem.getChildAtIndex(0));
 }
 
-function getLastDescendant(listItem: ListItemNode): ListItemNode | null {
-  const childList = listItem.getChildAtIndex(0) as ListNode;
-  if (!childList) return null;
-  const lastChild = childList.getChildAtIndex(childList.getChildrenSize() - 1) as ListItemNode;
-  if (!lastChild) return null;
-  if (lastChild.getChildrenSize() > 0 && containsList(lastChild)) return getLastDescendant(lastChild);
-  return lastChild;
+function getLastDescendantListItem(listItem: ListItemNode): ListItemNode | null {
+  const child = listItem.getChildAtIndex(0);
+  if (child && child instanceof ListNode) {
+    const lastChild = child.getChildAtIndex(child.getChildrenSize() - 1) as ListItemNode;
+    if (!lastChild) return null;
+    if (lastChild.getChildrenSize() > 0 && containsList(lastChild)) return getLastDescendantListItem(lastChild);
+    return lastChild;
+  }
+  return null;
 }
 
 // get the previous list item regardless of indentation
@@ -115,5 +117,5 @@ export function $getPreviousListItem(listItem: ListItemNode): ListItemNode | nul
   const previousSibling = listItem.getPreviousSibling() as ListItemNode;
   if (!previousSibling) return null;
   if (previousSibling.getChildrenSize() === 0) return previousSibling;
-  return getLastDescendant(previousSibling);
+  return getLastDescendantListItem(previousSibling);
 }
