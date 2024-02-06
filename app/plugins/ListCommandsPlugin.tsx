@@ -101,6 +101,7 @@ export function registerListCommands(editor: LexicalEditor) {
       (payload, fixSelection) => {
         const { listItem } = payload;
         if (isOnlyChild(listItem)) {
+          console.log("only child");
           // if we're an only child and we don't delete our grandparent list item, removal
           // leaves an empty listitem
           removeListItemAndChildren(listItem.getParent().getParent());
