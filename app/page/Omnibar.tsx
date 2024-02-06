@@ -11,8 +11,13 @@ function Omnibar({ pages } : {pages: Page[]}){
   const [displayValue, setDisplayValue] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const skipAutocompleteRef = useRef(false);
 
   useEffect(() => {
+    if (skipAutocompleteRef.current) {
+      skipAutocompleteRef.current = false;
+      return;
+    }
     if (term) {
       const filteredPages = searchPages(pages, term);
       const startMatch = filteredPages.find(page => page.title.toLowerCase().startsWith(term.toLowerCase()));
@@ -66,6 +71,7 @@ function Omnibar({ pages } : {pages: Page[]}){
       }
       event.preventDefault();
     } else if (event.key === "Backspace" || event.key === "Delete") {
+      skipAutocompleteRef.current = true;
       setSelectedIndex(-1);
     }
   }
@@ -86,8 +92,8 @@ function Omnibar({ pages } : {pages: Page[]}){
           {results.map((result, index) => (
             <li
               key={index}
-              className={`px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                selectedIndex === index ? "bg-gray-100 dark:bg-gray-700" : ""
+              className={`px-4 py-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
+                selectedIndex === index ? "bg-gray-200 dark:bg-gray-700" : ""
               } dark:text-white`}
               onMouseEnter={() => setSelectedIndex(index)}
               onClick={() => console.log("Clicked:", result)}
