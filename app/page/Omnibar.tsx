@@ -15,7 +15,9 @@ function Omnibar({ pages }: { pages: Page[] }) {
 
   // TODO accessibility
   // TODO reverse chronological list of all pages by default
-  // TODO after hitting Escape, typing a letter should show matching pages
+  // TODO Escape sets focus back to last active editor
+  // TODO activate omnibar with keyboard shortcut
+  // TODO search by contents, not just title
 
   useEffect(() => {
     if (skipAutocompleteRef.current) {

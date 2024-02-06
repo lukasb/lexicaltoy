@@ -4,13 +4,22 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import { updatePageTitle } from '../lib/actions';
 
-const EditablePageTitle = ({ pageId, initialTitle } : { pageId: string, initialTitle: string}) => {
+const EditablePageTitle = ({ 
+  pageId, 
+  initialTitle, 
+  updatePageTitleLocal
+} : { 
+  pageId: string, 
+  initialTitle: string,
+  updatePageTitleLocal: (id: string, newTitle: string) => void;
+}) => {
   const [pageTitle, setPageTitle] = useState(initialTitle);
   const titleRef = useRef<HTMLDivElement>(null); // Reference to the editable div
 
   const storePageTitle = useDebouncedCallback((newTitle) => {
     console.log(`Storing page`);
     updatePageTitle(pageId, newTitle);
+    updatePageTitleLocal(pageId, newTitle);
   }, 500);
 
   // Update the page title based on div content
