@@ -74,10 +74,20 @@ async function seedPages(client, pages) {
     console.log(`Created "update_last_modified_column" function`);
 
     const createTrigger = await client.sql`
-    CREATE TRIGGER update_pages_last_modified
-    BEFORE UPDATE ON pages
-    FOR EACH ROW
-    EXECUTE FUNCTION update_last_modified_column();
+    DO $$
+    BEGIN
+        IF EXISTS (
+            SELECT 1
+            FROM pg_trigger
+            WHERE tgname = 'update_pages_last_modified'
+        ) THEN
+            -- do nothing
+        ELSE
+            EXECUTE 'CREATE TRIGGER update_pages_last_modified BEFORE UPDATE ON pages FOR EACH ROW EXECUTE FUNCTION update_last_modified_column();';
+        END IF;
+    END
+    $$;
+
     `;
 
     console.log(`Created "update_pages_last_modified" trigger`);

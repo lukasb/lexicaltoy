@@ -1,18 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef, ReactEventHandler } from 'react';
-import { searchPages } from '../lib/pages-helpers';
-import { Page } from '../lib/definitions';
+import React, { useState, useEffect, useRef, ReactEventHandler } from "react";
+import { searchPages } from "../lib/pages-helpers";
+import { Page } from "../lib/definitions";
 
-function Omnibar({ pages } : {pages: Page[]}){
-
-  const [term, setTerm] = useState('');
+function Omnibar({ pages }: { pages: Page[] }) {
+  const [term, setTerm] = useState("");
   const [results, setResults] = useState<Page[]>([]);
-  const [displayValue, setDisplayValue] = useState('');
+  const [displayValue, setDisplayValue] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const ulRef = useRef<HTMLUListElement>(null);
   const skipAutocompleteRef = useRef(false);
+
+  // TODO accessibility
+  // TODO reverse chronological list of all pages by default
+  // TODO after hitting Escape, typing a letter should show matching pages
 
   useEffect(() => {
     if (skipAutocompleteRef.current) {
@@ -21,7 +24,9 @@ function Omnibar({ pages } : {pages: Page[]}){
     }
     if (term) {
       const filteredPages = searchPages(pages, term);
-      const startMatch = filteredPages.find(page => page.title.toLowerCase().startsWith(term.toLowerCase()));
+      const startMatch = filteredPages.find((page) =>
+        page.title.toLowerCase().startsWith(term.toLowerCase())
+      );
       if (startMatch && inputRef.current) {
         setDisplayValue(startMatch.title);
       } else {
@@ -29,7 +34,7 @@ function Omnibar({ pages } : {pages: Page[]}){
       }
       setResults(filteredPages);
     } else {
-      setDisplayValue('');
+      setDisplayValue("");
       setResults([]);
     }
   }, [term, pages]);
@@ -37,7 +42,9 @@ function Omnibar({ pages } : {pages: Page[]}){
   useEffect(() => {
     if (displayValue !== term && displayValue.startsWith(term)) {
       const filteredPages = searchPages(pages, displayValue);
-      const exactMatchIndex = filteredPages.findIndex(page => page.title.toLowerCase() === displayValue.toLowerCase());
+      const exactMatchIndex = filteredPages.findIndex(
+        (page) => page.title.toLowerCase() === displayValue.toLowerCase()
+      );
       if (inputRef.current && exactMatchIndex !== -1) {
         const startPos = term.length;
         const endPos = displayValue.length;
@@ -47,12 +54,15 @@ function Omnibar({ pages } : {pages: Page[]}){
         setSelectedIndex(-1);
       }
     }
-  }, [displayValue, term, pages]); 
+  }, [displayValue, term, pages]);
 
   useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside as EventListener);
+    document.addEventListener("mousedown", handleClickOutside as EventListener);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside as EventListener);
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside as EventListener
+      );
     };
   }, []);
 
@@ -82,15 +92,15 @@ function Omnibar({ pages } : {pages: Page[]}){
       skipAutocompleteRef.current = true;
       setSelectedIndex(-1);
     } else if (event.key === "Escape") {
-      setDisplayValue('');
+      setDisplayValue("");
       setResults([]);
       setSelectedIndex(-1);
     }
-  }
+  };
 
-  const handleClickOutside = (event: { target: Node | null; }) => {
+  const handleClickOutside = (event: { target: Node | null }) => {
     if (ulRef.current && !ulRef.current.contains(event.target)) {
-      setDisplayValue('');
+      setDisplayValue("");
       setResults([]);
       setSelectedIndex(-1);
     }
@@ -108,17 +118,19 @@ function Omnibar({ pages } : {pages: Page[]}){
         placeholder="Search or Create"
       />
       {results.length > 0 && (
-        <ul 
-        ref={ulRef}
-        className="absolute z-10 w-full max-w-5xl bg-white shadow-md max-h-60 overflow-auto mt-1 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+        <ul
+          ref={ulRef}
+          className="absolute z-10 w-full max-w-5xl bg-white shadow-md max-h-60 overflow-auto mt-1 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+        >
           {results.map((result, index) => (
             <li
               key={index}
               className={`px-4 py-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
-                selectedIndex === index ? "bg-gray-200 dark:bg-gray-700" : ""
+                selectedIndex === index ? "selected-item bg-gray-200 dark:bg-gray-700" : ""
               } dark:text-white`}
               onMouseEnter={() => setSelectedIndex(index)}
               onClick={() => console.log("Clicked:", result)}
+              data-testid="search-result"
             >
               {result.title}
             </li>
@@ -127,6 +139,6 @@ function Omnibar({ pages } : {pages: Page[]}){
       )}
     </div>
   );
-};
+}
 
 export default Omnibar;
