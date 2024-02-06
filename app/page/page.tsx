@@ -1,7 +1,7 @@
 import { fetchPages } from "../lib/db";
 import { Button } from "../ui/button";
 import { auth } from "@/auth";
-import EditorContainer from "../editor/editor-container";
+import EditingArea from "./EditingArea";
 import { signOut } from "@/auth";
 
 export const maxDuration = 60;
@@ -29,18 +29,13 @@ export default async function Home() {
     );
   }
 
-  const initialPage = await fetchPages(session.user.id);
-  const initialPageContent = initialPage[0].value;
-  const pageId = initialPage[0].id;
-  const initialPagetitle = initialPage[0].title;
+  const pages = await fetchPages(session.user.id);
 
   return (
     <div className="flex justify-center items-center">
       <div className="relative w-full">
-        <EditorContainer
-          pageId={pageId}
-          initialPagetitle={initialPagetitle}
-          initialPageContent={initialPageContent}
+        <EditingArea
+          pages={pages}
         />
         <form
           action={async () => {
