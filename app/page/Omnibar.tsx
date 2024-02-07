@@ -132,6 +132,11 @@ const Omnibar = forwardRef(({
     }
   };
 
+  const handleSearchResultsClick = (result: Page) => {
+    setCurrentPage(result);
+    resetSelf();
+  };
+
   return (
     <div className="relative my-4 max-w-7xl">
       <input
@@ -155,7 +160,7 @@ const Omnibar = forwardRef(({
                 selectedIndex === index ? "selected-item bg-gray-200 dark:bg-gray-700" : ""
               } dark:text-white`}
               onMouseEnter={() => setSelectedIndex(index)}
-              onClick={() => console.log("Clicked:", result)}
+              onClick={() => handleSearchResultsClick(result)}
               data-testid="search-result"
             >
               {result.title}
