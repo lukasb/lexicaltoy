@@ -6,10 +6,12 @@ import { Page } from "../lib/definitions";
 
 function Omnibar({ 
   pages,
-  createNewPage
+  createNewPage,
+  setCurrentPage
  }: { 
   pages: Page[],
   createNewPage: (title: string) => void
+  setCurrentPage: (page: Page) => void
  }) {
   const [term, setTerm] = useState("");
   const [results, setResults] = useState<Page[]>([]);
@@ -92,6 +94,7 @@ function Omnibar({
     } else if (event.key === "Enter") {
       if (selectedIndex > -1 && results.length > 0) {
         console.log("Selected:", results[selectedIndex]);
+        setCurrentPage(results[selectedIndex]);
       } else {
         console.log("Create:", term);
         createNewPage(term);

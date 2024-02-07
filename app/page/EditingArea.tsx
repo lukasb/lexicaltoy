@@ -16,6 +16,7 @@ function EditingArea({
 }) {
 
   const [currentPages, setCurrentPages] = useState(pages);
+  const emptyPageJSONString = '{"root":{"children":[{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"listitem","version":1,"value":1}],"direction":null,"format":"","indent":0,"type":"list","version":1,"listType":"bullet","start":1,"tag":"ul"}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
   // TODO let findMostRecentlyEditedPage return null if no pages
   // then create a new page if no pages
@@ -23,7 +24,7 @@ function EditingArea({
   const [currentPage, setCurrentPage] = useState(initialPage);
 
   const handleNewPage = async (title: string) => {
-    const result = await insertPage(title, "", userId);
+    const result = await insertPage(title, emptyPageJSONString, userId);
     if (typeof result === "string") {
       console.error(result);
       return;
@@ -38,8 +39,10 @@ function EditingArea({
       <Omnibar 
         pages={currentPages} 
         createNewPage={(title) => handleNewPage(title)}
+        setCurrentPage={setCurrentPage}
       />
       <EditorContainer
+          key={currentPage.id}
           pageId={currentPage.id}
           initialPagetitle={currentPage.title}
           initialPageContent={currentPage.value}
