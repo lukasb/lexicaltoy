@@ -29,6 +29,7 @@ function EditingArea({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey && event.key === 'k') {
+        event.preventDefault();
         omnibarRef.current?.focus();
       }
     };

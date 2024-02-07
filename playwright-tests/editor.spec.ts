@@ -79,3 +79,8 @@ test('open page', async ({ page }) => {
   const title = await page.getByTestId('editable-title');
   await expect(title).toHaveText('avalon');
 });
+
+test('keyboard shortcut for omnibar', async ({ page }) => {
+  await page.keyboard.press('Meta+k');
+  await expect(page.getByPlaceholder('Search or Create')).toBeFocused();
+});

@@ -101,7 +101,7 @@ function Editor({
         }
         // absolute positioning is the Lexical team's official recommendation for placeholders
         placeholder={
-          <div className="absolute top-10 left-10">Start typing here...</div>
+          <div className="absolute top-10 left-10"></div>
         }
         ErrorBoundary={LexicalErrorBoundary}
       />
