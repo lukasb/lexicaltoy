@@ -4,7 +4,13 @@ import React, { useState, useEffect, useRef, ReactEventHandler } from "react";
 import { searchPages } from "../lib/pages-helpers";
 import { Page } from "../lib/definitions";
 
-function Omnibar({ pages }: { pages: Page[] }) {
+function Omnibar({ 
+  pages,
+  createNewPage
+ }: { 
+  pages: Page[],
+  createNewPage: (title: string) => void
+ }) {
   const [term, setTerm] = useState("");
   const [results, setResults] = useState<Page[]>([]);
   const [displayValue, setDisplayValue] = useState("");
@@ -83,11 +89,12 @@ function Omnibar({ pages }: { pages: Page[] }) {
     } else if (event.key === "ArrowUp") {
       setSelectedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
       event.preventDefault();
-    } else if (event.key === "Enter" && results.length > 0) {
-      if (selectedIndex > -1) {
+    } else if (event.key === "Enter") {
+      if (selectedIndex > -1 && results.length > 0) {
         console.log("Selected:", results[selectedIndex]);
       } else {
         console.log("Create:", term);
+        createNewPage(term);
       }
       event.preventDefault();
     } else if (event.key === "Backspace" || event.key === "Delete") {

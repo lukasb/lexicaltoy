@@ -9,12 +9,14 @@ function EditorContainer({
   pageId,
   initialPagetitle,
   initialPageContent,
-  updatePageTitleLocal
+  updatePageTitleLocal,
+  updatePageContentsLocal
 }: {
   pageId: string;
   initialPagetitle: string;
   initialPageContent: string;
   updatePageTitleLocal: (id: string, newTitle: string) => void;
+  updatePageContentsLocal: (id: string, newValue: string) => void;
 }) {
   const [showDebug, setShowDebug] = useState(false);
 
@@ -35,6 +37,7 @@ function EditorContainer({
           initialPageContent={initialPageContent}
           pageId={pageId}
           showDebugInfo={showDebug}
+          updatePageContentsLocal={updatePageContentsLocal}
         />
       </div>
     </div>

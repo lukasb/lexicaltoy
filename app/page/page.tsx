@@ -36,6 +36,7 @@ export default async function Home() {
       <div className="relative w-full">
         <EditingArea
           pages={pages}
+          userId = {session.user.id}
         />
         <form
           action={async () => {

@@ -47,10 +47,12 @@ function Editor({
   initialPageContent,
   pageId,
   showDebugInfo,
+  updatePageContentsLocal
 }: {
   initialPageContent: string;
   pageId: string;
   showDebugInfo: boolean;
+  updatePageContentsLocal: (id: string, newValue: string) => void;
 }) {
   const initialConfig = {
     editorState: initialPageContent,
@@ -79,6 +81,7 @@ function Editor({
   const storePage = useDebouncedCallback((outline) => {
     console.log(`Storing page`);
     updatePageContents(pageId, outline);
+    updatePageContentsLocal(pageId, outline);
   }, 500);
 
   function onChange(editorState: EditorState) {

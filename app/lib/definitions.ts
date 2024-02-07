@@ -12,3 +12,14 @@ export type User = {
     title: string;
     lastModified: Date;
   }
+
+  export function isPage(obj: any): obj is Page {
+    return (
+      obj &&
+      typeof obj.id === 'string' &&
+      typeof obj.title === 'string' &&
+      typeof obj.value === 'string' &&
+      typeof obj.userId === 'string' &&
+      obj.lastModified instanceof Date
+    );
+  }

@@ -3,6 +3,7 @@
 import { sql } from "@vercel/postgres";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
+import { Page } from "./definitions"
 
 export async function updatePageContents(id: string, value: string) {
   try {
@@ -37,9 +38,16 @@ export async function insertPage(title: string, value: string, userId: string) {
     const result = await sql`
         INSERT INTO pages (title, value, userId)
         VALUES (${title}, ${value}, ${userId})
-        RETURNING id
+        RETURNING id, title, value, userId, last_modified
       `;
-    return result.rows[0].id;
+    const page: Page = {
+      id: result.rows[0].id,
+      title: result.rows[0].title,
+      value: result.rows[0].value,
+      userId: result.rows[0].userid,
+      lastModified: result.rows[0].last_modified,
+    };
+    return page;
   } catch (error) {
     return {
       message: "Database Error: Failed to Insert Page.",
