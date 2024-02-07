@@ -49,14 +49,23 @@ test('escape closes search results', async ({ page }) => {
 });
 
 test('renaming page reflected in search results', async ({ page }) => {
-  const title = page.getByText('TestPage1');
+  const title = page.getByTestId('editable-title');
+  await expect(title).toHaveText('TestPage1');
   await title.focus();
   await title.fill('NewTitle');
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('new');
   await expect(page.getByTestId('search-result')).toHaveText('NewTitle');
   await page.keyboard.press('Escape');
-  const newTitle = page.getByText('NewTitle');
+  const newTitle = page.getByTestId('editable-title');
   await newTitle.focus();
   await newTitle.fill('TestPage1');
+});
+
+test('create new page', async ({ page }) => {
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.fill('avalon');
+  await page.keyboard.press('Enter');
+  const title = await page.getByTestId('editable-title');
+  await expect(title).toHaveText('avalon');
 });
