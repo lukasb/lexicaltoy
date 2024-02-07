@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef, ReactEventHandler } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { searchPages } from "../lib/pages-helpers";
 import { Page } from "../lib/definitions";
 
-function Omnibar({ 
+const Omnibar = forwardRef(({
   pages,
   createNewPage,
   setCurrentPage
- }: { 
+}: { 
   pages: Page[],
-  createNewPage: (title: string) => void
+  createNewPage: (title: string) => void,
   setCurrentPage: (page: Page) => void
- }) {
+}, ref) => {
   const [term, setTerm] = useState("");
   const [results, setResults] = useState<Page[]>([]);
   const [displayValue, setDisplayValue] = useState("");
@@ -26,6 +26,12 @@ function Omnibar({
   // TODO Escape sets focus back to last active editor
   // TODO activate omnibar with keyboard shortcut
   // TODO search by contents, not just title
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      inputRef.current?.focus();
+    },
+  }));
 
   useEffect(() => {
     if (skipAutocompleteRef.current) {
@@ -158,6 +164,7 @@ function Omnibar({
       )}
     </div>
   );
-}
+});
 
+Omnibar.displayName = "Omnibar";
 export default Omnibar;

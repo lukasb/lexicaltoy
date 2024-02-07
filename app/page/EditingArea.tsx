@@ -6,6 +6,7 @@ import Omnibar from "./Omnibar";
 import { findMostRecentlyEditedPage } from "../lib/pages-helpers";
 import { useState } from "react";
 import { insertPage } from "../lib/actions";
+import { useEffect, useRef } from "react";
 
 function EditingArea({
   pages,
@@ -23,6 +24,23 @@ function EditingArea({
   const initialPage = findMostRecentlyEditedPage(currentPages);
   const [currentPage, setCurrentPage] = useState(initialPage);
 
+  const omnibarRef = useRef<{ focus: () => void } | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey && event.key === 'k') {
+        omnibarRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const handleNewPage = async (title: string) => {
     const result = await insertPage(title, emptyPageJSONString, userId);
     if (typeof result === "string") {
@@ -36,7 +54,8 @@ function EditingArea({
 
   return (
     <div className="md:p-4 lg:p-10 xl:p-20 2xl:p-30 transition-spacing ease-linear duration-75">
-      <Omnibar 
+      <Omnibar
+        ref={omnibarRef} 
         pages={currentPages} 
         createNewPage={(title) => handleNewPage(title)}
         setCurrentPage={setCurrentPage}
