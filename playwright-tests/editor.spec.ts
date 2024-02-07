@@ -69,3 +69,13 @@ test('create new page', async ({ page }) => {
   const title = await page.getByTestId('editable-title');
   await expect(title).toHaveText('avalon');
 });
+
+test('open page', async ({ page }) => {
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.fill('villa');
+  await page.keyboard.press('Enter');
+  const anotherSearch = page.getByPlaceholder('Search or Create');
+  await anotherSearch.fill('avalon');
+  const title = await page.getByTestId('editable-title');
+  await expect(title).toHaveText('avalon');
+});
