@@ -82,6 +82,13 @@ function Omnibar({
     setDisplayValue(newValue);
   };
 
+  const resetSelf = () => {
+    setTerm("");
+    setDisplayValue("");
+    setResults([]);
+    setSelectedIndex(-1);
+  }
+
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "ArrowDown") {
       setSelectedIndex((prevIndex) =>
@@ -95,18 +102,18 @@ function Omnibar({
       if (selectedIndex > -1 && results.length > 0) {
         console.log("Selected:", results[selectedIndex]);
         setCurrentPage(results[selectedIndex]);
+        resetSelf();
       } else {
         console.log("Create:", term);
         createNewPage(term);
+        resetSelf();
       }
       event.preventDefault();
     } else if (event.key === "Backspace" || event.key === "Delete") {
       skipAutocompleteRef.current = true;
       setSelectedIndex(-1);
     } else if (event.key === "Escape") {
-      setDisplayValue("");
-      setResults([]);
-      setSelectedIndex(-1);
+      resetSelf();
     }
   };
 
