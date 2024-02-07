@@ -13,9 +13,10 @@ const Omnibar = forwardRef(({
   createNewPage: (title: string) => void,
   setCurrentPage: (page: Page) => void
 }, ref) => {
-  const [term, setTerm] = useState("");
+
+  const [term, setTerm] = useState(""); // the actual user input
   const [results, setResults] = useState<Page[]>([]);
-  const [displayValue, setDisplayValue] = useState("");
+  const [displayValue, setDisplayValue] = useState(""); // the displayed value
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const ulRef = useRef<HTMLUListElement>(null);
