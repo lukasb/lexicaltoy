@@ -47,6 +47,7 @@ const EditablePageTitle = ({
         onBlur={handleTitleChange} // Update state when user leaves the editable area
         role="textbox" // ARIA role for better accessibility
         aria-multiline="false"
+        data-testid="editable-title"
       >
         {initialTitle}
       </div>

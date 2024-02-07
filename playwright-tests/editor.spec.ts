@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+// TODO figure out per-browser users in db, then re-enable
+// parallelism is playwright.config.ts
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/page');
 });
@@ -13,7 +16,8 @@ test('page contents', async ({ page }) => {
 });
 
 test('page title', async ({ page }) => {
-  await expect(page.getByText('TestPage1')).toBeVisible();
+  const title = await page.getByTestId('editable-title');
+  await expect(title).toHaveText('TestPage1');
 });
 
 test('should bring up search results', async ({ page }) => {
@@ -51,4 +55,8 @@ test('renaming page reflected in search results', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('new');
   await expect(page.getByTestId('search-result')).toHaveText('NewTitle');
+  await page.keyboard.press('Escape');
+  const newTitle = page.getByText('NewTitle');
+  await newTitle.focus();
+  await newTitle.fill('TestPage1');
 });
