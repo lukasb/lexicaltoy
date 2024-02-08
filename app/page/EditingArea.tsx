@@ -22,7 +22,7 @@ function EditingArea({
   // TODO let findMostRecentlyEditedPage return null if no pages
   // then create a new page if no pages
   const initialPage = findMostRecentlyEditedPage(currentPages);
-  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [openPages, setOpenPages] = useState<Page[]>([initialPage]);
 
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
 
@@ -42,14 +42,25 @@ function EditingArea({
     };
   }, []);
 
+  const openPage = (page: Page) => {
+    if (!currentPages.includes(page)) {
+      setCurrentPages([...currentPages, page]);
+    }
+    if (!openPages.includes(page)) {
+      setOpenPages(prevPages => [page, ...prevPages]);
+    } else {
+      // move page to the beginning of the array
+      setOpenPages(prevPages => [page, ...prevPages.filter(p => p !== page)]);
+    }
+  }
+
   const handleNewPage = async (title: string) => {
     const result = await insertPage(title, emptyPageJSONString, userId);
     if (typeof result === "string") {
       console.error(result);
       return;
     } else if (isPage(result)) {
-      setCurrentPages([...currentPages, result]);
-      setCurrentPage(result);
+      openPage(result);
     }
   }
 
@@ -59,13 +70,14 @@ function EditingArea({
         ref={omnibarRef} 
         pages={currentPages} 
         createNewPage={(title) => handleNewPage(title)}
-        setCurrentPage={setCurrentPage}
+        openPage={openPage}
       />
+      {openPages.map(page => (
       <EditorContainer
-          key={currentPage.id}
-          pageId={currentPage.id}
-          initialPagetitle={currentPage.title}
-          initialPageContent={currentPage.value}
+          key={page.id}
+          pageId={page.id}
+          initialPagetitle={page.title}
+          initialPageContent={page.value}
           updatePageTitleLocal={(id, newTitle) => {
             setCurrentPages(currentPages.map(page => 
               page.id === id ? { ...page, title: newTitle } : page
@@ -77,6 +89,7 @@ function EditingArea({
             ));
           }}
         />
+      ))}
     </div>
   );
 }

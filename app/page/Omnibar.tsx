@@ -7,11 +7,11 @@ import { Page } from "../lib/definitions";
 const Omnibar = forwardRef(({
   pages,
   createNewPage,
-  setCurrentPage
+  openPage
 }: { 
   pages: Page[],
   createNewPage: (title: string) => void,
-  setCurrentPage: (page: Page) => void
+  openPage: (page: Page) => void
 }, ref) => {
 
   const [term, setTerm] = useState(""); // the actual user input
@@ -107,7 +107,7 @@ const Omnibar = forwardRef(({
     } else if (event.key === "Enter") {
       if (selectedIndex > -1 && results.length > 0) {
         console.log("Selected:", results[selectedIndex]);
-        setCurrentPage(results[selectedIndex]);
+        openPage(results[selectedIndex]);
         resetSelf();
       } else {
         console.log("Create:", term);
@@ -132,7 +132,7 @@ const Omnibar = forwardRef(({
   };
 
   const handleSearchResultsClick = (result: Page) => {
-    setCurrentPage(result);
+    openPage(result);
     resetSelf();
   };
 
