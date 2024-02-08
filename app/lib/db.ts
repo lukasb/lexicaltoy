@@ -4,9 +4,17 @@ import { User, Page } from './definitions';
 
 export async function fetchPages(userId: string) {
     noStore();
-    const pages = await sql<Page>`
+    const result = await sql`
       SELECT * FROM pages
       WHERE userId = ${userId}
     `;
-    return pages.rows;
+    const pages = result.rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      value: row.value,
+      userId: row.userId,
+      lastModified: row.last_modified,
+    }));
+  
+    return pages;
   }

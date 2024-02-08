@@ -97,6 +97,10 @@ const Omnibar = forwardRef(({
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "ArrowDown") {
+      // if the search box is empty, show a reverse chronological list of all pages
+      if (term === "" && results.length === 0) {
+        setResults(pages.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime()));
+      }      
       setSelectedIndex((prevIndex) =>
         Math.min(prevIndex + 1, results.length - 1)
       );
