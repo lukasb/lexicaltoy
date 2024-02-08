@@ -82,7 +82,8 @@ function EditingArea({
         </Button>
         </div>
       ) : (
-        openPages.map(page => (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        {openPages.map(page => (
           <EditorContainer
             key={page.id}
             pageId={page.id}
@@ -102,7 +103,8 @@ function EditingArea({
               setOpenPages(openPages.filter(page => page.id !== id));
             }}
           />
-        ))
+        ))}
+        </div>
       )}
     </div>
   );
