@@ -7,6 +7,7 @@ import { findMostRecentlyEditedPage } from "../lib/pages-helpers";
 import { useState } from "react";
 import { insertPage } from "../lib/actions";
 import { useEffect, useRef } from "react";
+import { Button } from "../ui/button";
 
 function EditingArea({
   pages,
@@ -72,27 +73,37 @@ function EditingArea({
         createNewPage={(title) => handleNewPage(title)}
         openPage={openPage}
       />
-      {openPages.map(page => (
-      <EditorContainer
-          key={page.id}
-          pageId={page.id}
-          initialPagetitle={page.title}
-          initialPageContent={page.value}
-          updatePageTitleLocal={(id, newTitle) => {
-            setCurrentPages(currentPages.map(page => 
-              page.id === id ? { ...page, title: newTitle } : page
-            ));
-          }}
-          updatePageContentsLocal={(id, newValue) => {
-            setCurrentPages(currentPages.map(page => 
-              page.id === id ? { ...page, value: newValue } : page
-            ));
-          }}
-          closePage={(id) => {
-            setOpenPages(openPages.filter(page => page.id !== id));
-          }}
-        />
-      ))}
+      {openPages.length === 0 ? (
+        <div className="w-full h-40 flex justify-center items-center">
+        <Button 
+          onClick={() => handleNewPage('New Page')}
+        >
+          Create New Page
+        </Button>
+        </div>
+      ) : (
+        openPages.map(page => (
+          <EditorContainer
+            key={page.id}
+            pageId={page.id}
+            initialPagetitle={page.title}
+            initialPageContent={page.value}
+            updatePageTitleLocal={(id, newTitle) => {
+              setCurrentPages(currentPages.map(page => 
+                page.id === id ? { ...page, title: newTitle } : page
+              ));
+            }}
+            updatePageContentsLocal={(id, newValue) => {
+              setCurrentPages(currentPages.map(page => 
+                page.id === id ? { ...page, value: newValue } : page
+              ));
+            }}
+            closePage={(id) => {
+              setOpenPages(openPages.filter(page => page.id !== id));
+            }}
+          />
+        ))
+      )}
     </div>
   );
 }
