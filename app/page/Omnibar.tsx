@@ -25,7 +25,6 @@ const Omnibar = forwardRef(({
   // TODO accessibility
   // TODO reverse chronological list of all pages by default
   // TODO Escape sets focus back to last active editor
-  // TODO activate omnibar with keyboard shortcut
   // TODO search by contents, not just title
 
   useImperativeHandle(ref, () => ({
