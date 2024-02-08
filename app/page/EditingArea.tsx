@@ -88,6 +88,9 @@ function EditingArea({
               page.id === id ? { ...page, value: newValue } : page
             ));
           }}
+          closePage={(id) => {
+            setOpenPages(openPages.filter(page => page.id !== id));
+          }}
         />
       ))}
     </div>
