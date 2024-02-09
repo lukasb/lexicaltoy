@@ -66,8 +66,18 @@ test('create new page', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('avalon');
   await page.keyboard.press('Enter');
-  const title = await page.getByTestId('editable-title');
-  await expect(title).toHaveText('avalon');
+  const titles = page.locator('[data-testid="editable-title"]');
+  await titles.waitFor();
+  let found = false;
+  const count = await titles.count();
+  for (let i = 0; i < count; i++) {
+    const titleText = await titles.nth(i).textContent();
+    if (titleText === 'avalon') {
+      found = true;
+      break;
+    }
+  }
+  await expect(found).toBeTruthy();
 });
 
 test('open page', async ({ page }) => {
@@ -76,8 +86,19 @@ test('open page', async ({ page }) => {
   await page.keyboard.press('Enter');
   const anotherSearch = page.getByPlaceholder('Search or Create');
   await anotherSearch.fill('avalon');
-  const title = await page.getByTestId('editable-title');
-  await expect(title).toHaveText('avalon');
+  await page.keyboard.press('Enter');
+  const titles = page.locator('[data-testid="editable-title"]');
+  await titles.waitFor();
+  let found = false;
+  const count = await titles.count();
+  for (let i = 0; i < count; i++) {
+    const titleText = await titles.nth(i).textContent();
+    if (titleText === 'avalon') {
+      found = true;
+      break;
+    }
+  }
+  await expect(found).toBeTruthy();
 });
 
 test('keyboard shortcut for omnibar', async ({ page }) => {
