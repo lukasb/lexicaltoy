@@ -23,7 +23,6 @@ const Omnibar = forwardRef(({
   const skipAutocompleteRef = useRef(false);
 
   // TODO accessibility
-  // TODO reverse chronological list of all pages by default
   // TODO Escape sets focus back to last active editor
   // TODO search by contents, not just title
 
