@@ -39,7 +39,7 @@ function EditorContainer({
               updatePageTitleLocal={updatePageTitleLocal}
             />
             <Button onClick={() => setShowDebug(!showDebug)}>
-              {showDebug ? "Hide Debug" : "Show Debug"}
+              {showDebug ? "-d🐞" : "+d🐞"}
             </Button>
           </div>
         </div>
