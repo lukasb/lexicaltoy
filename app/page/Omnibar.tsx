@@ -82,6 +82,12 @@ const Omnibar = forwardRef(({
     };
   }, []);
 
+  useEffect(() => {
+    if (ulRef.current && selectedIndex > -1) {
+      ulRef.current?.children[selectedIndex]?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [selectedIndex]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setTerm(newValue);
