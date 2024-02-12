@@ -26,6 +26,8 @@ import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import TreeViewPlugin from "../plugins/TreeViewPlugin/TreeViewPlugin";
 import { AutoLinkPlugin } from "../plugins/AutoLinkPlugin";
 import LexicalClickableLinkPlugin from "@lexical/react/LexicalClickableLinkPlugin";
+import { WikilinkNode } from "../nodes/WikilinkNode";
+import { WikilinkPlugin } from "../plugins/WikilinkPlugin";
 
 function OnChangePlugin({
   onChange,
@@ -60,7 +62,7 @@ function Editor({
     editorState: initialPageContent,
     namespace: "MyEditor",
     theme,
-    nodes: [LinkNode, ListNode, ListItemNode, AutoLinkNode],
+    nodes: [LinkNode, ListNode, ListItemNode, AutoLinkNode, WikilinkNode],
     onError,
   };
 
@@ -115,6 +117,7 @@ function Editor({
       <HistoryPlugin />
       <AutoLinkPlugin />
       <LexicalClickableLinkPlugin />
+      <WikilinkPlugin />
       {floatingAnchorElem && !isSmallWidthViewport && (
         <>
           <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
