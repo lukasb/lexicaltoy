@@ -13,7 +13,7 @@ import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { UNORDERED_LIST } from "@lexical/markdown";
-import { LinkNode } from "@lexical/link";
+import { LinkNode, AutoLinkNode } from "@lexical/link";
 import { KeyboardShortcutsPlugin } from "../plugins/KeyboardShortcutsPlugin";
 import DraggableBlockPlugin from "../plugins/DraggableBlockPlugin";
 import { useDebouncedCallback } from "use-debounce";
@@ -24,6 +24,8 @@ import { useBreakpoint } from "../lib/window-helpers";
 import { ListCommandsPlugin } from "../plugins/ListCommandsPlugin";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import TreeViewPlugin from "../plugins/TreeViewPlugin/TreeViewPlugin";
+import { AutoLinkPlugin } from "../plugins/AutoLinkPlugin";
+import LexicalClickableLinkPlugin from "@lexical/react/LexicalClickableLinkPlugin";
 
 function OnChangePlugin({
   onChange,
@@ -58,7 +60,7 @@ function Editor({
     editorState: initialPageContent,
     namespace: "MyEditor",
     theme,
-    nodes: [LinkNode, ListNode, ListItemNode],
+    nodes: [LinkNode, ListNode, ListItemNode, AutoLinkNode],
     onError,
   };
 
@@ -111,6 +113,8 @@ function Editor({
       <KeyboardShortcutsPlugin />
       <ListCommandsPlugin />
       <HistoryPlugin />
+      <AutoLinkPlugin />
+      <LexicalClickableLinkPlugin />
       {floatingAnchorElem && !isSmallWidthViewport && (
         <>
           <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
