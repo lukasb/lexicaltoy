@@ -55,6 +55,14 @@ body {
   text-decoration: underline;
   cursor: pointer;
 }
+.PlaygroundEditorTheme__wikilink {
+  color: rgb(33, 111, 219);
+  text-decoration: none;
+}
+.PlaygroundEditorTheme__wikilink:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
 .PlaygroundEditorTheme__ul {
   padding: 0;
   margin: 0 .25rem;
