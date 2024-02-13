@@ -53,13 +53,13 @@ function Editor({
   pageId,
   showDebugInfo,
   updatePageContentsLocal,
-  openPageByTitle
+  openOrCreatePageByTitle
 }: {
   initialPageContent: string;
   pageId: string;
   showDebugInfo: boolean;
   updatePageContentsLocal: (id: string, newValue: string) => void;
-  openPageByTitle: (title: string) => void;
+  openOrCreatePageByTitle: (title: string) => void;
 }) {
   const initialConfig = {
     editorState: initialPageContent,
@@ -121,7 +121,7 @@ function Editor({
       <AutoLinkPlugin />
       <LexicalClickableLinkPlugin />
       <WikilinkPlugin />
-      <ClickableWikilinkPlugin openPageByTitle={openPageByTitle} />
+      <ClickableWikilinkPlugin openOrCreatePageByTitle={openOrCreatePageByTitle} />
       {floatingAnchorElem && !isSmallWidthViewport && (
         <>
           <DraggableBlockPlugin anchorElem={floatingAnchorElem} />

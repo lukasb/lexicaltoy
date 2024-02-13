@@ -12,7 +12,7 @@ function EditorContainer({
   updatePageTitleLocal,
   updatePageContentsLocal,
   closePage,
-  openPageByTitle
+  openOrCreatePageByTitle
 }: {
   pageId: string;
   initialPagetitle: string;
@@ -20,7 +20,7 @@ function EditorContainer({
   updatePageTitleLocal: (id: string, newTitle: string) => void;
   updatePageContentsLocal: (id: string, newValue: string) => void;
   closePage: (id: string) => void;
-  openPageByTitle: (title: string) => void;
+  openOrCreatePageByTitle: (title: string) => void;
 }) {
   const [showDebug, setShowDebug] = useState(false);
 
@@ -50,7 +50,7 @@ function EditorContainer({
           pageId={pageId}
           showDebugInfo={showDebug}
           updatePageContentsLocal={updatePageContentsLocal}
-          openPageByTitle={openPageByTitle}
+          openOrCreatePageByTitle={openOrCreatePageByTitle}
         />
       </div>
     </div>

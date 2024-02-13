@@ -37,10 +37,12 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     };
   }, []);
 
-  const openPageByTitle = (title: string) => {
+  const openOrCreatePageByTitle = (title: string) => {
     const page = currentPages.find((p) => p.title.toLowerCase() === title.toLowerCase());
     if (page) {
       openPage(page);
+    } else {
+      handleNewPage(title);
     }
   }
 
@@ -108,7 +110,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
               closePage={(id) => {
                 setOpenPages(openPages.filter((page) => page.id !== id));
               }}
-              openPageByTitle={openPageByTitle}
+              openOrCreatePageByTitle={openOrCreatePageByTitle}
             />
           ))}
         </div>
