@@ -22,7 +22,7 @@ import {
   KEY_ARROW_RIGHT_COMMAND,
   KEY_TAB_COMMAND,
 } from 'lexical';
-import {useCallback, useEffect} from 'react';
+import {useCallback, useEffect, useRef } from 'react';
 
 import {useSharedAutocompleteContext} from '../context/SharedAutcompleteContext';
 import {
@@ -65,23 +65,23 @@ function $search(selection: null | BaseSelection): [boolean, string] {
   return [true, word.reverse().join('')];
 }
 
-// TODO query should be custom
-function useQuery(pageTitles: string[]): (searchText: string) => SearchPromise {
-  return useCallback((searchText: string) => {
-    const server = new AutocompleteServer(pageTitles);
+export default function AutocompleteWikilinkPlugin({pageTitles} : {pageTitles: string[]}): JSX.Element | null {
+  const [editor] = useLexicalComposerContext();
+  const [, setSuggestion] = useSharedAutocompleteContext();
+
+  const pageTitlesRef = useRef(pageTitles);
+
+  useEffect(() => {
+    pageTitlesRef.current = pageTitles;
+  }, [pageTitles]);
+
+  const query = useCallback((searchText: string) => {
+    const server = new AutocompleteServer(pageTitlesRef.current);
     console.time('query');
     const response = server.query(searchText);
     console.timeEnd('query');
     return response;
-  }, [pageTitles]);
-}
-
-const pageTitles = [ 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vwx', 'yz' ];
-//export default function AutocompleteWikilinkPlugin({pageTitles} : {pageTitles: string[]}): JSX.Element | null {
-export default function AutocompleteWikilinkPlugin(): JSX.Element | null {
-  const [editor] = useLexicalComposerContext();
-  const [, setSuggestion] = useSharedAutocompleteContext();
-  const query = useQuery(pageTitles);
+  }, []);
 
   useEffect(() => {
     let autocompleteNodeKey: null | NodeKey = null;

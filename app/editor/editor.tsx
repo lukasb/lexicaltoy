@@ -126,7 +126,7 @@ function Editor({
       <LexicalClickableLinkPlugin />
       <WikilinkPlugin />
       <ClickableWikilinkPlugin openOrCreatePageByTitle={openOrCreatePageByTitle} />
-      <AutocompleteWikilinkPlugin />
+      <AutocompleteWikilinkPlugin pageTitles={pageTitles} />
       {floatingAnchorElem && !isSmallWidthViewport && (
         <>
           <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
