@@ -28,6 +28,7 @@ import { AutoLinkPlugin } from "../plugins/AutoLinkPlugin";
 import LexicalClickableLinkPlugin from "@lexical/react/LexicalClickableLinkPlugin";
 import { WikilinkNode } from "../nodes/WikilinkNode";
 import { WikilinkPlugin } from "../plugins/WikilinkPlugin";
+import ClickableWikilinkPlugin from "../plugins/ClickableWikilinkPlugin";
 
 function OnChangePlugin({
   onChange,
@@ -118,6 +119,7 @@ function Editor({
       <AutoLinkPlugin />
       <LexicalClickableLinkPlugin />
       <WikilinkPlugin />
+      <ClickableWikilinkPlugin />
       {floatingAnchorElem && !isSmallWidthViewport && (
         <>
           <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
