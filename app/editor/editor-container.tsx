@@ -9,6 +9,7 @@ function EditorContainer({
   pageId,
   initialPagetitle,
   initialPageContent,
+  pageTitles,
   updatePageTitleLocal,
   updatePageContentsLocal,
   closePage,
@@ -17,6 +18,7 @@ function EditorContainer({
   pageId: string;
   initialPagetitle: string;
   initialPageContent: string;
+  pageTitles: string[];
   updatePageTitleLocal: (id: string, newTitle: string) => void;
   updatePageContentsLocal: (id: string, newValue: string) => void;
   closePage: (id: string) => void;
@@ -49,6 +51,7 @@ function EditorContainer({
           initialPageContent={initialPageContent}
           pageId={pageId}
           showDebugInfo={showDebug}
+          pageTitles={pageTitles}
           updatePageContentsLocal={updatePageContentsLocal}
           openOrCreatePageByTitle={openOrCreatePageByTitle}
         />

@@ -80,7 +80,6 @@ export default function ClickableWikilinkPlugin({
     };
 
     function traverseUpToFindWikilinkNode(node: any): any {
-      console.log("traverseUpToFindWikilinkNode", node);
       if (node === null) {
         return null;
       }

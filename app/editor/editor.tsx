@@ -29,6 +29,8 @@ import LexicalClickableLinkPlugin from "@lexical/react/LexicalClickableLinkPlugi
 import { WikilinkNode } from "../nodes/WikilinkNode";
 import { WikilinkPlugin } from "../plugins/WikilinkPlugin";
 import ClickableWikilinkPlugin from "../plugins/ClickableWikilinkPlugin";
+import AutocompleteWikilinkPlugin from "../plugins/AutcompleteWikilinkPlugin";
+import { AutocompleteNode } from "../nodes/AutcompleteNode";
 
 function OnChangePlugin({
   onChange,
@@ -52,12 +54,14 @@ function Editor({
   initialPageContent,
   pageId,
   showDebugInfo,
+  pageTitles,
   updatePageContentsLocal,
-  openOrCreatePageByTitle
+  openOrCreatePageByTitle,
 }: {
   initialPageContent: string;
   pageId: string;
   showDebugInfo: boolean;
+  pageTitles: string[];
   updatePageContentsLocal: (id: string, newValue: string) => void;
   openOrCreatePageByTitle: (title: string) => void;
 }) {
@@ -65,7 +69,7 @@ function Editor({
     editorState: initialPageContent,
     namespace: "MyEditor",
     theme,
-    nodes: [LinkNode, ListNode, ListItemNode, AutoLinkNode, WikilinkNode],
+    nodes: [LinkNode, ListNode, ListItemNode, AutoLinkNode, WikilinkNode, AutocompleteNode],
     onError,
   };
 
@@ -122,6 +126,7 @@ function Editor({
       <LexicalClickableLinkPlugin />
       <WikilinkPlugin />
       <ClickableWikilinkPlugin openOrCreatePageByTitle={openOrCreatePageByTitle} />
+      <AutocompleteWikilinkPlugin pageTitles={[]} />
       {floatingAnchorElem && !isSmallWidthViewport && (
         <>
           <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
