@@ -42,6 +42,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   }, []);
 
   useEffect(() => {
+    console.log("setting page titles");
     setPageTitles(currentPages.map(page => page.title));
   }, [currentPages]);
 

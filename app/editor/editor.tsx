@@ -30,7 +30,7 @@ import { WikilinkNode } from "../nodes/WikilinkNode";
 import { WikilinkPlugin } from "../plugins/WikilinkPlugin";
 import ClickableWikilinkPlugin from "../plugins/ClickableWikilinkPlugin";
 import AutocompleteWikilinkPlugin from "../plugins/AutcompleteWikilinkPlugin";
-import { AutocompleteNode } from "../nodes/AutcompleteNode";
+import { WikilinkAutocompleteNode } from "../nodes/WikilinkAutcompleteNode";
 
 function OnChangePlugin({
   onChange,
@@ -69,7 +69,7 @@ function Editor({
     editorState: initialPageContent,
     namespace: "MyEditor",
     theme,
-    nodes: [LinkNode, ListNode, ListItemNode, AutoLinkNode, WikilinkNode, AutocompleteNode],
+    nodes: [LinkNode, ListNode, ListItemNode, AutoLinkNode, WikilinkNode, WikilinkAutocompleteNode],
     onError,
   };
 
@@ -126,7 +126,7 @@ function Editor({
       <LexicalClickableLinkPlugin />
       <WikilinkPlugin />
       <ClickableWikilinkPlugin openOrCreatePageByTitle={openOrCreatePageByTitle} />
-      <AutocompleteWikilinkPlugin pageTitles={[]} />
+      <AutocompleteWikilinkPlugin />
       {floatingAnchorElem && !isSmallWidthViewport && (
         <>
           <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
