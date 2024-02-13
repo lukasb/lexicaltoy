@@ -14,9 +14,16 @@ import {
   $getSelection,
   $isElementNode,
   $isRangeSelection,
+  COMMAND_PRIORITY_NORMAL,
   getNearestEditorFromDOMNode,
 } from "lexical";
 import { useEffect } from "react";
+import { mergeRegister } from "@lexical/utils";
+import { KEY_DOWN_COMMAND } from "lexical";
+
+function getPageTitleFromWikiLinkNode(node: any) {
+  return node.getTextContent().slice(2, -2);
+}
 
 export default function ClickableWikilinkPlugin({
   newTab = true,
@@ -51,9 +58,7 @@ export default function ClickableWikilinkPlugin({
               $isElementNode
             );
             if ($isWikilinkNode(maybeWikilinkNode)) {
-              const fullText = maybeWikilinkNode.getTextContent();
-              // Remove the [[ and ]] from the text
-              pageTitle = fullText.slice(2, -2);
+              pageTitle = getPageTitleFromWikiLinkNode(maybeWikilinkNode);
             }
           }
         }
@@ -74,22 +79,75 @@ export default function ClickableWikilinkPlugin({
       event.preventDefault();
     };
 
+    function traverseUpToFindWikilinkNode(node: any): any {
+      console.log("traverseUpToFindWikilinkNode", node);
+      if (node === null) {
+        return null;
+      }
+      if ($isWikilinkNode(node)) {
+        return node;
+      }
+      return traverseUpToFindWikilinkNode(node.getParent());
+    }
+
     const onMouseUp = (event: MouseEvent) => {
       if (event.button === 1 && editor.isEditable()) {
         onClick(event);
       }
     };
 
-    return editor.registerRootListener((rootElement, prevRootElement) => {
-      if (prevRootElement !== null) {
-        prevRootElement.removeEventListener("click", onClick);
-        prevRootElement.removeEventListener("mouseup", onMouseUp);
+    const onMetaEnter = (event: KeyboardEvent): boolean => {
+      const selection = editor.getEditorState().read($getSelection);
+      if (selection && selection.isCollapsed()) {
+        let pageTitle = null;
+        const target = event.target;
+        if (!(target instanceof Node)) {
+          return false;
+        }
+        const nearestEditor = getNearestEditorFromDOMNode(target);
+        if (nearestEditor === null) {
+          return false;
+        }
+        nearestEditor.getEditorState().read(() => {
+          const nodes = selection.getNodes();
+
+          const wikilinkNode = traverseUpToFindWikilinkNode(nodes[0]);
+          if (wikilinkNode) {
+            pageTitle = getPageTitleFromWikiLinkNode(wikilinkNode);
+          }
+        });
+
+        if (pageTitle === null || pageTitle === "") {
+          return false;
+        }
+
+        openOrCreatePageByTitle?.(pageTitle);
       }
-      if (rootElement !== null) {
-        rootElement.addEventListener("click", onClick);
-        rootElement.addEventListener("mouseup", onMouseUp);
-      }
-    });
+      return true;
+    };
+
+    return mergeRegister(
+      editor.registerRootListener((rootElement, prevRootElement) => {
+        if (prevRootElement !== null) {
+          prevRootElement.removeEventListener("click", onClick);
+          prevRootElement.removeEventListener("mouseup", onMouseUp);
+        }
+        if (rootElement !== null) {
+          rootElement.addEventListener("click", onClick);
+          rootElement.addEventListener("mouseup", onMouseUp);
+        }
+      }),
+      editor.registerCommand<KeyboardEvent>(
+        KEY_DOWN_COMMAND, // would prever to use KEY_ARROW_UP_COMMAND etc but those don't fire if ctrl is pressed
+        (event) => {
+          if (event.metaKey && event.key == "Enter") {
+            return onMetaEnter(event);
+          }
+          return false;
+        },
+        COMMAND_PRIORITY_NORMAL
+      )
+    );
   }, [editor, newTab]);
 
   return null;

@@ -64,16 +64,23 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
     editor.registerCommand<KeyboardEvent>(
       KEY_DOWN_COMMAND, // would prever to use KEY_ARROW_UP_COMMAND etc but those don't fire if ctrl is pressed
       (event) => {
-        if (!event.ctrlKey || !(event.key == 'ArrowUp' || event.key == 'ArrowDown')) return false;
-        const selection = $getSelection();
-        const listItem = $getActiveListItem(selection);
-        if (!listItem) return false;
-        event.preventDefault();
-        editor.dispatchCommand(event.key == 'ArrowUp'
-          ? MOVE_LISTITEM_UP_COMMAND
-          : MOVE_LISTITEM_DOWN_COMMAND,
-          { listItem });
-        return true;
+        if (
+          event.ctrlKey &&
+          (event.key == "ArrowUp" || event.key == "ArrowDown")
+        ) {
+          const selection = $getSelection();
+          const listItem = $getActiveListItem(selection);
+          if (!listItem) return false;
+          event.preventDefault();
+          editor.dispatchCommand(
+            event.key == "ArrowUp"
+              ? MOVE_LISTITEM_UP_COMMAND
+              : MOVE_LISTITEM_DOWN_COMMAND,
+            { listItem }
+          );
+          return true;
+        }
+        return false;
       },
       COMMAND_PRIORITY_NORMAL
     )
