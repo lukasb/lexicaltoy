@@ -12,7 +12,8 @@ import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
-import { UNORDERED_LIST } from "@lexical/markdown";
+import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
+import { UNORDERED_LIST, CHECK_LIST } from "@lexical/markdown";
 import { LinkNode, AutoLinkNode } from "@lexical/link";
 import { KeyboardShortcutsPlugin } from "../plugins/KeyboardShortcutsPlugin";
 import DraggableBlockPlugin from "../plugins/DraggableBlockPlugin";
@@ -124,9 +125,10 @@ function Editor({
       />
       <ListPlugin />
       <OnChangePlugin onChange={onChange} />
-      <MarkdownShortcutPlugin transformers={[UNORDERED_LIST]} />
+      <MarkdownShortcutPlugin transformers={[UNORDERED_LIST, CHECK_LIST]} />
       <KeyboardShortcutsPlugin />
       <ListCommandsPlugin />
+      <CheckListPlugin />
       <HistoryPlugin />
       <AutoLinkPlugin />
       <LexicalClickableLinkPlugin />

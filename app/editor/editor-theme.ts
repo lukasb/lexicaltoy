@@ -6,6 +6,9 @@ export const theme = {
     wikilinkAutocomplete: 'PlaygroundEditorTheme__wikilinkAutocomplete',
     list: {
         listitem: 'PlaygroundEditorTheme__listItem',
+        checklist: 'PlaygroundEditorTheme__checklist',
+        listitemChecked: 'PlaygroundEditorTheme__listItemChecked',
+        listitemUnchecked: 'PlaygroundEditorTheme__listItemUnchecked',
         nested: {
           listitem: 'PlaygroundEditorTheme__nestedListItem',
         },

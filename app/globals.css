@@ -126,12 +126,14 @@ body {
   content: '';
   width: 16px;
   height: 16px;
-  top: 2px;
+  top: 4px;
   left: 0;
   cursor: pointer;
   display: block;
+  background-color: rgb(168, 180, 247);
   background-size: cover;
   position: absolute;
+  outline: none;
 }
 .PlaygroundEditorTheme__listItemUnchecked[dir='rtl']:before,
 .PlaygroundEditorTheme__listItemChecked[dir='rtl']:before {
@@ -144,11 +146,11 @@ body {
   border-radius: 2px;
 }
 .PlaygroundEditorTheme__listItemUnchecked:before {
-  border: 1px solid #999;
+  /*border: 1px solid #999;*/
   border-radius: 2px;
 }
 .PlaygroundEditorTheme__listItemChecked:before {
-  border: 1px solid rgb(61, 135, 245);
+  /*border: 1px solid rgb(61, 135, 245);*/
   border-radius: 2px;
   background-color: #3d87f5;
   background-repeat: no-repeat;
