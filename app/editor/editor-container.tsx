@@ -4,6 +4,7 @@ import Editor from "../editor/editor";
 import EditablePageTitle from "./pageTitle";
 import { Button } from "../ui/button";
 import { useState } from "react";
+import { SharedAutocompleteContext } from "../context/SharedAutocompleteContext";
 
 function EditorContainer({
   pageId,
@@ -13,7 +14,7 @@ function EditorContainer({
   updatePageTitleLocal,
   updatePageContentsLocal,
   closePage,
-  openOrCreatePageByTitle
+  openOrCreatePageByTitle,
 }: {
   pageId: string;
   initialPagetitle: string;
@@ -47,14 +48,16 @@ function EditorContainer({
             </Button>
           </div>
         </div>
-        <Editor
-          initialPageContent={initialPageContent}
-          pageId={pageId}
-          showDebugInfo={showDebug}
-          pageTitles={pageTitles}
-          updatePageContentsLocal={updatePageContentsLocal}
-          openOrCreatePageByTitle={openOrCreatePageByTitle}
-        />
+        <SharedAutocompleteContext>
+          <Editor
+            initialPageContent={initialPageContent}
+            pageId={pageId}
+            showDebugInfo={showDebug}
+            pageTitles={pageTitles}
+            updatePageContentsLocal={updatePageContentsLocal}
+            openOrCreatePageByTitle={openOrCreatePageByTitle}
+          />
+        </SharedAutocompleteContext>
       </div>
     </div>
   );

@@ -24,7 +24,7 @@ import {
 } from 'lexical';
 import {useCallback, useEffect, useRef } from 'react';
 
-import {useSharedAutocompleteContext} from '../context/SharedAutcompleteContext';
+import {useSharedAutocompleteContext} from '../context/SharedAutocompleteContext';
 import {
   $createWikilinkAutocompleteNode,
   WikilinkAutocompleteNode,
@@ -131,6 +131,7 @@ export default function AutocompleteWikilinkPlugin({pageTitles} : {pageTitles: s
           selection.insertNodes([node]);
           $setSelection(selectionCopy);
           lastSuggestion = newSuggestion;
+          console.log('updateAsyncSuggestion', newSuggestion);
           setSuggestion(newSuggestion);
         },
         {tag: 'history-merge'},
@@ -205,9 +206,6 @@ export default function AutocompleteWikilinkPlugin({pageTitles} : {pageTitles: s
 
     const rootElem = editor.getRootElement();
 
-    console.log("useffect");
-    console.log(query);
-
     return mergeRegister(
       editor.registerNodeTransform(
         WikilinkAutocompleteNode,
@@ -268,12 +266,12 @@ class AutocompleteServer {
         }
         const potentialTitle = searchText.substring(2);
         const match = this.pageTitles.find(
-          (pageTitle) =>
-            pageTitle.toLowerCase().startsWith(potentialTitle.toLowerCase()) ?? null,
-        );
+          (pageTitle) => pageTitle.toLowerCase().startsWith(potentialTitle.toLowerCase())
+        );        
         if (match === undefined) {
           return resolve(null);
         }
+        console.log('match', match);
         const autocompleteChunk = match.substring(potentialTitle.length);
         if (autocompleteChunk === '') {
           return resolve(null);

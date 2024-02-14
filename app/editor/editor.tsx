@@ -69,7 +69,13 @@ function Editor({
     editorState: initialPageContent,
     namespace: "MyEditor",
     theme,
-    nodes: [LinkNode, ListNode, ListItemNode, AutoLinkNode, WikilinkNode, WikilinkAutocompleteNode],
+    nodes: [
+      LinkNode,
+      ListNode,
+      ListItemNode,
+      AutoLinkNode,
+      WikilinkNode,
+      WikilinkAutocompleteNode],
     onError,
   };
 

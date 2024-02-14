@@ -16,7 +16,7 @@ import {
 } from 'lexical';
 import * as React from 'react';
 
-import {useSharedAutocompleteContext} from '../context/SharedAutcompleteContext';
+import {useSharedAutocompleteContext} from '../context/SharedAutocompleteContext';
 import {uuid as UUID} from '../plugins/AutcompleteWikilinkPlugin';
 
 declare global {
@@ -99,7 +99,7 @@ function WikilinkAutocompleteComponent(): JSX.Element {
       : window.innerWidth <= 800 && window.innerHeight <= 600;
   // TODO Move to theme
   return (
-    <span style={{color: '#ccc'}} spellCheck="false">
+    <span style={{color: '#000'}} spellCheck="false">
       {suggestion}
     </span>
   );
