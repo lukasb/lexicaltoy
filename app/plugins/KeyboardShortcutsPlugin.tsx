@@ -29,18 +29,22 @@ import {
 } from "../lib/list-commands";
 import { ListItemNode } from "@lexical/list";
 
-function isLastLeaf(node: ElementNode): boolean {
+function isLast(node: ElementNode): boolean {
   if (node.getNextSibling()) return false;
   const parent = node.getParent();
   if (!parent) return true;
-  return isLastLeaf(parent);
+  return isLast(parent);
 }
 
-function isFirstLeaf(node: ElementNode): boolean {
+// this looks as if it would incorrectly return true if you're on node B in the following tree:
+// A
+// - B
+// it return false because B is stored as a grandchild of A's next sibling
+function isFirst(node: ElementNode): boolean {
   if (node.getPreviousSibling()) return false;
   const parent = node.getParent();
   if (!parent) return true;
-  return isFirstLeaf(parent);
+  return isFirst(parent);
 }
 
 export function registerKeyboardShortcuts(editor: LexicalEditor) {
@@ -53,8 +57,8 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
         if (!listItem) return false;
         // allow the user to tab out of the note if they're at the beginning or end
         if (
-          (!$canIndentListItem(listItem) && !event.shiftKey && isLastLeaf(listItem)) ||
-          (event.shiftKey && isFirstLeaf(listItem))
+          (!$canIndentListItem(listItem) && !event.shiftKey && isLast(listItem)) ||
+          (event.shiftKey && isFirst(listItem))
         ) {
           return false;
         }
