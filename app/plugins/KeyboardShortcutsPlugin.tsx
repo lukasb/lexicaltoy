@@ -19,7 +19,7 @@ import {
 } from "lexical";
 import { useEffect } from "react";
 import { mergeRegister } from "@lexical/utils";
-import { $getActiveListItem } from "../lib/list-utils";
+import { $canIndentListItem, $getActiveListItem } from "../lib/list-utils";
 import {
   DELETE_LISTITEM_COMMAND,
   INDENT_LISTITEM_COMMAND,
@@ -38,7 +38,7 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
       (event) => {
         const selection = $getSelection();
         const listItem = $getActiveListItem(selection);
-        if (!listItem) return false;
+        if (!listItem || !$canIndentListItem(listItem)) return false;
         event.preventDefault();
         const command: LexicalCommand<{listItem: ListItemNode}> = event.shiftKey
           ? OUTDENT_LISTITEM_COMMAND
