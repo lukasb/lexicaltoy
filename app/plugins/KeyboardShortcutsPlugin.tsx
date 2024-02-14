@@ -6,7 +6,7 @@
  *
  */
 
-import type { LexicalCommand, LexicalEditor } from "lexical";
+import type { LexicalCommand, LexicalEditor, ElementNode } from "lexical";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
@@ -29,7 +29,19 @@ import {
 } from "../lib/list-commands";
 import { ListItemNode } from "@lexical/list";
 
-// TODO accessibility implications of tab handling?
+function isLastLeaf(node: ElementNode): boolean {
+  if (node.getNextSibling()) return false;
+  const parent = node.getParent();
+  if (!parent) return true;
+  return isLastLeaf(parent);
+}
+
+function isFirstLeaf(node: ElementNode): boolean {
+  if (node.getPreviousSibling()) return false;
+  const parent = node.getParent();
+  if (!parent) return true;
+  return isFirstLeaf(parent);
+}
 
 export function registerKeyboardShortcuts(editor: LexicalEditor) {
   return mergeRegister(
@@ -38,7 +50,14 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
       (event) => {
         const selection = $getSelection();
         const listItem = $getActiveListItem(selection);
-        if (!listItem || (!$canIndentListItem(listItem) && !event.shiftKey)) return false;
+        if (!listItem) return false;
+        // allow the user to tab out of the note if they're at the beginning or end
+        if (
+          (!$canIndentListItem(listItem) && !event.shiftKey && isLastLeaf(listItem)) ||
+          (event.shiftKey && isFirstLeaf(listItem))
+        ) {
+          return false;
+        }
         event.preventDefault();
         const command: LexicalCommand<{listItem: ListItemNode}> = event.shiftKey
           ? OUTDENT_LISTITEM_COMMAND
