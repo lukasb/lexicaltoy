@@ -255,6 +255,7 @@ class AutocompleteServer {
       setTimeout(() => {
         if (isDismissed) {
           // TODO cache result
+          // TODO maybe don't do this which ends up logging an error to the console?
           return reject('Dismissed');
         }
         const searchTextLength = searchText.length;
