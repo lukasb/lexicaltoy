@@ -127,6 +127,9 @@ const Omnibar = forwardRef(({
     } else if (event.key === "Backspace" || event.key === "Delete") {
       skipAutocompleteRef.current = true;
       setSelectedIndex(-1);
+      if (term.length === 1) {
+        resetSelf();
+      }
     } else if (event.key === "Escape") {
       resetSelf();
     }
