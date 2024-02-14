@@ -15,6 +15,7 @@ import {
   SerializedLexicalNode,
 } from 'lexical';
 import * as React from 'react';
+import {addClassNamesToElement} from '@lexical/utils';
 
 import {useSharedAutocompleteContext} from '../context/SharedAutocompleteContext';
 import {uuid as UUID} from '../plugins/AutcompleteWikilinkPlugin';
@@ -46,8 +47,7 @@ export class WikilinkAutocompleteNode extends DecoratorNode<JSX.Element | null> 
     return 'wikilinkautocomplete';
   }
 
-  static importJSON(
-    serializedNode: SerializedAutocompleteNode,
+  static importJSON(serializedNode: SerializedAutocompleteNode,
   ): WikilinkAutocompleteNode {
     const node = $createWikilinkAutocompleteNode(serializedNode.uuid);
     return node;
@@ -75,7 +75,9 @@ export class WikilinkAutocompleteNode extends DecoratorNode<JSX.Element | null> 
   }
 
   createDOM(config: EditorConfig): HTMLElement {
-    return document.createElement('span');
+    const element = document.createElement('span');
+    addClassNamesToElement(element, config.theme.wikilinkAutocomplete);
+    return element;
   }
 
   decorate(): JSX.Element | null {
@@ -99,7 +101,7 @@ function WikilinkAutocompleteComponent(): JSX.Element {
       : window.innerWidth <= 800 && window.innerHeight <= 600;
   // TODO Move to theme
   return (
-    <span style={{color: '#000'}} spellCheck="false">
+    <span spellCheck="false">
       {suggestion}
     </span>
   );

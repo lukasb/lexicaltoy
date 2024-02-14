@@ -63,6 +63,16 @@ body {
   text-decoration: underline;
   cursor: pointer;
 }
+.PlaygroundEditorTheme__wikilinkAutocomplete {
+  color: lightgray;
+  text-decoration: none;
+}
+@media (prefers-color-scheme: dark) {
+  .PlaygroundEditorTheme__wikilinkAutocomplete {
+    color: gray;
+    text-decoration: none;
+  }
+}
 .PlaygroundEditorTheme__ul {
   padding: 0;
   margin: 0 .25rem;

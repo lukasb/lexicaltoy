@@ -3,6 +3,7 @@ export const theme = {
     indent: 'PlaygroundEditorTheme__indent',
     link: 'PlaygroundEditorTheme__link',
     wikilink: 'PlaygroundEditorTheme__wikilink',
+    wikilinkAutocomplete: 'PlaygroundEditorTheme__wikilinkAutocomplete',
     list: {
         listitem: 'PlaygroundEditorTheme__listItem',
         nested: {
