@@ -99,7 +99,6 @@ function WikilinkAutocompleteComponent(): JSX.Element {
     userAgentData !== undefined
       ? userAgentData.mobile
       : window.innerWidth <= 800 && window.innerHeight <= 600;
-  // TODO Move to theme
   return (
     <span spellCheck="false">
       {suggestion}

@@ -64,7 +64,7 @@ body {
   cursor: pointer;
 }
 .PlaygroundEditorTheme__wikilinkAutocomplete {
-  color: lightgray;
+  color: gray;
   text-decoration: none;
 }
 @media (prefers-color-scheme: dark) {
