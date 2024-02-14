@@ -131,7 +131,6 @@ export default function AutocompleteWikilinkPlugin({pageTitles} : {pageTitles: s
           selection.insertNodes([node]);
           $setSelection(selectionCopy);
           lastSuggestion = newSuggestion;
-          console.log('updateAsyncSuggestion', newSuggestion);
           setSuggestion(newSuggestion);
         },
         {tag: 'history-merge'},
@@ -272,7 +271,6 @@ class AutocompleteServer {
         if (match === undefined) {
           return resolve(null);
         }
-        console.log('match', match);
         const autocompleteChunk = match.substring(potentialTitle.length);
         if (autocompleteChunk === '') {
           return resolve(null);
