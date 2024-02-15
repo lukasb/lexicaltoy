@@ -108,6 +108,10 @@ test('keyboard shortcut for omnibar', async ({ page }) => {
 });
 
 test('can create a wikilink', async ({ page }) => {
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.fill('villa');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
   await page.keyboard.press('Meta+k');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
@@ -124,4 +128,25 @@ test('can create a wikilink', async ({ page }) => {
   await page.keyboard.press(' ');
   const wikilink = page.locator('.PlaygroundEditorTheme__wikilink');
   await expect(wikilink).toHaveText('[[abc]]');
+  await page.waitForTimeout(1000); // make sure edit happens
+});
+
+test('can open a wikilink', async ({ page }) => {
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.fill('villa');
+  await page.keyboard.press('Enter');
+  const wikilink = page.locator('.PlaygroundEditorTheme__wikilink');
+  await wikilink.click();
+  await page.waitForTimeout(1000);
+  const titles = await page.locator('[data-testid="editable-title"]');
+  let found = false;
+  const count = await titles.count();
+  for (let i = 0; i < count; i++) {
+    const titleText = await titles.nth(i).textContent();
+    if (titleText === 'abc') {
+      found = true;
+      break;
+    }
+  }
+  await expect(found).toBeTruthy();
 });
