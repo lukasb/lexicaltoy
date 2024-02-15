@@ -31,6 +31,7 @@ import {
 } from "../lib/list-commands";
 import { ListItemNode } from "@lexical/list";
 import { $createListItemNode } from '@lexical/list';
+import { $isRangeSelection } from 'lexical';
 
 function isLast(node: ElementNode): boolean {
   if (node.getNextSibling()) return false;
@@ -114,10 +115,11 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
       KEY_ENTER_COMMAND,
       (event) => {
         const selection = $getSelection();
+        if (!$isRangeSelection(selection) || !selection.isCollapsed()) return false;
         const listItem = $getActiveListItem(selection);
         if (!listItem) return false;
-        // if we're hitting enter on a node that has children, prepend a new child node
-        if ($hasChildListItems(listItem)) {
+        // if we're hitting enter at the end of a node that has children, prepend a new child node
+        if ($hasChildListItems(listItem) && selection.anchor.offset === listItem.getTextContent().length){
           event.preventDefault();
           editor.dispatchCommand(PREPEND_NEW_CHILD_COMMAND, { listItem });
           return true;
