@@ -9,6 +9,7 @@ import {
   MOVE_LISTITEM_DOWN_COMMAND,
   MOVE_LISTITEM_UP_COMMAND,
   OUTDENT_LISTITEM_COMMAND,
+  PREPEND_NEW_CHILD_COMMAND,
 } from "../lib/list-commands";
 import {
   $canIndentListItem,
@@ -18,7 +19,7 @@ import {
   $getPreviousListItem,
   $isNestedListItem,
 } from "../lib/list-utils";
-import { ListItemNode } from "@lexical/list";
+import { ListItemNode, $createListItemNode, $createListNode, ListNode } from "@lexical/list";
 
 function indentOutdentListItemAndChildren(listItem: ListItemNode, indentChange: number) {
   let nodesToOutdent: ListItemNode[] = [];
@@ -101,7 +102,6 @@ export function registerListCommands(editor: LexicalEditor) {
       (payload, fixSelection) => {
         const { listItem } = payload;
         if (isOnlyChild(listItem)) {
-          console.log("only child");
           // if we're an only child and we don't delete our grandparent list item, removal
           // leaves an empty listitem
           removeListItemAndChildren(listItem.getParent().getParent());
@@ -133,6 +133,31 @@ export function registerListCommands(editor: LexicalEditor) {
       (payload) => {
         const { listItem } = payload;
         console.log("up", listItem);
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    ),
+    editor.registerCommand(
+      PREPEND_NEW_CHILD_COMMAND,
+      (payload) => {
+        const { listItem } = payload;
+        const newListItem = $createListItemNode();
+        let childrenList = $getListContainingChildren(listItem);
+        if (childrenList) {
+          if (childrenList.getChildrenSize() > 0) {
+            childrenList.getChildren()[0].insertBefore(newListItem);
+          } else {
+            childrenList.getChildren().push(newListItem);
+          }
+        } else {
+          childrenList = $createListNode((listItem.getParent() as ListNode).getListType());
+          childrenList.append(newListItem);
+          const newSibling = $createListItemNode();
+          newSibling.append(childrenList);
+          listItem.insertAfter(newSibling);
+          const cList = $getListContainingChildren(listItem);
+        }
+        newListItem.selectEnd();
         return true;
       },
       COMMAND_PRIORITY_EDITOR

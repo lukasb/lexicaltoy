@@ -7,8 +7,10 @@ import {
   MOVE_LISTITEM_UP_COMMAND,
   MOVE_LISTITEM_DOWN_COMMAND,
   INDENT_LISTITEM_COMMAND,
-  OUTDENT_LISTITEM_COMMAND
+  OUTDENT_LISTITEM_COMMAND,
+  PREPEND_NEW_CHILD_COMMAND
 } from '../lib/list-commands';
+import { $getListContainingChildren } from "../lib/list-utils";
 
 async function testEditorCommand({
   editor,
@@ -110,7 +112,7 @@ describe('ListCommandsPlugin', () => {
     await testEditorCommand({
       editor: editor,
       command: DELETE_LISTITEM_COMMAND,
-      commandArgs: { listItem: node3 },
+      commandArgs: { listItem: node3, fixSelection: true },
       expectationFunction: (editorState) => {
         expect(parentList.getChildrenSize()).toBe(2);
         const secondChild = parentList.getChildren()[1] as ListItemNode;
@@ -126,7 +128,7 @@ describe('ListCommandsPlugin', () => {
     await testEditorCommand({
       editor: editor,
       command: DELETE_LISTITEM_COMMAND,
-      commandArgs: { listItem: node2 },
+      commandArgs: { listItem: node2, fixSelection: true },
       expectationFunction: (editorState) => {
         expect(parentList.getChildrenSize()).toBe(3);
         const secondChild = parentList.getChildren()[1] as ListItemNode;
@@ -140,7 +142,7 @@ describe('ListCommandsPlugin', () => {
     await testEditorCommand({
       editor: editor,
       command: DELETE_LISTITEM_COMMAND,
-      commandArgs: { listItem: node1 },
+      commandArgs: { listItem: node1, fixSelection: true },
       expectationFunction: (editorState) => {
         expect(parentList.getChildrenSize()).toBe(2);
       }
@@ -220,6 +222,31 @@ describe('ListCommandsPlugin', () => {
       commandArgs: { listItem: node2 },
       expectationFunction: (editorState) => {
         expect(node2.getIndent()).toBe(1);
+      }
+    });
+  });
+
+  test('PREPEND_NEW_CHILD_COMMAND prepends a new child if children already exist', async () => {
+    await testEditorCommand({
+      editor: editor,
+      command: PREPEND_NEW_CHILD_COMMAND,
+      commandArgs: { listItem: node1 },
+      expectationFunction: (editorState) => {
+        const node1Child = childList1.getChildren()[0] as ListItemNode;
+        expect(node1Child.getTextContentSize()).toBe(0);
+      }
+    });
+  });
+
+  test('PREPEND_NEW_CHILD_COMMAND prepends a new child if no children', async () => {
+    await testEditorCommand({
+      editor: editor,
+      command: PREPEND_NEW_CHILD_COMMAND,
+      commandArgs: { listItem: node5 },
+      expectationFunction: (editorState) => {
+        const childrenList = $getListContainingChildren(node5);
+        expect ((node5.getParent() as ListNode).getChildrenSize()).toBe(2);
+        expect (childrenList?.getChildrenSize()).toBe(1);
       }
     });
   });

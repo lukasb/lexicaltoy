@@ -6,3 +6,4 @@ export const MOVE_LISTITEM_UP_COMMAND: LexicalCommand <{listItem: ListItemNode}>
 export const MOVE_LISTITEM_DOWN_COMMAND: LexicalCommand <{listItem: ListItemNode}> = createCommand('MOVE_LISTITEM_DOWN_COMMAND');
 export const INDENT_LISTITEM_COMMAND: LexicalCommand <{listItem: ListItemNode}> = createCommand('INDENT_LISTITEM_COMMAND');
 export const OUTDENT_LISTITEM_COMMAND: LexicalCommand <{listItem: ListItemNode}> = createCommand('OUTDENT_LISTITEM_COMMAND');
+export const PREPEND_NEW_CHILD_COMMAND: LexicalCommand <{listItem: ListItemNode}> = createCommand('PREPEND_NEW_CHILD_COMMAND');

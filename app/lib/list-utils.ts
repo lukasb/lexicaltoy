@@ -74,15 +74,18 @@ export function $canIndent(selection: BaseSelection | null): boolean {
   return grandparent && $isListItemNode(grandparent);
  }
 
+ export function $hasChildListItems(listItem: ListItemNode): boolean {
+  return $getListItemContainingChildren(listItem) !== null;
+ }
+ 
  // if a node ABC has a child DEF, it's represented like this
  // <li>ABC</li>
  // <li id="2"><ul><li>DEF</li></ul></li>
  // in this example, we return the <li> with id="2"
  export function $getListItemContainingChildren(listItem: ListItemNode): ListItemNode | null {
-  const parent = listItem.getParent();
-  const nextSibling = parent.getChildAtIndex(listItem.getIndexWithinParent() + 1);
+  const nextSibling = listItem.getNextSibling();
   if (!nextSibling) return null;
-  if ($isListNode(nextSibling.getChildAtIndex(0))) {
+  if (nextSibling instanceof ListItemNode && $isListNode(nextSibling.getChildAtIndex(0))) {
     return nextSibling;
   }
   return null;
@@ -91,7 +94,9 @@ export function $canIndent(selection: BaseSelection | null): boolean {
 export function $getListContainingChildren(listItem: ListItemNode): ListNode | null {
   const listItemContainingChildren = $getListItemContainingChildren(listItem);
   if (listItemContainingChildren) {
-    return listItemContainingChildren.getChildAtIndex(0) as ListNode;
+    if (listItemContainingChildren.getChildrenSize() > 0) {
+      return listItemContainingChildren.getChildAtIndex(0) as ListNode;
+    }
   }
   return null;
 }

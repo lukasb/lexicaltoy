@@ -16,18 +16,21 @@ import {
   KEY_BACKSPACE_COMMAND,
   KEY_TAB_COMMAND,
   KEY_DOWN_COMMAND,
+  KEY_ENTER_COMMAND,
 } from "lexical";
 import { useEffect } from "react";
 import { mergeRegister } from "@lexical/utils";
-import { $canIndentListItem, $getActiveListItem } from "../lib/list-utils";
+import { $canIndentListItem, $getActiveListItem, $hasChildListItems } from "../lib/list-utils";
 import {
   DELETE_LISTITEM_COMMAND,
   INDENT_LISTITEM_COMMAND,
   MOVE_LISTITEM_DOWN_COMMAND,
   MOVE_LISTITEM_UP_COMMAND,
   OUTDENT_LISTITEM_COMMAND,
+  PREPEND_NEW_CHILD_COMMAND,
 } from "../lib/list-commands";
 import { ListItemNode } from "@lexical/list";
+import { $createListItemNode } from '@lexical/list';
 
 function isLast(node: ElementNode): boolean {
   if (node.getNextSibling()) return false;
@@ -101,6 +104,22 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
               : MOVE_LISTITEM_DOWN_COMMAND,
             { listItem }
           );
+          return true;
+        }
+        return false;
+      },
+      COMMAND_PRIORITY_NORMAL
+    ),
+    editor.registerCommand<KeyboardEvent>(
+      KEY_ENTER_COMMAND,
+      (event) => {
+        const selection = $getSelection();
+        const listItem = $getActiveListItem(selection);
+        if (!listItem) return false;
+        // if we're hitting enter on a node that has children, prepend a new child node
+        if ($hasChildListItems(listItem)) {
+          event.preventDefault();
+          editor.dispatchCommand(PREPEND_NEW_CHILD_COMMAND, { listItem });
           return true;
         }
         return false;
