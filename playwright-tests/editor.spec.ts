@@ -67,11 +67,12 @@ test('create new page', async ({ page }) => {
   await newSearch.fill('avalon');
   await page.keyboard.press('Enter');
   const titles = page.locator('[data-testid="editable-title"]');
-  await titles.waitFor();
+  await expect(titles).toHaveCount(2);
   let found = false;
   const count = await titles.count();
   for (let i = 0; i < count; i++) {
     const titleText = await titles.nth(i).textContent();
+    console.log(titleText);
     if (titleText === 'avalon') {
       found = true;
       break;
@@ -87,8 +88,8 @@ test('open page', async ({ page }) => {
   const anotherSearch = page.getByPlaceholder('Search or Create');
   await anotherSearch.fill('avalon');
   await page.keyboard.press('Enter');
-  const titles = page.locator('[data-testid="editable-title"]');
-  await titles.waitFor();
+  const titles = await page.locator('[data-testid="editable-title"]');
+  await expect(titles).toHaveCount(3);
   let found = false;
   const count = await titles.count();
   for (let i = 0; i < count; i++) {
