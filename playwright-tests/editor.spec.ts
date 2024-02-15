@@ -106,3 +106,22 @@ test('keyboard shortcut for omnibar', async ({ page }) => {
   await page.keyboard.press('Meta+k');
   await expect(page.getByPlaceholder('Search or Create')).toBeFocused();
 });
+
+test('can create a wikilink', async ({ page }) => {
+  await page.keyboard.press('Meta+k');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press(' ');
+  await page.keyboard.press('[');
+  await page.keyboard.press('[');
+  await page.keyboard.press('a');
+  await page.keyboard.press('b');
+  await page.keyboard.press('c');
+  await page.keyboard.press(']');
+  await page.keyboard.press(']');
+  await page.keyboard.press(' ');
+  const wikilink = page.locator('.PlaygroundEditorTheme__wikilink');
+  await expect(wikilink).toHaveText('[[abc]]');
+});
