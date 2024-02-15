@@ -17,7 +17,7 @@ const EditablePageTitle = ({
   const titleRef = useRef<HTMLDivElement>(null); // Reference to the editable div
 
   const storePageTitle = useDebouncedCallback((newTitle) => {
-    console.log(`Storing page`);
+    console.log(`Updating page title`);
     updatePageTitle(pageId, newTitle);
     updatePageTitleLocal(pageId, newTitle);
   }, 500);
