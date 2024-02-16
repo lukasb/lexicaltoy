@@ -10,7 +10,7 @@ import type {TextNode} from 'lexical';
 
 import {$createWikilinkNode, WikilinkNode} from '../nodes/WikilinkNode';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
-import {useLexicalTextEntity} from '@lexical/react/useLexicalTextEntity';
+import {useLexicalElementEntity} from '../lib/transform-helpers';
 import {useCallback, useEffect} from 'react';
 
 function getWikilinkRegexString(): string {
@@ -35,7 +35,7 @@ export function WikilinkPlugin(): JSX.Element | null {
 
   useEffect(() => {
     if (!editor.hasNodes([WikilinkNode])) {
-      throw new Error('WikilinkPlugin: HashtagNode not registered on editor');
+      throw new Error('WikilinkPlugin: WikilinkNode not registered on editor');
     }
   }, [editor]);
 
@@ -60,7 +60,7 @@ export function WikilinkPlugin(): JSX.Element | null {
     };
   }, []);
 
-  useLexicalTextEntity<WikilinkNode>(
+  useLexicalElementEntity<WikilinkNode>(
     getWikilinkMatch,
     WikilinkNode,
     createWikilinkNode,

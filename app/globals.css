@@ -55,11 +55,15 @@ body {
   text-decoration: underline;
   cursor: pointer;
 }
-.PlaygroundEditorTheme__wikilink {
+.PlaygroundEditorTheme__wikilinkPageTitle {
   color: rgb(99, 102, 233);
   text-decoration: none;
 }
-.PlaygroundEditorTheme__wikilink:hover {
+.PlaygroundEditorTheme__wikilinkBracket {
+  color: gray;
+  text-decoration: none;
+}
+.PlaygroundEditorTheme__wikilinkPageTitle:hover {
   text-decoration: underline;
   cursor: pointer;
 }

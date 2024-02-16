@@ -2,7 +2,8 @@ export const theme = {
     blockCursor: 'PlaygroundEditorTheme__blockCursor',
     indent: 'PlaygroundEditorTheme__indent',
     link: 'PlaygroundEditorTheme__link',
-    wikilink: 'PlaygroundEditorTheme__wikilink',
+    wikilinkPageTitle: 'PlaygroundEditorTheme__wikilinkPageTitle',
+    wikilinkBracket: 'PlaygroundEditorTheme__wikilinkBracket',
     wikilinkAutocomplete: 'PlaygroundEditorTheme__wikilinkAutocomplete',
     list: {
         listitem: 'PlaygroundEditorTheme__listItem',

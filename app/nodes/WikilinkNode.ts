@@ -6,49 +6,77 @@
  *
  */
 
+import { Spread } from 'lexical';
+
 import type {
   EditorConfig,
+  LexicalEditor,
   LexicalNode,
   NodeKey,
-  SerializedTextNode,
+  SerializedElementNode,
 } from 'lexical';
 
 import {addClassNamesToElement} from '@lexical/utils';
-import {$applyNodeReplacement, TextNode} from 'lexical';
+import {$applyNodeReplacement, ElementNode} from 'lexical';
+
+export type SerializedWikilinkNode = Spread<
+  {
+    pageTitle: string;
+  },
+  SerializedElementNode
+>;
 
 /** @noInheritDoc */
-export class WikilinkNode extends TextNode {
+export class WikilinkNode extends ElementNode {
+  
+  __pageTitle: string;
+
   static getType(): string {
     return 'wikilink';
   }
 
   static clone(node: WikilinkNode): WikilinkNode {
-    return new WikilinkNode(node.__text, node.__key);
+    return new WikilinkNode(node.__pageTitle, node.__key);
   }
 
-  constructor(text: string, key?: NodeKey) {
-    super(text, key);
+  constructor(pageTitle: string, key?: NodeKey) {
+    super(key);
+    this.__pageTitle = pageTitle;
   }
 
-  createDOM(config: EditorConfig): HTMLElement {
-    const element = super.createDOM(config);
-    addClassNamesToElement(element, config.theme.wikilink);
+  createDOM(config: EditorConfig, editor: LexicalEditor): HTMLElement {
+    // create a parent span element for the wikilink
+    const element = document.createElement('span');
+    
+    const openingBracket = document.createElement('span');
+    openingBracket.textContent = '[[';
+    addClassNamesToElement(openingBracket, config.theme.wikilinkBracket);
+    element.appendChild(openingBracket);
+
+    const pageTitleSpan = document.createElement('span');
+    pageTitleSpan.textContent = this.__pageTitle;
+    addClassNamesToElement(pageTitleSpan, config.theme.wikilinkPageTitle);
+    element.appendChild(pageTitleSpan);
+
+    const closingBracket = document.createElement('span');
+    closingBracket.textContent = '[[';
+    addClassNamesToElement(closingBracket, config.theme.wikilinkBracket);
+    element.appendChild(closingBracket);
+
     return element;
   }
 
-  static importJSON(serializedNode: SerializedTextNode): WikilinkNode {
-    const node = $createWikilinkNode(serializedNode.text);
-    node.setFormat(serializedNode.format);
-    node.setDetail(serializedNode.detail);
-    node.setMode(serializedNode.mode);
-    node.setStyle(serializedNode.style);
+  static importJSON(serializedNode: SerializedWikilinkNode): WikilinkNode {
+    const node = $createWikilinkNode(serializedNode.pageTitle);
     return node;
   }
 
-  exportJSON(): SerializedTextNode {
+  exportJSON(): SerializedWikilinkNode {
     return {
       ...super.exportJSON(),
+      pageTitle: this.__pageTitle,
       type: 'wikilink',
+      version: 1
     };
   }
 
