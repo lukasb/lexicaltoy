@@ -14,10 +14,38 @@ import type {
   LexicalNode,
   NodeKey,
   SerializedElementNode,
+  SerializedTextNode,
 } from 'lexical';
 
 import {addClassNamesToElement} from '@lexical/utils';
-import {$applyNodeReplacement, ElementNode} from 'lexical';
+import {$applyNodeReplacement, ElementNode, TextNode, $createTextNode} from 'lexical';
+
+export class WikilinkBracketNode extends TextNode {
+  static getType(): string {
+    return 'wikilinkBracket';
+  }
+
+  static clone(node: WikilinkBracketNode): WikilinkBracketNode {
+    return new WikilinkBracketNode(node.__key);
+  }
+
+  constructor(text: string, key?: NodeKey) {
+    super(text, key);
+  }
+
+  exportJSON(): SerializedTextNode {
+    return {
+      ...super.exportJSON(),
+      type: 'wikilinkBracket',
+      version: 1,
+    };
+  }
+
+  static importJSON(serializedNode: SerializedTextNode): WikilinkBracketNode {
+    return new WikilinkBracketNode(serializedNode.text);
+  }
+
+}
 
 export type SerializedWikilinkNode = Spread<
   {
@@ -39,31 +67,44 @@ export class WikilinkNode extends ElementNode {
     return new WikilinkNode(node.__pageTitle, node.__key);
   }
 
+  // TODO how do I set styles on these?
   constructor(pageTitle: string, key?: NodeKey) {
     super(key);
     this.__pageTitle = pageTitle;
+    //this.append(new WikilinkBracketNode('[['));
+    this.append($createTextNode('[['));
+    this.append($createTextNode(pageTitle));
+    this.append($createTextNode(']]'));
+    //this.append(new WikilinkBracketNode(']]'));
   }
 
   createDOM(config: EditorConfig, editor: LexicalEditor): HTMLElement {
+
     // create a parent span element for the wikilink
     const element = document.createElement('span');
     
+    /*
     const openingBracket = document.createElement('span');
     openingBracket.textContent = '[[';
     addClassNamesToElement(openingBracket, config.theme.wikilinkBracket);
-    element.appendChild(openingBracket);
+    element.append(openingBracket);
 
     const pageTitleSpan = document.createElement('span');
     pageTitleSpan.textContent = this.__pageTitle;
     addClassNamesToElement(pageTitleSpan, config.theme.wikilinkPageTitle);
-    element.appendChild(pageTitleSpan);
+    element.append(pageTitleSpan);
 
     const closingBracket = document.createElement('span');
-    closingBracket.textContent = '[[';
+    closingBracket.textContent = ']]';
     addClassNamesToElement(closingBracket, config.theme.wikilinkBracket);
-    element.appendChild(closingBracket);
+    element.append(closingBracket);
+    */
 
     return element;
+  }
+
+  updateDOM(_prevNode: unknown, _dom: HTMLElement, config: EditorConfig): boolean {
+    return false;
   }
 
   static importJSON(serializedNode: SerializedWikilinkNode): WikilinkNode {
@@ -84,8 +125,8 @@ export class WikilinkNode extends ElementNode {
     return false;
   }
 
-  isTextEntity(): true {
-    return true;
+  isTextEntity(): boolean {
+    return false;
   }
 }
 

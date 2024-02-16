@@ -63,6 +63,12 @@ body {
   color: gray;
   text-decoration: none;
 }
+@media (prefers-color-scheme: dark) {
+  .PlaygroundEditorTheme__wikilinkBracket {
+    color: rgb(77,77,77);
+    text-decoration: none;
+  }
+  }
 .PlaygroundEditorTheme__wikilinkPageTitle:hover {
   text-decoration: underline;
   cursor: pointer;

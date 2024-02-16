@@ -26,7 +26,7 @@ import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import TreeViewPlugin from "../plugins/TreeViewPlugin/TreeViewPlugin";
 import { AutoLinkPlugin } from "../plugins/AutoLinkPlugin";
 import LexicalClickableLinkPlugin from "@lexical/react/LexicalClickableLinkPlugin";
-import { WikilinkNode } from "../nodes/WikilinkNode";
+import { WikilinkNode, WikilinkBracketNode } from "../nodes/WikilinkNode";
 import { WikilinkPlugin } from "../plugins/WikilinkPlugin";
 import ClickableWikilinkPlugin from "../plugins/ClickableWikilinkPlugin";
 import AutocompleteWikilinkPlugin from "../plugins/AutcompleteWikilinkPlugin";
@@ -75,6 +75,7 @@ function Editor({
       ListItemNode,
       AutoLinkNode,
       WikilinkNode,
+      WikilinkBracketNode,
       WikilinkAutocompleteNode],
     onError,
   };

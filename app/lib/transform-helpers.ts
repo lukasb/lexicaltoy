@@ -60,6 +60,13 @@ export function registerLexicalElementEntity<T extends ElementNode>(
   };
 
   const textNodeTransform = (node: TextNode) => {
+
+    if (node.getParent() instanceof targetNode) {
+      return;
+    }
+
+    console.log("textNodeTransform", node.getTextContent());
+
     if (!node.isSimpleText()) {
       return;
     }
@@ -170,9 +177,11 @@ export function registerLexicalElementEntity<T extends ElementNode>(
   };
 
   const reverseNodeTransform = (node: T) => {
+  
     const text = node.getTextContent();
     const match = getMatch(text);
 
+    console.log("reverseNodeTransform", text);
     if (match === null || match.start !== 0) {
       replaceElementWithSimpleText(node);
 
@@ -180,6 +189,7 @@ export function registerLexicalElementEntity<T extends ElementNode>(
     }
 
     if (text.length > match.end) {
+
       // need to move all nodes (and parts of nodes) after the match.end out of the node
 
       let lengthSoFar = 0;
@@ -207,6 +217,7 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       if (nodesToMoveOut.length > 0) {
         for (let i = 0; i < nodesToMoveOut.length; i++) {
           const child = nodesToMoveOut[i];
+          child.remove();
           node.insertAfter(child);
         }
       }
@@ -214,6 +225,7 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       return;
     }
 
+    return;
     const prevSibling = node.getPreviousSibling();
 
     if ($isTextNode(prevSibling) && prevSibling.isTextEntity()) {
