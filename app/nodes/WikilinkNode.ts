@@ -49,6 +49,29 @@ export class WikilinkBracketNode extends TextNode {
 
 export type SerializedWikilinkNode = SerializedElementNode;
 
+function stripBrackets(input: string): string {
+  let result = input;
+
+  // Function to strip one set of brackets
+  function stripOnce(str: string): string {
+    if (str.startsWith('[')) {
+      str = str.substring(1);
+    }
+    if (str.endsWith(']')) {
+      str = str.substring(0, str.length - 1);
+    }
+    return str;
+  }
+
+  // Strip up to two leading and trailing brackets
+  for (let i = 0; i < 2; i++) {
+    result = stripOnce(result);
+  }
+
+  return result;
+}
+
+
 /** @noInheritDoc */
 export class WikilinkNode extends ElementNode {
 
@@ -57,11 +80,15 @@ export class WikilinkNode extends ElementNode {
   }
 
   static clone(node: WikilinkNode): WikilinkNode {
-    return new WikilinkNode(node.__key);
+    console.log("cloning wikilink node", node.__key, node.getTextContent());
+    const pageTitle = stripBrackets(node.getTextContent());
+    console.log("cloned wikilink node with title", pageTitle);
+    return new WikilinkNode(pageTitle, node.__key);
   }
 
   // TODO how do I set styles on these?
   constructor(pageTitle: string, key?: NodeKey) {
+    console.log("creating wikilink node with title", pageTitle);
     super(key);
     //this.append(new WikilinkBracketNode('[['));
     const openingBracket = $createTextNode('[[');
@@ -106,8 +133,7 @@ export class WikilinkNode extends ElementNode {
   }
 
   static importJSON(serializedNode: SerializedWikilinkNode): WikilinkNode {
-    const node = $createWikilinkNode();
-    return node;
+    return super.importJSON(serializedNode) as WikilinkNode;
   }
 
   exportJSON(): SerializedWikilinkNode {
@@ -125,7 +151,7 @@ export class WikilinkNode extends ElementNode {
   canInsertTextAfter(): boolean {
     return false;
   }
-  
+
   isTextEntity(): boolean {
     return false;
   }

@@ -51,8 +51,11 @@ export function registerLexicalElementEntity<T extends ElementNode>(
 
   const replaceElementWithSimpleText = (node: ElementNode): void => {
     const textNode = $createTextNode(node.getTextContent());
-    textNode.setFormat(node.getFormat());
-    node.replace(textNode);
+    console.log("replacing with simple text", textNode.getTextContent());
+    //textNode.setFormat(node.getFormat());
+    const newnode = node.replace(textNode, false);
+    console.log("newnode parent", newnode.getParentOrThrow());
+    newnode.markDirty();
   };
 
   const getMode = (node: TextNode): number => {
@@ -145,6 +148,7 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       }
 
       if (match === null) {
+        console.log("match is null for textnodetransform");
         return;
       }
 
@@ -182,7 +186,9 @@ export function registerLexicalElementEntity<T extends ElementNode>(
     const match = getMatch(text);
 
     console.log("reverseNodeTransform", text);
+    console.log("match", match);
     if (match === null || match.start !== 0) {
+      console.log("replacing with simpletext");
       replaceElementWithSimpleText(node);
 
       return;
