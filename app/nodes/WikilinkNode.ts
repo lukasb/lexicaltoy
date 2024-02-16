@@ -47,34 +47,32 @@ export class WikilinkBracketNode extends TextNode {
 
 }
 
-export type SerializedWikilinkNode = Spread<
-  {
-    pageTitle: string;
-  },
-  SerializedElementNode
->;
+export type SerializedWikilinkNode = SerializedElementNode;
 
 /** @noInheritDoc */
 export class WikilinkNode extends ElementNode {
-  
-  __pageTitle: string;
 
   static getType(): string {
     return 'wikilink';
   }
 
   static clone(node: WikilinkNode): WikilinkNode {
-    return new WikilinkNode(node.__pageTitle, node.__key);
+    return new WikilinkNode(node.__key);
   }
 
   // TODO how do I set styles on these?
   constructor(pageTitle: string, key?: NodeKey) {
     super(key);
-    this.__pageTitle = pageTitle;
     //this.append(new WikilinkBracketNode('[['));
-    this.append($createTextNode('[['));
-    this.append($createTextNode(pageTitle));
-    this.append($createTextNode(']]'));
+    const openingBracket = $createTextNode('[[');
+    openingBracket.setStyle("color: gray");
+    this.append(openingBracket);
+    const title = $createTextNode(pageTitle);
+    title.setStyle("color: blue");
+    this.append(title);
+    const endBracket = $createTextNode(']]');
+    endBracket.setStyle("color: gray");
+    this.append(endBracket);
     //this.append(new WikilinkBracketNode(']]'));
   }
 
@@ -108,14 +106,13 @@ export class WikilinkNode extends ElementNode {
   }
 
   static importJSON(serializedNode: SerializedWikilinkNode): WikilinkNode {
-    const node = $createWikilinkNode(serializedNode.pageTitle);
+    const node = $createWikilinkNode();
     return node;
   }
 
   exportJSON(): SerializedWikilinkNode {
     return {
       ...super.exportJSON(),
-      pageTitle: this.__pageTitle,
       type: 'wikilink',
       version: 1
     };
@@ -125,6 +122,10 @@ export class WikilinkNode extends ElementNode {
     return false;
   }
 
+  canInsertTextAfter(): boolean {
+    return false;
+  }
+  
   isTextEntity(): boolean {
     return false;
   }
