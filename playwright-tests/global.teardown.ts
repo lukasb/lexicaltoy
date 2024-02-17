@@ -32,6 +32,15 @@ async function cleanUp(client: { sql: any; }, users: any[]) {
       }),
     );
 
+    const deletedPagesHistory = await Promise.all(
+      users.map(async (user) => {
+        return client.sql`
+        DELETE FROM pages_history
+        WHERE userId = ${user.id};
+      `;
+      }),
+    );
+    
     console.log(`Cleaned up db`);
 
     return {
