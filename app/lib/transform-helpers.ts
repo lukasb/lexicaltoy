@@ -198,13 +198,10 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       const replacementNode = createNode(nodeToReplace);
       nodeToReplace.replace(replacementNode);
       const openingBracket = $createWikilinkInternalNode('[[');
-      openingBracket.setStyle("color: gray");
       replacementNode.append(openingBracket);
       const title = $createWikilinkInternalNode(stripBrackets(nodeToReplace.getTextContent()));
-      title.setStyle("color: blue");
       replacementNode.append(title);
       const endBracket = $createWikilinkInternalNode(']]');
-      endBracket.setStyle("color: gray");
       replacementNode.append(endBracket);
       endBracket.selectEnd();
     

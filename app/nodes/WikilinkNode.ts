@@ -21,19 +21,25 @@ import {$applyNodeReplacement, ElementNode, TextNode, $createTextNode} from 'lex
 
 export type SerializedWikilinkNode = SerializedElementNode;
 
-export function $createWikilinkInternalNode(text: string): WikilinkInternalNode {
-  return $applyNodeReplacement(new WikilinkInternalNode(text));
-}
-
 export class WikilinkInternalNode extends TextNode {
   static getType(): string {
     return 'wikilink-internal';
   }
 
-  markDirty(): void {
-    console.log("markDirty");
-    super.markDirty();
-    this.getParent().markDirty();
+  //markDirty(): void {
+  //  console.log("markDirty");
+  //  super.markDirty();
+  //  this.getParent().markDirty();
+  //}
+
+  createDOM(config: EditorConfig): HTMLElement {
+    const dom = super.createDOM(config);
+    if (this.getTextContent().startsWith('[') || this.getTextContent().startsWith(']')) {
+      dom.className = 'PlaygroundEditorTheme__wikilinkBracket';
+    } else {
+      dom.className = 'PlaygroundEditorTheme__wikilinkPageTitle';
+    }
+    return dom;
   }
 
   exportJSON(): SerializedTextNode {
@@ -44,6 +50,19 @@ export class WikilinkInternalNode extends TextNode {
     };
   }
 
+  static importJSON(serializedNode: SerializedTextNode): WikilinkInternalNode {
+    return $createWikilinkInternalNode(serializedNode.text);
+  }
+
+  static clone(node: WikilinkInternalNode): WikilinkInternalNode {
+    console.log("cloning", node.getTextContent(), node.__key);
+    return new WikilinkInternalNode(node.getTextContent(), node.__key);
+  }
+}
+
+export function $createWikilinkInternalNode(text: string): WikilinkInternalNode {
+  // used to be applyNodeReplacement no idea why
+  return new WikilinkInternalNode(text);
 }
 
 /** @noInheritDoc */
@@ -73,7 +92,7 @@ export class WikilinkNode extends ElementNode {
   }
 
   static importJSON(serializedNode: SerializedWikilinkNode): WikilinkNode {
-    return super.importJSON(serializedNode) as WikilinkNode;
+    return $createWikilinkNode();
   }
 
   exportJSON(): SerializedWikilinkNode {
@@ -103,7 +122,8 @@ export class WikilinkNode extends ElementNode {
  * @returns - The WikilinkNode with the embedded text.
  */
 export function $createWikilinkNode(): WikilinkNode {
-  return $applyNodeReplacement(new WikilinkNode());
+  //return $applyNodeReplacement(new WikilinkNode());
+  return new WikilinkNode();
 }
 
 /**
