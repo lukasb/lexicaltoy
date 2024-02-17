@@ -7,7 +7,31 @@ import { useEffect } from "react";
 
 import { $createTextNode, $isTextNode, TextNode, ElementNode } from "lexical";
 
+import { WikilinkInternalNode, $createWikilinkInternalNode } from "../nodes/WikilinkNode";
+
 export type EntityMatch = { end: number; start: number };
+
+function stripBrackets(input: string): string {
+  let result = input;
+
+  // Function to strip one set of brackets
+  function stripOnce(str: string): string {
+    if (str.startsWith('[')) {
+      str = str.substring(1);
+    }
+    if (str.endsWith(']')) {
+      str = str.substring(0, str.length - 1);
+    }
+    return str;
+  }
+
+  // Strip up to two leading and trailing brackets
+  for (let i = 0; i < 2; i++) {
+    result = stripOnce(result);
+  }
+
+  return result;
+}
 
 /**
  * Returns a tuple that can be rested (...) into mergeRegister to clean up
@@ -173,10 +197,21 @@ export function registerLexicalElementEntity<T extends ElementNode>(
 
       const replacementNode = createNode(nodeToReplace);
       nodeToReplace.replace(replacementNode);
-
+      const openingBracket = $createWikilinkInternalNode('[[');
+      openingBracket.setStyle("color: gray");
+      replacementNode.append(openingBracket);
+      const title = $createWikilinkInternalNode(stripBrackets(nodeToReplace.getTextContent()));
+      title.setStyle("color: blue");
+      replacementNode.append(title);
+      const endBracket = $createWikilinkInternalNode(']]');
+      endBracket.setStyle("color: gray");
+      replacementNode.append(endBracket);
+      endBracket.selectEnd();
+    
       if (currentNode == null) {
         return;
       }
+      console.log("hmmm");
     }
   };
 

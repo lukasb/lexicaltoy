@@ -41,7 +41,7 @@ export function WikilinkPlugin(): JSX.Element | null {
 
   const createWikilinkNode = useCallback((textNode: TextNode): WikilinkNode => {
     const title = textNode.getTextContent().slice(2, -2);
-    return $createWikilinkNode(title);
+    return $createWikilinkNode();
   }, []);
 
   const getWikilinkMatch = useCallback((text: string) => {

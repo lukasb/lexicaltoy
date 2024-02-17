@@ -17,60 +17,34 @@ import type {
   SerializedTextNode,
 } from 'lexical';
 
-import {addClassNamesToElement} from '@lexical/utils';
 import {$applyNodeReplacement, ElementNode, TextNode, $createTextNode} from 'lexical';
 
-export class WikilinkBracketNode extends TextNode {
+export type SerializedWikilinkNode = SerializedElementNode;
+
+export function $createWikilinkInternalNode(text: string): WikilinkInternalNode {
+  return $applyNodeReplacement(new WikilinkInternalNode(text));
+}
+
+export class WikilinkInternalNode extends TextNode {
   static getType(): string {
-    return 'wikilinkBracket';
+    return 'wikilink-internal';
   }
 
-  static clone(node: WikilinkBracketNode): WikilinkBracketNode {
-    return new WikilinkBracketNode(node.__key);
-  }
-
-  constructor(text: string, key?: NodeKey) {
-    super(text, key);
+  markDirty(): void {
+    console.log("markDirty");
+    super.markDirty();
+    this.getParent().markDirty();
   }
 
   exportJSON(): SerializedTextNode {
     return {
       ...super.exportJSON(),
-      type: 'wikilinkBracket',
-      version: 1,
+      type: 'wikilink-internal',
+      version: 1
     };
   }
 
-  static importJSON(serializedNode: SerializedTextNode): WikilinkBracketNode {
-    return new WikilinkBracketNode(serializedNode.text);
-  }
-
 }
-
-export type SerializedWikilinkNode = SerializedElementNode;
-
-function stripBrackets(input: string): string {
-  let result = input;
-
-  // Function to strip one set of brackets
-  function stripOnce(str: string): string {
-    if (str.startsWith('[')) {
-      str = str.substring(1);
-    }
-    if (str.endsWith(']')) {
-      str = str.substring(0, str.length - 1);
-    }
-    return str;
-  }
-
-  // Strip up to two leading and trailing brackets
-  for (let i = 0; i < 2; i++) {
-    result = stripOnce(result);
-  }
-
-  return result;
-}
-
 
 /** @noInheritDoc */
 export class WikilinkNode extends ElementNode {
@@ -80,51 +54,17 @@ export class WikilinkNode extends ElementNode {
   }
 
   static clone(node: WikilinkNode): WikilinkNode {
-    console.log("cloning wikilink node", node.__key, node.getTextContent());
-    const pageTitle = stripBrackets(node.getTextContent());
-    console.log("cloned wikilink node with title", pageTitle);
-    return new WikilinkNode(pageTitle, node.__key);
+    return new WikilinkNode(node.__key);
   }
 
-  // TODO how do I set styles on these?
-  constructor(pageTitle: string, key?: NodeKey) {
-    console.log("creating wikilink node with title", pageTitle);
+  constructor(key?: NodeKey) {
     super(key);
-    //this.append(new WikilinkBracketNode('[['));
-    const openingBracket = $createTextNode('[[');
-    openingBracket.setStyle("color: gray");
-    this.append(openingBracket);
-    const title = $createTextNode(pageTitle);
-    title.setStyle("color: blue");
-    this.append(title);
-    const endBracket = $createTextNode(']]');
-    endBracket.setStyle("color: gray");
-    this.append(endBracket);
-    //this.append(new WikilinkBracketNode(']]'));
   }
 
   createDOM(config: EditorConfig, editor: LexicalEditor): HTMLElement {
 
     // create a parent span element for the wikilink
     const element = document.createElement('span');
-    
-    /*
-    const openingBracket = document.createElement('span');
-    openingBracket.textContent = '[[';
-    addClassNamesToElement(openingBracket, config.theme.wikilinkBracket);
-    element.append(openingBracket);
-
-    const pageTitleSpan = document.createElement('span');
-    pageTitleSpan.textContent = this.__pageTitle;
-    addClassNamesToElement(pageTitleSpan, config.theme.wikilinkPageTitle);
-    element.append(pageTitleSpan);
-
-    const closingBracket = document.createElement('span');
-    closingBracket.textContent = ']]';
-    addClassNamesToElement(closingBracket, config.theme.wikilinkBracket);
-    element.append(closingBracket);
-    */
-
     return element;
   }
 
@@ -162,8 +102,8 @@ export class WikilinkNode extends ElementNode {
  * @param text - The text used inside the WikilinkNode.
  * @returns - The WikilinkNode with the embedded text.
  */
-export function $createWikilinkNode(text = ''): WikilinkNode {
-  return $applyNodeReplacement(new WikilinkNode(text));
+export function $createWikilinkNode(): WikilinkNode {
+  return $applyNodeReplacement(new WikilinkNode());
 }
 
 /**
