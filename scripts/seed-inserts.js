@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 
 module.exports = {
   seedUsers,
@@ -29,7 +29,7 @@ async function seedUsers(client, users) {
         VALUES (${user.id}, ${user.name}, ${user.email}, ${hashedPassword})
         ON CONFLICT (id) DO NOTHING;
       `;
-      }),
+      })
     );
 
     console.log(`Seeded ${insertedUsers.length} users`);
@@ -39,7 +39,7 @@ async function seedUsers(client, users) {
       users: insertedUsers,
     };
   } catch (error) {
-    console.error('Error seeding users:', error);
+    console.error("Error seeding users:", error);
     throw error;
   }
 }
@@ -59,7 +59,7 @@ async function seedPages(client, pages) {
   );
 `;
 
-  console.log(`Created "pages" table`);
+    console.log(`Created "pages" table`);
 
     const createLastModified = await client.sql`
     CREATE OR REPLACE FUNCTION update_last_modified_column()
@@ -92,6 +92,21 @@ async function seedPages(client, pages) {
 
     console.log(`Created "update_pages_last_modified" trigger`);
 
+    // Create the backup table if it doesn't exist
+    const createBackupTable = await client.sql`
+     CREATE TABLE IF NOT EXISTS pages_history (
+      history_id SERIAL PRIMARY KEY,
+      id UUID NOT NULL,
+      value TEXT NOT NULL,
+      userId UUID NOT NULL,
+      title TEXT NOT NULL,
+      last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
+      history_created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+    `;
+
+    console.log(`Created "pages_history" table`);
+
     // Insert data into the "pages" table
     const insertedPages = await Promise.all(
       pages.map(
@@ -99,8 +114,8 @@ async function seedPages(client, pages) {
         INSERT INTO pages (id, value, userId, title)
         VALUES (${page.id}, ${page.value}, ${page.userId}, ${page.title})
         ON CONFLICT (id) DO NOTHING;
-      `,
-      ),
+      `
+      )
     );
 
     console.log(`Seeded ${insertedPages.length} user outlines`);
@@ -110,7 +125,7 @@ async function seedPages(client, pages) {
       pages: insertedPages,
     };
   } catch (error) {
-    console.error('Error seeding pages:', error);
+    console.error("Error seeding pages:", error);
     throw error;
   }
 }
