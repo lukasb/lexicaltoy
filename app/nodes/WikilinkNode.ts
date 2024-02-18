@@ -26,11 +26,13 @@ export class WikilinkInternalNode extends TextNode {
     return 'wikilink-internal';
   }
 
-  //markDirty(): void {
-  //  console.log("markDirty");
-  //  super.markDirty();
-  //  this.getParent().markDirty();
-  //}
+  setTextContent(text: string): this {
+    console.log("setting text content", text);
+    const parent = this.getParent() as WikilinkNode;
+    parent.markDirty();
+    super.setTextContent(text);
+    return this;
+  }
 
   createDOM(config: EditorConfig): HTMLElement {
     const dom = super.createDOM(config);

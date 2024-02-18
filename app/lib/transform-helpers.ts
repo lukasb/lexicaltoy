@@ -78,8 +78,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
     console.log("replacing with simple text", textNode.getTextContent());
     //textNode.setFormat(node.getFormat());
     const newnode = node.replace(textNode, false);
-    console.log("newnode parent", newnode.getParentOrThrow());
-    newnode.markDirty();
   };
 
   const getMode = (node: TextNode): number => {
