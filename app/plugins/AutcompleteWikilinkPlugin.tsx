@@ -261,7 +261,7 @@ class AutocompleteServer {
         if (searchText === '' || searchTextLength < 3) {
           return resolve(null);
         }
-        if (searchText.startsWith('[[') || searchText.endsWith(']')) {
+        if (!searchText.startsWith('[[') || searchText.endsWith(']')) {
           return resolve(null);
         }
         const potentialTitle = searchText.substring(2);
