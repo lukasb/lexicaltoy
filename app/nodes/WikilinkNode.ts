@@ -57,7 +57,6 @@ export class WikilinkInternalNode extends TextNode {
   }
 
   static clone(node: WikilinkInternalNode): WikilinkInternalNode {
-    console.log("cloning", node.getTextContent(), node.__key);
     return new WikilinkInternalNode(node.getTextContent(), node.__key);
   }
 }

@@ -75,9 +75,10 @@ export function registerLexicalElementEntity<T extends ElementNode>(
 
   const replaceElementWithSimpleText = (node: ElementNode): void => {
     const textNode = $createTextNode(node.getTextContent());
-    console.log("replacing with simple text", textNode.getTextContent());
     //textNode.setFormat(node.getFormat());
     const newnode = node.replace(textNode, false);
+    console.log("replaceElementWithSimpleText", newnode);
+    textNode.selectEnd();
   };
 
   const getMode = (node: TextNode): number => {
@@ -89,8 +90,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
     if (node.getParent() instanceof targetNode) {
       return;
     }
-
-    console.log("textNodeTransform", node.getTextContent());
 
     if (!node.isSimpleText()) {
       return;
@@ -170,7 +169,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       }
 
       if (match === null) {
-        console.log("match is null for textnodetransform");
         return;
       }
 
@@ -206,7 +204,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       if (currentNode == null) {
         return;
       }
-      console.log("hmmm");
     }
   };
 
@@ -215,12 +212,8 @@ export function registerLexicalElementEntity<T extends ElementNode>(
     const text = node.getTextContent();
     const match = getMatch(text);
 
-    console.log("reverseNodeTransform", text);
-    console.log("match", match);
     if (match === null || match.start !== 0) {
-      console.log("replacing with simpletext");
       replaceElementWithSimpleText(node);
-
       return;
     }
 
@@ -293,6 +286,11 @@ export function registerLexicalElementEntity<T extends ElementNode>(
   return [removePlainTextTransform, removeReverseNodeTransform];
 }
 
+function handleWikilinkInternalNodeTransform(node: WikilinkInternalNode): void {
+  console.log("handleWikilinkInternalNodeTransform", node.getTextContent());
+  node.getParent()?.markDirty();
+}
+
 // this only works for elements that contain text nodes only
 export function useLexicalElementEntity<T extends ElementNode>(
   getMatch: (text: string) => null | EntityMatch,
@@ -303,7 +301,8 @@ export function useLexicalElementEntity<T extends ElementNode>(
 
   useEffect(() => {
     return mergeRegister(
-      ...registerLexicalElementEntity(editor, getMatch, targetNode, createNode)
+      ...registerLexicalElementEntity(editor, getMatch, targetNode, createNode),
+      editor.registerNodeTransform(WikilinkInternalNode, handleWikilinkInternalNodeTransform)
     );
   }, [createNode, editor, getMatch, targetNode]);
 }
