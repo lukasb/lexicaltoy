@@ -126,8 +126,8 @@ test('can create a wikilink', async ({ page }) => {
   await page.keyboard.press(']');
   await page.keyboard.press(']');
   await page.keyboard.press(' ');
-  const wikilink = page.locator('.PlaygroundEditorTheme__wikilink');
-  await expect(wikilink).toHaveText('[[abc]]');
+  const wikilink = page.locator('.PlaygroundEditorTheme__wikilinkPageTitle');
+  await expect(wikilink).toHaveText('abc');
   await page.waitForTimeout(1000); // make sure edit happens
 });
 
@@ -135,7 +135,7 @@ test('can open a wikilink', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
-  const wikilink = page.locator('.PlaygroundEditorTheme__wikilink');
+  const wikilink = page.locator('.PlaygroundEditorTheme__wikilinkPageTitle');
   await wikilink.click();
   await page.waitForTimeout(1000);
   const titles = await page.locator('[data-testid="editable-title"]');
