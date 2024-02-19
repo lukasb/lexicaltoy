@@ -278,8 +278,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       console.log('node **', node.getTextContent(), "**");
     }
 
-    return;
-
     if (text.length > match.end) {
       const newText = text.slice(match.end);
       console.log('newText~~', newText, '~~');

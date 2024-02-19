@@ -53,7 +53,7 @@ export class WikilinkInternalNode extends TextNode {
     return new WikilinkInternalNode(node.getTextContent(), node.__key);
   }
 
-  canInserTextBefore(): boolean {
+  canInsertTextBefore(): boolean {
     return false;
   }
 
@@ -109,12 +109,16 @@ export class WikilinkNode extends ElementNode {
     return true;
   }
 
-  canInserTextBefore(): boolean {
+  canInsertTextBefore(): boolean {
     return false;
   }
 
   canInsertTextAfter(): boolean {
     return false;
+  }
+
+  isInline(): boolean {
+    return true;
   }
 }
 
