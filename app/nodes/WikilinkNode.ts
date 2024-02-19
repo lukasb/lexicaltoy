@@ -26,16 +26,9 @@ export class WikilinkInternalNode extends TextNode {
     return 'wikilink-internal';
   }
 
-  setTextContent(text: string): this {
-    console.log("setting text content", text);
-    const parent = this.getParent() as WikilinkNode;
-    parent.markDirty();
-    super.setTextContent(text);
-    return this;
-  }
-
   createDOM(config: EditorConfig): HTMLElement {
     const dom = super.createDOM(config);
+    console.log("can insert text after", this.canInsertTextAfter());
     if (this.getTextContent().startsWith('[') || this.getTextContent().startsWith(']')) {
       dom.className = 'PlaygroundEditorTheme__wikilinkBracket';
     } else {
@@ -104,23 +97,14 @@ export class WikilinkNode extends ElementNode {
     };
   }
 
-  canInsertTextBefore(): boolean {
-    return false;
-  }
-
-  canInsertTextAfter(): boolean {
-    return false;
-  }
-
   isTextEntity(): boolean {
-    return false;
+    return true;
   }
 }
 
 /**
- * Generates a WikilinkNode, which is a string following the format of [[text]].
- * @param text - The text used inside the WikilinkNode.
- * @returns - The WikilinkNode with the embedded text.
+ * Generates a WikilinkNode. Just a container, WikilinkPlugin is responsible for inserting the rest of the nodes.
+ * @returns - The WikilinkNode
  */
 export function $createWikilinkNode(): WikilinkNode {
   //return $applyNodeReplacement(new WikilinkNode());

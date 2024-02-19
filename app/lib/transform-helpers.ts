@@ -5,9 +5,11 @@ import { registerLexicalTextEntity } from "@lexical/text";
 import { mergeRegister } from "@lexical/utils";
 import { useEffect } from "react";
 
-import { $createTextNode, $isTextNode, TextNode, ElementNode } from "lexical";
+import { $createTextNode, $isTextNode, TextNode, ElementNode, $getSelection, $setSelection, BaseSelection, $isRangeSelection, $createRangeSelection } from "lexical";
 
-import { WikilinkInternalNode, $createWikilinkInternalNode } from "../nodes/WikilinkNode";
+import { $getAncestor, INTERNAL_$isBlock } from "lexical/LexicalUtils";
+
+import { WikilinkInternalNode, $createWikilinkInternalNode, WikilinkNode } from "../nodes/WikilinkNode";
 
 export type EntityMatch = { end: number; start: number };
 
@@ -61,7 +63,7 @@ export function registerLexicalElementEntity<T extends ElementNode>(
   editor: LexicalEditor,
   getMatch: (text: string) => null | EntityMatch,
   targetNode: Klass<T>,
-  createNode: (textNode: TextNode) => T
+  createNode: () => T
 ): Array<() => void> {
   const isTargetNode = (node: LexicalNode | null | undefined): node is T => {
     return node instanceof targetNode;
@@ -74,11 +76,10 @@ export function registerLexicalElementEntity<T extends ElementNode>(
   };
 
   const replaceElementWithSimpleText = (node: ElementNode): void => {
+    // get the current selection position within the node
     const textNode = $createTextNode(node.getTextContent());
-    //textNode.setFormat(node.getFormat());
     const newnode = node.replace(textNode, false);
-    console.log("replaceElementWithSimpleText", newnode);
-    textNode.selectEnd();
+    newnode.selectEnd();
   };
 
   const getMode = (node: TextNode): number => {
@@ -86,6 +87,8 @@ export function registerLexicalElementEntity<T extends ElementNode>(
   };
 
   const textNodeTransform = (node: TextNode) => {
+
+    console.log('textNodeTransform');
 
     if (node.getParent() instanceof targetNode) {
       return;
@@ -191,15 +194,35 @@ export function registerLexicalElementEntity<T extends ElementNode>(
         );
       }
 
-      const replacementNode = createNode(nodeToReplace);
-      nodeToReplace.replace(replacementNode);
+      const selection = $getSelection();
+      if (selection === null || !$isRangeSelection(selection) || !selection.isCollapsed()) {
+        console.log('selection is null');
+        return;
+      }
+      const selectionCopy = selection.clone();
+      const replacementNode = createNode();
+      
+      const node = selection.getNodes()[0];
+      const start = selection.anchor.offset;
+
       const openingBracket = $createWikilinkInternalNode('[[');
       replacementNode.append(openingBracket);
       const title = $createWikilinkInternalNode(stripBrackets(nodeToReplace.getTextContent()));
       replacementNode.append(title);
       const endBracket = $createWikilinkInternalNode(']]');
       replacementNode.append(endBracket);
-      endBracket.selectEnd();
+      nodeToReplace.replace(replacementNode);
+
+      if (start < 2) {
+        openingBracket.select(start, start);
+      } else if (start < title.getTextContent().length + 2) {
+        title.select(start - 2, start - 2);
+      } else {
+        endBracket.select(start - title.getTextContent().length - 2, start - title.getTextContent().length - 2);
+      }
+
+      //selectionCopy.insertNodes([replacementNode]);
+      //$setSelection(selectionCopy);
     
       if (currentNode == null) {
         return;
@@ -209,15 +232,20 @@ export function registerLexicalElementEntity<T extends ElementNode>(
 
   const reverseNodeTransform = (node: T) => {
   
+    console.log('reverseNodeTransform');
+
     const text = node.getTextContent();
     const match = getMatch(text);
 
     if (match === null || match.start !== 0) {
+      console.log('match is null or start is not 0');
       replaceElementWithSimpleText(node);
       return;
     }
 
     if (text.length > match.end) {
+
+      console.log('text length is greater than match end');
 
       // need to move all nodes (and parts of nodes) after the match.end out of the node
 
@@ -287,7 +315,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
 }
 
 function handleWikilinkInternalNodeTransform(node: WikilinkInternalNode): void {
-  console.log("handleWikilinkInternalNodeTransform", node.getTextContent());
   node.getParent()?.markDirty();
 }
 

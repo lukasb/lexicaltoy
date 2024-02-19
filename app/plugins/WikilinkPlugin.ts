@@ -39,8 +39,7 @@ export function WikilinkPlugin(): JSX.Element | null {
     }
   }, [editor]);
 
-  const createWikilinkNode = useCallback((textNode: TextNode): WikilinkNode => {
-    const title = textNode.getTextContent().slice(2, -2);
+  const createWikilinkNode = useCallback((): WikilinkNode => {
     return $createWikilinkNode();
   }, []);
 
