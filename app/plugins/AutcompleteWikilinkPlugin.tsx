@@ -255,7 +255,8 @@ class AutocompleteServer {
         if (isDismissed) {
           // TODO cache result
           // TODO maybe don't do this which ends up logging an error to the console?
-          return reject('Dismissed');
+          //return reject('Dismissed');
+          return;
         }
         const searchTextLength = searchText.length;
         if (searchText === '' || searchTextLength < 3) {
