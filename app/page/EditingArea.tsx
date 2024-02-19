@@ -80,7 +80,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   };
 
   return (
-    <div className="md:p-4 lg:p-10 xl:p-20 2xl:p-30 transition-spacing ease-linear duration-75">
+    <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <Omnibar
         ref={omnibarRef}
         pages={currentPages}
