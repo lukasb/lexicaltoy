@@ -76,16 +76,26 @@ export function registerLexicalElementEntity<T extends ElementNode>(
     return node instanceof targetNode;
   };
 
-  const replaceTextWithSimpleText = (node: TextNode): void => {
-    const textNode = $createTextNode(node.getTextContent());
-    textNode.setFormat(node.getFormat());
-    node.replace(textNode);
-  };
-
   const replaceElementWithSimpleText = (node: ElementNode): void => {
+    const selection = $getSelection();
+    let offset = -1;
+    // TODO okay we can do better than this
+    if (selection != null && $isRangeSelection(selection) && selection.isCollapsed()) {
+      if (node.getChildren()[0] === selection.anchor.getNode()) {
+        offset = selection.anchor.offset;
+      } else if (node.getChildren()[1] === selection.focus.getNode()) {
+        offset = selection.focus.offset + 2;
+      } else if (node.getChildren()[2] === selection.focus.getNode()) {
+        offset = selection.focus.offset + 2 + node.getChildren()[1].getTextContent().length;
+      }
+    }
     const textNode = $createTextNode(node.getTextContent());
     const newnode = node.replace(textNode, false);
-    newnode.selectEnd();
+    if (offset !== -1) {
+      newnode?.select(offset, offset);
+    } else {
+      newnode.selectEnd();
+    }
   };
 
   const getMode = (node: TextNode): number => {
@@ -205,10 +215,8 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       if (selection === null || !$isRangeSelection(selection) || !selection.isCollapsed()) {
         return;
       }
-      const selectionCopy = selection.clone();
+
       const replacementNode = createNode();
-      
-      const node = selection.getNodes()[0];
       const start = selection.anchor.offset;
 
       const openingBracket = $createWikilinkInternalNode('[[');
