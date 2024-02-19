@@ -11,11 +11,9 @@ import {
   ElementNode,
   $getSelection,
   $isRangeSelection,
-  RangeSelection 
 } from "lexical";
 
 import { 
-  WikilinkNode,
   WikilinkInternalNode,
   $createWikilinkInternalNode
 } from "../nodes/WikilinkNode";
@@ -85,7 +83,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
   };
 
   const replaceElementWithSimpleText = (node: ElementNode): void => {
-    console.log('replaceElementWithSimpleText', node);
     const textNode = $createTextNode(node.getTextContent());
     const newnode = node.replace(textNode, false);
     newnode.selectEnd();
@@ -97,15 +94,11 @@ export function registerLexicalElementEntity<T extends ElementNode>(
 
   const textNodeTransform = (node: TextNode) => {
 
-    console.log('textNodeTransform', node);
-
     if (node.getParent() instanceof targetNode) {
-      console.log('parent is target node');
       return;
     }
 
     if (!node.isSimpleText()) {
-      console.log('node is not simple text');
       return;
     }
 
@@ -115,7 +108,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
     let match;
 
     if ($isTextNode(prevSibling)) {
-      console.log('prevSibling is text node');
       const previousText = prevSibling.getTextContent();
       const combinedText = previousText + text;
       const prevMatch = getMatch(combinedText);
@@ -154,19 +146,14 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       match = getMatch(text);
       let nextText = match === null ? "" : text.slice(match.end);
       text = nextText;
-      console.log('nextText', nextText);
       if (nextText === "") {
         const nextSibling = currentNode.getNextSibling();
 
         if (isTargetNode(nextSibling)) {
-          console.log("nahhh");
           return;
-        } else {
-          console.log('nextSibling is not target node', nextSibling);
         }
 
         if ($isTextNode(nextSibling)) {
-          console.log('nextSibling is text node');
           nextText =
             currentNode.getTextContent() + nextSibling.getTextContent();
           const nextMatch = getMatch(nextText);
@@ -185,16 +172,13 @@ export function registerLexicalElementEntity<T extends ElementNode>(
         }
       } else {
         const nextMatch = getMatch(nextText);
-        console.log('nextMatch', nextMatch, nextText);
 
         if (nextMatch !== null && nextMatch.start === 0) {
-          console.log('nextMatch.start === 0');
           return;
         }
       }
 
       if (match === null) {
-        console.log('match is null');
         return;
       }
 
@@ -217,7 +201,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
         );
       }
 
-      console.log('nodeToReplace', nodeToReplace);
       const selection = $getSelection();
       if (selection === null || !$isRangeSelection(selection) || !selection.isCollapsed()) {
         return;
@@ -237,13 +220,10 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       nodeToReplace.replace(replacementNode);
 
       if (start < 2) {
-        console.log('selecting opening bracket');
         openingBracket.select(start, start);
       } else if (start < title.getTextContent().length + 2) {
-        console.log('selecting title');
         title.select(start - 2, start - 2);
       } else {
-        console.log('selecting end bracket');
         endBracket.select(start - title.getTextContent().length - 2, start - title.getTextContent().length - 2);
       }
     
@@ -254,121 +234,14 @@ export function registerLexicalElementEntity<T extends ElementNode>(
   };
 
   const reverseNodeTransform = (node: T) => {
-  
-    console.log('reverseNodeTransform!');
     
     const text = node.getTextContent();
-    console.log("reversenodetransform text", text);
     const match = getMatch(text);
 
     if (match === null) {
-      console.log('match is null');
-      replaceElementWithSimpleText(node);
-      return;
-    }
-
-    if (match.start > 0) {
-      const newText = node.getChildren()[0].getTextContent().slice(0, -2);
-      if ($isTextNode(node.getChildren()[0])) {
-        const textNode = node.getChildren()[0] as TextNode;
-        textNode.setTextContent("[[");
-      }
-      const textNode = $createTextNode(newText);
-      node.insertBefore(textNode);
-      console.log('node **', node.getTextContent(), "**");
-    }
-
-    if (text.length > match.end) {
-      const newText = text.slice(match.end);
-      console.log('newText~~', newText, '~~');
-      if ($isTextNode(node.getChildren()[2])) {
-        const textNode = node.getChildren()[2] as TextNode;
-        textNode.setTextContent("]]");
-      }
-      const textNode = $createTextNode(newText);
-      node.insertAfter(textNode);
-      console.log('node ~~', node.getTextContent(), "~~");
-    }
-
-    return; 
-
-    if (text.length > match.end) {
-
-      const selection = $getSelection();
-      let offset = -1;
-
-      console.log('selection', selection);
-      console.log('selection nodes', selection?.getNodes());
-      if ($isRangeSelection(selection) && 
-          selection.isCollapsed() &&
-          selection?.getNodes()[0].__key == node.getChildren()[2].__key) {
-        offset = selection.anchor.offset - 2;
-        console.log('offset', offset);
-      }
-
-      // need to move all nodes (and parts of nodes) after the match.end out of the node
-
-      let lengthSoFar = 0;
-      let nodesToMoveOut = [];
-      for (let i = 0; i < node.getChildrenSize(); i++) {
-        const child = node.getChildAtIndex(i);
-        if (lengthSoFar > match.end && child) {
-          nodesToMoveOut.push(child);
-        } else if (!$isTextNode(child)) {
-          continue;
-        } else {
-          const childText = child.getTextContent();
-          const childLength = childText.length;
-          if (lengthSoFar + childLength > match.end) {
-            const splitIndex = match.end - lengthSoFar;
-            const [before, after] = child.splitText(splitIndex);
-            if (after && after.getTextContent().length > 0) {
-              nodesToMoveOut.push(after);
-            }
-          }
-          lengthSoFar += childLength;
-        }
-      }
-
-      lengthSoFar = 0;
-      if (nodesToMoveOut.length > 0) {
-        console.log('nodesToMoveOut', nodesToMoveOut, offset);
-        for (let i = 0; i < nodesToMoveOut.length; i++) {
-          const child = nodesToMoveOut[i];
-          lengthSoFar = lengthSoFar + child.getTextContent().length;
-          child.remove();
-          node.insertAfter(child);
-          if (offset >= 0 && lengthSoFar >= offset && child.getType() === 'text') {
-            // TODO make this work if we're moving out more than one node
-            const textNode = child as TextNode;
-            console.log('selecting', textNode.getTextContent(), offset, offset);
-            textNode.select(offset, offset);
-            offset = -1;
-          }
-        }
-      }
-
-      return;
-    }
-
-    return;
-    const prevSibling = node.getPreviousSibling();
-
-    if ($isTextNode(prevSibling) && prevSibling.isTextEntity()) {
-      replaceTextWithSimpleText(prevSibling);
       replaceElementWithSimpleText(node);
     }
 
-    const nextSibling = node.getNextSibling();
-
-    if ($isTextNode(nextSibling) && nextSibling.isTextEntity()) {
-      replaceTextWithSimpleText(nextSibling);
-
-      // This may have already been converted in the previous block
-      if (isTargetNode(node)) {
-        replaceElementWithSimpleText(node);
-      }
-    }
   };
 
   const removePlainTextTransform = editor.registerNodeTransform(
@@ -391,7 +264,7 @@ function handleWikilinkInternalNodeTransform(node: WikilinkInternalNode): void {
 export function useLexicalElementEntity<T extends ElementNode>(
   getMatch: (text: string) => null | EntityMatch,
   targetNode: Klass<T>,
-  createNode: (textNode: TextNode) => T
+  createNode: () => T
 ): void {
   const [editor] = useLexicalComposerContext();
 

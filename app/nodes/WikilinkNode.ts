@@ -6,8 +6,6 @@
  *
  */
 
-import { Spread } from 'lexical';
-
 import type {
   EditorConfig,
   LexicalEditor,
@@ -17,7 +15,7 @@ import type {
   SerializedTextNode,
 } from 'lexical';
 
-import {$applyNodeReplacement, ElementNode, TextNode, $createTextNode} from 'lexical';
+import { ElementNode, TextNode } from 'lexical';
 
 export type SerializedWikilinkNode = SerializedElementNode;
 
