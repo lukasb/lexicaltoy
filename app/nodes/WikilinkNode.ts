@@ -26,7 +26,6 @@ export class WikilinkInternalNode extends TextNode {
 
   createDOM(config: EditorConfig): HTMLElement {
     const dom = super.createDOM(config);
-    console.log("can insert text after", this.canInsertTextAfter());
     if (this.getTextContent().startsWith('[') || this.getTextContent().startsWith(']')) {
       dom.className = 'PlaygroundEditorTheme__wikilinkBracket';
     } else {
