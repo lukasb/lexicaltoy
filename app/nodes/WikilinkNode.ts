@@ -52,6 +52,14 @@ export class WikilinkInternalNode extends TextNode {
   static clone(node: WikilinkInternalNode): WikilinkInternalNode {
     return new WikilinkInternalNode(node.getTextContent(), node.__key);
   }
+
+  canInserTextBefore(): boolean {
+    return false;
+  }
+
+  canInsertTextAfter(): boolean {
+    return false;
+  }
 }
 
 export function $createWikilinkInternalNode(text: string): WikilinkInternalNode {
@@ -99,6 +107,14 @@ export class WikilinkNode extends ElementNode {
 
   isTextEntity(): boolean {
     return true;
+  }
+
+  canInserTextBefore(): boolean {
+    return false;
+  }
+
+  canInsertTextAfter(): boolean {
+    return false;
   }
 }
 

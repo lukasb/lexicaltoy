@@ -47,7 +47,7 @@ function OnChangePlugin({
 }
 
 function onError(error: Error) {
-  console.error(error);
+  console.error("Editor error:", error);
 }
 
 function Editor({

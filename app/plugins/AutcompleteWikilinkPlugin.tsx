@@ -163,8 +163,8 @@ export default function AutocompleteWikilinkPlugin({pageTitles} : {pageTitles: s
               updateAsyncSuggestion(searchPromise, newSuggestion);
             }
           })
-          .catch((e) => {
-            console.error(e);
+          .catch((e): void => {
+            console.error("AutoLinkPlugin error", e);
           });
         lastMatch = match;
       });

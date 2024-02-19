@@ -72,7 +72,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const handleNewPage = async (title: string) => {
     const result = await insertPage(title, emptyPageJSONString, userId);
     if (typeof result === "string") {
-      console.error(result);
+      console.error("expected page, got string", result);
       return;
     } else if (isPage(result)) {
       openPage(result);

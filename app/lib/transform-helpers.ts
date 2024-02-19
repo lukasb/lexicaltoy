@@ -15,6 +15,7 @@ import {
 } from "lexical";
 
 import { 
+  WikilinkNode,
   WikilinkInternalNode,
   $createWikilinkInternalNode
 } from "../nodes/WikilinkNode";
@@ -84,7 +85,7 @@ export function registerLexicalElementEntity<T extends ElementNode>(
   };
 
   const replaceElementWithSimpleText = (node: ElementNode): void => {
-    // get the current selection position within the node
+    console.log('replaceElementWithSimpleText', node);
     const textNode = $createTextNode(node.getTextContent());
     const newnode = node.replace(textNode, false);
     newnode.selectEnd();
@@ -153,11 +154,19 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       match = getMatch(text);
       let nextText = match === null ? "" : text.slice(match.end);
       text = nextText;
-
+      console.log('nextText', nextText);
       if (nextText === "") {
         const nextSibling = currentNode.getNextSibling();
 
+        if (isTargetNode(nextSibling)) {
+          console.log("nahhh");
+          return;
+        } else {
+          console.log('nextSibling is not target node', nextSibling);
+        }
+
         if ($isTextNode(nextSibling)) {
+          console.log('nextSibling is text node');
           nextText =
             currentNode.getTextContent() + nextSibling.getTextContent();
           const nextMatch = getMatch(nextText);
@@ -176,13 +185,16 @@ export function registerLexicalElementEntity<T extends ElementNode>(
         }
       } else {
         const nextMatch = getMatch(nextText);
+        console.log('nextMatch', nextMatch, nextText);
 
         if (nextMatch !== null && nextMatch.start === 0) {
+          console.log('nextMatch.start === 0');
           return;
         }
       }
 
       if (match === null) {
+        console.log('match is null');
         return;
       }
 
@@ -205,6 +217,7 @@ export function registerLexicalElementEntity<T extends ElementNode>(
         );
       }
 
+      console.log('nodeToReplace', nodeToReplace);
       const selection = $getSelection();
       if (selection === null || !$isRangeSelection(selection) || !selection.isCollapsed()) {
         return;
@@ -224,10 +237,13 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       nodeToReplace.replace(replacementNode);
 
       if (start < 2) {
+        console.log('selecting opening bracket');
         openingBracket.select(start, start);
       } else if (start < title.getTextContent().length + 2) {
+        console.log('selecting title');
         title.select(start - 2, start - 2);
       } else {
+        console.log('selecting end bracket');
         endBracket.select(start - title.getTextContent().length - 2, start - title.getTextContent().length - 2);
       }
     
@@ -242,13 +258,41 @@ export function registerLexicalElementEntity<T extends ElementNode>(
     console.log('reverseNodeTransform!');
     
     const text = node.getTextContent();
+    console.log("reversenodetransform text", text);
     const match = getMatch(text);
 
-    if (match === null || match.start !== 0) {
-      console.log('match is null or start is not 0');
+    if (match === null) {
+      console.log('match is null');
       replaceElementWithSimpleText(node);
       return;
     }
+
+    if (match.start > 0) {
+      const newText = node.getChildren()[0].getTextContent().slice(0, -2);
+      if ($isTextNode(node.getChildren()[0])) {
+        const textNode = node.getChildren()[0] as TextNode;
+        textNode.setTextContent("[[");
+      }
+      const textNode = $createTextNode(newText);
+      node.insertBefore(textNode);
+      console.log('node **', node.getTextContent(), "**");
+    }
+
+    return;
+
+    if (text.length > match.end) {
+      const newText = text.slice(match.end);
+      console.log('newText~~', newText, '~~');
+      if ($isTextNode(node.getChildren()[2])) {
+        const textNode = node.getChildren()[2] as TextNode;
+        textNode.setTextContent("]]");
+      }
+      const textNode = $createTextNode(newText);
+      node.insertAfter(textNode);
+      console.log('node ~~', node.getTextContent(), "~~");
+    }
+
+    return; 
 
     if (text.length > match.end) {
 
@@ -306,11 +350,9 @@ export function registerLexicalElementEntity<T extends ElementNode>(
         }
       }
 
-      console.log("byebye");
       return;
     }
 
-    console.log('nada');
     return;
     const prevSibling = node.getPreviousSibling();
 
