@@ -51,11 +51,20 @@ export class WikilinkInternalNode extends TextNode {
   }
 
   canInsertTextBefore(): boolean {
-    return false;
+    // TODO - this is a hack to prevent the user from typing in the brackets, should be a type check or something
+    if (this.getTextContent().startsWith('[') || this.getTextContent().startsWith(']')) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
   canInsertTextAfter(): boolean {
-    return false;
+    if (this.getTextContent().startsWith('[') || this.getTextContent().startsWith(']')) {
+      return false;
+    } else {
+      return true;
+    }
   }
 }
 
