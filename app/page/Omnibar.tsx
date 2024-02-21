@@ -164,9 +164,7 @@ const Omnibar = forwardRef(({
 
   const handleClickOutside = (event: { target: Node | null }) => {
     if (ulRef.current && !ulRef.current.contains(event.target)) {
-      setDisplayValue("");
-      setResults([]);
-      setSelectedIndex(-1);
+      resetSelf();
     }
   };
 
