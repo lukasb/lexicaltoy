@@ -50,16 +50,37 @@ async function seedPages(client, pages) {
 
     // Create the "outlines" table if it doesn't exist
     const createTable = await client.sql`
-    CREATE TABLE IF NOT EXISTS pages (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    value TEXT NOT NULL,
-    userId UUID NOT NULL,
-    title TEXT NOT NULL,
-    last_modified TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-  );
+      CREATE TABLE IF NOT EXISTS pages (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      value TEXT NOT NULL,
+      userId UUID NOT NULL,
+      title TEXT NOT NULL,
+      last_modified TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      revision_number INT NOT NULL DEFAULT 1
+    );
 `;
 
     console.log(`Created "pages" table`);
+
+    const createRevisionNumberConstraint = await client.sql`
+      CREATE OR REPLACE FUNCTION validate_revision_update() 
+      RETURNS TRIGGER AS $$
+      BEGIN
+      -- Require revision number to be exactly one greater than current value
+      IF NEW.revision_number != (OLD.revision_number + 1) THEN
+        RAISE EXCEPTION 'Revision number must be exactly one greater than current revision'; 
+      END IF;
+
+      RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+    CREATE TRIGGER revision_validation_trigger
+    BEFORE UPDATE ON pages
+    FOR EACH ROW EXECUTE PROCEDURE validate_revision_update();
+    `;
+
+    console.log(`Created "validate_revision_update" trigger`);
 
     const createLastModified = await client.sql`
     CREATE OR REPLACE FUNCTION update_last_modified_column()
@@ -101,7 +122,8 @@ async function seedPages(client, pages) {
       userId UUID NOT NULL,
       title TEXT NOT NULL,
       last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
-      history_created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      history_created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      revision_number INT NOT NULL DEFAULT 1
     );
     `;
 

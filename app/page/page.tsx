@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import { auth } from "@/auth";
 import EditingArea from "./EditingArea";
 import { signOut } from "@/auth";
+import { isDevelopmentEnvironment } from "../lib/environment";
 
 export const maxDuration = 60;
 
@@ -34,10 +35,12 @@ export default async function Home() {
   return (
     <div className="flex justify-center items-center">
       <div className="relative w-full">
-        <EditingArea
-          pages={pages}
-          userId = {session.user.id}
-        />
+        {isDevelopmentEnvironment && (
+          <div className="absolute top-0 left-0 bg-red-500 text-white p-2">
+            Debug
+          </div>
+        )}
+        <EditingArea pages={pages} userId={session.user.id} />
         <form
           action={async () => {
             "use server";

@@ -1,6 +1,13 @@
 const { seedUsers, seedPages } = require('../scripts/seed-inserts.js');
 
-require('dotenv').config({ path: './.env.local' }); 
+let envfile;
+if (process.env.NODE_ENV === 'production') {
+  console.log('refusing to seed production database');
+  process.exit(1);
+} else if (process.env.NODE_ENV === 'development') {
+  envfile = './.env.development.local';
+}
+require('dotenv').config({ path: envfile }); 
 const { db } = require('@vercel/postgres');
 const {
   users,

@@ -1,4 +1,4 @@
-require('dotenv').config({ path: './.env.local' }); 
+require('dotenv').config({ path: './.env.development.local' }); 
 const { db } = require('@vercel/postgres');
 const {
   users,
