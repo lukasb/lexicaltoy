@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { 
+  useState,
+  useEffect,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+  useCallback
+} from "react";
 import { searchPages } from "../lib/pages-helpers";
 import { Page } from "../lib/definitions";
 
@@ -26,12 +33,32 @@ const Omnibar = forwardRef(({
   // TODO Escape sets focus back to last active editor
   // TODO search by contents, not just title
 
+  const showReverseChronologicalList = useCallback(() => {
+    setResults(pages.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime()));
+  }, [pages]); // Include 'pages' as a dependency   
+
   useImperativeHandle(ref, () => ({
     focus: () => {
       inputRef.current?.focus();
     },
   }));
 
+  useEffect(() => {
+    const handleFocus = () => {
+      if (term === "") { 
+        showReverseChronologicalList();
+      }
+    };
+  
+    const inputElement = inputRef.current; // Capture the value, which might change if there's a re-render between setup and cleanup  
+    inputElement?.addEventListener('focus', handleFocus);
+  
+    return () => {
+      inputElement?.removeEventListener('focus', handleFocus);
+    };
+  }, [term, showReverseChronologicalList]); 
+  
+  
   useEffect(() => {
     if (skipAutocompleteRef.current) {
       skipAutocompleteRef.current = false;
@@ -104,7 +131,7 @@ const Omnibar = forwardRef(({
     if (event.key === "ArrowDown") {
       // if the search box is empty, show a reverse chronological list of all pages
       if (term === "" && results.length === 0) {
-        setResults(pages.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime()));
+        showReverseChronologicalList();
       }      
       setSelectedIndex((prevIndex) =>
         Math.min(prevIndex + 1, results.length - 1)
