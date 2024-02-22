@@ -5,9 +5,7 @@ import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { Page } from "./definitions"
 
-export async function updatePageContentsWithHistory(id: string, value: string, oldRevisionNumber: number) {
-
-  const newRevisionNumber = oldRevisionNumber + 1;
+export async function updatePageContentsWithHistory(id: string, value: string, oldRevisionNumber: number): Promise<number> {
 
   try {
     // Insert the current page data into the history table directly from the pages table
@@ -19,15 +17,17 @@ export async function updatePageContentsWithHistory(id: string, value: string, o
     `;
   
     // Then, update the page with the new value
-    await sql`
+    const result = await sql`
         UPDATE pages
-        SET value = ${value}, revision_number = ${newRevisionNumber}
+        SET value = ${value}, revision_number = ${oldRevisionNumber+1}
         WHERE id = ${id}
+        RETURNING revision_number
     `;
+    return result.rows[0].revision_number;
   } catch (error) {
     console.log("Database Error: Failed to Update Page.", error);
-    throw new Error("Database Error: Failed to Update Page.")
   }
+  return -1;
 }
 
 export async function updatePageTitle(id: string, title: string) {
