@@ -62,7 +62,7 @@ async function seedPages(client, pages) {
 
     console.log(`Created "pages" table`);
 
-    const createRevisionNumberConstraint = await client.sql`
+    const createRevisionNumberConstraintFunction = await client.sql`
       CREATE OR REPLACE FUNCTION validate_revision_update() 
       RETURNS TRIGGER AS $$
       BEGIN
@@ -74,10 +74,24 @@ async function seedPages(client, pages) {
       RETURN NEW;
       END;
       $$ LANGUAGE plpgsql;
+    `;
 
-    CREATE TRIGGER revision_validation_trigger
-    BEFORE UPDATE ON pages
-    FOR EACH ROW EXECUTE PROCEDURE validate_revision_update();
+    console.log(`Created "validate_revision_update" function`);
+
+    const createRevisionNumberConstraintTrigger = await client.sql`
+    DO $$
+    BEGIN
+        IF EXISTS (
+            SELECT 1
+            FROM pg_trigger
+            WHERE tgname = 'revision_validation_trigger'
+        ) THEN
+            -- do nothing
+        ELSE
+            EXECUTE 'CREATE TRIGGER revision_validation_trigger BEFORE UPDATE ON pages FOR EACH ROW EXECUTE PROCEDURE validate_revision_update();';
+        END IF;
+    END
+    $$;
     `;
 
     console.log(`Created "validate_revision_update" trigger`);
