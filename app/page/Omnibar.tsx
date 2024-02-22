@@ -27,7 +27,7 @@ const Omnibar = forwardRef(({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const ulRef = useRef<HTMLUListElement>(null);
-  const skipAutocompleteRef = useRef(false);
+  const skipTermResolutionRef = useRef(false);
 
   // TODO accessibility
   // TODO Escape sets focus back to last active editor
@@ -46,6 +46,7 @@ const Omnibar = forwardRef(({
   useEffect(() => {
     const handleFocus = () => {
       if (term === "") { 
+        skipTermResolutionRef.current = true;
         showReverseChronologicalList();
       }
     };
@@ -60,8 +61,8 @@ const Omnibar = forwardRef(({
   
   
   useEffect(() => {
-    if (skipAutocompleteRef.current) {
-      skipAutocompleteRef.current = false;
+    if (skipTermResolutionRef.current) {
+      skipTermResolutionRef.current = false;
       return;
     }
     if (term) {
@@ -76,8 +77,7 @@ const Omnibar = forwardRef(({
       }
       setResults(filteredPages);
     } else {
-      setDisplayValue("");
-      setResults([]);
+      resetSelf();
     }
   }, [term, pages]);
 
@@ -152,7 +152,7 @@ const Omnibar = forwardRef(({
       }
       event.preventDefault();
     } else if (event.key === "Backspace" || event.key === "Delete") {
-      skipAutocompleteRef.current = true;
+      skipTermResolutionRef.current = true;
       setSelectedIndex(-1);
       if (term.length === 1) {
         resetSelf();
