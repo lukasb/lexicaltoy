@@ -187,7 +187,7 @@ const Omnibar = forwardRef(({
       {results.length > 0 && (
         <ul
           ref={ulRef}
-          className="absolute z-10 w-full max-w-5xl bg-white shadow-md sm:max-h-60 md:max-h-[360px] lg:max-h-[600px] overflow-auto mt-1 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          className="absolute z-10 w-full max-w-5xl bg-white shadow-md max-h-[400px] md:max-h-[500px] lg:max-h-[600px] overflow-auto mt-1 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
         >
           {results.map((result, index) => (
             <li
