@@ -108,7 +108,7 @@ function Editor({
         alert("Failed to save page because you edited an old version, please relead for the latest version.");
         return;
       }
-      setRevisionNumber(newRevisionNumber); // TODO maybe get this from server
+      setRevisionNumber(newRevisionNumber);
       updatePageContentsLocal(pageId, outline, newRevisionNumber);
     } catch (error) {
       alert("Failed to save page");
