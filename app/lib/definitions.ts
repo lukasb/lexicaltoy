@@ -11,6 +11,7 @@ export type User = {
     userId: string;
     title: string;
     lastModified: Date;
+    revisionNumber: number;
   }
 
   export function isPage(obj: any): obj is Page {

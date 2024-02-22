@@ -102,6 +102,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
               initialPagetitle={page.title}
               initialPageContent={page.value}
               pageTitles={pageTitles}
+              initialRevisionNumber={page.revisionNumber}
               updatePageTitleLocal={(id, newTitle) => {
                 setCurrentPages(
                   currentPages.map((page) =>
@@ -109,10 +110,10 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                   )
                 );
               }}
-              updatePageContentsLocal={(id, newValue) => {
+              updatePageContentsLocal={(id, newValue, newRevisionNumber) => {
                 setCurrentPages(
                   currentPages.map((page) =>
-                    page.id === id ? { ...page, value: newValue } : page
+                    page.id === id ? { ...page, value: newValue, revisionNumber: newRevisionNumber } : page
                   )
                 );
               }}

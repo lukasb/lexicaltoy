@@ -17,7 +17,7 @@ import { LinkNode, AutoLinkNode } from "@lexical/link";
 import { KeyboardShortcutsPlugin } from "../plugins/KeyboardShortcutsPlugin";
 import DraggableBlockPlugin from "../plugins/DraggableBlockPlugin";
 import { useDebouncedCallback } from "use-debounce";
-import { updatePageContents } from "../lib/actions";
+import { updatePageContentsWithHistory } from "../lib/actions";
 import { theme } from "./editor-theme";
 import { FloatingMenuPlugin } from "../plugins/FloatingMenuPlugin";
 import { useBreakpoint } from "../lib/window-helpers";
@@ -55,6 +55,7 @@ function Editor({
   pageId,
   showDebugInfo,
   pageTitles,
+  initialRevisionNumber,
   updatePageContentsLocal,
   openOrCreatePageByTitle,
 }: {
@@ -62,7 +63,8 @@ function Editor({
   pageId: string;
   showDebugInfo: boolean;
   pageTitles: string[];
-  updatePageContentsLocal: (id: string, newValue: string) => void;
+  initialRevisionNumber: number;
+  updatePageContentsLocal: (id: string, newValue: string, revisionNumber: number) => void;
   openOrCreatePageByTitle: (title: string) => void;
 }) {
   const initialConfig = {
@@ -79,6 +81,8 @@ function Editor({
       WikilinkAutocompleteNode],
     onError,
   };
+
+  const [revisionNumber, setRevisionNumber] = useState(initialRevisionNumber);
 
   const [floatingAnchorElem, setFloatingAnchorElem] =
     useState<HTMLDivElement | null>(null);
@@ -98,8 +102,13 @@ function Editor({
 
   const storePage = useDebouncedCallback((outline) => {
     console.log(`Storing page`);
-    updatePageContents(pageId, outline);
-    updatePageContentsLocal(pageId, outline);
+    try {
+      updatePageContentsWithHistory(pageId, outline, revisionNumber);
+      setRevisionNumber(revisionNumber+1); // TODO maybe get this from server
+      updatePageContentsLocal(pageId, outline, revisionNumber);
+    } catch (error) {
+      alert("Failed to save page");
+    }
   }, 500);
 
   function onChange(editorState: EditorState) {

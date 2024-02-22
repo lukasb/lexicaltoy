@@ -14,6 +14,7 @@ export async function fetchPages(userId: string) {
       value: row.value,
       userId: row.userId,
       lastModified: row.last_modified,
+      revisionNumber: row.revision_number,
     }));
   
     return pages;
