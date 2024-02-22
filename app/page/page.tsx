@@ -36,8 +36,8 @@ export default async function Home() {
     <div className="flex justify-center items-center">
       <div className="relative w-full">
         {isDevelopmentEnvironment && (
-          <div className="absolute top-0 left-0 bg-red-500 text-white p-2">
-            Debug
+          <div className="absolute top-0 left-0 bg-red-500 text-white p-0.5">
+            dev
           </div>
         )}
         <EditingArea pages={pages} userId={session.user.id} />
