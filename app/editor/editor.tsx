@@ -102,7 +102,6 @@ function Editor({
 
   const storePage = useDebouncedCallback(async (outline) => {
     console.log(`Storing page`);
-    console.log("revision number", revisionNumber);
     try {
       const newRevisionNumber = await updatePageContentsWithHistory(pageId, outline, revisionNumber);
       if (newRevisionNumber === -1) {
@@ -110,8 +109,7 @@ function Editor({
         return;
       }
       setRevisionNumber(newRevisionNumber); // TODO maybe get this from server
-      console.log("new revision number", newRevisionNumber);
-      updatePageContentsLocal(pageId, outline, revisionNumber);
+      updatePageContentsLocal(pageId, outline, newRevisionNumber);
     } catch (error) {
       alert("Failed to save page");
     }
