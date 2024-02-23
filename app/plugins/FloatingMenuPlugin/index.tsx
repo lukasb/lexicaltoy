@@ -3,21 +3,29 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { computePosition } from '@floating-ui/dom';
 import { $getSelection } from 'lexical';
-
-import { FloatingMenu, FloatingMenuCoords } from "./FloatingMenu";
 import { $getActiveListItem, $isListItemActive } from "@/app/lib/list-utils";
 import { BaseSelection } from "lexical";
+import { set } from "zod";
 
-import { createDOMRange } from '@lexical/selection';
+export type FloatingMenuCoords = { x: number; y: number } | undefined;
+
+interface FloatingMenuConfig {
+  component: React.ComponentType<any>;
+  shouldShow: (selection: BaseSelection) => boolean;
+  priority: number;
+}
 
 export function FloatingMenuPlugin({
     anchorElem = document.body,
+    menuConfig,
   }: {
     anchorElem?: HTMLElement;
+    menuConfig: FloatingMenuConfig[];
   }) 
   {
   const ref = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<FloatingMenuCoords>(undefined);
+  const [visibleMenu, setVisibleMenu] = useState<FloatingMenuConfig | null>(null);
   const [editor] = useLexicalComposerContext();
 
   const calculatePosition = useCallback((selection: BaseSelection) => {
@@ -48,14 +56,29 @@ export function FloatingMenuPlugin({
     }
 
     const selection = $getSelection();
-
-    if ($isListItemActive(selection)) {
-      if (!selection) return setCoords(undefined);
-      calculatePosition(selection);
-    } else {
+    if (!selection) {
       setCoords(undefined);
+      return;
     }
-  }, [editor, calculatePosition]);
+
+    let newVisibleMenu: FloatingMenuConfig | null = null;
+    for (const config of menuConfig) {
+      if (config.shouldShow(selection)) {
+        if (!newVisibleMenu || config.priority > newVisibleMenu.priority) {
+          newVisibleMenu = config;
+        }
+      }
+    }
+
+    if (newVisibleMenu) {
+      calculatePosition(selection);
+      setVisibleMenu(newVisibleMenu);
+    } else {
+      setCoords(undefined); // Hide if no matching menu
+      setVisibleMenu(null);
+    }
+
+  }, [editor, calculatePosition, menuConfig]);
 
   useEffect(() => {
     const unregisterListener = editor.registerUpdateListener(
@@ -67,7 +90,9 @@ export function FloatingMenuPlugin({
   }, [editor, $handleSelectionChange]);
 
   return createPortal(
-    <FloatingMenu ref={ref} editor={editor} coords={coords} />,
+    visibleMenu ? (
+      <visibleMenu.component ref={ref} editor={editor} coords={coords} />
+    ) : null,
     anchorElem
   );
 }

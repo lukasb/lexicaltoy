@@ -31,6 +31,8 @@ import { WikilinkPlugin } from "../plugins/WikilinkPlugin";
 import ClickableWikilinkPlugin from "../plugins/ClickableWikilinkPlugin";
 import AutocompleteWikilinkPlugin from "../plugins/AutcompleteWikilinkPlugin";
 import { WikilinkAutocompleteNode } from "../nodes/WikilinkAutcompleteNode";
+import FloatingMenu from '../plugins/FloatingMenuPlugin/FloatingMenu';
+import { shouldShowFloatingMenu } from "../plugins/FloatingMenuPlugin/FloatingMenu";
 
 function OnChangePlugin({
   onChange,
@@ -154,7 +156,16 @@ function Editor({
       )}
       {floatingAnchorElem && isSmallWidthViewport && (
         <>
-          <FloatingMenuPlugin anchorElem={floatingAnchorElem} />
+          <FloatingMenuPlugin 
+            anchorElem={floatingAnchorElem}
+            menuConfig={[
+              {
+                component: FloatingMenu,
+                shouldShow: shouldShowFloatingMenu,
+                priority: 10
+              }
+            ]}
+          />
         </>
       )}
       {showDebugInfo && <TreeViewPlugin />}

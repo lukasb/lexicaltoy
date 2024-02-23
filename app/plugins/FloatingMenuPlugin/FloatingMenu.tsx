@@ -1,15 +1,14 @@
 import { forwardRef, useEffect, useState } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $getSelection, $isRangeSelection } from "lexical";
+import { $getSelection, $isRangeSelection, BaseSelection } from "lexical";
 import { $canIndent, $canOutdent } from "@/app/lib/list-utils";
 import {
   INDENT_LISTITEM_COMMAND,
   OUTDENT_LISTITEM_COMMAND,
 } from "@/app/lib/list-commands";
-import { $getActiveListItem } from "@/app/lib/list-utils";
+import { $getActiveListItem, $isListItemActive } from "@/app/lib/list-utils";
 import { ListItemNode } from "@lexical/list";
-
-export type FloatingMenuCoords = { x: number; y: number } | undefined;
+import { FloatingMenuCoords } from "./index";
 
 type FloatingMenuState = {
   canIndent: boolean;
@@ -22,9 +21,12 @@ type FloatingMenuProps = {
   coords: FloatingMenuCoords;
 };
 
-export const FloatingMenu = forwardRef<HTMLDivElement, FloatingMenuProps>(
-  function FloatingMenu(props, ref) {
-    const { editor, coords } = props;
+// show if selection is on a list item
+export function shouldShowFloatingMenu(selection: BaseSelection) {
+  return (selection && $isListItemActive(selection)) || false;
+}
+
+const FloatingMenu = forwardRef<HTMLDivElement, FloatingMenuProps>(({ editor, coords }, ref) => {
 
     const shouldShow = coords !== undefined;
 
@@ -92,5 +94,8 @@ export const FloatingMenu = forwardRef<HTMLDivElement, FloatingMenuProps>(
         </button>
       </div>
     );
-  }
-);
+});
+
+FloatingMenu.displayName = "FloatingMenu";
+
+export default FloatingMenu;
