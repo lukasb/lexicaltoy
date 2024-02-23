@@ -31,8 +31,8 @@ import { WikilinkPlugin } from "../plugins/WikilinkPlugin";
 import ClickableWikilinkPlugin from "../plugins/ClickableWikilinkPlugin";
 import AutocompleteWikilinkPlugin from "../plugins/AutcompleteWikilinkPlugin";
 import { WikilinkAutocompleteNode } from "../nodes/WikilinkAutcompleteNode";
-import FloatingMenu from '../plugins/FloatingMenuPlugin/FloatingMenu';
-import { shouldShowFloatingMenu, computeFloatingMenuPosition } from "../plugins/FloatingMenuPlugin/FloatingMenu";
+import FloatingIndentButtons from '../plugins/FloatingMenuPlugin/FloatingIndentButtons';
+import { shouldShowFloatingIndentButtons, computeFloatingIndentButtonsPosition } from "../plugins/FloatingMenuPlugin/FloatingIndentButtons";
 
 function OnChangePlugin({
   onChange,
@@ -160,9 +160,9 @@ function Editor({
             anchorElem={floatingAnchorElem}
             menuConfig={[
               {
-                component: FloatingMenu,
-                shouldShow: shouldShowFloatingMenu,
-                computePosition: computeFloatingMenuPosition,
+                component: FloatingIndentButtons,
+                shouldShow: shouldShowFloatingIndentButtons,
+                computePosition: computeFloatingIndentButtonsPosition,
                 priority: 10
               }
             ]}

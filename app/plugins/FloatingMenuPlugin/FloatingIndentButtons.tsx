@@ -1,5 +1,4 @@
 import { forwardRef, useEffect, useState } from "react";
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $getSelection, $isRangeSelection, BaseSelection, LexicalEditor } from "lexical";
 import { $canIndent, $canOutdent } from "@/app/lib/list-utils";
 import {
@@ -18,11 +17,11 @@ type FloatingMenuState = {
 };
 
 // show if selection is on a list item
-export function shouldShowFloatingMenu(selection: BaseSelection) {
+export function shouldShowFloatingIndentButtons(selection: BaseSelection) {
   return (selection && $isListItemActive(selection)) || false;
 }
 
-export async function computeFloatingMenuPosition(
+export async function computeFloatingIndentButtonsPosition(
   editor: LexicalEditor,
   selection: BaseSelection,
   ref: React.RefObject<HTMLElement>
@@ -45,7 +44,7 @@ export async function computeFloatingMenuPosition(
   }
 }
 
-const FloatingMenu = forwardRef<HTMLDivElement, FloatingMenuProps>(({ editor, coords }, ref) => {
+const FloatingIndentButtons = forwardRef<HTMLDivElement, FloatingMenuProps>(({ editor, coords }, ref) => {
 
     const shouldShow = coords !== undefined;
 
@@ -115,6 +114,6 @@ const FloatingMenu = forwardRef<HTMLDivElement, FloatingMenuProps>(({ editor, co
     );
 });
 
-FloatingMenu.displayName = "FloatingMenu";
+FloatingIndentButtons.displayName = "FloatingMenu";
 
-export default FloatingMenu;
+export default FloatingIndentButtons;
