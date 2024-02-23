@@ -8,18 +8,13 @@ import {
 } from "@/app/lib/list-commands";
 import { $getActiveListItem, $isListItemActive } from "@/app/lib/list-utils";
 import { ListItemNode } from "@lexical/list";
-import { FloatingMenuCoords } from "./index";
+import { FloatingMenuCoords, FloatingMenuProps } from "./index";
 import { computePosition } from '@floating-ui/dom';
 
 type FloatingMenuState = {
   canIndent: boolean;
   canOutdent: boolean;
   listItem: ListItemNode | null;
-};
-
-type FloatingMenuProps = {
-  editor: ReturnType<typeof useLexicalComposerContext>[0];
-  coords: FloatingMenuCoords;
 };
 
 // show if selection is on a list item
@@ -33,12 +28,8 @@ export async function computeFloatingMenuPosition(
   ref: React.RefObject<HTMLElement>
 ): Promise<FloatingMenuCoords> {
 
-  console.log("computing position inner");
   const listItem = $getActiveListItem(selection);
-  if (!listItem || !ref || !ref.current) {
-    console.log("no list item or no ref");
-    return undefined;
-  }
+  if (!listItem || !ref || !ref.current) return undefined;
 
   const listItemDOM = editor.getElementByKey(
     listItem.getKey()
@@ -48,10 +39,8 @@ export async function computeFloatingMenuPosition(
   try {
     const pos = await computePosition(listItemDOM, ref.current, { placement: "bottom-end" });
     const coords = { x: pos.x, y: pos.y + 10 };
-    console.log("pos", coords);
-    return coords; // Ensure this result is returned.
+    return coords;
   } catch (error) {
-    console.log("Error computing position", error);
     return undefined;
   }
 }

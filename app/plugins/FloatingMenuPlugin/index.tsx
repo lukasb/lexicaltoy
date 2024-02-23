@@ -13,6 +13,11 @@ interface FloatingMenuConfig {
   priority: number;
 }
 
+export type FloatingMenuProps = {
+  editor: ReturnType<typeof useLexicalComposerContext>[0];
+  coords: FloatingMenuCoords;
+};
+
 export function FloatingMenuPlugin({
     anchorElem = document.body,
     menuConfig,
@@ -32,13 +37,9 @@ export function FloatingMenuPlugin({
       currentVisibleMenu: FloatingMenuConfig | null
     ) => {
       if (!selection || !ref.current) return setCoords(undefined);
-
-      console.log("calculating position outer");
-      if (!currentVisibleMenu) console.log("no current visible menu");
       const coords = currentVisibleMenu
         ? await currentVisibleMenu.computePosition(editor, selection, ref)
         : undefined;
-      console.log("coords", coords);
       setCoords(coords);
     },
     [editor]
