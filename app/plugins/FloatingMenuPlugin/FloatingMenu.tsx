@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useState } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $getSelection, $isRangeSelection, BaseSelection } from "lexical";
+import { $getSelection, $isRangeSelection, BaseSelection, LexicalEditor } from "lexical";
 import { $canIndent, $canOutdent } from "@/app/lib/list-utils";
 import {
   INDENT_LISTITEM_COMMAND,
@@ -9,6 +9,7 @@ import {
 import { $getActiveListItem, $isListItemActive } from "@/app/lib/list-utils";
 import { ListItemNode } from "@lexical/list";
 import { FloatingMenuCoords } from "./index";
+import { computePosition } from '@floating-ui/dom';
 
 type FloatingMenuState = {
   canIndent: boolean;
@@ -24,6 +25,35 @@ type FloatingMenuProps = {
 // show if selection is on a list item
 export function shouldShowFloatingMenu(selection: BaseSelection) {
   return (selection && $isListItemActive(selection)) || false;
+}
+
+export async function computeFloatingMenuPosition(
+  editor: LexicalEditor,
+  selection: BaseSelection,
+  ref: React.RefObject<HTMLElement>
+): Promise<FloatingMenuCoords> {
+
+  console.log("computing position inner");
+  const listItem = $getActiveListItem(selection);
+  if (!listItem || !ref || !ref.current) {
+    console.log("no list item or no ref");
+    return undefined;
+  }
+
+  const listItemDOM = editor.getElementByKey(
+    listItem.getKey()
+  ) as HTMLLIElement;
+
+  // Use async/await to wait for the promise to resolve.
+  try {
+    const pos = await computePosition(listItemDOM, ref.current, { placement: "bottom-end" });
+    const coords = { x: pos.x, y: pos.y + 10 };
+    console.log("pos", coords);
+    return coords; // Ensure this result is returned.
+  } catch (error) {
+    console.log("Error computing position", error);
+    return undefined;
+  }
 }
 
 const FloatingMenu = forwardRef<HTMLDivElement, FloatingMenuProps>(({ editor, coords }, ref) => {

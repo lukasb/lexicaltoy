@@ -32,7 +32,7 @@ import ClickableWikilinkPlugin from "../plugins/ClickableWikilinkPlugin";
 import AutocompleteWikilinkPlugin from "../plugins/AutcompleteWikilinkPlugin";
 import { WikilinkAutocompleteNode } from "../nodes/WikilinkAutcompleteNode";
 import FloatingMenu from '../plugins/FloatingMenuPlugin/FloatingMenu';
-import { shouldShowFloatingMenu } from "../plugins/FloatingMenuPlugin/FloatingMenu";
+import { shouldShowFloatingMenu, computeFloatingMenuPosition } from "../plugins/FloatingMenuPlugin/FloatingMenu";
 
 function OnChangePlugin({
   onChange,
@@ -162,6 +162,7 @@ function Editor({
               {
                 component: FloatingMenu,
                 shouldShow: shouldShowFloatingMenu,
+                computePosition: computeFloatingMenuPosition,
                 priority: 10
               }
             ]}
