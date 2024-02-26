@@ -87,7 +87,12 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
 
     const shouldShow = coords !== undefined;
 
-    const handleSelectSuggestion = (page: Page) => {
+    const resetSelf = useCallback(() => {
+      setResults([]);
+      setSelectedIndex(-1);
+    }, []);
+
+    const handleSelectSuggestion = useCallback((page: Page) => {
       editor.update(() => {
         const selection = $getSelection();
         if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return;
@@ -97,12 +102,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         selection.insertText(remainingText + "]]");
         resetSelf();
       });
-    }
-
-    const resetSelf = () => {
-      setResults([]);
-      setSelectedIndex(-1);
-    };
+    }, [editor, resetSelf]);
 
     useEffect(() => {
       const unregisterListener = editor.registerUpdateListener(
