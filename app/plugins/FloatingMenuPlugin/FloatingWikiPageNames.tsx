@@ -21,7 +21,6 @@ import { $isAtNodeEnd } from "@lexical/selection";
 import { FloatingMenuCoords, FloatingMenuProps } from ".";
 import { PagesContext } from "@/app/page/EditingArea";
 import { isSmallWidthViewport } from "@/app/lib/window-helpers";
-import { get } from 'http';
 
 // TODO figure out actual line height instead of hardcoding 30
 const lineHeight = 30;
@@ -67,7 +66,13 @@ export async function computeFloatingWikiPageNamesPosition(
   selection: BaseSelection,
   ref: React.RefObject<HTMLElement>
 ): Promise<FloatingMenuCoords> {
-  return computeFloatingWikiPageNamesPositionInternal(editor);
+  const position = computeFloatingWikiPageNamesPositionInternal(editor);
+  if (!position) return { x: 0, y: 0 };
+  const {cursorLeft, cursorTop, rootX, rootY} = position;
+  return {
+    x: cursorLeft - rootX,
+    y: cursorTop - rootY + lineHeight
+  };
 }
 
 function computeFloatingWikiPageNamesPositionInternal(editor: LexicalEditor) {
@@ -86,11 +91,13 @@ function computeFloatingWikiPageNamesPositionInternal(editor: LexicalEditor) {
     startY = dom?.getBoundingClientRect().top || 0;
   });
   if (!rect) return;
-  
-  let x = rect.left - startX;
-  let y = rect.top - startY + lineHeight;
-  
-  return { x, y };
+
+  return {
+    cursorLeft: rect.left,
+    cursorTop: rect.top,
+    rootX: startX,
+    rootY: startY 
+  };
 }
 
 const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
@@ -111,8 +118,8 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
     useEffect(() => {
       if (results.length > 0) {
         if (!editor) return;
-        const defaultPosition = computeFloatingWikiPageNamesPositionInternal(editor);
-        if (!defaultPosition) return;
+        const positionVars = computeFloatingWikiPageNamesPositionInternal(editor);
+        if (!positionVars) return;
         let newHeight = 0;
         let newTop = 0;
         // TODO well this sorta works to figure out the height ...
@@ -121,11 +128,11 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         } else {
           newHeight = Math.min(results.length * 30, desktopMaxHeight);
         }
-        const spaceBelow = window.innerHeight - defaultPosition.y;
+        const spaceBelow = (window.innerHeight - positionVars.rootY) - positionVars.cursorTop - window.scrollY;
         if (spaceBelow < newHeight) {
-          newTop = defaultPosition.y - newHeight - lineHeight - 10;
+          newTop = positionVars.cursorTop - positionVars.rootY - newHeight - lineHeight - 10;
         } else {
-          newTop = defaultPosition.y;
+          newTop = positionVars.cursorTop - positionVars.rootY + lineHeight;
         }
         setPosition({top: newTop, left: position.left});
       }
