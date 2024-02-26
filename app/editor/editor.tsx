@@ -29,10 +29,10 @@ import LexicalClickableLinkPlugin from "@lexical/react/LexicalClickableLinkPlugi
 import { WikilinkNode, WikilinkInternalNode } from "../nodes/WikilinkNode";
 import { WikilinkPlugin } from "../plugins/WikilinkPlugin";
 import ClickableWikilinkPlugin from "../plugins/ClickableWikilinkPlugin";
-import AutocompleteWikilinkPlugin from "../plugins/AutcompleteWikilinkPlugin";
-import { WikilinkAutocompleteNode } from "../nodes/WikilinkAutcompleteNode";
 import FloatingIndentButtons from '../plugins/FloatingMenuPlugin/FloatingIndentButtons';
 import { shouldShowFloatingIndentButtons, computeFloatingIndentButtonsPosition } from "../plugins/FloatingMenuPlugin/FloatingIndentButtons";
+import FloatingWikiPageNames from "../plugins/FloatingMenuPlugin/FloatingWikiPageNames";
+import { shouldShowFloatingWikiPageNames, computeFloatingWikiPageNamesPosition } from "../plugins/FloatingMenuPlugin/FloatingWikiPageNames";
 
 function OnChangePlugin({
   onChange,
@@ -79,8 +79,7 @@ function Editor({
       ListItemNode,
       AutoLinkNode,
       WikilinkNode,
-      WikilinkInternalNode,
-      WikilinkAutocompleteNode],
+      WikilinkInternalNode],
     onError,
   };
 
@@ -148,10 +147,20 @@ function Editor({
       <LexicalClickableLinkPlugin />
       <WikilinkPlugin />
       <ClickableWikilinkPlugin openOrCreatePageByTitle={openOrCreatePageByTitle} />
-      <AutocompleteWikilinkPlugin pageTitles={pageTitles} />
       {floatingAnchorElem && !isSmallWidthViewport && (
         <>
           <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
+          <FloatingMenuPlugin 
+            anchorElem={floatingAnchorElem}
+            menuConfig={[
+              {
+                component: FloatingWikiPageNames,
+                shouldShow: shouldShowFloatingWikiPageNames,
+                computePosition: computeFloatingWikiPageNamesPosition,
+                priority: 20
+              }
+            ]}
+          />
         </>
       )}
       {floatingAnchorElem && isSmallWidthViewport && (
@@ -164,6 +173,12 @@ function Editor({
                 shouldShow: shouldShowFloatingIndentButtons,
                 computePosition: computeFloatingIndentButtonsPosition,
                 priority: 10
+              },
+              {
+                component: FloatingWikiPageNames,
+                shouldShow: shouldShowFloatingWikiPageNames,
+                computePosition: computeFloatingWikiPageNamesPosition,
+                priority: 20
               }
             ]}
           />

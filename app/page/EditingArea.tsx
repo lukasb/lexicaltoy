@@ -8,6 +8,9 @@ import { useState } from "react";
 import { insertPage } from "../lib/actions";
 import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
+import { createContext, useContext } from 'react';
+
+export const PagesContext = createContext<Page[]>([]);
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   
@@ -81,6 +84,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
+      <PagesContext.Provider value={currentPages}>
       <Omnibar
         ref={omnibarRef}
         pages={currentPages}
@@ -125,6 +129,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
           ))}
         </div>
       )}
+      </PagesContext.Provider>
     </div>
   );
 }
