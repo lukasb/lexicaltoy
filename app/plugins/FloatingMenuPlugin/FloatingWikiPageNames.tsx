@@ -12,6 +12,7 @@ import {
   $isTextNode,
   LexicalEditor,
   $getSelection,
+  $getRoot,
 } from "lexical";
 import { $isAtNodeEnd } from "@lexical/selection";
 import { FloatingMenuCoords, FloatingMenuProps } from ".";
@@ -61,7 +62,18 @@ export async function computeFloatingWikiPageNamesPosition(
   const range = theSelection?.getRangeAt(0);
   const rect = range?.getBoundingClientRect();
 
-  return { x: rect?.left || 0, y: rect?.top || 0 };
+  const node = $getRoot();
+  const editorState = editor.getEditorState();
+  let startX = 0;
+  let startY = 0;
+  editorState.read(() => {
+    const dom = editor.getElementByKey(node.__key);
+    startX = dom?.getBoundingClientRect().left || 0;
+    startY = dom?.getBoundingClientRect().top || 0;
+  });
+  if (!rect) return;
+  // TODO figure out actual line height instead of hardcoding 30
+  return { x: rect.left - startX || 0, y: rect.top - startY + 30 || 0 };
 }
 
 const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
@@ -93,14 +105,12 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
       const unregisterListener = editor.registerUpdateListener(
         ({ editorState }) => {
           editorState.read(() => {
-            console.log("reading editor state");
             const selection = $getSelection();
             const [hasMatch, match] = $search(selection);
             if (!hasMatch) {
               resetSelf();
               return;
             }
-            console.log("filtering pages");
             const filteredPages = searchPages(pages, match);
             setResults(filteredPages);
           });
