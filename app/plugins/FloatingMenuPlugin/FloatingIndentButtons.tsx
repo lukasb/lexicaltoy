@@ -114,6 +114,6 @@ const FloatingIndentButtons = forwardRef<HTMLDivElement, FloatingMenuProps>(({ e
     );
 });
 
-FloatingIndentButtons.displayName = "FloatingMenu";
+FloatingIndentButtons.displayName = "FloatingIndentButtons";
 
 export default FloatingIndentButtons;
