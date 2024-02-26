@@ -5,18 +5,19 @@ const CAN_USE_DOM: boolean =
   typeof window.document !== 'undefined' &&
   typeof window.document.createElement !== 'undefined';
 
+export function isSmallWidthViewport(breakpoint: number): boolean {
+  return CAN_USE_DOM && window.matchMedia(`(max-width: ${breakpoint}px)`).matches;
+};
+
 export function useBreakpoint(
   breakpoint: number,
-  isSmallWidthViewport: boolean,
+  isCurrentSmallWidthViewport: boolean,
   setIsSmallWidthViewport: (isSmall: boolean) => void
 ): void {
   useEffect(() => {
     const updateViewPortWidth = () => {
-      const isNextSmallWidthViewport =
-        CAN_USE_DOM && window.matchMedia(`(max-width: ${breakpoint}px)`).matches;
-
-      if (isNextSmallWidthViewport !== isSmallWidthViewport) {
-        setIsSmallWidthViewport(isNextSmallWidthViewport);
+      if (isSmallWidthViewport(breakpoint) !== isCurrentSmallWidthViewport) {
+        setIsSmallWidthViewport(isSmallWidthViewport(breakpoint));
       }
     };
     updateViewPortWidth();
@@ -25,5 +26,5 @@ export function useBreakpoint(
     return () => {
       window.removeEventListener('resize', updateViewPortWidth);
     };
-  }, [breakpoint, isSmallWidthViewport, setIsSmallWidthViewport]);
+  }, [breakpoint, isCurrentSmallWidthViewport, setIsSmallWidthViewport]);
 }

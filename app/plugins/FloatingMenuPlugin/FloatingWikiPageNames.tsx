@@ -20,6 +20,13 @@ import {
 import { $isAtNodeEnd } from "@lexical/selection";
 import { FloatingMenuCoords, FloatingMenuProps } from ".";
 import { PagesContext } from "@/app/page/EditingArea";
+import { isSmallWidthViewport } from "@/app/lib/window-helpers";
+import { get } from 'http';
+
+// TODO figure out actual line height instead of hardcoding 30
+const lineHeight = 30;
+const mobileMaxHeight = 100;
+const desktopMaxHeight = 400;
 
 export function shouldShowFloatingWikiPageNames(selection: BaseSelection) {
   if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
@@ -60,23 +67,30 @@ export async function computeFloatingWikiPageNamesPosition(
   selection: BaseSelection,
   ref: React.RefObject<HTMLElement>
 ): Promise<FloatingMenuCoords> {
+  return computeFloatingWikiPageNamesPositionInternal(editor);
+}
+
+function computeFloatingWikiPageNamesPositionInternal(editor: LexicalEditor) {
   // lexical selections don't let you get a range?
   const theSelection = window.getSelection();
   const range = theSelection?.getRangeAt(0);
   const rect = range?.getBoundingClientRect();
 
-  const node = $getRoot();
   const editorState = editor.getEditorState();
   let startX = 0;
   let startY = 0;
   editorState.read(() => {
+    const node = $getRoot();
     const dom = editor.getElementByKey(node.__key);
     startX = dom?.getBoundingClientRect().left || 0;
     startY = dom?.getBoundingClientRect().top || 0;
   });
   if (!rect) return;
-  // TODO figure out actual line height instead of hardcoding 30
-  return { x: rect.left - startX || 0, y: rect.top - startY + 30 || 0 };
+  
+  let x = rect.left - startX;
+  let y = rect.top - startY + lineHeight;
+  
+  return { x, y };
 }
 
 const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
@@ -84,6 +98,8 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
     const [results, setResults] = useState<Page[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const pages = useContext(PagesContext);
+    const [cancelled, setCancelled] = useState(false);
+    const [position, setPosition] = useState({top: coords?.y, left: coords?.x});
 
     const shouldShow = coords !== undefined;
 
@@ -91,6 +107,29 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
       setResults([]);
       setSelectedIndex(-1);
     }, []);
+
+    useEffect(() => {
+      if (results.length > 0) {
+        if (!editor) return;
+        const defaultPosition = computeFloatingWikiPageNamesPositionInternal(editor);
+        if (!defaultPosition) return;
+        let newHeight = 0;
+        let newTop = 0;
+        // TODO well this sorta works to figure out the height ...
+        if (isSmallWidthViewport(768)) {
+          newHeight = Math.min(results.length * 30, mobileMaxHeight);
+        } else {
+          newHeight = Math.min(results.length * 30, desktopMaxHeight);
+        }
+        const spaceBelow = window.innerHeight - defaultPosition.y;
+        if (spaceBelow < newHeight) {
+          newTop = defaultPosition.y - newHeight - lineHeight - 10;
+        } else {
+          newTop = defaultPosition.y;
+        }
+        setPosition({top: newTop, left: position.left});
+      }
+    }, [results]);
 
     const handleSelectSuggestion = useCallback((page: Page) => {
       editor.update(() => {
@@ -122,29 +161,25 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
       return unregisterListener;
     }, [editor]);
 
-    useEffect(() => {
-      console.log('Component mounted');
-    
-      return () => {
-        console.log('Component unmounted');
-      };
-    }, []);
+    // we're doing this to memoize state (results, shouldShow etc)
+    // component was being mounted twice and the second time it didn't have the right state
+    // TODO figure out why
 
     const command = useCallback((keyboardEvent: React.KeyboardEvent, editor: LexicalEditor) => {
       if (keyboardEvent.key === "ArrowDown") {
-        if (!shouldShow) return false;
+        if (!shouldShow || cancelled) return false;
         keyboardEvent.preventDefault();
         setSelectedIndex((prevIndex) =>
           Math.min(prevIndex + 1, results.length - 1)
         );
         return true;
       } else if (keyboardEvent.key === "ArrowUp") {
-        if (!shouldShow) return false;
+        if (!shouldShow || cancelled) return false;
         keyboardEvent.preventDefault();
         setSelectedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
         return true;
       } else if (keyboardEvent.key === "Enter") {
-        if (!shouldShow) return false;
+        if (!shouldShow || cancelled) return false;
         if (selectedIndex > -1 && results.length > 0) {
           keyboardEvent.preventDefault();
           handleSelectSuggestion(results[selectedIndex]);
@@ -153,6 +188,8 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         }
         return false;
       } else if (keyboardEvent.key === "Escape") {
+        if (!shouldShow || cancelled) return false;
+        setCancelled(true);
         resetSelf();
         return true;
       }
@@ -161,7 +198,6 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
     
     useEffect(() => {
       if (!editor) return () => undefined;
-      console.log("registering command");
       return editor.registerCommand(
         KEY_DOWN_COMMAND,
         command,
@@ -169,6 +205,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
       );
     }, [editor, command]);
 
+    // TODO don't hardcode max heights below
     return (
       <div
         ref={ref}
@@ -176,13 +213,13 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         aria-hidden={!shouldShow}
         style={{
           position: "absolute",
-          top: coords?.y,
-          left: coords?.x,
+          top: position.top ? position.top : coords?.y,
+          left: position.left ? position.left: coords?.x,
           visibility: shouldShow ? "visible" : "hidden",
           opacity: shouldShow ? 1 : 0,
         }}
       >
-        <ul className="max-h-[400px] overflow-auto">
+        <ul className="max-h-[100px] md:max-h-[400px] overflow-auto">
           {results.map((result, index) => (
             <li
               key={index}
