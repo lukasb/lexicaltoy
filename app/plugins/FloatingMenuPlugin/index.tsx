@@ -70,6 +70,7 @@ export function FloatingMenuPlugin({
     }
 
     if (newVisibleMenu) {
+      console.log(`newVisibleMenu: ${newVisibleMenu}`);
       setVisibleMenu(newVisibleMenu);
       calculatePosition(selection, newVisibleMenu);
     } else {
@@ -87,6 +88,14 @@ export function FloatingMenuPlugin({
     );
     return unregisterListener;
   }, [editor, $handleSelectionChange]);
+
+  useEffect(() => {
+    console.log('Plugin mounted');
+  
+    return () => {
+      console.log('Plugin unmounted');
+    };
+  }, []);
 
   return createPortal(
     visibleMenu ? (

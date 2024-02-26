@@ -3,6 +3,7 @@ import React, {
   useEffect,
   forwardRef,
   useContext,
+  useCallback
 } from "react";
 import { searchPages } from "@/app/lib/pages-helpers";
 import { Page } from "@/app/lib/definitions";
@@ -13,6 +14,8 @@ import {
   LexicalEditor,
   $getSelection,
   $getRoot,
+  COMMAND_PRIORITY_CRITICAL,
+  KEY_DOWN_COMMAND
 } from "lexical";
 import { $isAtNodeEnd } from "@lexical/selection";
 import { FloatingMenuCoords, FloatingMenuProps } from ".";
@@ -118,6 +121,53 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
       );
       return unregisterListener;
     }, [editor]);
+
+    useEffect(() => {
+      console.log('Component mounted');
+    
+      return () => {
+        console.log('Component unmounted');
+      };
+    }, []);
+
+    const command = useCallback((keyboardEvent: React.KeyboardEvent, editor: LexicalEditor) => {
+      if (keyboardEvent.key === "ArrowDown") {
+        if (!shouldShow) return false;
+        keyboardEvent.preventDefault();
+        setSelectedIndex((prevIndex) =>
+          Math.min(prevIndex + 1, results.length - 1)
+        );
+        return true;
+      } else if (keyboardEvent.key === "ArrowUp") {
+        if (!shouldShow) return false;
+        keyboardEvent.preventDefault();
+        setSelectedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+        return true;
+      } else if (keyboardEvent.key === "Enter") {
+        if (!shouldShow) return false;
+        if (selectedIndex > -1 && results.length > 0) {
+          keyboardEvent.preventDefault();
+          handleSelectSuggestion(results[selectedIndex]);
+          resetSelf();
+          return true;
+        }
+        return false;
+      } else if (keyboardEvent.key === "Escape") {
+        resetSelf();
+        return true;
+      }
+      return false;
+    }, [shouldShow, results, selectedIndex, handleSelectSuggestion, resetSelf]);
+    
+    useEffect(() => {
+      if (!editor) return () => undefined;
+      console.log("registering command");
+      return editor.registerCommand(
+        KEY_DOWN_COMMAND,
+        command,
+        COMMAND_PRIORITY_CRITICAL
+      );
+    }, [editor, command]);
 
     return (
       <div
