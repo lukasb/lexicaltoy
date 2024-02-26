@@ -130,7 +130,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
           newHeight = Math.min(results.length * menuLineHeight, desktopMaxHeight);
         }
         console.log("stuff", newHeight, positionVars.cursorTop, positionVars.rootY);
-        const spaceBelow = (window.innerHeight - positionVars.rootY) - positionVars.cursorTop - window.scrollY;
+        const spaceBelow = window.innerHeight - positionVars.cursorTop - window.scrollY;
         if (spaceBelow < newHeight) {
           newTop = positionVars.cursorTop - positionVars.rootY - newHeight - 10;
         } else {
