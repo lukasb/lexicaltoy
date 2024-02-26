@@ -23,7 +23,8 @@ import { PagesContext } from "@/app/page/EditingArea";
 import { isSmallWidthViewport } from "@/app/lib/window-helpers";
 
 // TODO figure out actual line height instead of hardcoding 30
-const lineHeight = 30;
+const editorLineHeight = 30;
+const menuLineHeight = 40;
 const mobileMaxHeight = 100;
 const desktopMaxHeight = 400;
 
@@ -71,7 +72,7 @@ export async function computeFloatingWikiPageNamesPosition(
   const {cursorLeft, cursorTop, rootX, rootY} = position;
   return {
     x: cursorLeft - rootX,
-    y: cursorTop - rootY + lineHeight
+    y: cursorTop - rootY + editorLineHeight
   };
 }
 
@@ -124,15 +125,16 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         let newTop = 0;
         // TODO well this sorta works to figure out the height ...
         if (isSmallWidthViewport(768)) {
-          newHeight = Math.min(results.length * 30, mobileMaxHeight);
+          newHeight = Math.min(results.length * menuLineHeight, mobileMaxHeight);
         } else {
-          newHeight = Math.min(results.length * 30, desktopMaxHeight);
+          newHeight = Math.min(results.length * menuLineHeight, desktopMaxHeight);
         }
+        console.log("stuff", newHeight, positionVars.cursorTop, positionVars.rootY);
         const spaceBelow = (window.innerHeight - positionVars.rootY) - positionVars.cursorTop - window.scrollY;
         if (spaceBelow < newHeight) {
-          newTop = positionVars.cursorTop - positionVars.rootY - newHeight - lineHeight - 10;
+          newTop = positionVars.cursorTop - positionVars.rootY - newHeight - 10;
         } else {
-          newTop = positionVars.cursorTop - positionVars.rootY + lineHeight;
+          newTop = positionVars.cursorTop - positionVars.rootY + editorLineHeight;
         }
         setPosition({top: newTop, left: position.left});
       }
