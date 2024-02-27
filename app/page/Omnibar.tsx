@@ -6,17 +6,17 @@ import React, {
   useRef,
   forwardRef,
   useImperativeHandle,
-  useCallback
+  useCallback,
+  useContext
 } from "react";
 import { searchPages } from "../lib/pages-helpers";
 import { Page } from "../lib/definitions";
-
+import { PagesContext } from "@/app/context/pages-context";
+ 
 const Omnibar = forwardRef(({
-  pages,
   createNewPage,
   openPage
 }: { 
-  pages: Page[],
   createNewPage: (title: string) => void,
   openPage: (page: Page) => void
 }, ref) => {
@@ -28,6 +28,7 @@ const Omnibar = forwardRef(({
   const inputRef = useRef<HTMLInputElement>(null);
   const ulRef = useRef<HTMLUListElement>(null);
   const skipTermResolutionRef = useRef(false);
+  const pages = useContext(PagesContext);
 
   // TODO accessibility
   // TODO Escape sets focus back to last active editor
@@ -59,8 +60,12 @@ const Omnibar = forwardRef(({
     };
   }, [term, showReverseChronologicalList]); 
   
+  useEffect(() => {
+    console.log("got new pages", pages.length);
+  }, [pages]);
   
   useEffect(() => {
+    console.log("number of pages", pages.length);
     if (skipTermResolutionRef.current) {
       skipTermResolutionRef.current = false;
       return;
