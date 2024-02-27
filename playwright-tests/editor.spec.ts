@@ -156,3 +156,25 @@ test('can open a wikilink', async ({ page }) => {
   }
   await expect(found).toBeTruthy();
 });
+
+test('clicking wikilink does not open duplicate pages', async ({ page }) => {
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.fill('villa');
+  await page.keyboard.press('Enter');
+  const wikilink = page.locator('.PlaygroundEditorTheme__wikilinkPageTitle');
+  await wikilink.click();
+  await page.waitForTimeout(1000);
+  await wikilink.click();
+  await page.waitForTimeout(1000);
+  const titles = await page.locator('[data-testid="editable-title"]');
+  let found = 0;
+  const count = await titles.count();
+  for (let i = 0; i < count; i++) {
+    const titleText = await titles.nth(i).textContent();
+    if (titleText === 'abc') {
+      found = found + 1;
+      break;
+    }
+  }
+  await expect(found).toBe(1);
+});
