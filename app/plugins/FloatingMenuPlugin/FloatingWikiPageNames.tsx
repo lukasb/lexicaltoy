@@ -124,7 +124,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
       itemRefs.current = results.map((_, i) =>
         itemRefs.current[i] ?? createRef<HTMLLIElement>()
       );
-    }, [results.length]);
+    }, [results]);
 
     useEffect(() => {
       if (results.length > 0) {
@@ -147,7 +147,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         }
         setPosition({top: newTop, left: position.left});
       }
-    }, [results]);
+    }, [results, editor, position.left, position.top]);
 
     // Scroll the selected item into view when selectedIndex changes
     useEffect(() => {
@@ -188,7 +188,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         }
       );
       return unregisterListener;
-    }, [editor]);
+    }, [editor, pages, resetSelf]);
 
     // we're doing this to memoize state (results, shouldShow etc)
     // component was being mounted twice and the second time it didn't have the right state
@@ -223,7 +223,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         return true;
       }
       return false;
-    }, [shouldShow, results, selectedIndex, handleSelectSuggestion, resetSelf]);
+    }, [shouldShow, results, selectedIndex, handleSelectSuggestion, resetSelf, cancelled]);
     
     useEffect(() => {
       if (!editor) return () => undefined;
