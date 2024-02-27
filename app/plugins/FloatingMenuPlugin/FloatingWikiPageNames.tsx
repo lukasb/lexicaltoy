@@ -21,7 +21,7 @@ import {
 } from "lexical";
 import { $isAtNodeEnd } from "@lexical/selection";
 import { FloatingMenuCoords, FloatingMenuProps } from ".";
-import { PagesContext } from "@/app/page/EditingArea";
+import { PagesContext } from "@/app/context/pages-context";
 import { isSmallWidthViewport } from "@/app/lib/window-helpers";
 
 // TODO figure out actual line height instead of hardcoding 30

@@ -9,8 +9,7 @@ import { insertPage } from "../lib/actions";
 import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { createContext, useContext } from 'react';
-
-export const PagesContext = createContext<Page[]>([]);
+import { PagesContext } from '@/app/context/pages-context';
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   
