@@ -61,12 +61,7 @@ const Omnibar = forwardRef(({
   }, [term, showReverseChronologicalList]); 
   
   useEffect(() => {
-    console.log("got new pages", pages.length);
-  }, [pages]);
-  
-  useEffect(() => {
-    console.log("number of pages", pages.length);
-    if (skipTermResolutionRef.current) {
+    if (skipTermResolutionRef.current === true) {
       skipTermResolutionRef.current = false;
       return;
     }
@@ -102,6 +97,12 @@ const Omnibar = forwardRef(({
       }
     }
   }, [displayValue, term, pages]);
+  
+  const handleClickOutside = useCallback((event: { target: Node | null}) => {
+    if (ulRef.current && !ulRef.current.contains(event.target)) {
+      resetSelf();
+    }
+  }, []);
 
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside as EventListener);
@@ -111,7 +112,7 @@ const Omnibar = forwardRef(({
         handleClickOutside as EventListener
       );
     };
-  }, []);
+  }, [handleClickOutside]);
 
   useEffect(() => {
     if (ulRef.current && selectedIndex > -1) {
@@ -121,6 +122,7 @@ const Omnibar = forwardRef(({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+    if (newValue === "") skipTermResolutionRef.current = false;
     setTerm(newValue);
     setDisplayValue(newValue);
   };
@@ -157,16 +159,7 @@ const Omnibar = forwardRef(({
     } else if (event.key === "Backspace" || event.key === "Delete") {
       skipTermResolutionRef.current = true;
       setSelectedIndex(-1);
-      if (term.length === 1) {
-        resetSelf();
-      }
     } else if (event.key === "Escape") {
-      resetSelf();
-    }
-  };
-
-  const handleClickOutside = (event: { target: Node | null }) => {
-    if (ulRef.current && !ulRef.current.contains(event.target)) {
       resetSelf();
     }
   };
