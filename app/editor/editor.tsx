@@ -28,7 +28,7 @@ import { AutoLinkPlugin } from "../plugins/AutoLinkPlugin";
 import LexicalClickableLinkPlugin from "@lexical/react/LexicalClickableLinkPlugin";
 import { WikilinkNode, WikilinkInternalNode } from "../nodes/WikilinkNode";
 import { WikilinkPlugin } from "../plugins/WikilinkPlugin";
-import ClickableWikilinkPlugin from "../plugins/ClickableWikilinkPlugin";
+import WikilinkEventListenerPlugin from "../plugins/WikilinkEventListenerPlugin";
 import FloatingIndentButtons from '../plugins/FloatingMenuPlugin/FloatingIndentButtons';
 import { shouldShowFloatingIndentButtons, computeFloatingIndentButtonsPosition } from "../plugins/FloatingMenuPlugin/FloatingIndentButtons";
 import FloatingWikiPageNames from "../plugins/FloatingMenuPlugin/FloatingWikiPageNames";
@@ -146,7 +146,7 @@ function Editor({
       <AutoLinkPlugin />
       <LexicalClickableLinkPlugin />
       <WikilinkPlugin />
-      <ClickableWikilinkPlugin openOrCreatePageByTitle={openOrCreatePageByTitle} />
+      <WikilinkEventListenerPlugin openOrCreatePageByTitle={openOrCreatePageByTitle} />
       {floatingAnchorElem && !isSmallWidthViewport && (
         <>
           <DraggableBlockPlugin anchorElem={floatingAnchorElem} />

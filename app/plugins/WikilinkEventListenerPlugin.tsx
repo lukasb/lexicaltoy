@@ -25,7 +25,7 @@ function getPageTitleFromWikiLinkNode(node: any) {
   return node.getTextContent().slice(2, -2);
 }
 
-export default function ClickableWikilinkPlugin({
+export default function WikilinkEventListenerPlugin({
   newTab = true,
   openOrCreatePageByTitle,
 }: {

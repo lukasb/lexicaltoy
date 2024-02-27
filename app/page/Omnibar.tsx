@@ -142,11 +142,9 @@ const Omnibar = forwardRef(({
       event.preventDefault();
     } else if (event.key === "Enter") {
       if (selectedIndex > -1 && results.length > 0) {
-        console.log("Selected:", results[selectedIndex]);
         openPage(results[selectedIndex]);
         resetSelf();
       } else {
-        console.log("Create:", term);
         createNewPage(term);
         resetSelf();
       }
