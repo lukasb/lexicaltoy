@@ -28,14 +28,20 @@ test('should bring up search results', async ({ page }) => {
 
 test('should select search result', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
-  await newSearch.fill('test');
+  await newSearch.focus();
+  await page.keyboard.press('t');
+  await page.keyboard.press('e');
+  await page.keyboard.press('s');
   const isSelectedItemPresent = await page.$('.selected-item') !== null;
   expect(isSelectedItemPresent).toBeTruthy();
 });
 
 test('backspace deselects search result', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
-  await newSearch.fill('test');
+  await newSearch.focus();
+  await page.keyboard.press('t');
+  await page.keyboard.press('e');
+  await page.keyboard.press('s');
   await page.keyboard.press('Backspace');
   const isSelectedItemPresent = await page.$('.selected-item') !== null;
   expect(isSelectedItemPresent).toBeFalsy();
