@@ -3,7 +3,9 @@ import React, {
   useEffect,
   forwardRef,
   useContext,
-  useCallback
+  useCallback,
+  useRef,
+  createRef
 } from "react";
 import { searchPages } from "@/app/lib/pages-helpers";
 import { Page } from "@/app/lib/definitions";
@@ -111,10 +113,18 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
 
     const shouldShow = coords !== undefined;
 
+    const itemRefs = useRef<(React.RefObject<HTMLLIElement> | null)[]>([]);
+
     const resetSelf = useCallback(() => {
       setResults([]);
       setSelectedIndex(-1);
     }, []);
+
+    useEffect(() => {
+      itemRefs.current = results.map((_, i) =>
+        itemRefs.current[i] ?? createRef<HTMLLIElement>()
+      );
+    }, [results.length]);
 
     useEffect(() => {
       if (results.length > 0) {
@@ -139,6 +149,17 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         setPosition({top: newTop, left: position.left});
       }
     }, [results]);
+
+    // Scroll the selected item into view when selectedIndex changes
+    useEffect(() => {
+      const selectedItemRef = itemRefs.current[selectedIndex];
+      if (selectedItemRef?.current) {
+        selectedItemRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      }
+    }, [selectedIndex]);
 
     const handleSelectSuggestion = useCallback((page: Page) => {
       editor.update(() => {
@@ -232,6 +253,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
           {results.map((result, index) => (
             <li
               key={index}
+              ref={itemRefs.current[index]}
               className={`px-4 py-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
                 selectedIndex === index
                   ? "selected-item bg-gray-200 dark:bg-gray-700"
