@@ -59,6 +59,8 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
   const openPage = (page: Page) => {
     setOpenPages((prevPages) => {
+      // doing all this inside the setOpenPages is necessary in some cases (like when opening from clicking a wikilink)
+      // and not in others (like when opening from the omnibar.) I have no idea why.
       const pageIndex = prevPages.findIndex((p) => p.id === page.id);
       if (pageIndex === -1) {
         return [page, ...prevPages];
