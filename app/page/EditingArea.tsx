@@ -49,7 +49,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   }, [currentPages]);
 
   const openOrCreatePageByTitle = (title: string) => {
-    console.log("openOrCreatePageByTitle ~~", title, "~~");
     const page = currentPages.find((p) => p.title.toLowerCase() === title.toLowerCase());
     if (page) {
       openPage(page);
@@ -58,47 +57,24 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     }
   }
 
-  useEffect(() => {
-    console.log('EditingArea mounted');
-    return () => {
-      console.log('EditingArea unmounted');
-    };
-  }, []);
-
-  useEffect(() => {
-    console.log('Component rendered', openPages);
-  });
-
-  useEffect(() => {
-    console.log("new pages", openPages);
-  }, [openPages]);
-
   const openPage = (page: Page) => {
-    console.log("opening page", page);
-    if (!currentPages.includes(page)) {
-      setCurrentPages([...currentPages, page]);
-    }
-    const pageIndex = openPages.findIndex((p) => p.id === page.id);
-    console.log("openPages is", openPages);
-    if (pageIndex === -1) {
-      console.log("before update", openPages);
-      setOpenPages((prevPages) => {
-        if (!prevPages.includes(page)) {
-          console.log("Updating with:", [page, ...prevPages]);
-          return [page, ...prevPages];
-        } else {
-          console.log("Already in openPages");
+    setOpenPages((prevPages) => {
+      const pageIndex = prevPages.findIndex((p) => p.id === page.id);
+      if (pageIndex === -1) {
+        return [page, ...prevPages];
+      } else {
+        if (pageIndex === 0) {
           return prevPages;
+        } else {
+          // Move the page to the front.
+          const updatedPages = [...prevPages];
+          updatedPages.splice(pageIndex, 1);
+          updatedPages.unshift(page);
+          return updatedPages;
         }
-      });
-    } else {
-      setOpenPages((prevPages) => {
-        console.log("this shouldn't happen");
-        const otherPages = prevPages.filter((p) => p.id !== page.id);
-        return [page, ...otherPages];
-      });
-    }
-  };
+      }
+    });
+  };  
 
   const handleNewPage = async (title: string) => {
     const result = await insertPage(title, emptyPageJSONString, userId);
