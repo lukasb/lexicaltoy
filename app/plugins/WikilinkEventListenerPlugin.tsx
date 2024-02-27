@@ -147,7 +147,7 @@ export default function WikilinkEventListenerPlugin({
         COMMAND_PRIORITY_NORMAL
       )
     );
-  }, [editor, newTab]);
+  }, [editor, newTab, openOrCreatePageByTitle]);
 
   return null;
 }
