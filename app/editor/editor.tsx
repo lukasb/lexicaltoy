@@ -69,7 +69,7 @@ function Editor({
 }) {
   const initialConfig = {
     editorState: initialPageContent,
-    namespace: "MyEditor",
+    namespace: "orangetask",
     theme,
     nodes: [
       LinkNode,
@@ -96,8 +96,6 @@ function Editor({
       setFloatingAnchorElem(_floatingAnchorElem);
     }
   };
-
-  const [editorState, setEditorState] = useState<any>(null);
 
   const storePage = useDebouncedCallback(async (outline) => {
     console.log(`Storing page`);
