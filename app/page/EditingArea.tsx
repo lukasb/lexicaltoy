@@ -20,8 +20,8 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
   // TODO let findMostRecentlyEditedPage return null if no pages
   // then create a new page if no pages
-  const initialPage = findMostRecentlyEditedPage(currentPages);
-  const [openPages, setOpenPages] = useState<Page[]>([initialPage]);
+  const initialPageId = findMostRecentlyEditedPage(currentPages)?.id;
+  const [openPageIds, setOpenPageIds] = useState<string[]>(initialPageId ? [initialPageId] : []);
 
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
 
@@ -51,21 +51,21 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   }
 
   const openPage = (page: Page) => {
-    setOpenPages((prevPages) => {
+    setOpenPageIds((prevPageIds) => {
       // doing all this inside the setOpenPages is necessary in some cases (like when opening from clicking a wikilink)
       // and not in others (like when opening from the omnibar.) I have no idea why.
-      const pageIndex = prevPages.findIndex((p) => p.id === page.id);
+      const pageIndex = prevPageIds.findIndex((pId) => pId === page.id);
       if (pageIndex === -1) {
-        return [page, ...prevPages];
+        return [page.id, ...prevPageIds];
       } else {
         if (pageIndex === 0) {
-          return prevPages;
+          return prevPageIds;
         } else {
           // Move the page to the front.
-          const updatedPages = [...prevPages];
-          updatedPages.splice(pageIndex, 1);
-          updatedPages.unshift(page);
-          return updatedPages;
+          const updatedPageIds = [...prevPageIds];
+          updatedPageIds.splice(pageIndex, 1);
+          updatedPageIds.unshift(page.id);
+          return updatedPageIds;
         }
       }
     });
@@ -85,50 +85,55 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <PagesContext.Provider value={currentPages}>
-      <Omnibar
-        ref={omnibarRef}
-        openOrCreatePageByTitle={openOrCreatePageByTitle}
-      />
-      {openPages.length === 0 ? (
-        <div className="w-full h-40 flex justify-center items-center">
-          <Button onClick={() => handleNewPage("New Page")}>
-            Create New Page
-          </Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
-          {openPages.map((page) => (
-            <EditorContainer
-              key={page.id}
-              pageId={page.id}
-              initialPagetitle={page.title}
-              initialPageContent={page.value}
-              initialRevisionNumber={page.revisionNumber}
-              updatePageTitleLocal={(id, newTitle, newRevisionNumber) => {
-                setCurrentPages(
-                  currentPages.map((page) =>
-                    page.id === id ? { ...page, title: newTitle, revisionNumber: newRevisionNumber } : page
-                  )
-                );
-              }}
-              updatePageContentsLocal={(id, newValue, newRevisionNumber) => {
-                setCurrentPages(
-                  currentPages.map((page) =>
-                    page.id === id ? { ...page, value: newValue, revisionNumber: newRevisionNumber } : page
-                  )
-                );
-              }}
-              closePage={(id) => {
-                setOpenPages(openPages.filter((page) => page.id !== id));
-              }}
-              openOrCreatePageByTitle={openOrCreatePageByTitle}
-            />
-          ))}
-        </div>
-      )}
+        <Omnibar
+          ref={omnibarRef}
+          openOrCreatePageByTitle={openOrCreatePageByTitle}
+        />
+        {openPageIds.length === 0 ? (
+          <div className="w-full h-40 flex justify-center items-center">
+            <Button onClick={() => handleNewPage("New Page")}>
+              Create New Page
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
+            {openPageIds.map((pageId) => {
+              const page = currentPages.find(p => p.id === pageId);
+              if (!page) return null;
+              return (
+                <EditorContainer
+                  key={page.id}
+                  pageId={page.id}
+                  initialPagetitle={page.title}
+                  initialPageContent={page.value}
+                  initialRevisionNumber={page.revisionNumber}
+                  updatePageTitleLocal={(id, newTitle) => {
+                    setCurrentPages(
+                      currentPages.map((page) =>
+                        page.id === id ? { ...page, title: newTitle } : page
+                      )
+                    );
+                  }}
+                  updatePageContentsLocal={(id, newValue, newRevisionNumber) => {
+                    setCurrentPages(
+                      currentPages.map((page) =>
+                        page.id === id ? { ...page, value: newValue, revisionNumber: newRevisionNumber } : page
+                      )
+                    );
+                  }}
+                  closePage={(id) => {
+                    setOpenPageIds(prevPageIds => prevPageIds.filter(pageId => pageId !== id));
+                  }}
+                  openOrCreatePageByTitle={openOrCreatePageByTitle}
+                />
+              );
+            })}
+          </div>
+        )}
       </PagesContext.Provider>
     </div>
   );
+  
 }
 
 export default EditingArea;
