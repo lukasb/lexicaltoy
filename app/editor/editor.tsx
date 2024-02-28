@@ -35,20 +35,7 @@ import FloatingWikiPageNames from "../plugins/FloatingMenuPlugin/FloatingWikiPag
 import { shouldShowFloatingWikiPageNames, computeFloatingWikiPageNamesPosition } from "../plugins/FloatingMenuPlugin/FloatingWikiPageNames";
 import { Page } from "@/app/lib/definitions";
 import { PagesContext } from "@/app/context/pages-context";
-
-function OnChangePlugin({
-  onChange,
-}: {
-  onChange: (editorState: EditorState) => void;
-}) {
-  const [editor] = useLexicalComposerContext();
-  useEffect(() => {
-    return editor.registerUpdateListener(({ editorState }) => {
-      onChange(editorState);
-    });
-  }, [editor, onChange]);
-  return null;
-}
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -103,6 +90,7 @@ function Editor({
   const storePage = useDebouncedCallback(async (outline) => {
     const currentPage = getPage(page.id);
     if (!currentPage) return;
+    console.log("Storing page");
     try {
       const newRevisionNumber = await updatePageContentsWithHistory(page.id, outline, page.revisionNumber);
       if (newRevisionNumber === -1) {
@@ -137,7 +125,7 @@ function Editor({
         ErrorBoundary={LexicalErrorBoundary}
       />
       <ListPlugin />
-      <OnChangePlugin onChange={onChange} />
+      <OnChangePlugin onChange={onChange} ignoreSelectionChange={true} />
       <MarkdownShortcutPlugin transformers={[UNORDERED_LIST]} />
       <KeyboardShortcutsPlugin />
       <ListCommandsPlugin />
