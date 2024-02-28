@@ -56,7 +56,6 @@ function Editor({
   initialPageContent,
   pageId,
   showDebugInfo,
-  pageTitles,
   initialRevisionNumber,
   updatePageContentsLocal,
   openOrCreatePageByTitle,
@@ -64,7 +63,6 @@ function Editor({
   initialPageContent: string;
   pageId: string;
   showDebugInfo: boolean;
-  pageTitles: string[];
   initialRevisionNumber: number;
   updatePageContentsLocal: (id: string, newValue: string, revisionNumber: number) => void;
   openOrCreatePageByTitle: (title: string) => void;

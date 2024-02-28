@@ -15,7 +15,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   // TODO we're doing a lot of prop drilling now, maybe we should use context
 
   const [currentPages, setCurrentPages] = useState(pages);
-  const [pageTitles, setPageTitles] = useState<string[]>([]); // TODO maybe don't do this
   const emptyPageJSONString =
     '{"root":{"children":[{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"listitem","version":1,"value":1}],"direction":null,"format":"","indent":0,"type":"list","version":1,"listType":"bullet","start":1,"tag":"ul"}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
@@ -41,10 +40,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-
-  useEffect(() => {
-    setPageTitles(currentPages.map(page => page.title));
-  }, [currentPages]);
 
   const openOrCreatePageByTitle = (title: string) => {
     const page = currentPages.find((p) => p.title.toLowerCase() === title.toLowerCase());
@@ -108,7 +103,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
               pageId={page.id}
               initialPagetitle={page.title}
               initialPageContent={page.value}
-              pageTitles={pageTitles}
               initialRevisionNumber={page.revisionNumber}
               updatePageTitleLocal={(id, newTitle, newRevisionNumber) => {
                 setCurrentPages(

@@ -10,7 +10,6 @@ function EditorContainer({
   initialPagetitle,
   initialPageContent,
   initialRevisionNumber,
-  pageTitles,
   updatePageTitleLocal,
   updatePageContentsLocal,
   closePage,
@@ -20,7 +19,6 @@ function EditorContainer({
   initialPagetitle: string;
   initialPageContent: string;
   initialRevisionNumber: number;
-  pageTitles: string[];
   updatePageTitleLocal: (id: string, newTitle: string, newRevisionNumber: number) => void;
   updatePageContentsLocal: (id: string, newValue: string, newRevisionNumber: number) => void;
   closePage: (id: string) => void;
@@ -53,7 +51,6 @@ function EditorContainer({
             initialPageContent={initialPageContent}
             pageId={pageId}
             showDebugInfo={showDebug}
-            pageTitles={pageTitles}
             initialRevisionNumber={initialRevisionNumber}
             updatePageContentsLocal={updatePageContentsLocal}
             openOrCreatePageByTitle={openOrCreatePageByTitle}
