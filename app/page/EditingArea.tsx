@@ -103,14 +103,11 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
               return (
                 <EditorContainer
                   key={page.id}
-                  pageId={page.id}
-                  initialPagetitle={page.title}
-                  initialPageContent={page.value}
-                  initialRevisionNumber={page.revisionNumber}
-                  updatePageTitleLocal={(id, newTitle) => {
+                  page={page}
+                  updatePageTitleLocal={(id, newTitle, newRevisionNumber) => {
                     setCurrentPages(
                       currentPages.map((page) =>
-                        page.id === id ? { ...page, title: newTitle } : page
+                        page.id === id ? { ...page, title: newTitle, revisionNumber: newRevisionNumber } : page
                       )
                     );
                   }}

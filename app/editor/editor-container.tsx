@@ -4,21 +4,16 @@ import Editor from "../editor/editor";
 import EditablePageTitle from "./pageTitle";
 import { Button } from "../ui/button";
 import { useState } from "react";
+import { Page } from "@/app/lib/definitions";
 
 function EditorContainer({
-  pageId,
-  initialPagetitle,
-  initialPageContent,
-  initialRevisionNumber,
+  page,
   updatePageTitleLocal,
   updatePageContentsLocal,
   closePage,
   openOrCreatePageByTitle,
 }: {
-  pageId: string;
-  initialPagetitle: string;
-  initialPageContent: string;
-  initialRevisionNumber: number;
+  page: Page;
   updatePageTitleLocal: (id: string, newTitle: string, newRevisionNumber: number) => void;
   updatePageContentsLocal: (id: string, newValue: string, newRevisionNumber: number) => void;
   closePage: (id: string) => void;
@@ -32,14 +27,14 @@ function EditorContainer({
         <div className="m-0 p-0 group">
           <button
             className="absolute top-0 left-0 ml-3 mt-1 opacity-0 group-hover:opacity-100 text-lg text-indigo-600"
-            onClick={() => closePage(pageId)}
+            onClick={() => closePage(page.id)}
           >
             x
           </button>
           <div className="flex flex-row justify-between">
             <EditablePageTitle
-              initialTitle={initialPagetitle}
-              pageId={pageId}
+              initialTitle={page.title}
+              pageId={page.id}
               updatePageTitleLocal={updatePageTitleLocal}
             />
             <Button onClick={() => setShowDebug(!showDebug)}>
@@ -48,10 +43,8 @@ function EditorContainer({
           </div>
         </div>
           <Editor
-            initialPageContent={initialPageContent}
-            pageId={pageId}
+            page={page}
             showDebugInfo={showDebug}
-            initialRevisionNumber={initialRevisionNumber}
             updatePageContentsLocal={updatePageContentsLocal}
             openOrCreatePageByTitle={openOrCreatePageByTitle}
           />

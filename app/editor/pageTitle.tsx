@@ -21,21 +21,22 @@ const EditablePageTitle = ({
     return pages.find((page) => page.id === id);
   }, [pages]);
 
-  const storePageTitle = useDebouncedCallback(async (newTitle) => {
+  const storePageTitle = async (newTitle: string) => {
     console.log(`Updating page title`);
     const page = getPage(pageId);
     if (!page) return;
+    console.log("title - page has revision number", page.revisionNumber);
     try {
       const newRevisionNumber = await updatePageTitle(pageId, newTitle, page.revisionNumber);
       if (newRevisionNumber === -1) {
-        alert("Failed to save page because you edited an old version, please relead for the latest version.");
+        alert("Failed to update title because you edited an old version, please relead for the latest version.");
         return;
       }
       updatePageTitleLocal(pageId, newTitle, newRevisionNumber);
     } catch (error) {
-      alert("Failed to save page");
+      alert("Failed to update title");
     }
-  }, 500);
+  };
 
   // Update the page title based on div content
   const handleTitleChange = () => {

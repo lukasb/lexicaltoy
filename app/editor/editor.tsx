@@ -3,7 +3,7 @@
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import React, { useState } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { useEffect } from "react";
+import { useEffect, useContext, useCallback } from "react";
 import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import type { EditorState } from "lexical";
@@ -33,6 +33,8 @@ import FloatingIndentButtons from '../plugins/FloatingMenuPlugin/FloatingIndentB
 import { shouldShowFloatingIndentButtons, computeFloatingIndentButtonsPosition } from "../plugins/FloatingMenuPlugin/FloatingIndentButtons";
 import FloatingWikiPageNames from "../plugins/FloatingMenuPlugin/FloatingWikiPageNames";
 import { shouldShowFloatingWikiPageNames, computeFloatingWikiPageNamesPosition } from "../plugins/FloatingMenuPlugin/FloatingWikiPageNames";
+import { Page } from "@/app/lib/definitions";
+import { PagesContext } from "@/app/context/pages-context";
 
 function OnChangePlugin({
   onChange,
@@ -53,22 +55,18 @@ function onError(error: Error) {
 }
 
 function Editor({
-  initialPageContent,
-  pageId,
+  page,
   showDebugInfo,
-  initialRevisionNumber,
   updatePageContentsLocal,
   openOrCreatePageByTitle,
 }: {
-  initialPageContent: string;
-  pageId: string;
+  page: Page;
   showDebugInfo: boolean;
-  initialRevisionNumber: number;
   updatePageContentsLocal: (id: string, newValue: string, revisionNumber: number) => void;
   openOrCreatePageByTitle: (title: string) => void;
 }) {
   const initialConfig = {
-    editorState: initialPageContent,
+    editorState: page.value,
     namespace: "orangetask",
     theme,
     nodes: [
@@ -81,7 +79,11 @@ function Editor({
     onError,
   };
 
-  const [revisionNumber, setRevisionNumber] = useState(initialRevisionNumber);
+  const pages = useContext(PagesContext);
+
+  const getPage = useCallback((id: string) => {
+    return pages.find((page) => page.id === id);
+  }, [pages]);
 
   const [floatingAnchorElem, setFloatingAnchorElem] =
     useState<HTMLDivElement | null>(null);
@@ -99,14 +101,16 @@ function Editor({
 
   const storePage = useDebouncedCallback(async (outline) => {
     console.log(`Storing page`);
+    const currentPage = getPage(page.id);
+    if (!currentPage) return;
+    console.log("editor - page has revision number", page.revisionNumber);
     try {
-      const newRevisionNumber = await updatePageContentsWithHistory(pageId, outline, revisionNumber);
+      const newRevisionNumber = await updatePageContentsWithHistory(page.id, outline, page.revisionNumber);
       if (newRevisionNumber === -1) {
         alert("Failed to save page because you edited an old version, please relead for the latest version.");
         return;
       }
-      setRevisionNumber(newRevisionNumber);
-      updatePageContentsLocal(pageId, outline, newRevisionNumber);
+      updatePageContentsLocal(page.id, outline, newRevisionNumber);
     } catch (error) {
       alert("Failed to save page");
     }
