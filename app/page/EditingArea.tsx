@@ -9,6 +9,7 @@ import { insertPage } from "../lib/actions";
 import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { PagesContext } from '@/app/context/pages-context';
+import { useJournal } from '@/app/hooks/use-journal';
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   
@@ -49,6 +50,8 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
       handleNewPage(title);
     }
   }
+
+  useJournal(openOrCreatePageByTitle);
 
   const openPage = (page: Page) => {
     setOpenPageIds((prevPageIds) => {
