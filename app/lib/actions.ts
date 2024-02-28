@@ -50,7 +50,7 @@ export async function insertPage(title: string, value: string, userId: string) {
     const result = await sql`
         INSERT INTO pages (title, value, userId)
         VALUES (${title}, ${value}, ${userId})
-        RETURNING id, title, value, userId, last_modified, revision_number
+        RETURNING id, title, value, userId, last_modified, revision_number, is_journal, deleted
       `;
     const page: Page = {
       id: result.rows[0].id,
@@ -59,6 +59,8 @@ export async function insertPage(title: string, value: string, userId: string) {
       userId: result.rows[0].userid,
       lastModified: result.rows[0].last_modified,
       revisionNumber: result.rows[0].revision_number,
+      isJournal: result.rows[0].is_journal,
+      deleted: result.rows[0].deleted,
     };
     return page;
   } catch (error) {
@@ -67,6 +69,32 @@ export async function insertPage(title: string, value: string, userId: string) {
     };
   }
 }
+
+export async function insertJournalPage(title: string, value: string, userId: string) {
+  try {
+    const result = await sql`
+        INSERT INTO pages (title, value, userId, is_journal)
+        VALUES (${title}, ${value}, ${userId}, true)
+        RETURNING id, title, value, userId, last_modified, revision_number, is_journal, deleted
+      `;
+    const page: Page = {
+      id: result.rows[0].id,
+      title: result.rows[0].title,
+      value: result.rows[0].value,
+      userId: result.rows[0].userid,
+      lastModified: result.rows[0].last_modified,
+      revisionNumber: result.rows[0].revision_number,
+      isJournal: result.rows[0].is_journal,
+      deleted: result.rows[0].deleted,
+    };
+    return page;
+  } catch (error) {
+    return {
+      message: "Database Error: Failed to Insert Page.",
+    };
+  }
+}
+
 
 export async function deletePage(id: string, oldRevisionNumber: number): Promise<number> {
   try {

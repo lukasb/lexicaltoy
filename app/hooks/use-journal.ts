@@ -1,11 +1,24 @@
 // useJournalLogic.js
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { getTodayJournalTitle } from '@/app/lib/journal-helpers';
 
-// TODO import it instead maybe?
-type OpenOrCreatePageByTitleType = (title: string) => void;
+// TODO import these instead maybe?
+type HandleNewJournalPage = (title: string) => void;
+type CheckForJournalPage = (title: string) => boolean;
 
-export const useJournal = (openOrCreatePageByTitle: OpenOrCreatePageByTitleType) => {
+export const useJournal = (handleNewJournalPage: HandleNewJournalPage,
+  checkForJournalPage: CheckForJournalPage) => {
+
+  const checkForJournalPageRef = useRef<CheckForJournalPage>();
+  const handleNewJournalPageRef = useRef<HandleNewJournalPage>();
+
+  useEffect(() => {
+    checkForJournalPageRef.current = checkForJournalPage;
+    handleNewJournalPageRef.current = handleNewJournalPage;
+  }, [checkForJournalPage, handleNewJournalPage]);
+
   const executeJournalLogic = () => {
+    console.log('Executing journal logic');
     checkAndCreateDailyJournalPage();
     deleteOldJournalPages();
   };
@@ -22,7 +35,8 @@ export const useJournal = (openOrCreatePageByTitle: OpenOrCreatePageByTitleType)
   }, []); // Runs only once when the component mounts
 
   const checkAndCreateDailyJournalPage = () => {
-    // Implement the logic here
+    const todayJournalTitle = getTodayJournalTitle();
+    if (!checkForJournalPageRef.current?.(todayJournalTitle)) handleNewJournalPageRef.current?.(todayJournalTitle);
   };
 
   const deleteOldJournalPages = () => {

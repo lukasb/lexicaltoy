@@ -4,12 +4,14 @@ import EditorContainer from "@/app/editor/editor-container";
 import { Page, isPage } from "@/app/lib/definitions";
 import Omnibar from "./Omnibar";
 import { findMostRecentlyEditedPage } from "@/app/lib/pages-helpers";
-import { useState } from "react";
-import { insertPage, deletePage } from "@/app/lib/actions";
+import { useState, useCallback } from "react";
+import { insertPage, deletePage, insertJournalPage } from "@/app/lib/actions";
 import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { PagesContext } from '@/app/context/pages-context';
-import { useJournal } from '@/app/hooks/use-journal';
+import { DEFAULT_JOURNAL_CONTENTS } from "@/app/lib/journal-helpers";
+import { fetchPages } from "@/app/lib/db";
+import { getTodayJournalTitle } from '@/app/lib/journal-helpers';
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   
@@ -25,6 +27,62 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const [openPageIds, setOpenPageIds] = useState<string[]>(initialPageId ? [initialPageId] : []);
 
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
+  const setupDoneRef = useRef(false);
+
+  useEffect(() => {
+    console.log("EditingArea mounted");
+    return () => {
+      console.log("EditingArea unmounted");
+    };
+  }, []);
+
+  const handleNewJournalPage = useCallback(async (title: string) => {
+    console.log("Creating new journal page", title);
+    const result = await insertJournalPage(title, DEFAULT_JOURNAL_CONTENTS, userId);
+    if (typeof result === "string") {
+      console.error("expected page, got string", result);
+      return;
+    } else if (isPage(result)) {
+      console.log("inserted journal page", result);
+      setCurrentPages((prevPages) => [result, ...prevPages]);
+      openPage(result);
+    }
+  }, [userId]);
+
+  const checkForJournalPage = useCallback((title: string) => {
+    console.log("Checking for journal page", title);
+    console.log("Number of pages", currentPages.length);
+    return ;
+  }, [currentPages]);
+
+  const deleteOldJournalPages = () => {
+    // Implement the logic here
+  };
+
+  const executeJournalLogic = useCallback(() => {
+    console.log('Executing journal logic');
+    const todayJournalTitle = getTodayJournalTitle();
+    if (!currentPages.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
+      handleNewJournalPage(todayJournalTitle);
+    }
+    deleteOldJournalPages();
+  }, [currentPages, handleNewJournalPage]);
+
+  useEffect(() => {
+    const fetchAndSetPages = async () => {
+      const pages = await fetchPages(userId);
+      setCurrentPages(pages);
+    };
+    fetchAndSetPages();
+  }, [userId]);
+
+  useEffect(() => {
+    if (setupDoneRef.current) return;
+    executeJournalLogic();
+    const intervalId = setInterval(executeJournalLogic, 30000);
+    setupDoneRef.current = true;
+    return () => clearInterval(intervalId);
+  }, [executeJournalLogic]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -50,8 +108,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
       handleNewPage(title);
     }
   }
-
-  useJournal(openOrCreatePageByTitle);
 
   const openPage = (page: Page) => {
     setOpenPageIds((prevPageIds) => {
