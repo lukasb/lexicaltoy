@@ -14,11 +14,9 @@ import { Page } from "../lib/definitions";
 import { PagesContext } from "@/app/context/pages-context";
  
 const Omnibar = forwardRef(({
-  createNewPage,
-  openPage
+  openOrCreatePageByTitle
 }: { 
-  createNewPage: (title: string) => void,
-  openPage: (page: Page) => void
+  openOrCreatePageByTitle: (title: string) => void;
 }, ref) => {
 
   const [term, setTerm] = useState(""); // the actual user input
@@ -149,10 +147,10 @@ const Omnibar = forwardRef(({
       event.preventDefault();
     } else if (event.key === "Enter") {
       if (selectedIndex > -1 && results.length > 0) {
-        openPage(results[selectedIndex]);
+        openOrCreatePageByTitle(results[selectedIndex].title);
         resetSelf();
       } else {
-        createNewPage(term);
+        openOrCreatePageByTitle(displayValue);
         resetSelf();
       }
       event.preventDefault();
@@ -165,7 +163,7 @@ const Omnibar = forwardRef(({
   };
 
   const handleSearchResultsClick = (result: Page) => {
-    openPage(result);
+    openOrCreatePageByTitle(result.title);
     resetSelf();
   };
 

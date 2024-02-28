@@ -92,8 +92,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
       <PagesContext.Provider value={currentPages}>
       <Omnibar
         ref={omnibarRef}
-        createNewPage={(title) => handleNewPage(title)}
-        openPage={openPage}
+        openOrCreatePageByTitle={openOrCreatePageByTitle}
       />
       {openPages.length === 0 ? (
         <div className="w-full h-40 flex justify-center items-center">
