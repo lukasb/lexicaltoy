@@ -21,7 +21,7 @@ function EditorContainer({
   initialPageContent: string;
   initialRevisionNumber: number;
   pageTitles: string[];
-  updatePageTitleLocal: (id: string, newTitle: string) => void;
+  updatePageTitleLocal: (id: string, newTitle: string, newRevisionNumber: number) => void;
   updatePageContentsLocal: (id: string, newValue: string, newRevisionNumber: number) => void;
   closePage: (id: string) => void;
   openOrCreatePageByTitle: (title: string) => void;

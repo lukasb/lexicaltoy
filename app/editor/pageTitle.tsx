@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useContext, useCallback } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import { updatePageTitle } from '../lib/actions';
+import { PagesContext } from '@/app/context/pages-context';
 
 const EditablePageTitle = ({ 
   pageId, 
@@ -11,31 +12,45 @@ const EditablePageTitle = ({
 } : { 
   pageId: string, 
   initialTitle: string,
-  updatePageTitleLocal: (id: string, newTitle: string) => void;
+  updatePageTitleLocal: (id: string, newTitle: string, newRevisionNumber: number) => void;
 }) => {
-  const [pageTitle, setPageTitle] = useState(initialTitle);
   const titleRef = useRef<HTMLDivElement>(null); // Reference to the editable div
+  const pages = useContext(PagesContext);
 
-  const storePageTitle = useDebouncedCallback((newTitle) => {
+  const getPage = useCallback((id: string) => {
+    return pages.find((page) => page.id === id);
+  }, [pages]);
+
+  const storePageTitle = useDebouncedCallback(async (newTitle) => {
     console.log(`Updating page title`);
-    updatePageTitle(pageId, newTitle);
-    updatePageTitleLocal(pageId, newTitle);
+    const page = getPage(pageId);
+    if (!page) return;
+    try {
+      const newRevisionNumber = await updatePageTitle(pageId, newTitle, page.revisionNumber);
+      if (newRevisionNumber === -1) {
+        alert("Failed to save page because you edited an old version, please relead for the latest version.");
+        return;
+      }
+      updatePageTitleLocal(pageId, newTitle, newRevisionNumber);
+    } catch (error) {
+      alert("Failed to save page");
+    }
   }, 500);
 
   // Update the page title based on div content
   const handleTitleChange = () => {
     const newTitle = titleRef.current?.innerText || initialTitle;
-    setPageTitle(newTitle);
     storePageTitle(newTitle);
   };
 
-  // This effect ensures that the contentEditable div is updated if the initialTitle prop changes
-  // after the component has mounted.
   useEffect(() => {
     if (titleRef.current) {
-      titleRef.current.innerText = initialTitle;
+      const page = getPage(pageId);
+      if (page) {
+        titleRef.current.innerText = page.title;
+      }
     }
-  }, [initialTitle]);
+  }, [getPage, pageId]);
 
   return (
     <div className="flex flex-col items-start justify-center">
