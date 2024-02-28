@@ -89,13 +89,13 @@ test('create new page', async ({ page }) => {
 
 test('open page', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
-  await newSearch.fill('villa');
+  await newSearch.fill('TestPage1');
   await page.keyboard.press('Enter');
   const anotherSearch = page.getByPlaceholder('Search or Create');
   await anotherSearch.fill('avalon');
   await page.keyboard.press('Enter');
   const titles = await page.locator('[data-testid="editable-title"]');
-  await expect(titles).toHaveCount(3);
+  await expect(titles).toHaveCount(2);
   let found = false;
   const count = await titles.count();
   for (let i = 0; i < count; i++) {
