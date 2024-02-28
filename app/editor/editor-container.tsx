@@ -39,20 +39,22 @@ function EditorContainer({
               pageId={page.id}
               updatePageTitleLocal={updatePageTitleLocal}
             />
-            <Button onClick={() => deletePage(page.id, page.revisionNumber)}>
-              Del
-            </Button>
-            <Button onClick={() => setShowDebug(!showDebug)}>
-              {showDebug ? "-d🐞" : "+d🐞"}
-            </Button>
+            <div className="flex">
+              <Button className="mx-1" onClick={() => deletePage(page.id, page.revisionNumber)}>
+                Del
+              </Button>
+              <Button onClick={() => setShowDebug(!showDebug)}>
+                {showDebug ? "-d🐞" : "+d🐞"}
+              </Button>
+            </div>
           </div>
         </div>
-          <Editor
-            page={page}
-            showDebugInfo={showDebug}
-            updatePageContentsLocal={updatePageContentsLocal}
-            openOrCreatePageByTitle={openOrCreatePageByTitle}
-          />
+        <Editor
+          page={page}
+          showDebugInfo={showDebug}
+          updatePageContentsLocal={updatePageContentsLocal}
+          openOrCreatePageByTitle={openOrCreatePageByTitle}
+        />
       </div>
     </div>
   );
