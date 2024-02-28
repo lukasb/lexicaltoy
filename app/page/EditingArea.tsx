@@ -1,11 +1,11 @@
 "use client";
 
-import EditorContainer from "../editor/editor-container";
-import { Page, isPage } from "../lib/definitions";
+import EditorContainer from "@/app/editor/editor-container";
+import { Page, isPage } from "@/app/lib/definitions";
 import Omnibar from "./Omnibar";
-import { findMostRecentlyEditedPage } from "../lib/pages-helpers";
+import { findMostRecentlyEditedPage } from "@/app/lib/pages-helpers";
 import { useState } from "react";
-import { insertPage } from "../lib/actions";
+import { insertPage, deletePage } from "@/app/lib/actions";
 import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { PagesContext } from '@/app/context/pages-context';
@@ -85,6 +85,18 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     }
   };
 
+  const handleDeletePage = async (id: string) => {
+    const page = currentPages.find((p) => p.id === id);
+    if (!page) return;
+    const result = await deletePage(id, page.revisionNumber);
+    if (result === -1) {
+      console.error("Failed to delete page");
+      return;
+    }
+    setCurrentPages((prevPages) => prevPages.filter((p) => p.id !== id));
+    setOpenPageIds((prevPageIds) => prevPageIds.filter((pId) => pId !== id));
+  }
+
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <PagesContext.Provider value={currentPages}>
@@ -125,6 +137,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                     setOpenPageIds(prevPageIds => prevPageIds.filter(pageId => pageId !== id));
                   }}
                   openOrCreatePageByTitle={openOrCreatePageByTitle}
+                  deletePage={handleDeletePage}
                 />
               );
             })}

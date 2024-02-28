@@ -68,6 +68,21 @@ export async function insertPage(title: string, value: string, userId: string) {
   }
 }
 
+export async function deletePage(id: string, oldRevisionNumber: number): Promise<number> {
+  try {
+    const result = await sql`
+        UPDATE pages
+        SET deleted = true, revision_number = ${oldRevisionNumber+1}
+        WHERE id = ${id}
+        RETURNING revision_number
+      `;
+      return result.rows[0].revision_number;
+  } catch (error) {
+    console.log("Database Error: Failed to Delete Page.");
+  }
+  return -1;
+}
+
 export async function authenticate(
   prevState: string | undefined,
   formData: FormData
