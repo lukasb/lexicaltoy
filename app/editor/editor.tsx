@@ -99,11 +99,10 @@ function Editor({
     }
   };
 
+  // TODO this assumes the page content won't be changed elsewhere in the same PagesContext
   const storePage = useDebouncedCallback(async (outline) => {
-    console.log(`Storing page`);
     const currentPage = getPage(page.id);
     if (!currentPage) return;
-    console.log("editor - page has revision number", page.revisionNumber);
     try {
       const newRevisionNumber = await updatePageContentsWithHistory(page.id, outline, page.revisionNumber);
       if (newRevisionNumber === -1) {

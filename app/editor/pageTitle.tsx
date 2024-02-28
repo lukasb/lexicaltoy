@@ -21,11 +21,10 @@ const EditablePageTitle = ({
     return pages.find((page) => page.id === id);
   }, [pages]);
 
+  // TODO this assumes that the page won't be renamed elsewhere in the same PagesContext
   const storePageTitle = async (newTitle: string) => {
-    console.log(`Updating page title`);
     const page = getPage(pageId);
     if (!page) return;
-    console.log("title - page has revision number", page.revisionNumber);
     try {
       const newRevisionNumber = await updatePageTitle(pageId, newTitle, page.revisionNumber);
       if (newRevisionNumber === -1) {
