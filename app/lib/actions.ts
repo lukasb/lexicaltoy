@@ -25,7 +25,7 @@ export async function updatePageContentsWithHistory(id: string, value: string, o
     `;
     return result.rows[0].revision_number;
   } catch (error) {
-    console.log("Database Error: Failed to Update Page.", error);
+    console.log("Database Error: Failed to Update Page Contents.", error);
   }
   return -1;
 }
@@ -40,7 +40,7 @@ export async function updatePageTitle(id: string, title: string, oldRevisionNumb
       `;
       return result.rows[0].revision_number;
   } catch (error) {
-      console.log("Database Error: Failed to Update Page.")
+      console.log("Database Error: Failed to Update Page Title.", error)
   }
   return -1;
 }
@@ -125,7 +125,7 @@ export async function deletePage(id: string, oldRevisionNumber: number): Promise
       `;
       return result.rows[0].revision_number;
   } catch (error) {
-    console.log("Database Error: Failed to Delete Page.");
+    console.log("Database Error: Failed to Delete Page.", error);
   }
   return -1;
 }
