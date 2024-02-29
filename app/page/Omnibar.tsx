@@ -187,13 +187,18 @@ const Omnibar = forwardRef(({
             <li
               key={index}
               className={`px-4 py-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
-                selectedIndex === index ? "selected-item bg-gray-200 dark:bg-gray-700" : ""
+                selectedIndex === index
+                  ? "selected-item bg-gray-200 dark:bg-gray-700"
+                  : ""
               } dark:text-white`}
               onMouseEnter={() => setSelectedIndex(index)}
               onClick={() => handleSearchResultsClick(result)}
               data-testid="search-result"
             >
               {result.title}
+              {result.isJournal && (
+                <span className="text-gray-400 ml-2">journal</span>
+              )}
             </li>
           ))}
         </ul>
