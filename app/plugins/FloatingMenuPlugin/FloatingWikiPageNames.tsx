@@ -171,6 +171,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         console.log("match length", match.length);
 
         const {anchor, focus} = selection;
+        // TODO handle case where beginning of wiki page name is before the node the selection is in
         const newAnchorOffset = Math.max(anchor.offset - match.length, 0);
         const range = createDOMRange(
           editor,
