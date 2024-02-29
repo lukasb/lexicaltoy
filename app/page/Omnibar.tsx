@@ -159,6 +159,9 @@ const Omnibar = forwardRef(({
       setSelectedIndex(-1);
     } else if (event.key === "Escape") {
       resetSelf();
+    } else if (event.metaKey && event.key === "k") {
+      event.preventDefault();
+      showReverseChronologicalList();
     }
   };
 
