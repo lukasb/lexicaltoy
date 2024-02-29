@@ -12,6 +12,7 @@ import { PagesContext } from '@/app/context/pages-context';
 import { DEFAULT_JOURNAL_CONTENTS } from "@/app/lib/journal-helpers";
 import { fetchPages } from "@/app/lib/db";
 import { getJournalTitle } from '@/app/lib/journal-helpers';
+import { format, parse, isBefore, startOfDay } from 'date-fns';
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -38,12 +39,24 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   }, [userId]);
 
   const handleDeleteStaleJournalPages = useCallback(async (today: Date, defaultValue: string) => {
-    const deletedIds = await deleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS);
+    const todayStr = format(today, 'MMM do, yyyy');
+    const stalePages = currentPages.filter((page) => {
+      if (!page.isJournal) {
+        return false;
+      }
+      const pageDateStr = page.title;
+      const pageDate = parse(pageDateStr, 'MMM do, yyyy', new Date());
+      const pageDateStartOfDay = startOfDay(pageDate);
+      const todayStartOfDay = startOfDay(today);
+      return isBefore(pageDateStartOfDay, todayStartOfDay) && page.value === defaultValue;
+    });
+    const idsToDelete = stalePages.map(page => page.id);
+    const deletedIds = await deleteStaleJournalPages(idsToDelete);
     if (deletedIds.length > 0) {
       setCurrentPages((prevPages) => prevPages.filter((p) => !deletedIds.includes(p.id)));
       setOpenPageIds((prevPageIds) => prevPageIds.filter((pId) => !deletedIds.includes(pId)));
     }
-  }, []);
+  }, [currentPages]);
 
   const executeJournalLogic = useCallback(() => {
     console.log('Executing journal logic');

@@ -14,7 +14,6 @@ export type User = {
     revisionNumber: number;
     isJournal: boolean;
     deleted: boolean;
-    journalDate?: Date;
   }
 
   export function isPage(obj: any): obj is Page {
