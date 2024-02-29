@@ -5,13 +5,13 @@ import { Page, isPage } from "@/app/lib/definitions";
 import Omnibar from "./Omnibar";
 import { findMostRecentlyEditedPage } from "@/app/lib/pages-helpers";
 import { useState, useCallback } from "react";
-import { insertPage, deletePage, insertJournalPage } from "@/app/lib/actions";
+import { insertPage, deletePage, insertJournalPage, deleteStaleJournalPages } from "@/app/lib/actions";
 import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { PagesContext } from '@/app/context/pages-context';
 import { DEFAULT_JOURNAL_CONTENTS } from "@/app/lib/journal-helpers";
 import { fetchPages } from "@/app/lib/db";
-import { getTodayJournalTitle } from '@/app/lib/journal-helpers';
+import { getJournalTitle } from '@/app/lib/journal-helpers';
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -26,8 +26,8 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
   const setupDoneRef = useRef(false);
 
-  const handleNewJournalPage = useCallback(async (title: string) => {
-    const result = await insertJournalPage(title, DEFAULT_JOURNAL_CONTENTS, userId);
+  const handleNewJournalPage = useCallback(async (title: string, date: Date) => {
+    const result = await insertJournalPage(title, DEFAULT_JOURNAL_CONTENTS, userId, date);
     if (typeof result === "string") {
       console.error("expected page, got string", result);
       return;
@@ -37,18 +37,23 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     }
   }, [userId]);
 
-  const deleteOldJournalPages = () => {
-    // Implement the logic here
-  };
+  const handleDeleteStaleJournalPages = useCallback(async (today: Date, defaultValue: string) => {
+    const deletedIds = await deleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS);
+    if (deletedIds.length > 0) {
+      setCurrentPages((prevPages) => prevPages.filter((p) => !deletedIds.includes(p.id)));
+      setOpenPageIds((prevPageIds) => prevPageIds.filter((pId) => !deletedIds.includes(pId)));
+    }
+  }, []);
 
   const executeJournalLogic = useCallback(() => {
     console.log('Executing journal logic');
-    const todayJournalTitle = getTodayJournalTitle();
+    const today = new Date();
+    const todayJournalTitle = getJournalTitle(today);
     if (!currentPages.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
-      handleNewJournalPage(todayJournalTitle);
+      handleNewJournalPage(todayJournalTitle, today);
     }
-    deleteOldJournalPages();
-  }, [currentPages, handleNewJournalPage]);
+    handleDeleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS);
+  }, [currentPages, handleNewJournalPage, handleDeleteStaleJournalPages]);
 
   useEffect(() => {
     const fetchAndSetPages = async () => {

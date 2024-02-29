@@ -70,12 +70,13 @@ export async function insertPage(title: string, value: string, userId: string) {
   }
 }
 
-export async function insertJournalPage(title: string, value: string, userId: string) {
+export async function insertJournalPage(title: string, value: string, userId: string, journalDate: Date) {
   try {
+    const dateStr = journalDate.toISOString().split('T')[0];
     const result = await sql`
-        INSERT INTO pages (title, value, userId, is_journal)
-        VALUES (${title}, ${value}, ${userId}, true)
-        RETURNING id, title, value, userId, last_modified, revision_number, is_journal, deleted
+        INSERT INTO pages (title, value, userId, is_journal, journal_date)
+        VALUES (${title}, ${value}, ${userId}, true, ${dateStr})
+        RETURNING id, title, value, userId, last_modified, revision_number, is_journal, deleted, journal_date
       `;
     const page: Page = {
       id: result.rows[0].id,
@@ -86,6 +87,7 @@ export async function insertJournalPage(title: string, value: string, userId: st
       revisionNumber: result.rows[0].revision_number,
       isJournal: result.rows[0].is_journal,
       deleted: result.rows[0].deleted,
+      journalDate: result.rows[0].journal_date,
     };
     return page;
   } catch (error) {
@@ -95,6 +97,21 @@ export async function insertJournalPage(title: string, value: string, userId: st
   }
 }
 
+export async function deleteStaleJournalPages(todayDate: Date, defaultValue: string): Promise<string[]> {
+  try {
+    const dateStr = todayDate.toISOString().split('T')[0];
+    const result = await sql`
+        UPDATE pages
+        SET deleted = true, revision_number = revision_number + 1
+        WHERE is_journal = true AND journal_date < ${dateStr} AND value = ${defaultValue}
+        RETURNING id
+      `;
+    return result.rows.map(row => row.id);
+  } catch (error) {
+    console.log("Database Error: Failed to Delete Stale Journal Pages.");
+  }
+  return [];
+}
 
 export async function deletePage(id: string, oldRevisionNumber: number): Promise<number> {
   try {

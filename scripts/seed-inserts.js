@@ -141,7 +141,8 @@ async function seedPages(client, pages) {
       history_created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       revision_number INT NOT NULL DEFAULT 1,
       is_journal BOOLEAN NOT NULL DEFAULT FALSE,
-      deleted BOOLEAN NOT NULL DEFAULT FALSE
+      deleted BOOLEAN NOT NULL DEFAULT FALSE,
+      journal_date DATE
     );
     `;
 

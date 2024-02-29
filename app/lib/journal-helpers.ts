@@ -1,11 +1,6 @@
 export const DEFAULT_JOURNAL_CONTENTS = '{"root":{"children":[{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"listitem","version":1,"value":1}],"direction":null,"format":"","indent":0,"type":"list","version":1,"listType":"bullet","start":1,"tag":"ul"}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
-export function getTodayJournalTitle() {
-  const today = new Date();
-  return getJournalTitle(today);
-}
-
-function getJournalTitle(date: Date) {
+export function getJournalTitle(date: Date) {
   function getOrdinalSuffix(day: number): string {
     if (day > 3 && day < 21) return 'th';
     switch (day % 10) {
