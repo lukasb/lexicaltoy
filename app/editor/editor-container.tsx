@@ -37,6 +37,7 @@ function EditorContainer({
             <EditablePageTitle
               initialTitle={page.title}
               pageId={page.id}
+              isJournal={page.isJournal}
               updatePageTitleLocal={updatePageTitleLocal}
             />
             <div className="flex">
