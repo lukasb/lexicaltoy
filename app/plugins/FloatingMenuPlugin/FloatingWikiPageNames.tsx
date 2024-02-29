@@ -23,6 +23,7 @@ import { $isAtNodeEnd } from "@lexical/selection";
 import { FloatingMenuCoords, FloatingMenuProps } from ".";
 import { PagesContext } from "@/app/context/pages-context";
 import { isSmallWidthViewport } from "@/app/lib/window-helpers";
+import { createDOMRange } from "@lexical/selection";
 
 // TODO figure out actual line height instead of hardcoding 30
 const editorLineHeight = 30;
@@ -166,8 +167,24 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return;
         const [hasMatch, match] = $search(selection);
         if (!hasMatch) return;
-        const remainingText = page.title.slice(match.length);
-        selection.insertText(remainingText + "]]");
+        //const remainingText = page.title.slice(match.length);
+        console.log("match length", match.length);
+
+        const {anchor, focus} = selection;
+        const newAnchorOffset = Math.max(anchor.offset - match.length, 0);
+        const range = createDOMRange(
+          editor,
+          anchor.getNode(),
+          newAnchorOffset,
+          focus.getNode(),
+          focus.offset,
+        );
+        if (range) {
+          selection.applyDOMRange(range);
+          selection.removeText();
+        }
+        
+        selection.insertText(page.title + "]]");
         resetSelf();
       });
     }, [editor, resetSelf]);
