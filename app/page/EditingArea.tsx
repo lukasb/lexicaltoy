@@ -14,46 +14,28 @@ import { fetchPages } from "@/app/lib/db";
 import { getTodayJournalTitle } from '@/app/lib/journal-helpers';
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
-  
-  // TODO we're doing a lot of prop drilling now, maybe we should use context
 
   const [currentPages, setCurrentPages] = useState(pages);
   const emptyPageJSONString =
     '{"root":{"children":[{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"listitem","version":1,"value":1}],"direction":null,"format":"","indent":0,"type":"list","version":1,"listType":"bullet","start":1,"tag":"ul"}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
   // TODO let findMostRecentlyEditedPage return null if no pages
-  // then create a new page if no pages
   const initialPageId = findMostRecentlyEditedPage(currentPages)?.id;
   const [openPageIds, setOpenPageIds] = useState<string[]>(initialPageId ? [initialPageId] : []);
 
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
   const setupDoneRef = useRef(false);
 
-  useEffect(() => {
-    console.log("EditingArea mounted");
-    return () => {
-      console.log("EditingArea unmounted");
-    };
-  }, []);
-
   const handleNewJournalPage = useCallback(async (title: string) => {
-    console.log("Creating new journal page", title);
     const result = await insertJournalPage(title, DEFAULT_JOURNAL_CONTENTS, userId);
     if (typeof result === "string") {
       console.error("expected page, got string", result);
       return;
     } else if (isPage(result)) {
-      console.log("inserted journal page", result);
       setCurrentPages((prevPages) => [result, ...prevPages]);
       openPage(result);
     }
   }, [userId]);
-
-  const checkForJournalPage = useCallback((title: string) => {
-    console.log("Checking for journal page", title);
-    console.log("Number of pages", currentPages.length);
-    return ;
-  }, [currentPages]);
 
   const deleteOldJournalPages = () => {
     // Implement the logic here
@@ -77,10 +59,11 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   }, [userId]);
 
   useEffect(() => {
-    if (setupDoneRef.current) return;
-    executeJournalLogic();
+    if (!setupDoneRef.current) {
+      executeJournalLogic();
+      setupDoneRef.current = true;
+    }
     const intervalId = setInterval(executeJournalLogic, 30000);
-    setupDoneRef.current = true;
     return () => clearInterval(intervalId);
   }, [executeJournalLogic]);
 
