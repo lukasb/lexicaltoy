@@ -246,3 +246,33 @@ test('deleted page does not appear in search results', async ({ page }) => {
   }
   await expect(found).toBe(0);
 });
+
+test('wiki page names autocomplete correctly when match is not at start of page title', async ({ page }) => {
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.fill('villa');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
+  await page.keyboard.press('Meta+k');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type(' [[illa');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
+  const wikilinks = page.locator('.PlaygroundEditorTheme__wikilinkPageTitle');
+  let found = 0;
+  const count = await wikilinks.count();
+  for (let i = 0; i < count; i++) {
+    const titleText = await wikilinks.nth(i).textContent();
+    if (titleText === 'villa') {
+      found = found + 1;
+      break;
+    }
+  }
+  await expect(found).toBe(1);
+});
