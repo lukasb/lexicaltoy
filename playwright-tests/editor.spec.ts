@@ -12,12 +12,31 @@ test('window title', async ({ page }) => {
 });
 
 test('page contents', async ({ page }) => {
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.focus();
+  await newSearch.fill('test');
+  await page.keyboard.press('Enter');
   await expect(page.getByText('Hello, world!')).toBeVisible();
 });
 
 test('page title', async ({ page }) => {
-  const title = await page.getByTestId('editable-title');
-  await expect(title).toHaveText('TestPage1');
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.focus();
+  await newSearch.fill('test');
+  await page.keyboard.press('Enter');
+  
+  const titles = page.locator('[data-testid="editable-title"]');
+  let found = false;
+  const count = await titles.count();
+  for (let i = 0; i < count; i++) {
+    const titleText = await titles.nth(i).textContent();
+    console.log(titleText);
+    if (titleText === 'TestPage1') {
+      found = true;
+      break;
+    }
+  }
+  await expect(found).toBeTruthy();
 });
 
 test('should bring up search results', async ({ page }) => {
@@ -55,25 +74,35 @@ test('escape closes search results', async ({ page }) => {
 });
 
 test('renaming page reflected in search results', async ({ page }) => {
-  const title = page.getByTestId('editable-title');
-  await expect(title).toHaveText('TestPage1');
-  await title.focus();
-  await title.fill('NewTitle');
   const newSearch = page.getByPlaceholder('Search or Create');
-  await newSearch.fill('new');
-  await expect(page.getByTestId('search-result')).toHaveText('NewTitle');
+  await newSearch.focus();
+  await newSearch.fill('test');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Meta+k');
   await page.keyboard.press('Escape');
-  const newTitle = page.getByTestId('editable-title');
-  await newTitle.focus();
-  await newTitle.fill('TestPage1');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('new');
+  await newSearch.fill('new');
+  await expect(page.getByTestId('search-result')).toHaveText('newTestPage1');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('Meta+k');
 });
 
 test('create new page', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('avalon');
   await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
   const titles = page.locator('[data-testid="editable-title"]');
-  await expect(titles).toHaveCount(2);
   let found = false;
   const count = await titles.count();
   for (let i = 0; i < count; i++) {
@@ -95,7 +124,6 @@ test('open page', async ({ page }) => {
   await anotherSearch.fill('avalon');
   await page.keyboard.press('Enter');
   const titles = await page.locator('[data-testid="editable-title"]');
-  await expect(titles).toHaveCount(2);
   let found = false;
   const count = await titles.count();
   for (let i = 0; i < count; i++) {
@@ -123,15 +151,8 @@ test('can create a wikilink', async ({ page }) => {
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
-  await page.keyboard.press(' ');
-  await page.keyboard.press('[');
-  await page.keyboard.press('[');
-  await page.keyboard.press('a');
-  await page.keyboard.press('b');
-  await page.keyboard.press('c');
-  await page.keyboard.press(']');
-  await page.keyboard.press(']');
-  await page.keyboard.press(' ');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type(' [[abc]] ');
   const wikilink = page.locator('.PlaygroundEditorTheme__wikilinkPageTitle');
   await expect(wikilink).toHaveText('abc');
   await page.waitForTimeout(1000); // make sure edit happens
@@ -198,4 +219,30 @@ test('opening same page from omnibar twice does not create duplicate editor', as
     }
   }
   await expect(found).toBe(1);
+});
+
+test('deleted page does not appear in search results', async ({ page }) => {
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.focus();
+  await newSearch.fill('twill');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Meta+k');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
+  await page.keyboard.press('Meta+k');
+  await page.keyboard.type('twill');
+  const titles = await page.locator('[data-testid="search-result"]');
+  let found = 0;
+  const count = await titles.count();
+  for (let i = 0; i < count; i++) {
+    const titleText = await titles.nth(i).textContent();
+    if (titleText === 'twill') {
+      found = found + 1;
+      break;
+    }
+  }
+  await expect(found).toBe(0);
 });

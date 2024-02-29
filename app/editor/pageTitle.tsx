@@ -8,10 +8,12 @@ import { PagesContext } from '@/app/context/pages-context';
 const EditablePageTitle = ({ 
   pageId, 
   initialTitle, 
+  isJournal,
   updatePageTitleLocal
 } : { 
   pageId: string, 
   initialTitle: string,
+  isJournal: boolean,
   updatePageTitleLocal: (id: string, newTitle: string, newRevisionNumber: number) => void;
 }) => {
   const titleRef = useRef<HTMLDivElement>(null); // Reference to the editable div
@@ -57,9 +59,9 @@ const EditablePageTitle = ({
       <div
         ref={titleRef}
         className="text-2xl font-bold mb-4 px-0 py-2 focus:outline-none"
-        contentEditable
+        contentEditable={!isJournal}
         suppressContentEditableWarning={true}
-        onBlur={handleTitleChange} // Update state when user leaves the editable area
+        onBlur={isJournal? undefined: handleTitleChange} // Update state when user leaves the editable area
         role="textbox" // ARIA role for better accessibility
         aria-multiline="false"
         data-testid="editable-title"

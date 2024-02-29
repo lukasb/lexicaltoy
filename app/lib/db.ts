@@ -1,12 +1,14 @@
+'use server';
+
 import { sql } from '@vercel/postgres';
 import { unstable_noStore as noStore } from 'next/cache';
-import { User, Page } from './definitions';
 
 export async function fetchPages(userId: string) {
     noStore();
     const result = await sql`
       SELECT * FROM pages
       WHERE userId = ${userId}
+      AND deleted = false
     `;
     const pages = result.rows.map(row => ({
       id: row.id,
@@ -15,6 +17,8 @@ export async function fetchPages(userId: string) {
       userId: row.userId,
       lastModified: row.last_modified,
       revisionNumber: row.revision_number,
+      isJournal: row.is_journal,
+      deleted: row.deleted
     }));
   
     return pages;

@@ -1,29 +1,63 @@
 "use client";
 
-import EditorContainer from "../editor/editor-container";
-import { Page, isPage } from "../lib/definitions";
+import EditorContainer from "@/app/editor/editor-container";
+import { Page, isPage } from "@/app/lib/definitions";
 import Omnibar from "./Omnibar";
-import { findMostRecentlyEditedPage } from "../lib/pages-helpers";
-import { useState } from "react";
-import { insertPage } from "../lib/actions";
+import { findMostRecentlyEditedPage } from "@/app/lib/pages-helpers";
+import { useState, useCallback } from "react";
+import { insertPage, deletePage, insertJournalPage, deleteStaleJournalPages } from "@/app/lib/actions";
 import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { PagesContext } from '@/app/context/pages-context';
+import { DEFAULT_JOURNAL_CONTENTS } from "@/app/lib/journal-helpers";
+import { fetchPages } from "@/app/lib/db";
+import { getJournalTitle } from '@/app/lib/journal-helpers';
+import { handleNewJournalPage, handleDeleteStaleJournalPages, getTodayJournalPage } from "@/app/lib/journal-helpers";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
-  
-  // TODO we're doing a lot of prop drilling now, maybe we should use context
 
   const [currentPages, setCurrentPages] = useState(pages);
   const emptyPageJSONString =
     '{"root":{"children":[{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"listitem","version":1,"value":1}],"direction":null,"format":"","indent":0,"type":"list","version":1,"listType":"bullet","start":1,"tag":"ul"}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
-  // TODO let findMostRecentlyEditedPage return null if no pages
-  // then create a new page if no pages
   const initialPageId = findMostRecentlyEditedPage(currentPages)?.id;
-  const [openPageIds, setOpenPageIds] = useState<string[]>(initialPageId ? [initialPageId] : []);
+  const todayJournalPageId = getTodayJournalPage(currentPages)?.id;
+  const [openPageIds, setOpenPageIds] = useState<string[]>(() => {
+    const initialIds: string[] = [];
+    if (initialPageId && initialPageId !== todayJournalPageId) initialIds.push(initialPageId);
+    if (todayJournalPageId) initialIds.push(todayJournalPageId);
+    return initialIds;
+  });
 
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
+  const setupDoneRef = useRef(false);
+
+  const executeJournalLogic = useCallback(() => {
+    console.log('Executing journal logic');
+    const today = new Date();
+    const todayJournalTitle = getJournalTitle(today);
+    if (!currentPages.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
+      handleNewJournalPage(todayJournalTitle, userId, today, setCurrentPages, openPage);
+    }
+    handleDeleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, currentPages, setCurrentPages);
+  }, [userId, currentPages]);
+
+  useEffect(() => {
+    const fetchAndSetPages = async () => {
+      const pages = await fetchPages(userId);
+      setCurrentPages(pages);
+    };
+    fetchAndSetPages();
+  }, [userId]);
+
+  useEffect(() => {
+    if (!setupDoneRef.current) {
+      executeJournalLogic();
+      setupDoneRef.current = true;
+    }
+    const intervalId = setInterval(executeJournalLogic, 30000);
+    return () => clearInterval(intervalId);
+  }, [executeJournalLogic]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -51,6 +85,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   }
 
   const openPage = (page: Page) => {
+    console.log("opening page", page);
     setOpenPageIds((prevPageIds) => {
       // doing all this inside the setOpenPages is necessary in some cases (like when opening from clicking a wikilink)
       // and not in others (like when opening from the omnibar.) I have no idea why.
@@ -81,6 +116,18 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
       openPage(result);
     }
   };
+
+  const handleDeletePage = async (id: string) => {
+    const page = currentPages.find((p) => p.id === id);
+    if (!page) return;
+    const result = await deletePage(id, page.revisionNumber);
+    if (result === -1) {
+      console.error("Failed to delete page");
+      return;
+    }
+    setCurrentPages((prevPages) => prevPages.filter((p) => p.id !== id));
+    setOpenPageIds((prevPageIds) => prevPageIds.filter((pId) => pId !== id));
+  }
 
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
@@ -122,6 +169,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                     setOpenPageIds(prevPageIds => prevPageIds.filter(pageId => pageId !== id));
                   }}
                   openOrCreatePageByTitle={openOrCreatePageByTitle}
+                  deletePage={handleDeletePage}
                 />
               );
             })}

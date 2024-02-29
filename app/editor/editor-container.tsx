@@ -12,12 +12,14 @@ function EditorContainer({
   updatePageContentsLocal,
   closePage,
   openOrCreatePageByTitle,
+  deletePage,
 }: {
   page: Page;
   updatePageTitleLocal: (id: string, newTitle: string, newRevisionNumber: number) => void;
   updatePageContentsLocal: (id: string, newValue: string, newRevisionNumber: number) => void;
   closePage: (id: string) => void;
   openOrCreatePageByTitle: (title: string) => void;
+  deletePage: (id: string, oldRevisionNumber: number) => void;
 }) {
   const [showDebug, setShowDebug] = useState(false);
 
@@ -35,19 +37,30 @@ function EditorContainer({
             <EditablePageTitle
               initialTitle={page.title}
               pageId={page.id}
+              isJournal={page.isJournal}
               updatePageTitleLocal={updatePageTitleLocal}
             />
-            <Button onClick={() => setShowDebug(!showDebug)}>
-              {showDebug ? "-d🐞" : "+d🐞"}
-            </Button>
+            <div className="flex">
+              {!page.isJournal && (
+                <Button
+                  className="mx-1"
+                  onClick={() => deletePage(page.id, page.revisionNumber)}
+                >
+                  Del
+                </Button>
+              )}
+              <Button onClick={() => setShowDebug(!showDebug)}>
+                {showDebug ? "-d🐞" : "+d🐞"}
+              </Button>
+            </div>
           </div>
         </div>
-          <Editor
-            page={page}
-            showDebugInfo={showDebug}
-            updatePageContentsLocal={updatePageContentsLocal}
-            openOrCreatePageByTitle={openOrCreatePageByTitle}
-          />
+        <Editor
+          page={page}
+          showDebugInfo={showDebug}
+          updatePageContentsLocal={updatePageContentsLocal}
+          openOrCreatePageByTitle={openOrCreatePageByTitle}
+        />
       </div>
     </div>
   );

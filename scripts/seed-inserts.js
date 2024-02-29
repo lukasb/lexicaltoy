@@ -56,7 +56,9 @@ async function seedPages(client, pages) {
       userId UUID NOT NULL,
       title TEXT NOT NULL,
       last_modified TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-      revision_number INT NOT NULL DEFAULT 1
+      revision_number INT NOT NULL DEFAULT 1,
+      is_journal BOOLEAN NOT NULL DEFAULT FALSE,
+      deleted BOOLEAN NOT NULL DEFAULT FALSE
     );
 `;
 
@@ -137,7 +139,9 @@ async function seedPages(client, pages) {
       title TEXT NOT NULL,
       last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
       history_created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-      revision_number INT NOT NULL DEFAULT 1
+      revision_number INT NOT NULL DEFAULT 1,
+      is_journal BOOLEAN NOT NULL DEFAULT FALSE,
+      deleted BOOLEAN NOT NULL DEFAULT FALSE
     );
     `;
 
