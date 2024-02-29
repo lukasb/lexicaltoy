@@ -41,9 +41,14 @@ function EditorContainer({
               updatePageTitleLocal={updatePageTitleLocal}
             />
             <div className="flex">
-              <Button className="mx-1" onClick={() => deletePage(page.id, page.revisionNumber)}>
-                Del
-              </Button>
+              {!page.isJournal && (
+                <Button
+                  className="mx-1"
+                  onClick={() => deletePage(page.id, page.revisionNumber)}
+                >
+                  Del
+                </Button>
+              )}
               <Button onClick={() => setShowDebug(!showDebug)}>
                 {showDebug ? "-d🐞" : "+d🐞"}
               </Button>
