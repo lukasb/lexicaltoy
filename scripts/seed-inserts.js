@@ -127,67 +127,48 @@ async function seedPages(client, pages) {
     `;
 
     console.log(`Created "update_pages_last_modified" trigger`);
-
-    const createPreventDuplicateJournal = await client.sql`
-    CREATE OR REPLACE FUNCTION prevent_duplicate_journal_page()
-    RETURNS TRIGGER AS $$
-    BEGIN
-    -- Check if there's an existing page with the same title and is_journal = true
-      IF EXISTS (
-        SELECT 1
-        FROM pages
-        WHERE title = NEW.title
-        AND is_journal = true
-      ) THEN
-        -- If such a page exists, prevent the insertion by raising an error
-        RAISE EXCEPTION 'A journal page with the same title already exists.';
-      END IF;
-
-      -- If no duplicate was found, allow the insertion to proceed
-      RETURN NEW;
-    END;
-    $$ LANGUAGE plpgsql;
-    `;
-    console.log(`Created "prevent_duplicate_journal_page" function`);
-
+    
     const createPreventDuplicateJournalTrigger = await client.sql`
     DO $$
       BEGIN
-      -- Check if the trigger already exists
       IF NOT EXISTS (
           SELECT 1
           FROM pg_trigger
           WHERE tgname = 'check_duplicate_journal_before_insert'
       ) THEN
-          -- Trigger does not exist, so create the trigger function
-          EXECUTE 'CREATE OR REPLACE FUNCTION prevent_duplicate_journal_page()
-                  RETURNS TRIGGER AS $$
-                  BEGIN
-                      IF EXISTS (
-                          SELECT 1
-                          FROM pages
-                          WHERE title = NEW.title
-                          AND is_journal = true
-                      ) THEN
-                          RAISE EXCEPTION ''A journal page with the same title already exists.'';
-                      END IF;
-                      RETURN NEW;
-                  END;
-                  $$ LANGUAGE plpgsql;';
-          
-          -- Create the trigger
-          EXECUTE 'CREATE TRIGGER check_duplicate_journal_before_insert
-                  BEFORE INSERT ON pages
-                  FOR EACH ROW
-                  WHEN (NEW.is_journal = true)
-                  EXECUTE FUNCTION prevent_duplicate_journal_page();';
+          -- Trigger does not exist, so create the trigger function using EXECUTE
+          EXECUTE '
+              CREATE OR REPLACE FUNCTION prevent_duplicate_journal_page()
+              RETURNS TRIGGER AS $pg$
+              BEGIN
+                  IF EXISTS (
+                      SELECT 1
+                      FROM pages
+                      WHERE title = NEW.title
+                      AND is_journal = true
+                  ) THEN
+                      RAISE EXCEPTION ''A journal page with the same title already exists.'';
+                  END IF;
+                  RETURN NEW;
+              END;
+              $pg$ LANGUAGE plpgsql;
+          ';
+
+          -- Now, create the trigger
+          EXECUTE '
+              CREATE TRIGGER check_duplicate_journal_before_insert
+              BEFORE INSERT ON pages
+              FOR EACH ROW
+              WHEN (NEW.is_journal = true)
+              EXECUTE FUNCTION prevent_duplicate_journal_page();
+          ';
       END IF;
-      END;
+    END;
     $$ LANGUAGE plpgsql;
     `;
 
     console.log(`Created "prevent_duplicate_journal_page" trigger`);
-
+    
     // Create the backup table if it doesn't exist
     const createBackupTable = await client.sql`
      CREATE TABLE IF NOT EXISTS pages_history (

@@ -167,8 +167,6 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return;
         const [hasMatch, match] = $search(selection);
         if (!hasMatch) return;
-        //const remainingText = page.title.slice(match.length);
-        console.log("match length", match.length);
 
         const {anchor, focus} = selection;
         // TODO handle case where beginning of wiki page name is before the node the selection is in

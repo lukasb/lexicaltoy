@@ -125,7 +125,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       if (isTargetNode(prevSibling)) {
         if (prevMatch === null || getMode(prevSibling) !== 0) {
           replaceElementWithSimpleText(prevSibling);
-
           return;
         } else {
           const diff = prevMatch.end - previousText.length;
@@ -142,7 +141,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
               const remainingText = text.slice(diff);
               node.setTextContent(remainingText);
             }
-
             return;
           }
         }
@@ -159,10 +157,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       if (nextText === "") {
         const nextSibling = currentNode.getNextSibling();
 
-        if (isTargetNode(nextSibling)) {
-          return;
-        }
-
         if ($isTextNode(nextSibling)) {
           nextText =
             currentNode.getTextContent() + nextSibling.getTextContent();
@@ -174,7 +168,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
             } else {
               nextSibling.markDirty();
             }
-
             return;
           } else if (nextMatch.start !== 0) {
             return;
