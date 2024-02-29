@@ -5,7 +5,7 @@ import { Page, isPage } from "@/app/lib/definitions";
 import Omnibar from "./Omnibar";
 import { findMostRecentlyEditedPage } from "@/app/lib/pages-helpers";
 import { useState, useCallback } from "react";
-import { insertPage, deletePage, insertJournalPage, deleteStaleJournalPages } from "@/app/lib/actions";
+import { insertPage, deletePage } from "@/app/lib/actions";
 import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { PagesContext } from '@/app/context/pages-context';

@@ -95,23 +95,38 @@ export async function insertJournalPage(title: string, value: string, userId: st
   }
 }
 
+// this runs on the server, and sometimes next (or node?) will run it with
+// stale data or even a stale definition of the function
+// renaming this function, rebooting the server, and renaming the function again fixed it
+// wtf
+// when I renamed the function, started getting this error: https://github.com/vercel/next.js/discussions/58431
 export async function deleteStaleJournalPages(ids: string[]): Promise<string[]> {
   const deletedIds: string[] = [];
-  // we do this because vercel's sql library doesn't stuff like ANY(${ids})
-  // this should change when this merges https://github.com/vercel/storage/pull/504
+
   for (const id of ids) {
     try {
       const result = await sql`
-          UPDATE pages
-          SET deleted = true, revision_number = revision_number + 1
+          SELECT id
+          FROM pages
           WHERE id = ${id}
-          RETURNING id
         `;
-      deletedIds.push(result.rows[0].id);
+
+      if (result.rows.length === 0) {
+        deletedIds.push(id);
+      } else {
+        const deleteResult = await sql`
+            UPDATE pages
+            SET deleted = true, revision_number = revision_number + 1
+            WHERE id = ${id}
+            RETURNING id
+          `;
+        deletedIds.push(deleteResult.rows[0].id);
+      }
     } catch (error) {
       console.log(`Database Error: Failed to Delete Page with ID ${id}:`, error);
     }
   }
+
   return deletedIds;
 }
 

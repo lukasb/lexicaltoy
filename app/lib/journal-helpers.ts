@@ -38,7 +38,6 @@ export const handleNewJournalPage = async (title: string, userId: string, date: 
 }
 
 export const handleDeleteStaleJournalPages = async (today: Date, defaultValue: string, currentPages: Page[], setCurrentPages: Function) => {
-  const todayStr = format(today, 'MMM do, yyyy');
   const stalePages = currentPages.filter((page) => {
     if (!page.isJournal) {
       return false;
@@ -50,6 +49,7 @@ export const handleDeleteStaleJournalPages = async (today: Date, defaultValue: s
     return isBefore(pageDateStartOfDay, todayStartOfDay) && page.value === defaultValue;
   });
   const idsToDelete = stalePages.map(page => page.id);
+  if (idsToDelete.length === 0) return;
   const deletedIds = await deleteStaleJournalPages(idsToDelete);
   if (deletedIds.length > 0) {
     setCurrentPages((prevPages: Page[]) => prevPages.filter((p) => !deletedIds.includes(p.id)));
