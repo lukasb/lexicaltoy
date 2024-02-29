@@ -1,3 +1,8 @@
+import { format, parse, isBefore, startOfDay } from 'date-fns';
+import { Page, isPage } from "@/app/lib/definitions";
+import { deleteStaleJournalPages } from "@/app/lib/actions";
+import { insertJournalPage } from '@/app/lib/actions';
+
 export const DEFAULT_JOURNAL_CONTENTS = '{"root":{"children":[{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"listitem","version":1,"value":1}],"direction":null,"format":"","indent":0,"type":"list","version":1,"listType":"bullet","start":1,"tag":"ul"}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 export function getJournalTitle(date: Date) {
@@ -19,4 +24,34 @@ export function getJournalTitle(date: Date) {
   const dateString = today.toLocaleDateString('en-US', options);
   
   return dateString.replace(new RegExp(` ${day},`), ` ${day}${ordinalSuffix},`);
+}
+
+export const handleNewJournalPage = async (title: string, userId: string, date: Date, setCurrentPages: Function, openPage: Function) => {
+  const result = await insertJournalPage(title, DEFAULT_JOURNAL_CONTENTS, userId, date);
+  if (typeof result === "string") {
+    console.error("expected page, got string", result);
+    return;
+  } else if (isPage(result)) {
+    setCurrentPages((prevPages: Page[]) => [result, ...prevPages]);
+    openPage(result);
+  }
+}
+
+export const handleDeleteStaleJournalPages = async (today: Date, defaultValue: string, currentPages: Page[], setCurrentPages: Function) => {
+  const todayStr = format(today, 'MMM do, yyyy');
+  const stalePages = currentPages.filter((page) => {
+    if (!page.isJournal) {
+      return false;
+    }
+    const pageDateStr = page.title;
+    const pageDate = parse(pageDateStr, 'MMM do, yyyy', new Date());
+    const pageDateStartOfDay = startOfDay(pageDate);
+    const todayStartOfDay = startOfDay(today);
+    return isBefore(pageDateStartOfDay, todayStartOfDay) && page.value === defaultValue;
+  });
+  const idsToDelete = stalePages.map(page => page.id);
+  const deletedIds = await deleteStaleJournalPages(idsToDelete);
+  if (deletedIds.length > 0) {
+    setCurrentPages((prevPages: Page[]) => prevPages.filter((p) => !deletedIds.includes(p.id)));
+  }
 }

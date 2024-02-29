@@ -12,7 +12,7 @@ import { PagesContext } from '@/app/context/pages-context';
 import { DEFAULT_JOURNAL_CONTENTS } from "@/app/lib/journal-helpers";
 import { fetchPages } from "@/app/lib/db";
 import { getJournalTitle } from '@/app/lib/journal-helpers';
-import { format, parse, isBefore, startOfDay } from 'date-fns';
+import { handleNewJournalPage, handleDeleteStaleJournalPages } from "@/app/lib/journal-helpers";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -27,46 +27,15 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
   const setupDoneRef = useRef(false);
 
-  const handleNewJournalPage = useCallback(async (title: string, date: Date) => {
-    const result = await insertJournalPage(title, DEFAULT_JOURNAL_CONTENTS, userId, date);
-    if (typeof result === "string") {
-      console.error("expected page, got string", result);
-      return;
-    } else if (isPage(result)) {
-      setCurrentPages((prevPages) => [result, ...prevPages]);
-      openPage(result);
-    }
-  }, [userId]);
-
-  const handleDeleteStaleJournalPages = useCallback(async (today: Date, defaultValue: string) => {
-    const todayStr = format(today, 'MMM do, yyyy');
-    const stalePages = currentPages.filter((page) => {
-      if (!page.isJournal) {
-        return false;
-      }
-      const pageDateStr = page.title;
-      const pageDate = parse(pageDateStr, 'MMM do, yyyy', new Date());
-      const pageDateStartOfDay = startOfDay(pageDate);
-      const todayStartOfDay = startOfDay(today);
-      return isBefore(pageDateStartOfDay, todayStartOfDay) && page.value === defaultValue;
-    });
-    const idsToDelete = stalePages.map(page => page.id);
-    const deletedIds = await deleteStaleJournalPages(idsToDelete);
-    if (deletedIds.length > 0) {
-      setCurrentPages((prevPages) => prevPages.filter((p) => !deletedIds.includes(p.id)));
-      setOpenPageIds((prevPageIds) => prevPageIds.filter((pId) => !deletedIds.includes(pId)));
-    }
-  }, [currentPages]);
-
   const executeJournalLogic = useCallback(() => {
     console.log('Executing journal logic');
     const today = new Date();
     const todayJournalTitle = getJournalTitle(today);
     if (!currentPages.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
-      handleNewJournalPage(todayJournalTitle, today);
+      handleNewJournalPage(todayJournalTitle, userId, today, setCurrentPages, openPage);
     }
-    handleDeleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS);
-  }, [currentPages, handleNewJournalPage, handleDeleteStaleJournalPages]);
+    handleDeleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, currentPages, setCurrentPages);
+  }, [userId, currentPages]);
 
   useEffect(() => {
     const fetchAndSetPages = async () => {
@@ -111,6 +80,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   }
 
   const openPage = (page: Page) => {
+    console.log("opening page", page);
     setOpenPageIds((prevPageIds) => {
       // doing all this inside the setOpenPages is necessary in some cases (like when opening from clicking a wikilink)
       // and not in others (like when opening from the omnibar.) I have no idea why.
