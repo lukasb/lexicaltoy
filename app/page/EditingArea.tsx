@@ -12,7 +12,7 @@ import { PagesContext } from '@/app/context/pages-context';
 import { DEFAULT_JOURNAL_CONTENTS } from "@/app/lib/journal-helpers";
 import { fetchPages } from "@/app/lib/db";
 import { getJournalTitle } from '@/app/lib/journal-helpers';
-import { handleNewJournalPage, handleDeleteStaleJournalPages } from "@/app/lib/journal-helpers";
+import { handleNewJournalPage, handleDeleteStaleJournalPages, getTodayJournalPage } from "@/app/lib/journal-helpers";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -20,9 +20,14 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const emptyPageJSONString =
     '{"root":{"children":[{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"listitem","version":1,"value":1}],"direction":null,"format":"","indent":0,"type":"list","version":1,"listType":"bullet","start":1,"tag":"ul"}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
-  // TODO let findMostRecentlyEditedPage return null if no pages
   const initialPageId = findMostRecentlyEditedPage(currentPages)?.id;
-  const [openPageIds, setOpenPageIds] = useState<string[]>(initialPageId ? [initialPageId] : []);
+  const todayJournalPageId = getTodayJournalPage(currentPages)?.id;
+  const [openPageIds, setOpenPageIds] = useState<string[]>(() => {
+    const initialIds: string[] = [];
+    if (initialPageId && initialPageId !== todayJournalPageId) initialIds.push(initialPageId);
+    if (todayJournalPageId) initialIds.push(todayJournalPageId);
+    return initialIds;
+  });
 
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
   const setupDoneRef = useRef(false);

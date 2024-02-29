@@ -15,7 +15,11 @@ export function searchPages(pages: Page[], term: string): Page[] {
   return [...startsWithTerm, ...includesTerm];
 }
 
-export function findMostRecentlyEditedPage(pages: Page[]): Page {
+export function findMostRecentlyEditedPage(pages: Page[]): Page | null {
+  if (!pages || pages.length === 0) {
+    return null;
+  }
+
   const mostRecentlyEditedPage = pages.reduce((latest, current) => {
     return latest.lastModified > current.lastModified ? latest : current;
   }, pages[0]);

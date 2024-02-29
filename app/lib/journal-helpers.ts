@@ -55,3 +55,15 @@ export const handleDeleteStaleJournalPages = async (today: Date, defaultValue: s
     setCurrentPages((prevPages: Page[]) => prevPages.filter((p) => !deletedIds.includes(p.id)));
   }
 }
+
+export const getTodayJournalPage = (currentPages: Page[]) => {
+  const today = new Date();
+  const todayStr = getJournalTitle(today);
+  const todaysJournalPage = currentPages.find((page) => {
+    if (!page.isJournal) {
+      return false;
+    }
+    return page.title === todayStr;
+  });
+  return todaysJournalPage;
+}
