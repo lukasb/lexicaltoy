@@ -128,46 +128,11 @@ async function seedPages(client, pages) {
 
     console.log(`Created "update_pages_last_modified" trigger`);
     
-    const createPreventDuplicateJournalTrigger = await client.sql`
-    DO $$
-      BEGIN
-      IF NOT EXISTS (
-          SELECT 1
-          FROM pg_trigger
-          WHERE tgname = 'check_duplicate_journal_before_insert'
-      ) THEN
-          -- Trigger does not exist, so create the trigger function using EXECUTE
-          EXECUTE '
-              CREATE OR REPLACE FUNCTION prevent_duplicate_journal_page()
-              RETURNS TRIGGER AS $pg$
-              BEGIN
-                  IF EXISTS (
-                      SELECT 1
-                      FROM pages
-                      WHERE title = NEW.title
-                      AND is_journal = true
-                  ) THEN
-                      RAISE EXCEPTION ''A journal page with the same title already exists.'';
-                  END IF;
-                  RETURN NEW;
-              END;
-              $pg$ LANGUAGE plpgsql;
-          ';
-
-          -- Now, create the trigger
-          EXECUTE '
-              CREATE TRIGGER check_duplicate_journal_before_insert
-              BEFORE INSERT ON pages
-              FOR EACH ROW
-              WHEN (NEW.is_journal = true)
-              EXECUTE FUNCTION prevent_duplicate_journal_page();
-          ';
-      END IF;
-    END;
-    $$ LANGUAGE plpgsql;
+    const createUniqueJournalTrigger = await client.sql`
+    ALTER TABLE pages ADD CONSTRAINT unique_pages UNIQUE (userId, is_journal, title);
     `;
 
-    console.log(`Created "prevent_duplicate_journal_page" trigger`);
+    console.log(`Created "unique_pages" constraint`);
     
     // Create the backup table if it doesn't exist
     const createBackupTable = await client.sql`
