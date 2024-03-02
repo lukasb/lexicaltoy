@@ -129,7 +129,19 @@ async function seedPages(client, pages) {
     console.log(`Created "update_pages_last_modified" trigger`);
     
     const createUniqueJournalTrigger = await client.sql`
-    ALTER TABLE pages ADD CONSTRAINT unique_pages UNIQUE (userId, is_journal, title);
+    DO $$
+    BEGIN
+        -- Replace 'unique_pages' with your constraint name
+        -- Replace 'pages' with your table name
+        IF NOT EXISTS (
+            SELECT 1
+            FROM pg_constraint
+            WHERE conname = 'unique_pages'
+        ) THEN
+            ALTER TABLE pages
+            ADD CONSTRAINT unique_pages UNIQUE (userId, is_journal, title);
+        END IF;
+    END$$;
     `;
 
     console.log(`Created "unique_pages" constraint`);
