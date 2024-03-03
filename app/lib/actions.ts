@@ -100,7 +100,7 @@ export async function insertJournalPage(title: string, value: string, userId: st
 // renaming this function, rebooting the server, and renaming the function again fixed it
 // wtf
 // when I renamed the function, started getting this error: https://github.com/vercel/next.js/discussions/58431
-export async function deleteStaleJournalPages(ids: string[]): Promise<string[]> {
+export async function deleteStaleJournalPages(ids: string[], defaultValue: string): Promise<string[]> {
   const deletedIds: string[] = [];
 
   for (const id of ids) {
@@ -117,10 +117,10 @@ export async function deleteStaleJournalPages(ids: string[]): Promise<string[]> 
         const deleteResult = await sql`
             UPDATE pages
             SET deleted = true, revision_number = revision_number + 1
-            WHERE id = ${id}
+            WHERE id = ${id} and value = ${defaultValue}
             RETURNING id
           `;
-        deletedIds.push(deleteResult.rows[0].id);
+        if (deleteResult.rows.length > 0) deletedIds.push(deleteResult.rows[0].id);
       }
     } catch (error) {
       console.log(`Database Error: Failed to Delete Page with ID ${id}:`, error);

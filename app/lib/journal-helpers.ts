@@ -50,7 +50,7 @@ export const handleDeleteStaleJournalPages = async (today: Date, defaultValue: s
   });
   const idsToDelete = stalePages.map(page => page.id);
   if (idsToDelete.length === 0) return;
-  const deletedIds = await deleteStaleJournalPages(idsToDelete);
+  const deletedIds = await deleteStaleJournalPages(idsToDelete, defaultValue);
   if (deletedIds.length > 0) {
     setCurrentPages((prevPages: Page[]) => prevPages.filter((p) => !deletedIds.includes(p.id)));
   }
