@@ -10,6 +10,10 @@ import type {
 import { ElementNode, TextNode } from 'lexical';
 
 export type SerializedTodoNode = SerializedElementNode;
+export type SerializedTodoStatusNode = SerializedTextNode;
+export type SerializedTodoCheckboxNode = SerializedElementNode & {
+  checked: boolean;
+};
 
 export class TodoTextNode extends TextNode {
   static getType(): string {
@@ -54,21 +58,16 @@ export type TodoStatus = 'NOW' | 'LATER' | 'TODO' | 'DOING' | 'DONE';
 
 export class TodoStatusNode extends TextNode {
 
-  __status: TodoStatus;
-
   constructor(status: TodoStatus, key?: NodeKey) {
     super(status, key);
-    this.__status = status;
   }
 
   getStatus(): TodoStatus {
-    const self = this.getLatest();
-    return self.__status;
+    return this.getLatest().getTextContent() as TodoStatus;
   }
 
   setStatus(status: TodoStatus): void {
     const self = this.getLatest();
-    self.__status = status;
     self.setTextContent(status);
   }
 
@@ -82,7 +81,8 @@ export class TodoStatusNode extends TextNode {
     return dom;
   }
 
-  exportJSON(): SerializedTextNode {
+  exportJSON(): SerializedTodoStatusNode {
+    const self = this.getLatest();
     return {
       ...super.exportJSON(),
       type: 'todo-status',
@@ -90,12 +90,12 @@ export class TodoStatusNode extends TextNode {
     };
   }
 
-  static importJSON(serializedNode: SerializedTextNode): TodoTextNode {
-    return $createTodoTextNode(serializedNode.text);
+  static importJSON(serializedNode: SerializedTodoStatusNode): TodoStatusNode {
+    return $createTodoStatusNode(serializedNode.text as TodoStatus);
   }
 
-  static clone(node: TodoTextNode): TodoTextNode {
-    return new TodoTextNode(node.getTextContent(), node.__key);
+  static clone(node: TodoStatusNode): TodoStatusNode {
+    return new TodoStatusNode(node.getStatus(), node.__key);
   }
 
   canInsertTextBefore(): boolean {
@@ -107,14 +107,85 @@ export class TodoStatusNode extends TextNode {
   }
 }
 
-/**
- * Generates a TodoNode. Just a container, TodoPlugin is responsible for inserting the rest of the nodes.
- * @returns - The TodoNode
- */
 export function $createTodoStatusNode(status: TodoStatus): TodoStatusNode {
   return new TodoStatusNode(status);
 }
 
+// https://codepen.io/lukasb-the-flexboxer/pen/wvZvYQY
+
+export class TodoCheckboxNode extends ElementNode {
+
+  __checked: boolean;
+
+  static getType(): string {
+    return 'todo-checkbox';
+  }
+
+  static clone(node: TodoCheckboxNode): TodoCheckboxNode {
+    const self = node.getLatest();
+    return new TodoCheckboxNode(self.__checked, node.__key);
+  }
+
+  constructor(checked: boolean, key?: NodeKey) {
+    super(key);
+    this.__checked = checked;
+  }
+
+  getChecked(): boolean {
+    return this.getLatest().__checked;
+  }
+
+  setChecked(checked: boolean): void {
+    const self = this.getWritable();
+    self.__checked = checked;
+  }
+
+  createDOM(config: EditorConfig, editor: LexicalEditor): HTMLElement {
+    const element = document.createElement('input');
+    element.type = 'checkbox';
+    element.classList.add('PlaygroundEditorTheme__todoCheckbox');
+    element.checked = this.__checked;
+    return element;
+  }
+
+  updateDOM(_prevNode: unknown, _dom: HTMLElement, config: EditorConfig): boolean {
+    return false;
+  }
+
+  static importJSON(serializedNode: SerializedTodoCheckboxNode): TodoNode {
+    return $createTodoCheckboxNode(serializedNode.checked);
+  }
+
+  exportJSON(): SerializedTodoCheckboxNode {
+    const self = this.getLatest();
+    return {
+      ...super.exportJSON(),
+      type: 'todo',
+      checked: self.__checked,
+      version: 1
+    };
+  }
+
+  isTextEntity(): boolean {
+    return false;
+  }
+
+  canInsertTextBefore(): boolean {
+    return false;
+  }
+
+  canInsertTextAfter(): boolean {
+    return false;
+  }
+
+  isInline(): boolean {
+    return true;
+  }
+}
+
+export function $createTodoCheckboxNode(checked: boolean): TodoNode {
+  return new TodoCheckboxNode(checked);
+}
 
 export class TodoNode extends ElementNode {
 
