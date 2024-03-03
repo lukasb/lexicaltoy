@@ -178,6 +178,10 @@ body {
   transform: rotate(45deg);
   border-width: 0 2px 2px 0;
 }
+.PlaygroundEditorTheme__todoStatus {
+  color: rgb(99, 102, 233);
+  font-weight: bold;
+}
 .PlaygroundEditorTheme__mark {
   background: rgba(255, 212, 0, 0.14);
   border-bottom: 2px solid rgba(255, 212, 0, 0.3);

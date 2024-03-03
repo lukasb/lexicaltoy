@@ -9,12 +9,6 @@ import type {
 
 import { ElementNode, TextNode } from 'lexical';
 
-/*
-
-https://codepen.io/lukasb-the-flexboxer/pen/wvZvYQY
-
-*/
-
 export type SerializedTodoNode = SerializedElementNode;
 
 export class TodoTextNode extends TextNode {
@@ -56,43 +50,52 @@ export function $createTodoTextNode(text: string): TodoTextNode {
   return new TodoTextNode(text);
 }
 
-export class TodoStatusNode extends ElementNode {
+export type TodoStatus = 'NOW' | 'LATER' | 'TODO' | 'DOING' | 'DONE';
+
+export class TodoStatusNode extends TextNode {
+
+  __status: TodoStatus;
+
+  constructor(status: TodoStatus, key?: NodeKey) {
+    super(status, key);
+    this.__status = status;
+  }
+
+  getStatus(): TodoStatus {
+    const self = this.getLatest();
+    return self.__status;
+  }
+
+  setStatus(status: TodoStatus): void {
+    const self = this.getLatest();
+    self.__status = status;
+    self.setTextContent(status);
+  }
 
   static getType(): string {
-    return 'todo';
+    return 'todo-status';
   }
 
-  static clone(node: TodoNode): TodoNode {
-    return new TodoNode(node.__key);
+  createDOM(config: EditorConfig): HTMLElement {
+    const dom = super.createDOM(config);
+    dom.classList.add('PlaygroundEditorTheme__todoStatus');
+    return dom;
   }
 
-  constructor(key?: NodeKey) {
-    super(key);
-  }
-
-  createDOM(config: EditorConfig, editor: LexicalEditor): HTMLElement {
-    const element = document.createElement('span');
-    return element;
-  }
-
-  updateDOM(_prevNode: unknown, _dom: HTMLElement, config: EditorConfig): boolean {
-    return false;
-  }
-
-  static importJSON(serializedNode: SerializedTodoNode): TodoNode {
-    return $createTodoNode();
-  }
-
-  exportJSON(): SerializedTodoNode {
+  exportJSON(): SerializedTextNode {
     return {
       ...super.exportJSON(),
-      type: 'todo',
+      type: 'todo-status',
       version: 1
     };
   }
 
-  isTextEntity(): boolean {
-    return true;
+  static importJSON(serializedNode: SerializedTextNode): TodoTextNode {
+    return $createTodoTextNode(serializedNode.text);
+  }
+
+  static clone(node: TodoTextNode): TodoTextNode {
+    return new TodoTextNode(node.getTextContent(), node.__key);
   }
 
   canInsertTextBefore(): boolean {
@@ -100,11 +103,7 @@ export class TodoStatusNode extends ElementNode {
   }
 
   canInsertTextAfter(): boolean {
-    return true;
-  }
-
-  isInline(): boolean {
-    return true;
+    return false;
   }
 }
 
@@ -112,8 +111,8 @@ export class TodoStatusNode extends ElementNode {
  * Generates a TodoNode. Just a container, TodoPlugin is responsible for inserting the rest of the nodes.
  * @returns - The TodoNode
  */
-export function $createTodoNode(): TodoNode {
-  return new TodoNode();
+export function $createTodoStatusNode(status: TodoStatus): TodoStatusNode {
+  return new TodoStatusNode(status);
 }
 
 
