@@ -36,6 +36,8 @@ import { shouldShowFloatingWikiPageNames, computeFloatingWikiPageNamesPosition }
 import { Page } from "@/app/lib/definitions";
 import { PagesContext } from "@/app/context/pages-context";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
+import { TodoNode, TodoCheckboxNode, TodoStatus, TodoStatusNode, TodoTextNode } from "@/app/nodes/TodoNode";
+import { TodoPlugin } from "@/app/plugins/TodosPlugin";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -62,7 +64,11 @@ function Editor({
       ListItemNode,
       AutoLinkNode,
       WikilinkNode,
-      WikilinkInternalNode],
+      WikilinkInternalNode,
+      TodoNode,
+      TodoCheckboxNode,
+      TodoStatusNode,
+      TodoTextNode],
     onError,
   };
 
@@ -134,6 +140,7 @@ function Editor({
       <LexicalClickableLinkPlugin />
       <WikilinkPlugin />
       <WikilinkEventListenerPlugin openOrCreatePageByTitle={openOrCreatePageByTitle} />
+      <TodoPlugin />
       {floatingAnchorElem && !isSmallWidthViewport && (
         <>
           <DraggableBlockPlugin anchorElem={floatingAnchorElem} />

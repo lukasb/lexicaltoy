@@ -160,7 +160,7 @@ export class TodoCheckboxNode extends ElementNode {
     const self = this.getLatest();
     return {
       ...super.exportJSON(),
-      type: 'todo',
+      type: 'todo-checkbox',
       checked: self.__checked,
       version: 1
     };
