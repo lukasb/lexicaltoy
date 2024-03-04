@@ -257,6 +257,8 @@ export function registerLexicalElementEntity<T extends ElementNode>(
   return [removePlainTextTransform, removeReverseNodeTransform];
 }
 
+// the best way I could find to get wikilink nodes to turn back into text nodes when they no longer match the format
+// so every time we edit a node inside a WikilinkNode, we mark the parent (the WikilinkNode) as dirty so its reverse node transform is called
 function handleWikilinkInternalNodeTransform(node: WikilinkInternalNode): void {
   node.getParent()?.markDirty();
 }
