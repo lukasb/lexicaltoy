@@ -15,60 +15,21 @@ export type SerializedTodoCheckboxNode = SerializedElementNode & {
   checked: boolean;
 };
 
-export class TodoTextNode extends TextNode {
-  static getType(): string {
-    return 'todo-text';
-  }
-
-  createDOM(config: EditorConfig): HTMLElement {
-    const dom = super.createDOM(config);
-    return dom;
-  }
-
-  exportJSON(): SerializedTextNode {
-    return {
-      ...super.exportJSON(),
-      type: 'todo-text',
-      version: 1
-    };
-  }
-
-  static importJSON(serializedNode: SerializedTextNode): TodoTextNode {
-    return $createTodoTextNode(serializedNode.text);
-  }
-
-  static clone(node: TodoTextNode): TodoTextNode {
-    return new TodoTextNode(node.getTextContent(), node.__key);
-  }
-
-  canInsertTextBefore(): boolean {
-    return true;
-  }
-
-  canInsertTextAfter(): boolean {
-    return true;
-  }
-}
-
-export function $createTodoTextNode(text: string): TodoTextNode {
-  return new TodoTextNode(text);
-}
-
 export type TodoStatus = 'NOW' | 'LATER' | 'TODO' | 'DOING' | 'DONE';
 
 export class TodoStatusNode extends TextNode {
 
   constructor(status: TodoStatus, key?: NodeKey) {
-    super(status, key);
+    super(status + ' ', key);
   }
 
   getStatus(): TodoStatus {
-    return this.getLatest().getTextContent() as TodoStatus;
+    return this.getLatest().getTextContent().slice(0, -1) as TodoStatus;
   }
 
   setStatus(status: TodoStatus): void {
     const self = this.getLatest();
-    self.setTextContent(status);
+    self.setTextContent(status + ' ');
   }
 
   static getType(): string {

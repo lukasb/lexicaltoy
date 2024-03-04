@@ -1,23 +1,22 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
+import { useEffect } from 'react';
+import { LexicalEditor, COMMAND_PRIORITY_EDITOR } from 'lexical';
+import { mergeRegister } from '@lexical/utils';
 import {
-  $createTodoNode, TodoNode, TodoStatus
+  TodoNode,
+  TodoStatusNode,
+  TodoCheckboxNode
 } from '@/app/nodes/TodoNode';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
-import {useLexicalTodoEntity} from '@/app/lib/todo-helpers';
-import {useCallback, useEffect} from 'react';
-
-function getTodoRegexString(): string {
-  return '^(TODO|DONE|NOW|LATER|DOING) .*';
-}
-
-const REGEX = new RegExp(getTodoRegexString(), 'i');
+import { $wrapLIContentsWithTodo, $unwrapTodoContents, $toggleTodoStatus, $toggleTodoDone } from '@/app/lib/todo-helpers';
+import { 
+  INSERT_TODO_COMMAND,
+  INSERT_DOING_TODO_COMMAND,
+  INSERT_NOW_TODO_COMMAND,
+  INSERT_LATER_TODO_COMMAND,
+  TOGGLE_TODO_STATUS_COMMAND,
+  TOGGLE_TODO_DONE_COMMAND,
+  REMOVE_TODO_COMMAND
+} from '@/app/lib/todo-commands';
 
 /*
 
@@ -39,37 +38,82 @@ eventListener={(event: Event, editor: LexicalEditor, nodeKey: string) => {
 />
 */
 
-export function TodoPlugin(): JSX.Element | null {
-  const [editor] = useLexicalComposerContext();
+function registerTodoCommands(editor: LexicalEditor) {
+  return mergeRegister(
+    editor.registerCommand(
+      INSERT_TODO_COMMAND,
+      (node) => {
+        const { listItem } = node;
+        $wrapLIContentsWithTodo(listItem, "TODO");
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    ),
+    editor.registerCommand(
+      INSERT_DOING_TODO_COMMAND,
+      (node) => {
+        const { listItem } = node;
+        $wrapLIContentsWithTodo(listItem, "DOING");
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    ),
+    editor.registerCommand(
+      INSERT_NOW_TODO_COMMAND,
+      (node) => {
+        const { listItem } = node;
+        $wrapLIContentsWithTodo(listItem, "NOW");
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    ),
+    editor.registerCommand(
+      INSERT_LATER_TODO_COMMAND,
+      (node) => {
+        const { listItem } = node;
+        $wrapLIContentsWithTodo(listItem, "LATER");
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    ),
+    editor.registerCommand(
+      TOGGLE_TODO_STATUS_COMMAND,
+      (node) => {
+        const { todo } = node;
+        $toggleTodoStatus(todo);
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    ),
+    editor.registerCommand(
+      TOGGLE_TODO_DONE_COMMAND,
+      (node) => {
+        const { todo } = node;
+        $toggleTodoDone(todo);
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    ),
+    editor.registerCommand(
+      REMOVE_TODO_COMMAND,
+      (node) => {
+        const { listItem } = node;
+        $unwrapTodoContents(listItem);
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    )
+  );
+}
 
+export function TodoPlugin(): null {
+  const [editor] = useLexicalComposerContext();
   useEffect(() => {
-    if (!editor.hasNodes([TodoNode])) {
+    if (!editor.hasNodes([TodoNode, TodoStatusNode, TodoCheckboxNode])) {
       throw new Error('TodoPlugin: TodoNode not registered on editor');
     }
+    return registerTodoCommands(editor);
   }, [editor]);
-
-  // TODO - maybe make a generic class that handles useLexicalElementEntity and useLexicalTodoEntity
-  // then put all the creation logic in here
-  // dunno though, might be hard
-  const createTodoNode = useCallback((): TodoNode => {
-    return $createTodoNode();
-  }, []);
-
-  const getTodoMatch = useCallback((text: string) => {
-    const matchArr = REGEX.exec(text);
-
-    if (matchArr === null) {
-      return null;
-    }
-    
-    return matchArr[1] as TodoStatus;
-  }, []);
-
-  useLexicalTodoEntity<TodoNode>(
-    getTodoMatch,
-    TodoNode,
-    createTodoNode,
-  );
 
   return null;
 }
