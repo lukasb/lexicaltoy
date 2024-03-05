@@ -65,7 +65,7 @@ export class TodoCheckboxStatusNode extends DecoratorNode<JSX.Element> {
 
 
   createDOM(config: EditorConfig): HTMLElement {
-    return document.createElement('span');
+    return document.createElement('div');
   }
 
   updateDOM(_prevNode: unknown, _dom: HTMLElement, config: EditorConfig): boolean {
@@ -78,7 +78,6 @@ export class TodoCheckboxStatusNode extends DecoratorNode<JSX.Element> {
 
   exportJSON(): SerializedTodoCheckboxStatusNode {
     return {
-      ...super.exportJSON(),
       type: 'todo-checkbox-status',
       version: 1,
       status: this.__status,

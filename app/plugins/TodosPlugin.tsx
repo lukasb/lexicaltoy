@@ -19,6 +19,7 @@ import {
 import { ListItemNode } from '@lexical/list';
 import { $isRangeSelection } from 'lexical';
 import { $getSelection } from 'lexical';
+import { todo } from 'node:test';
 
 function getListItemFromSelection(selection: BaseSelection): ListItemNode | null {
   if (
@@ -46,7 +47,18 @@ function todoInsertCommand(status: TodoStatus) {
   }
 }
 
-function registerTodoCommands(editor: LexicalEditor) {
+function todoNodeTransform(node: TodoNode) {
+  // if the decorator node is removed, remove the todo node
+  const checkboxStatus = node.getChildren().find((child) => child instanceof TodoCheckboxStatusNode) as TodoCheckboxStatusNode;
+  if (!checkboxStatus) {
+    const listItem = node.getParent();
+    if (listItem instanceof ListItemNode) {
+      $unwrapTodoContents(listItem);
+    }
+  }
+}
+
+function registerTodoHandlers(editor: LexicalEditor) {
   return mergeRegister(
     editor.registerCommand(
       INSERT_TODO_COMMAND,
@@ -102,7 +114,8 @@ function registerTodoCommands(editor: LexicalEditor) {
         return true;
       },
       COMMAND_PRIORITY_EDITOR
-    )
+    ),
+    editor.registerNodeTransform(TodoNode, todoNodeTransform)
   );
 }
 
@@ -112,7 +125,7 @@ export function TodosPlugin(): null {
     if (!editor.hasNodes([TodoNode, TodoCheckboxStatusNode])) {
       throw new Error('TodoPlugin: TodoNode and/or TodoCheckboxStatusNode not registered on editor');
     }
-    return registerTodoCommands(editor);
+    return registerTodoHandlers(editor);
   }, [editor]);
 
   return null;

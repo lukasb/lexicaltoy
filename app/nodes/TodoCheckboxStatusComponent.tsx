@@ -59,7 +59,7 @@ export default function TodoCheckboxStatusComponent(
   };
 
   return (
-    <span>
+    <div style={{display: 'flex'}}>
       <input
         type="checkbox"
         checked={isChecked}
@@ -70,6 +70,6 @@ export default function TodoCheckboxStatusComponent(
           {status}
         </div>
       )}
-    </span>
+    </div>
   );
 }

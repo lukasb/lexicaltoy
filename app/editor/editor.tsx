@@ -35,7 +35,7 @@ import { shouldShowFloatingWikiPageNames, computeFloatingWikiPageNamesPosition }
 import { Page } from "@/app/lib/definitions";
 import { PagesContext } from "@/app/context/pages-context";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { TodoNode, TodoCheckboxNode, TodoStatusNode } from "@/app/nodes/TodoNode";
+import { TodoNode, TodoCheckboxStatusNode } from "@/app/nodes/TodoNode";
 import { TodosPlugin } from "@/app/plugins/TodosPlugin";
 import FloatingSlashCommands from '../plugins/FloatingMenuPlugin/FloatingSlashCommands';
 import { shouldShowFloatingSlashCommands, computeFloatingSlashCommandsPosition } from "../plugins/FloatingMenuPlugin/FloatingSlashCommands";
@@ -67,8 +67,8 @@ function Editor({
       WikilinkNode,
       WikilinkInternalNode,
       TodoNode,
-      TodoCheckboxNode,
-      TodoStatusNode],
+      TodoCheckboxStatusNode,
+    ],
     onError,
   };
 
