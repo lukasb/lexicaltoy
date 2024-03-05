@@ -257,7 +257,6 @@ const FloatingSlashCommands = forwardRef<HTMLDivElement, FloatingMenuProps>(
           selection.removeText();
         }
         
-        console.log("selection is ", selection);
         editor.dispatchCommand(command.command, selection);
 
         resetSelf();
@@ -273,7 +272,6 @@ const FloatingSlashCommands = forwardRef<HTMLDivElement, FloatingMenuProps>(
           return;
         }
         if (match.length === 0) {
-          console.log("match length is 0");
           setCommands(slashCommands.filter((command) => command.shouldShow(selection)));
         } else {
           const filteredCommands = slashCommands.filter(

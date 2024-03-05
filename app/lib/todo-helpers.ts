@@ -25,8 +25,6 @@ const hasTodo = (node: ListItemNode): boolean => {
 
 export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus) => {
 
-  console.log("wrapLIContentsWithTodo", node.getTextContent());
-
   if (hasTodo(node)) return;
   
   const selection = $getSelection();
@@ -57,11 +55,7 @@ export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus) 
 };
 
 export const $unwrapTodoContents = (node: ListItemNode) => {
-  
-  console.log("unwrapLIContents", node.getTextContent());
-
   if (!hasTodo(node) || !(node.getChildren()[0] instanceof TodoNode)) return;
-
   const todoNode = node.getChildren()[0] as TodoNode;
   todoNode.remove();
   for (const child of todoNode.getChildren()) {
@@ -70,7 +64,6 @@ export const $unwrapTodoContents = (node: ListItemNode) => {
       node.append(child);
     }
   }
-
 };
 
 export const $toggleTodoStatus = (node: TodoNode) => {
