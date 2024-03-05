@@ -138,7 +138,7 @@ function registerTodoCommands(editor: LexicalEditor) {
   );
 }
 
-export function TodoPlugin(): null {
+export function TodosPlugin(): null {
   const [editor] = useLexicalComposerContext();
   useEffect(() => {
     if (!editor.hasNodes([TodoNode, TodoStatusNode, TodoCheckboxNode])) {

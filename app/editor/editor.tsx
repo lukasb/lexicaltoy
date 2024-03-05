@@ -2,8 +2,7 @@
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import React, { useState } from "react";
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { useEffect, useContext, useCallback } from "react";
+import { useContext, useCallback } from "react";
 import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import type { EditorState } from "lexical";
@@ -36,8 +35,10 @@ import { shouldShowFloatingWikiPageNames, computeFloatingWikiPageNamesPosition }
 import { Page } from "@/app/lib/definitions";
 import { PagesContext } from "@/app/context/pages-context";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { TodoNode, TodoCheckboxNode, TodoStatus, TodoStatusNode, TodoTextNode } from "@/app/nodes/TodoNode";
-import { TodoPlugin } from "@/app/plugins/TodosPlugin";
+import { TodoNode, TodoCheckboxNode, TodoStatusNode } from "@/app/nodes/TodoNode";
+import { TodosPlugin } from "@/app/plugins/TodosPlugin";
+import FloatingSlashCommands from '../plugins/FloatingMenuPlugin/FloatingSlashCommands';
+import { shouldShowFloatingSlashCommands, computeFloatingSlashCommandsPosition } from "../plugins/FloatingMenuPlugin/FloatingSlashCommands";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -67,8 +68,7 @@ function Editor({
       WikilinkInternalNode,
       TodoNode,
       TodoCheckboxNode,
-      TodoStatusNode,
-      TodoTextNode],
+      TodoStatusNode],
     onError,
   };
 
@@ -140,7 +140,7 @@ function Editor({
       <LexicalClickableLinkPlugin />
       <WikilinkPlugin />
       <WikilinkEventListenerPlugin openOrCreatePageByTitle={openOrCreatePageByTitle} />
-      <TodoPlugin />
+      <TodosPlugin />
       {floatingAnchorElem && !isSmallWidthViewport && (
         <>
           <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
@@ -152,6 +152,12 @@ function Editor({
                 shouldShow: shouldShowFloatingWikiPageNames,
                 computePosition: computeFloatingWikiPageNamesPosition,
                 priority: 20
+              },
+              {
+                component: FloatingSlashCommands,
+                shouldShow: shouldShowFloatingSlashCommands,
+                computePosition: computeFloatingSlashCommandsPosition,
+                priority: 30
               }
             ]}
           />
@@ -173,6 +179,12 @@ function Editor({
                 shouldShow: shouldShowFloatingWikiPageNames,
                 computePosition: computeFloatingWikiPageNamesPosition,
                 priority: 20
+              },
+              {
+                component: FloatingSlashCommands,
+                shouldShow: shouldShowFloatingSlashCommands,
+                computePosition: computeFloatingSlashCommandsPosition,
+                priority: 30
               }
             ]}
           />

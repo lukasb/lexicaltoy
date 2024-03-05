@@ -49,13 +49,14 @@ interface SlashCommand {
 
 const canCreateTodo = (selection: BaseSelection) => {
   if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
-  const node = selection.anchor.getNode();
+  const node = selection.anchor.getNode().getParent();
+  console.log("canCreateTodo", node);
   return $isListItemNode(node);
 }
 
 const canRemoveTodo = (selection: BaseSelection) => {
   if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
-  const node = selection.anchor.getNode();
+  const node = selection.anchor.getNode().getParent();
   return (node instanceof TodoNode);
 }
 
@@ -101,8 +102,11 @@ export function shouldShowFloatingSlashCommands(selection: BaseSelection) {
   const [hasMatch, match] = $search(selection);
   if (!hasMatch) return false;
   for (const command of slashCommands) {
-    if (matchesCommandText(command, match) && command.shouldShow(selection)) return true;
+    if (matchesCommandText(command, match) && command.shouldShow(selection)){
+      return true;
+    }
   }
+  return false;
 }
 
 // tries to find "/slashcommand" before the cursor, within the current TextNode, based on valid slash commands
