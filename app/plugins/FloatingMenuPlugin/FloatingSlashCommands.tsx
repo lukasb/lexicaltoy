@@ -141,7 +141,7 @@ function $search(selection: null | BaseSelection): [boolean, string] {
 export async function computeFloatingSlashCommandsPosition(
   editor: LexicalEditor,
   selection: BaseSelection,
-  ref: React.RefObject<HTMLElement>
+  ref: React.RefObject<HTMLElement> | null
 ): Promise<FloatingMenuCoords> {
   const position = computeFloatingSlashCommandsPositionInternal(editor);
   if (!position) return { x: 0, y: 0 };
@@ -180,7 +180,7 @@ function computeFloatingSlashCommandsPositionInternal(editor: LexicalEditor) {
 
 const FloatingSlashCommands = forwardRef<HTMLDivElement, FloatingMenuProps>(
   ({ editor, coords }, ref) => {
-    const [commands, setCommands] = useState<SlashCommand[]>([]);
+    const [commands, setCommands] = useState<SlashCommand[]>(slashCommands);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [cancelled, setCancelled] = useState(false);
     const [position, setPosition] = useState({top: coords?.y, left: coords?.x});

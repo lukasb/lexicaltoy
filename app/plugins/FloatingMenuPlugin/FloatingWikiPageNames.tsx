@@ -56,9 +56,6 @@ function $search(selection: null | BaseSelection): [boolean, string] {
   while (i-- && i >= 0 && (c = text[i]) !== "[") {
     searchText.push(c);
   }
-  if (searchText.length === 0) {
-    return [false, ""];
-  }
   if (text[i] !== "[" || i === 0 || text[i - 1] !== "[") {
     return [false, ""];
   }
@@ -68,7 +65,7 @@ function $search(selection: null | BaseSelection): [boolean, string] {
 export async function computeFloatingWikiPageNamesPosition(
   editor: LexicalEditor,
   selection: BaseSelection,
-  ref: React.RefObject<HTMLElement>
+  ref: React.RefObject<HTMLElement> | null
 ): Promise<FloatingMenuCoords> {
   const position = computeFloatingWikiPageNamesPositionInternal(editor);
   if (!position) return { x: 0, y: 0 };
@@ -106,9 +103,9 @@ function computeFloatingWikiPageNamesPositionInternal(editor: LexicalEditor) {
 
 const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
   ({ editor, coords }, ref) => {
-    const [results, setResults] = useState<Page[]>([]);
-    const [selectedIndex, setSelectedIndex] = useState(0);
     const pages = useContext(PagesContext);
+    const [results, setResults] = useState<Page[]>(pages);
+    const [selectedIndex, setSelectedIndex] = useState(0);
     const [cancelled, setCancelled] = useState(false);
     const [position, setPosition] = useState({top: coords?.y, left: coords?.x});
 
@@ -198,6 +195,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
               resetSelf();
               return;
             }
+            console.log("searching pages");
             const filteredPages = searchPages(pages, match);
             setResults(filteredPages);
           });
