@@ -62,11 +62,15 @@ export default function TodoCheckboxStatusComponent(
     <div style={{display: 'flex'}}>
       <input
         type="checkbox"
+        className="mx-1"
         checked={isChecked}
         onChange={handleCheckboxChange}
       />
       {!isChecked && (
-        <div onClick={handleStatusClick}>
+        <div 
+          className="mx-1"
+          onClick={handleStatusClick}
+        >
           {status}
         </div>
       )}

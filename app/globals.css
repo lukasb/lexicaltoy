@@ -178,6 +178,9 @@ body {
   transform: rotate(45deg);
   border-width: 0 2px 2px 0;
 }
+.PlaygroundEditorTheme__todo {
+  display: flex;
+}
 .PlaygroundEditorTheme__todoStatus {
   color: rgb(99, 102, 233);
   font-weight: bold;

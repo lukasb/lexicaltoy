@@ -117,7 +117,8 @@ export class TodoNode extends ElementNode {
   }
 
   createDOM(config: EditorConfig, editor: LexicalEditor): HTMLElement {
-    const element = document.createElement('span');
+    const element = document.createElement('div');
+    element.className = 'PlaygroundEditorTheme__todo';
     return element;
   }
 
