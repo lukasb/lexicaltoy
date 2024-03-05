@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { LexicalEditor, COMMAND_PRIORITY_EDITOR } from 'lexical';
+import { LexicalEditor, COMMAND_PRIORITY_EDITOR, BaseSelection } from 'lexical';
 import { mergeRegister } from '@lexical/utils';
 import {
   TodoNode,
@@ -17,6 +17,9 @@ import {
   TOGGLE_TODO_DONE_COMMAND,
   REMOVE_TODO_COMMAND
 } from '@/app/lib/todo-commands';
+import { ListItemNode } from '@lexical/list';
+import { $isRangeSelection } from 'lexical';
+import { get } from 'http';
 
 /*
 
@@ -37,41 +40,67 @@ eventListener={(event: Event, editor: LexicalEditor, nodeKey: string) => {
 }}
 />
 */
+function getListItemFromSelection(selection: BaseSelection): ListItemNode | null {
+  if (
+    selection === null ||
+    !$isRangeSelection(selection) ||
+    !selection.isCollapsed()
+  ) {
+    return null;
+  }
+  const node = selection.anchor.getNode();
+  if (node.getParent() instanceof ListItemNode) {
+    return node.getParent();
+  }
+  return null;
+}
 
 function registerTodoCommands(editor: LexicalEditor) {
   return mergeRegister(
     editor.registerCommand(
       INSERT_TODO_COMMAND,
-      (node) => {
-        const { listItem } = node;
-        $wrapLIContentsWithTodo(listItem, "TODO");
+      (payload) => {
+        const { selection } = payload;
+        const listItem = getListItemFromSelection(selection);
+        if (listItem) {
+          $wrapLIContentsWithTodo(listItem, "TODO");
+        }
         return true;
       },
       COMMAND_PRIORITY_EDITOR
     ),
     editor.registerCommand(
       INSERT_DOING_TODO_COMMAND,
-      (node) => {
-        const { listItem } = node;
-        $wrapLIContentsWithTodo(listItem, "DOING");
+      (payload) => {
+        const { selection } = payload;
+        const listItem = getListItemFromSelection(selection);
+        if (listItem) {
+          $wrapLIContentsWithTodo(listItem, "DOING");
+        }
         return true;
       },
       COMMAND_PRIORITY_EDITOR
     ),
     editor.registerCommand(
       INSERT_NOW_TODO_COMMAND,
-      (node) => {
-        const { listItem } = node;
-        $wrapLIContentsWithTodo(listItem, "NOW");
+      (payload) => {
+        const { selection } = payload;
+        const listItem = getListItemFromSelection(selection);
+        if (listItem) {
+          $wrapLIContentsWithTodo(listItem, "NOW");
+        }
         return true;
       },
       COMMAND_PRIORITY_EDITOR
     ),
     editor.registerCommand(
       INSERT_LATER_TODO_COMMAND,
-      (node) => {
-        const { listItem } = node;
-        $wrapLIContentsWithTodo(listItem, "LATER");
+      (payload) => {
+        const { selection } = payload;
+        const listItem = getListItemFromSelection(selection);
+        if (listItem) {
+          $wrapLIContentsWithTodo(listItem, "LATER");
+        }
         return true;
       },
       COMMAND_PRIORITY_EDITOR
@@ -96,9 +125,12 @@ function registerTodoCommands(editor: LexicalEditor) {
     ),
     editor.registerCommand(
       REMOVE_TODO_COMMAND,
-      (node) => {
-        const { listItem } = node;
-        $unwrapTodoContents(listItem);
+      (payload) => {
+        const { selection } = payload;
+        const listItem = getListItemFromSelection(selection);
+        if (listItem) {
+          $unwrapTodoContents(listItem);
+        }
         return true;
       },
       COMMAND_PRIORITY_EDITOR
