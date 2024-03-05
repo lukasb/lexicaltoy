@@ -50,7 +50,6 @@ interface SlashCommand {
 const canCreateTodo = (selection: BaseSelection) => {
   if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
   const node = selection.anchor.getNode().getParent();
-  console.log("canCreateTodo", node);
   return $isListItemNode(node);
 }
 
@@ -101,6 +100,7 @@ export function shouldShowFloatingSlashCommands(selection: BaseSelection) {
   if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
   const [hasMatch, match] = $search(selection);
   if (!hasMatch) return false;
+  if (match.length === 0) return true;
   for (const command of slashCommands) {
     if (matchesCommandText(command, match) && command.shouldShow(selection)){
       return true;
@@ -128,10 +128,10 @@ function $search(selection: null | BaseSelection): [boolean, string] {
   while (i-- && i >= 0 && (c = text[i]) !== "/") {
     searchText.push(c);
   }
-  if (searchText.length === 0) {
-    return [false, ""];
+  if (text[i] === "/" && searchText.length === 0) {
+    return [true, ""];
   }
-  if (text[i] !== "/") {
+  if (searchText.length === 0) {
     return [false, ""];
   }
   return [true, searchText.reverse().join("")];
@@ -243,7 +243,7 @@ const FloatingSlashCommands = forwardRef<HTMLDivElement, FloatingMenuProps>(
 
         const {anchor, focus} = selection;
         // TODO handle case where beginning of wiki page name is before the node the selection is in
-        const newAnchorOffset = Math.max(anchor.offset - match.length, 0);
+        const newAnchorOffset = Math.max(anchor.offset - (match.length + 1), 0);
         const range = createDOMRange(
           editor,
           anchor.getNode(),
@@ -256,6 +256,7 @@ const FloatingSlashCommands = forwardRef<HTMLDivElement, FloatingMenuProps>(
           selection.removeText();
         }
         
+        console.log("selection is ", selection);
         editor.dispatchCommand(command.command, selection);
 
         resetSelf();
@@ -272,9 +273,17 @@ const FloatingSlashCommands = forwardRef<HTMLDivElement, FloatingMenuProps>(
               resetSelf();
               return;
             }
-            const filteredCommands = slashCommands.filter(
-              (command) => (matchesCommandText(command, match) && command.shouldShow(selection)));
-            setCommands(filteredCommands);
+            if (match.length === 0) {
+              console.log("match length is 0");
+              setCommands(slashCommands.filter((command) => command.shouldShow(selection)));
+            } else {
+              const filteredCommands = slashCommands.filter(
+                (command) =>
+                  matchesCommandText(command, match) &&
+                  command.shouldShow(selection)
+              );
+              setCommands(filteredCommands);
+            }
           });
         }
       );

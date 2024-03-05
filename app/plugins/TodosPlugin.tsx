@@ -19,7 +19,7 @@ import {
 } from '@/app/lib/todo-commands';
 import { ListItemNode } from '@lexical/list';
 import { $isRangeSelection } from 'lexical';
-import { get } from 'http';
+import { $getSelection } from 'lexical';
 
 /*
 
@@ -46,12 +46,16 @@ function getListItemFromSelection(selection: BaseSelection): ListItemNode | null
     !$isRangeSelection(selection) ||
     !selection.isCollapsed()
   ) {
+    console.log("problem with selection", selection);
     return null;
   }
-  const node = selection.anchor.getNode();
-  if (node.getParent() instanceof ListItemNode) {
+  const node = selection.anchor.getNode().getParent();
+  if (node instanceof ListItemNode) {
+    return node;
+  } else if (node instanceof TodoNode && node.getParent() instanceof ListItemNode) {
     return node.getParent();
   }
+  console.log("problem with parent", node.getParent());
   return null;
 }
 
@@ -59,9 +63,13 @@ function registerTodoCommands(editor: LexicalEditor) {
   return mergeRegister(
     editor.registerCommand(
       INSERT_TODO_COMMAND,
-      (payload) => {
-        const { selection } = payload;
-        const listItem = getListItemFromSelection(selection);
+      () => {
+        const theSelection = $getSelection();
+        if (!theSelection) {
+          console.log("can't get selection");
+          return true;
+        }
+        const listItem = getListItemFromSelection(theSelection);
         if (listItem) {
           $wrapLIContentsWithTodo(listItem, "TODO");
         }
@@ -71,9 +79,13 @@ function registerTodoCommands(editor: LexicalEditor) {
     ),
     editor.registerCommand(
       INSERT_DOING_TODO_COMMAND,
-      (payload) => {
-        const { selection } = payload;
-        const listItem = getListItemFromSelection(selection);
+      () => {
+        const theSelection = $getSelection();
+        if (!theSelection) {
+          console.log("can't get selection");
+          return true;
+        }
+        const listItem = getListItemFromSelection(theSelection);
         if (listItem) {
           $wrapLIContentsWithTodo(listItem, "DOING");
         }
@@ -83,9 +95,13 @@ function registerTodoCommands(editor: LexicalEditor) {
     ),
     editor.registerCommand(
       INSERT_NOW_TODO_COMMAND,
-      (payload) => {
-        const { selection } = payload;
-        const listItem = getListItemFromSelection(selection);
+      () => {
+        const theSelection = $getSelection();
+        if (!theSelection) {
+          console.log("can't get selection");
+          return true;
+        }
+        const listItem = getListItemFromSelection(theSelection);
         if (listItem) {
           $wrapLIContentsWithTodo(listItem, "NOW");
         }
@@ -95,9 +111,13 @@ function registerTodoCommands(editor: LexicalEditor) {
     ),
     editor.registerCommand(
       INSERT_LATER_TODO_COMMAND,
-      (payload) => {
-        const { selection } = payload;
-        const listItem = getListItemFromSelection(selection);
+      () => {
+        const theSelection = $getSelection();
+        if (!theSelection) {
+          console.log("can't get selection");
+          return true;
+        }
+        const listItem = getListItemFromSelection(theSelection);
         if (listItem) {
           $wrapLIContentsWithTodo(listItem, "LATER");
         }
@@ -125,9 +145,13 @@ function registerTodoCommands(editor: LexicalEditor) {
     ),
     editor.registerCommand(
       REMOVE_TODO_COMMAND,
-      (payload) => {
-        const { selection } = payload;
-        const listItem = getListItemFromSelection(selection);
+      () => {
+        const theSelection = $getSelection();
+        if (!theSelection) {
+          console.log("can't get selection");
+          return true;
+        }
+        const listItem = getListItemFromSelection(theSelection);
         if (listItem) {
           $unwrapTodoContents(listItem);
         }
