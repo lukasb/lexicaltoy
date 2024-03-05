@@ -16,6 +16,7 @@ import {
   COMMAND_PRIORITY_CRITICAL,
   KEY_DOWN_COMMAND,
   LexicalCommand,
+  EditorState,
 } from "lexical";
 import { $isListItemNode } from "@lexical/list";
 import { $isAtNodeEnd } from "@lexical/selection";
@@ -180,7 +181,7 @@ function computeFloatingSlashCommandsPositionInternal(editor: LexicalEditor) {
 
 const FloatingSlashCommands = forwardRef<HTMLDivElement, FloatingMenuProps>(
   ({ editor, coords }, ref) => {
-    const [commands, setCommands] = useState<SlashCommand[]>(slashCommands);
+    const [commands, setCommands] = useState<SlashCommand[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [cancelled, setCancelled] = useState(false);
     const [position, setPosition] = useState({top: coords?.y, left: coords?.x});
@@ -263,32 +264,41 @@ const FloatingSlashCommands = forwardRef<HTMLDivElement, FloatingMenuProps>(
       });
     }, [editor, resetSelf]);
 
+    const filterSlashCommands = useCallback((editorState: EditorState) => {
+      editorState.read(() => {
+        const selection = $getSelection();
+        const [hasMatch, match] = $search(selection);
+        if (!hasMatch || !selection) {
+          resetSelf();
+          return;
+        }
+        if (match.length === 0) {
+          console.log("match length is 0");
+          setCommands(slashCommands.filter((command) => command.shouldShow(selection)));
+        } else {
+          const filteredCommands = slashCommands.filter(
+            (command) =>
+              matchesCommandText(command, match) &&
+              command.shouldShow(selection)
+          );
+          setCommands(filteredCommands);
+        }
+      });
+    }, [resetSelf]);
+
+    useEffect(() => {
+      const editorState = editor.getEditorState();
+      filterSlashCommands(editorState);  
+    }, [editor, filterSlashCommands]);
+
     useEffect(() => {
       const unregisterListener = editor.registerUpdateListener(
         ({ editorState }) => {
-          editorState.read(() => {
-            const selection = $getSelection();
-            const [hasMatch, match] = $search(selection);
-            if (!hasMatch || !selection) {
-              resetSelf();
-              return;
-            }
-            if (match.length === 0) {
-              console.log("match length is 0");
-              setCommands(slashCommands.filter((command) => command.shouldShow(selection)));
-            } else {
-              const filteredCommands = slashCommands.filter(
-                (command) =>
-                  matchesCommandText(command, match) &&
-                  command.shouldShow(selection)
-              );
-              setCommands(filteredCommands);
-            }
-          });
+          filterSlashCommands(editorState);
         }
       );
       return unregisterListener;
-    }, [editor, commands, resetSelf]);
+    }, [editor, commands, resetSelf, filterSlashCommands]);
 
     // we're doing this to memoize state (results, shouldShow etc)
     // component was being mounted twice and the second time it didn't have the right state
