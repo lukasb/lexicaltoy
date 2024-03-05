@@ -1,4 +1,5 @@
 import { 
+  $getNodeByKey,
   $getSelection,
   $isRangeSelection,
 } from "lexical";
@@ -7,8 +8,7 @@ import { ListItemNode } from "@lexical/list"
 
 import {
   $createTodoNode, TodoNode,
-  $createTodoStatusNode, TodoStatusNode,
-  $createTodoCheckboxNode, TodoCheckboxNode,
+  $createTodoCheckboxStatusNode, TodoCheckboxStatusNode,
   TodoStatus
 } from '@/app/nodes/TodoNode';
 
@@ -40,11 +40,9 @@ export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus) 
   const start = selection.anchor.offset;
   const selectedNode = selection.anchor.getNode();
 
-  const checkboxNode = $createTodoCheckboxNode(status === "DONE");
+  const checkboxNode = $createTodoCheckboxStatusNode(status, status === "DONE");
   replacementNode.append(checkboxNode);
-  const statusNode = $createTodoStatusNode(status);
-  replacementNode.append(statusNode);
-
+  
   for (const child of node.getChildren()) {
     child.remove();
     replacementNode.append(child);
@@ -59,38 +57,30 @@ export const $unwrapTodoContents = (node: ListItemNode) => {
   const todoNode = node.getChildren()[0] as TodoNode;
   todoNode.remove();
   for (const child of todoNode.getChildren()) {
-    if (!(child instanceof TodoCheckboxNode || child instanceof TodoStatusNode)) {
+    if (!(child instanceof TodoCheckboxStatusNode)) {
       child.remove();
       node.append(child);
     }
   }
 };
 
-export const $toggleTodoStatus = (node: TodoNode) => {
-  const statusNode = node.getChildren()[1];
-  if (!(statusNode instanceof TodoStatusNode)) return;
-  const status = statusNode.getStatus();
-  switch (status) {
-    case "TODO":
-      statusNode.setStatus("DOING");
-      break;
-    case "DOING":
-      statusNode.setStatus("TODO");
-      break;
-    case "NOW":
-      statusNode.setStatus("LATER");
-      break;
-    case "LATER":
-        statusNode.setStatus("NOW");
-        break;  
-    default:
-      break;
+export const $handleSetTodoDoneValue = (done: boolean, nodeKey: string) => {
+  const decoratorNode = $getNodeByKey(nodeKey);
+  if (!(decoratorNode instanceof TodoCheckboxStatusNode)) return;
+  const todoNode = decoratorNode.getParent();
+  if (!(todoNode instanceof TodoNode)) return;
+  todoNode
+  for (const child of todoNode.getChildren()) {
+    if (child instanceof TodoCheckboxStatusNode) {
+      continue;
+    }
+    // TODO set strikethrough format based on value of done
   }
+  decoratorNode.setDone(done);
 }
 
-export const $toggleTodoDone = (node: TodoNode) => {
-  const checkboxNode = node.getChildren()[0];
-  if (!(checkboxNode instanceof TodoCheckboxNode)) return;
-  checkboxNode.setChecked(!checkboxNode.getChecked());
-  // TODO: other stuff
+export const $handleSetTodoStatus = (status: TodoStatus, nodeKey: string) => {
+  const decoratorNode = $getNodeByKey(nodeKey);
+  if (!(decoratorNode instanceof TodoCheckboxStatusNode)) return;
+  decoratorNode.setStatus(status);
 }
