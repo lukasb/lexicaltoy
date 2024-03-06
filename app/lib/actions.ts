@@ -6,7 +6,6 @@ import { AuthError } from "next-auth";
 import { Page } from "./definitions"
 
 export async function updatePageContentsWithHistory(id: string, value: string, oldRevisionNumber: number): Promise<number> {
-
   try {
     // Insert the current page data into the history table directly from the pages table
     await sql`

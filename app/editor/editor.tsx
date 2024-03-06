@@ -1,7 +1,7 @@
 "use client";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useContext, useCallback } from "react";
 import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -93,11 +93,11 @@ function Editor({
 
   // TODO this assumes the page content won't be changed elsewhere in the same PagesContext
   const storePage = useDebouncedCallback(async (outline) => {
+    console.log("Storing page");
     const currentPage = getPage(page.id);
     if (!currentPage) return;
-    console.log("Storing page");
     try {
-      const newRevisionNumber = await updatePageContentsWithHistory(page.id, outline, page.revisionNumber);
+      const newRevisionNumber = await updatePageContentsWithHistory(page.id, outline, currentPage.revisionNumber);
       if (newRevisionNumber === -1) {
         alert("Failed to save page because you edited an old version, please relead for the latest version.");
         return;
