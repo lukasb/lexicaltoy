@@ -23,7 +23,7 @@ import { $isAtNodeEnd } from "@lexical/selection";
 import { FloatingMenuCoords, FloatingMenuProps } from ".";
 import { isSmallWidthViewport } from "@/app/lib/window-helpers";
 import { createDOMRange } from "@lexical/selection";
-import { TodoCheckboxStatusNode } from "@/app/nodes/TodoNode";
+import { TodoCheckboxStatusNode, TodoStatus } from "@/app/nodes/TodoNode";
 import { 
   INSERT_DOING_TODO_COMMAND,
   INSERT_LATER_TODO_COMMAND,
@@ -48,16 +48,26 @@ interface SlashCommand {
   shouldShow: (selection: BaseSelection) => boolean;
 }
 
-const canCreateTodo = (selection: BaseSelection) => {
+// Adjust the function to take an additional `baseStatus` parameter
+const canCreateOrChangeTodo = (baseStatus: TodoStatus) => (selection: BaseSelection) => {
   if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
   const node = selection.anchor.getNode().getParent();
-  return ($isListItemNode(node) && !(node.getChildren()[0] instanceof TodoCheckboxStatusNode));
-}
+  if ($isListItemNode(node)) { 
+    const firstChild = node.getChildren()[0];
+    if (firstChild instanceof TodoCheckboxStatusNode) {
+      return firstChild.getStatus() !== baseStatus;
+    } else {
+      return true;
+    }
+  }
+  return false;
+};
 
 const canRemoveTodo = (selection: BaseSelection) => {
   if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
   const node = selection.anchor.getNode().getParent();
   return ($isListItemNode(node) && (node.getChildren()[0] instanceof TodoCheckboxStatusNode));
+  return false;
 }
 
 const slashCommands = [
@@ -65,25 +75,25 @@ const slashCommands = [
     shortName: "TODO",
     description: "Create a new todo",
     command: INSERT_TODO_COMMAND,
-    shouldShow: canCreateTodo
+    shouldShow: canCreateOrChangeTodo("TODO")
   },
   {
     shortName: "DOING",
     description: "Create a new todo set to DOING",
     command: INSERT_DOING_TODO_COMMAND,
-    shouldShow: canCreateTodo
+    shouldShow: canCreateOrChangeTodo("DOING")
   },
   {
     shortName: "LATER",
     description: "Create a new todo set to LATER",
     command: INSERT_LATER_TODO_COMMAND,
-    shouldShow: canCreateTodo
+    shouldShow: canCreateOrChangeTodo("LATER")
   },
   {
     shortName: "NOW",
     description: "Create a new todo set to NOW",
     command: INSERT_NOW_TODO_COMMAND,
-    shouldShow: canCreateTodo
+    shouldShow: canCreateOrChangeTodo("NOW")
   },
   {
     shortName: "Remove",

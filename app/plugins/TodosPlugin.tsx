@@ -12,7 +12,8 @@ import {
   $handleSetTodoStatus,
   $handleSetTodoDoneValue,
   hasTodo,
-  TodoDoneTextClass
+  TodoDoneTextClass,
+  $changeTodoStatus
 } from '@/app/lib/todo-helpers';
 import { 
   INSERT_TODO_COMMAND,
@@ -42,12 +43,16 @@ function getListItemFromSelection(selection: BaseSelection): ListItemNode | null
   return null;
 }
 
-function todoInsertCommand(status: TodoStatus, done: boolean) {
+function todoAddOrChangeCommand(status: TodoStatus, done: boolean) {
   const theSelection = $getSelection();
   if (!theSelection)  return;
   const listItem = getListItemFromSelection(theSelection);
   if (listItem) {
-    $wrapLIContentsWithTodo(listItem, status, done);
+    if (!hasTodo(listItem)) {
+      $wrapLIContentsWithTodo(listItem, status, done);
+    } else {
+      $changeTodoStatus(listItem, status);
+    }
   }
 }
 
@@ -56,7 +61,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       INSERT_TODO_COMMAND,
       () => {
-        todoInsertCommand("TODO", false);
+        todoAddOrChangeCommand("TODO", false);
         return true;
       },
       COMMAND_PRIORITY_EDITOR
@@ -64,7 +69,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       INSERT_DOING_TODO_COMMAND,
       () => {
-        todoInsertCommand("DOING", false);
+        todoAddOrChangeCommand("DOING", false);
         return true;
       },
       COMMAND_PRIORITY_EDITOR
@@ -72,7 +77,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       INSERT_NOW_TODO_COMMAND,
       () => {
-        todoInsertCommand("NOW", false);
+        todoAddOrChangeCommand("NOW", false);
         return true;
       },
       COMMAND_PRIORITY_EDITOR
@@ -80,7 +85,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       INSERT_LATER_TODO_COMMAND,
       () => {
-        todoInsertCommand("LATER", false);
+        todoAddOrChangeCommand("LATER", false);
         return true;
       },
       COMMAND_PRIORITY_EDITOR

@@ -48,6 +48,12 @@ export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus, 
   selectedNode.select(start, start);
 };
 
+export const $changeTodoStatus = (node: ListItemNode, status: TodoStatus) => {
+  if (!hasTodo(node)) return;
+  const todoNode = node.getChildren()[0] as TodoCheckboxStatusNode;
+  $handleSetTodoStatus(status, todoNode.getKey());
+}
+
 export const $unwrapTodoContents = (node: ListItemNode) => {
   if (!hasTodo(node) || !(node.getChildren()[0] instanceof TodoCheckboxStatusNode)) return;
   const todoNode = node.getChildren()[0] as TodoCheckboxStatusNode;
