@@ -183,6 +183,10 @@ body {
 .PlaygroundEditorTheme__todo {
   display: flex;
 }
+.PlaygroundEditorTheme__todoDone {
+  color: gray;
+  text-decoration: line-through;
+}
 .PlaygroundEditorTheme__todoStatus {
   color: rgb(99, 102, 233);
   font-weight: bold;

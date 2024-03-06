@@ -38,7 +38,7 @@ export default function TodoCheckboxStatusComponent(
         newStatus = "DOING";
         break;
       case "DOING":
-        newStatus = "DONE";
+        newStatus = "TODO";
         break;
       case "NOW":
         newStatus = "LATER";
@@ -63,11 +63,12 @@ export default function TodoCheckboxStatusComponent(
       <input
         type="checkbox"
         checked={isChecked}
+        className="mr-2"
         onChange={handleCheckboxChange}
       />
       {!isChecked && (
         <div 
-          className="mx-2 text-sm font-semibold text-indigo-400 cursor-pointer"
+          className="mr-2 text-sm font-semibold text-indigo-400 cursor-pointer"
           onClick={handleStatusClick}
         >
           {status}
