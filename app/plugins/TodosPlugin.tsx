@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { LexicalEditor, COMMAND_PRIORITY_EDITOR, BaseSelection } from 'lexical';
+import { LexicalEditor, COMMAND_PRIORITY_EDITOR, BaseSelection, $isTextNode } from 'lexical';
 import { mergeRegister } from '@lexical/utils';
 import {
   TodoCheckboxStatusNode,
@@ -117,11 +117,24 @@ function registerTodoHandlers(editor: LexicalEditor) {
       COMMAND_PRIORITY_EDITOR
     ),
     editor.registerNodeTransform(ListItemNode, (node) => {
+      // I suppose I've committed worse crimes
       if (!hasTodo(node)) {
         for (const child of node.getChildren()) {
           const elem = editor.getElementByKey(child.getKey());
           if (elem && elem.classList.contains(TodoDoneTextClass)) {
             elem.classList.remove(TodoDoneTextClass);
+          }
+        }
+      } else {
+        const todoNode = node.getChildren()[0] as TodoCheckboxStatusNode;
+        if (todoNode.getDone()) {
+          for (const child of node.getChildren()) {
+            if ($isTextNode(child)) {
+              const elem = editor.getElementByKey(child.getKey());
+              if (elem) {
+                elem.classList.add(TodoDoneTextClass);
+              }
+            }
           }
         }
       }

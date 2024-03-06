@@ -62,11 +62,9 @@ export const $handleSetTodoDoneValue = (editor: LexicalEditor, done: boolean, no
   for (const child of listItem.getChildren()) {
     if ($isTextNode(child)) {
       const elem = editor.getElementByKey(child.getKey());
-      console.log("elem", elem);
       if (elem) {
         if (done) elem.classList.add(TodoDoneTextClass);
         else elem.classList.remove(TodoDoneTextClass);
-        // TODO still need to handle removing this class if decoratorNode is removed
       }
     }
   }
