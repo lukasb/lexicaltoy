@@ -79,7 +79,7 @@ export default function TodoCheckboxStatusComponent(
       />
       {!isChecked && (
         <div 
-          className="mr-2 text-sm font-semibold text-indigo-400 cursor-pointer"
+          className="mr-2 text-sm font-semibold text-indigo-400 cursor-pointer PlaygroundEditorTheme__todoStatus"
           onClick={handleStatusClick}
         >
           {status}

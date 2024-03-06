@@ -191,13 +191,12 @@ body {
   text-decoration: line-through;
 }
 .PlaygroundEditorTheme__todoStatus {
-  color: rgb(99, 102, 233);
-  font-weight: bold;
+  height: 1.2em;
 }
 .PlaygroundEditorTheme__todoCheckbox {
   position: relative;
-  width: 1em;
-  height: 1em;
+  width: 1.2em;
+  height: 1.2em;
   color: black;
   border: 1px solid gray;
   border-radius: 4px;
@@ -208,10 +207,10 @@ body {
     position: absolute;
     content: '';
     display: block;
-    top: 1.3px;
-    left: 4.6px;
-    width: 5.3px;
-    height: 9.3px;
+    top: 1.56px;
+    left: 5.52px;
+    width: 6.36px;
+    height: 11.16px;
     border-style: solid;
     border-color: white;
     border-width: 0 2px 2px 0;
