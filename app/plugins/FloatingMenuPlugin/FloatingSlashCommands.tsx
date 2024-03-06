@@ -23,7 +23,7 @@ import { $isAtNodeEnd } from "@lexical/selection";
 import { FloatingMenuCoords, FloatingMenuProps } from ".";
 import { isSmallWidthViewport } from "@/app/lib/window-helpers";
 import { createDOMRange } from "@lexical/selection";
-import { TodoNode } from "@/app/nodes/TodoNode";
+import { TodoCheckboxStatusNode } from "@/app/nodes/TodoNode";
 import { 
   INSERT_DOING_TODO_COMMAND,
   INSERT_LATER_TODO_COMMAND,
@@ -51,13 +51,13 @@ interface SlashCommand {
 const canCreateTodo = (selection: BaseSelection) => {
   if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
   const node = selection.anchor.getNode().getParent();
-  return $isListItemNode(node);
+  return ($isListItemNode(node) && !(node.getChildren()[0] instanceof TodoCheckboxStatusNode));
 }
 
 const canRemoveTodo = (selection: BaseSelection) => {
   if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
   const node = selection.anchor.getNode().getParent();
-  return (node instanceof TodoNode);
+  return ($isListItemNode(node) && (node.getChildren()[0] instanceof TodoCheckboxStatusNode));
 }
 
 const slashCommands = [

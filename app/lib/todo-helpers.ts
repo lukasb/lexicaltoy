@@ -7,7 +7,6 @@ import {
 import { ListItemNode } from "@lexical/list"
 
 import {
-  $createTodoNode, TodoNode,
   $createTodoCheckboxStatusNode, TodoCheckboxStatusNode,
   TodoStatus
 } from '@/app/nodes/TodoNode';
@@ -17,13 +16,13 @@ const hasTodo = (node: ListItemNode): boolean => {
     return false;
   }
   const firstChild = node.getChildren()[0];
-  if (firstChild instanceof TodoNode) {
+  if (firstChild instanceof TodoCheckboxStatusNode) {
     return true;
   }
   return false;
 }
 
-export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus) => {
+export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus, done: boolean) => {
 
   if (hasTodo(node)) return;
   
@@ -36,41 +35,28 @@ export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus) 
     return;
   }
 
-  const replacementNode = $createTodoNode();
   const start = selection.anchor.offset;
   const selectedNode = selection.anchor.getNode();
 
-  const checkboxNode = $createTodoCheckboxStatusNode(status, status === "DONE");
-  replacementNode.append(checkboxNode);
+  const todoNode = $createTodoCheckboxStatusNode(status, done);
+  node.splice(0, 0, [todoNode]);
   
-  for (const child of node.getChildren()) {
-    child.remove();
-    replacementNode.append(child);
-  }
-
-  node.append(replacementNode);
   selectedNode.select(start, start);
 };
 
 export const $unwrapTodoContents = (node: ListItemNode) => {
-  if (!hasTodo(node) || !(node.getChildren()[0] instanceof TodoNode)) return;
-  const todoNode = node.getChildren()[0] as TodoNode;
+  if (!hasTodo(node) || !(node.getChildren()[0] instanceof TodoCheckboxStatusNode)) return;
+  const todoNode = node.getChildren()[0] as TodoCheckboxStatusNode;
+  // TODO if done, unset strikethrough format
   todoNode.remove();
-  for (const child of todoNode.getChildren()) {
-    if (!(child instanceof TodoCheckboxStatusNode)) {
-      child.remove();
-      node.append(child);
-    }
-  }
 };
 
 export const $handleSetTodoDoneValue = (done: boolean, nodeKey: string) => {
   const decoratorNode = $getNodeByKey(nodeKey);
   if (!(decoratorNode instanceof TodoCheckboxStatusNode)) return;
-  const todoNode = decoratorNode.getParent();
-  if (!(todoNode instanceof TodoNode)) return;
-  todoNode
-  for (const child of todoNode.getChildren()) {
+  const listItem = decoratorNode.getParent();
+  if (!(listItem instanceof ListItemNode)) return;
+  for (const child of listItem.getChildren()) {
     if (child instanceof TodoCheckboxStatusNode) {
       continue;
     }

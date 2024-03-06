@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { LexicalEditor, COMMAND_PRIORITY_EDITOR, BaseSelection } from 'lexical';
 import { mergeRegister } from '@lexical/utils';
 import {
-  TodoNode,
   TodoCheckboxStatusNode,
   TodoStatus
 } from '@/app/nodes/TodoNode';
@@ -14,7 +13,8 @@ import {
   INSERT_NOW_TODO_COMMAND,
   INSERT_LATER_TODO_COMMAND,
   REMOVE_TODO_COMMAND,
-  SET_TODO_DONE_VALUE_COMMAND
+  SET_TODO_DONE_VALUE_COMMAND,
+  SET_TODO_STATUS_COMMAND
 } from '@/app/lib/todo-commands';
 import { ListItemNode } from '@lexical/list';
 import { $isRangeSelection } from 'lexical';
@@ -31,29 +31,16 @@ function getListItemFromSelection(selection: BaseSelection): ListItemNode | null
   const node = selection.anchor.getNode().getParent();
   if (node instanceof ListItemNode) {
     return node;
-  } else if (node instanceof TodoNode && node.getParent() instanceof ListItemNode) {
-    return node.getParent();
   }
   return null;
 }
 
-function todoInsertCommand(status: TodoStatus) {
+function todoInsertCommand(status: TodoStatus, done: boolean) {
   const theSelection = $getSelection();
   if (!theSelection)  return;
   const listItem = getListItemFromSelection(theSelection);
   if (listItem) {
-    $wrapLIContentsWithTodo(listItem, status);
-  }
-}
-
-function todoNodeTransform(node: TodoNode) {
-  // if the decorator node is removed, remove the todo node
-  const checkboxStatus = node.getChildren().find((child) => child instanceof TodoCheckboxStatusNode) as TodoCheckboxStatusNode;
-  if (!checkboxStatus) {
-    const listItem = node.getParent();
-    if (listItem instanceof ListItemNode) {
-      $unwrapTodoContents(listItem);
-    }
+    $wrapLIContentsWithTodo(listItem, status, done);
   }
 }
 
@@ -62,7 +49,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       INSERT_TODO_COMMAND,
       () => {
-        todoInsertCommand("TODO");
+        todoInsertCommand("TODO", false);
         return true;
       },
       COMMAND_PRIORITY_EDITOR
@@ -70,7 +57,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       INSERT_DOING_TODO_COMMAND,
       () => {
-        todoInsertCommand("DOING");
+        todoInsertCommand("DOING", false);
         return true;
       },
       COMMAND_PRIORITY_EDITOR
@@ -78,7 +65,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       INSERT_NOW_TODO_COMMAND,
       () => {
-        todoInsertCommand("NOW");
+        todoInsertCommand("NOW", false);
         return true;
       },
       COMMAND_PRIORITY_EDITOR
@@ -86,7 +73,15 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       INSERT_LATER_TODO_COMMAND,
       () => {
-        todoInsertCommand("LATER");
+        todoInsertCommand("LATER", false);
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    ),
+    editor.registerCommand(
+      SET_TODO_STATUS_COMMAND,
+      ({ status, todoNodeKey }) => {
+        $handleSetTodoStatus(status, todoNodeKey);
         return true;
       },
       COMMAND_PRIORITY_EDITOR
@@ -113,16 +108,15 @@ function registerTodoHandlers(editor: LexicalEditor) {
         return true;
       },
       COMMAND_PRIORITY_EDITOR
-    ),
-    editor.registerNodeTransform(TodoNode, todoNodeTransform)
+    )
   );
 }
 
 export function TodosPlugin(): null {
   const [editor] = useLexicalComposerContext();
   useEffect(() => {
-    if (!editor.hasNodes([TodoNode, TodoCheckboxStatusNode])) {
-      throw new Error('TodoPlugin: TodoNode and/or TodoCheckboxStatusNode not registered on editor');
+    if (!editor.hasNodes([TodoCheckboxStatusNode])) {
+      throw new Error('TodoPlugin: TodoCheckboxStatusNode not registered on editor');
     }
     return registerTodoHandlers(editor);
   }, [editor]);

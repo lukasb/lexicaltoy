@@ -1,12 +1,9 @@
 import {
   EditorConfig,
-  LexicalEditor,
-  LexicalNode,
   NodeKey,
   SerializedElementNode,
   SerializedLexicalNode,
   DecoratorNode,
-  ElementNode,
   Spread
 } from 'lexical';
 
@@ -100,76 +97,4 @@ export function $createTodoCheckboxStatusNode(
   status: TodoStatus, done: boolean
 ): TodoCheckboxStatusNode {
   return new TodoCheckboxStatusNode(status, done);
-}
-
-export class TodoNode extends ElementNode {
-
-  static getType(): string {
-    return 'todo';
-  }
-
-  static clone(node: TodoNode): TodoNode {
-    return new TodoNode(node.__key);
-  }
-
-  constructor(key?: NodeKey) {
-    super(key);
-  }
-
-  createDOM(config: EditorConfig, editor: LexicalEditor): HTMLElement {
-    const element = document.createElement('div');
-    element.className = 'PlaygroundEditorTheme__todo';
-    return element;
-  }
-
-  updateDOM(_prevNode: unknown, _dom: HTMLElement, config: EditorConfig): boolean {
-    return false;
-  }
-
-  static importJSON(serializedNode: SerializedTodoNode): TodoNode {
-    return $createTodoNode();
-  }
-
-  exportJSON(): SerializedTodoNode {
-    return {
-      ...super.exportJSON(),
-      type: 'todo',
-      version: 1
-    };
-  }
-
-  isTextEntity(): boolean {
-    return true;
-  }
-
-  canInsertTextBefore(): boolean {
-    return false;
-  }
-
-  canInsertTextAfter(): boolean {
-    return true;
-  }
-
-  isInline(): boolean {
-    return true;
-  }
-}
-
-/**
- * Generates a TodoNode. Just a container, TodoPlugin is responsible for inserting the rest of the nodes.
- * @returns - The TodoNode
- */
-export function $createTodoNode(): TodoNode {
-  return new TodoNode();
-}
-
-/**
- * Determines if node is a TodoNode.
- * @param node - The node to be checked.
- * @returns true if node is a TodoNode, false otherwise.
- */
-export function $isTodoNode(
-  node: LexicalNode | null | undefined,
-): node is TodoNode {
-  return node instanceof TodoNode;
 }
