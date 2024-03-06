@@ -59,7 +59,7 @@ export default function TodoCheckboxStatusComponent(
   };
 
   return (
-    <div style={{display: 'flex'}}>
+    <div className="inline-flex">
       <input
         type="checkbox"
         className="mx-1"

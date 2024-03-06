@@ -54,6 +54,10 @@ export class TodoCheckboxStatusNode extends DecoratorNode<JSX.Element> {
     return new TodoCheckboxStatusNode(node.getStatus(), node.getDone(), node.__key);
   }
 
+  isInline(): boolean {
+    return true;
+  }
+
   constructor(status: TodoStatus, done: boolean, key?: NodeKey) {
     super(key);
     this.__status = status;
@@ -62,7 +66,9 @@ export class TodoCheckboxStatusNode extends DecoratorNode<JSX.Element> {
 
 
   createDOM(config: EditorConfig): HTMLElement {
-    return document.createElement('div');
+    const element = document.createElement('div');
+    element.classList.add('inline-flex');
+    return element;
   }
 
   updateDOM(_prevNode: unknown, _dom: HTMLElement, config: EditorConfig): boolean {
