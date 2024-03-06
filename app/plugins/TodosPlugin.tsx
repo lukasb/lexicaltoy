@@ -19,7 +19,6 @@ import {
 import { ListItemNode } from '@lexical/list';
 import { $isRangeSelection } from 'lexical';
 import { $getSelection } from 'lexical';
-import { todo } from 'node:test';
 
 function getListItemFromSelection(selection: BaseSelection): ListItemNode | null {
   if (
