@@ -129,10 +129,16 @@ function $search(selection: null | BaseSelection): [boolean, string] {
   while (i-- && i >= 0 && (c = text[i]) !== "/") {
     searchText.push(c);
   }
+  // just a slash works
   if (text[i] === "/" && searchText.length === 0) {
     return [true, ""];
   }
+  // otherwise, we should have some text to search
   if (searchText.length === 0) {
+    return [false, ""];
+  }
+  // if we didn't find a slash, don't search
+  if (i < 1 && text[i] !== "/") {
     return [false, ""];
   }
   return [true, searchText.reverse().join("")];
