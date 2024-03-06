@@ -62,13 +62,12 @@ export default function TodoCheckboxStatusComponent(
     <div className="inline-flex">
       <input
         type="checkbox"
-        className="mx-1"
         checked={isChecked}
         onChange={handleCheckboxChange}
       />
       {!isChecked && (
         <div 
-          className="mx-1"
+          className="mx-2 text-sm font-semibold text-indigo-400 cursor-pointer"
           onClick={handleStatusClick}
         >
           {status}
