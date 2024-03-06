@@ -2,13 +2,10 @@ import React, {
   useState,
   useEffect,
   forwardRef,
-  useContext,
   useCallback,
   useRef,
   createRef
 } from "react";
-import { searchPages } from "@/app/lib/pages-helpers";
-import { Page } from "@/app/lib/definitions";
 import {
   BaseSelection,
   $isRangeSelection,
@@ -17,28 +14,104 @@ import {
   $getSelection,
   $getRoot,
   COMMAND_PRIORITY_CRITICAL,
-  KEY_DOWN_COMMAND
+  KEY_DOWN_COMMAND,
+  LexicalCommand,
+  EditorState,
 } from "lexical";
+import { $isListItemNode } from "@lexical/list";
 import { $isAtNodeEnd } from "@lexical/selection";
 import { FloatingMenuCoords, FloatingMenuProps } from ".";
-import { PagesContext } from "@/app/context/pages-context";
 import { isSmallWidthViewport } from "@/app/lib/window-helpers";
 import { createDOMRange } from "@lexical/selection";
+import { TodoCheckboxStatusNode } from "@/app/nodes/TodoNode";
+import { 
+  INSERT_DOING_TODO_COMMAND,
+  INSERT_LATER_TODO_COMMAND,
+  INSERT_NOW_TODO_COMMAND,
+  INSERT_TODO_COMMAND,
+  REMOVE_TODO_COMMAND
+} from "@/app/lib/todo-commands";
 
 // TODO figure out actual line height instead of hardcoding 30
+// this is copied from FloatingWikiPageNames.tsx should probably be shared
 const editorLineHeight = 30;
 const menuLineHeight = 40;
 const mobileMaxHeight = 100;
 const desktopMaxHeight = 400;
 
-export function shouldShowFloatingWikiPageNames(selection: BaseSelection) {
-  if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
-  const [hasMatch, match] = $search(selection);
-  return hasMatch;
+// TODO refactor these out somewhere
+
+interface SlashCommand {
+  shortName: string;
+  description: string;
+  command: LexicalCommand<BaseSelection>;
+  shouldShow: (selection: BaseSelection) => boolean;
 }
 
-// tries to find "[[wikilink pagename" before the cursor
-// returns [true, "wikilink pagename"] if it finds one
+const canCreateTodo = (selection: BaseSelection) => {
+  if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
+  const node = selection.anchor.getNode().getParent();
+  return ($isListItemNode(node) && !(node.getChildren()[0] instanceof TodoCheckboxStatusNode));
+}
+
+const canRemoveTodo = (selection: BaseSelection) => {
+  if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
+  const node = selection.anchor.getNode().getParent();
+  return ($isListItemNode(node) && (node.getChildren()[0] instanceof TodoCheckboxStatusNode));
+}
+
+const slashCommands = [
+  {
+    shortName: "TODO",
+    description: "Create a new todo",
+    command: INSERT_TODO_COMMAND,
+    shouldShow: canCreateTodo
+  },
+  {
+    shortName: "DOING",
+    description: "Create a new todo set to DOING",
+    command: INSERT_DOING_TODO_COMMAND,
+    shouldShow: canCreateTodo
+  },
+  {
+    shortName: "LATER",
+    description: "Create a new todo set to LATER",
+    command: INSERT_LATER_TODO_COMMAND,
+    shouldShow: canCreateTodo
+  },
+  {
+    shortName: "NOW",
+    description: "Create a new todo set to NOW",
+    command: INSERT_NOW_TODO_COMMAND,
+    shouldShow: canCreateTodo
+  },
+  {
+    shortName: "Remove",
+    description: "Remove todo",
+    command: REMOVE_TODO_COMMAND,
+    shouldShow: canRemoveTodo
+  }
+];
+
+function matchesCommandText(command: SlashCommand, searchText: string) {
+  return command.shortName.toLowerCase().startsWith(searchText.toLowerCase());
+}
+
+export function shouldShowFloatingSlashCommands(selection: BaseSelection) {
+  if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
+  const [hasMatch, match] = $search(selection);
+  if (!hasMatch) return false;
+  if (match.length === 0) return true;
+  for (const command of slashCommands) {
+    if (matchesCommandText(command, match) && command.shouldShow(selection)){
+      return true;
+    }
+  }
+  return false;
+}
+
+// tries to find "/slashcommand" before the cursor, within the current TextNode, based on valid slash commands
+// returns [true, "slashcommand"] if it finds one
 function $search(selection: null | BaseSelection): [boolean, string] {
   if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
     return [false, ""];
@@ -53,21 +126,25 @@ function $search(selection: null | BaseSelection): [boolean, string] {
   const text = node.getTextContent();
   let i = node.getTextContentSize();
   let c;
-  while (i-- && i >= 0 && (c = text[i]) !== "[") {
+  while (i-- && i >= 0 && (c = text[i]) !== "/") {
     searchText.push(c);
   }
-  if (text[i] !== "[" || i === 0 || text[i - 1] !== "[") {
+  if (text[i] === "/" && searchText.length === 0) {
+    return [true, ""];
+  }
+  if (searchText.length === 0) {
     return [false, ""];
   }
   return [true, searchText.reverse().join("")];
 }
 
-export async function computeFloatingWikiPageNamesPosition(
+// TODO duplicate code from FloatingWikiPageNames.tsx, refactor to share
+export async function computeFloatingSlashCommandsPosition(
   editor: LexicalEditor,
   selection: BaseSelection,
   ref: React.RefObject<HTMLElement> | null
 ): Promise<FloatingMenuCoords> {
-  const position = computeFloatingWikiPageNamesPositionInternal(editor);
+  const position = computeFloatingSlashCommandsPositionInternal(editor);
   if (!position) return { x: 0, y: 0 };
   const {cursorLeft, cursorTop, rootX, rootY} = position;
   return {
@@ -76,7 +153,8 @@ export async function computeFloatingWikiPageNamesPosition(
   };
 }
 
-function computeFloatingWikiPageNamesPositionInternal(editor: LexicalEditor) {
+// TODO duplicate code from FloatingWikiPageNames.tsx, refactor to share
+function computeFloatingSlashCommandsPositionInternal(editor: LexicalEditor) {
   // lexical selections don't let you get a range?
   const theSelection = window.getSelection();
   const range = theSelection?.getRangeAt(0);
@@ -101,10 +179,9 @@ function computeFloatingWikiPageNamesPositionInternal(editor: LexicalEditor) {
   };
 }
 
-const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
+const FloatingSlashCommands = forwardRef<HTMLDivElement, FloatingMenuProps>(
   ({ editor, coords }, ref) => {
-    const pages = useContext(PagesContext);
-    const [results, setResults] = useState<Page[]>(pages);
+    const [commands, setCommands] = useState<SlashCommand[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [cancelled, setCancelled] = useState(false);
     const [position, setPosition] = useState({top: coords?.y, left: coords?.x});
@@ -114,28 +191,28 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
     const itemRefs = useRef<(React.RefObject<HTMLLIElement> | null)[]>([]);
 
     const resetSelf = useCallback(() => {
-      setResults([]);
+      setCommands([]);
       setSelectedIndex(-1);
     }, []);
 
     useEffect(() => {
-      itemRefs.current = results.map((_, i) =>
+      itemRefs.current = commands.map((_, i) =>
         itemRefs.current[i] ?? createRef<HTMLLIElement>()
       );
-    }, [results]);
+    }, [commands]);
 
     useEffect(() => {
-      if (results.length > 0) {
+      if (commands.length > 0) {
         if (!editor) return;
-        const positionVars = computeFloatingWikiPageNamesPositionInternal(editor);
+        const positionVars = computeFloatingSlashCommandsPositionInternal(editor);
         if (!positionVars) return;
         let newHeight = 0;
         let newTop = 0;
         // TODO well this sorta works to figure out the height ...
         if (isSmallWidthViewport(768)) {
-          newHeight = Math.min(results.length * menuLineHeight, mobileMaxHeight);
+          newHeight = Math.min(commands.length * menuLineHeight, mobileMaxHeight);
         } else {
-          newHeight = Math.min(results.length * menuLineHeight, desktopMaxHeight);
+          newHeight = Math.min(commands.length * menuLineHeight, desktopMaxHeight);
         }
         const spaceBelow = window.innerHeight - positionVars.cursorTop - window.scrollY;
         if (spaceBelow < newHeight) {
@@ -145,7 +222,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         }
         setPosition({top: newTop, left: position.left});
       }
-    }, [results, editor, position.left, position.top]);
+    }, [commands, editor, position.left, position.top]);
 
     // Scroll the selected item into view when selectedIndex changes
     useEffect(() => {
@@ -158,7 +235,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
       }
     }, [selectedIndex]);
 
-    const handleSelectSuggestion = useCallback((page: Page) => {
+    const handleSelectCommand = useCallback((command: SlashCommand) => {
       editor.update(() => {
         const selection = $getSelection();
         if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return;
@@ -167,7 +244,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
 
         const {anchor, focus} = selection;
         // TODO handle case where beginning of wiki page name is before the node the selection is in
-        const newAnchorOffset = Math.max(anchor.offset - match.length, 0);
+        const newAnchorOffset = Math.max(anchor.offset - (match.length + 1), 0);
         const range = createDOMRange(
           editor,
           anchor.getNode(),
@@ -180,29 +257,46 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
           selection.removeText();
         }
         
-        selection.insertText(page.title + "]]");
+        editor.dispatchCommand(command.command, selection);
+
         resetSelf();
       });
     }, [editor, resetSelf]);
 
+    const filterSlashCommands = useCallback((editorState: EditorState) => {
+      editorState.read(() => {
+        const selection = $getSelection();
+        const [hasMatch, match] = $search(selection);
+        if (!hasMatch || !selection) {
+          resetSelf();
+          return;
+        }
+        if (match.length === 0) {
+          setCommands(slashCommands.filter((command) => command.shouldShow(selection)));
+        } else {
+          const filteredCommands = slashCommands.filter(
+            (command) =>
+              matchesCommandText(command, match) &&
+              command.shouldShow(selection)
+          );
+          setCommands(filteredCommands);
+        }
+      });
+    }, [resetSelf]);
+
+    useEffect(() => {
+      const editorState = editor.getEditorState();
+      filterSlashCommands(editorState);  
+    }, [editor, filterSlashCommands]);
+
     useEffect(() => {
       const unregisterListener = editor.registerUpdateListener(
         ({ editorState }) => {
-          editorState.read(() => {
-            const selection = $getSelection();
-            const [hasMatch, match] = $search(selection);
-            if (!hasMatch) {
-              resetSelf();
-              return;
-            }
-            console.log("searching pages");
-            const filteredPages = searchPages(pages, match);
-            setResults(filteredPages);
-          });
+          filterSlashCommands(editorState);
         }
       );
       return unregisterListener;
-    }, [editor, pages, resetSelf]);
+    }, [editor, commands, resetSelf, filterSlashCommands]);
 
     // we're doing this to memoize state (results, shouldShow etc)
     // component was being mounted twice and the second time it didn't have the right state
@@ -213,7 +307,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         if (!shouldShow || cancelled) return false;
         keyboardEvent.preventDefault();
         setSelectedIndex((prevIndex) =>
-          Math.min(prevIndex + 1, results.length - 1)
+          Math.min(prevIndex + 1, commands.length - 1)
         );
         return true;
       } else if (keyboardEvent.key === "ArrowUp") {
@@ -223,9 +317,9 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         return true;
       } else if (keyboardEvent.key === "Enter") {
         if (!shouldShow || cancelled) return false;
-        if (selectedIndex > -1 && results.length > 0) {
+        if (selectedIndex > -1 && commands.length > 0) {
           keyboardEvent.preventDefault();
-          handleSelectSuggestion(results[selectedIndex]);
+          handleSelectCommand(commands[selectedIndex]);
           resetSelf();
           return true;
         }
@@ -237,7 +331,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         return true;
       }
       return false;
-    }, [shouldShow, results, selectedIndex, handleSelectSuggestion, resetSelf, cancelled]);
+    }, [shouldShow, commands, selectedIndex, handleSelectCommand, resetSelf, cancelled]);
     
     useEffect(() => {
       if (!editor) return () => undefined;
@@ -263,7 +357,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         }}
       >
         <ul className="max-h-[100px] md:max-h-[400px] overflow-auto">
-          {results.map((result, index) => (
+          {commands.map((command, index) => (
             <li
               key={index}
               ref={itemRefs.current[index]}
@@ -272,9 +366,9 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
                   ? "selected-item bg-gray-200 dark:bg-gray-700"
                   : ""
               }`}
-              onClick={() => handleSelectSuggestion(result)}
+              onClick={() => handleSelectCommand(command)}
             >
-              {result.title}
+              {command.shortName} <span className="text-gray-400 ml-2">{command.description}</span>
             </li>
           ))}
         </ul>
@@ -283,5 +377,5 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
   }
 );
 
-FloatingWikiPageNames.displayName = "FloatingWikiPageNames";
-export default FloatingWikiPageNames;
+FloatingSlashCommands.displayName = "FloatingSlashCommands";
+export default FloatingSlashCommands;

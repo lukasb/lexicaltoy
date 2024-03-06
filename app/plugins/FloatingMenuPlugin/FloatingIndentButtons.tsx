@@ -24,7 +24,7 @@ export function shouldShowFloatingIndentButtons(selection: BaseSelection) {
 export async function computeFloatingIndentButtonsPosition(
   editor: LexicalEditor,
   selection: BaseSelection,
-  ref: React.RefObject<HTMLElement>
+  ref: React.RefObject<HTMLElement> | null
 ): Promise<FloatingMenuCoords> {
 
   const listItem = $getActiveListItem(selection);

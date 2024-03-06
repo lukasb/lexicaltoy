@@ -9,7 +9,7 @@ export type FloatingMenuCoords = { x: number; y: number } | undefined;
 interface FloatingMenuConfig {
   component: React.ComponentType<any>;
   shouldShow: (selection: BaseSelection) => boolean;
-  computePosition: (editor: LexicalEditor, selection: BaseSelection, ref: React.RefObject<HTMLElement>) => Promise<FloatingMenuCoords>;
+  computePosition: (editor: LexicalEditor, selection: BaseSelection, ref: React.RefObject<HTMLElement> | null) => Promise<FloatingMenuCoords>;
   priority: number;
 }
 
@@ -31,21 +31,22 @@ export function FloatingMenuPlugin({
   const [visibleMenu, setVisibleMenu] = useState<FloatingMenuConfig | null>(null);
   const [editor] = useLexicalComposerContext();
 
-  const calculatePosition = useCallback(
+  const updateMenu = useCallback(
     async (
       selection: BaseSelection,
-      currentVisibleMenu: FloatingMenuConfig | null
+      menu: FloatingMenuConfig | null
     ) => {
-      if (!selection || !ref.current) return setCoords(undefined);
-      const coords = currentVisibleMenu
-        ? await currentVisibleMenu.computePosition(editor, selection, ref)
+      if (!selection) return setCoords(undefined);
+      const coords = menu
+        ? await menu.computePosition(editor, selection, ref)
         : undefined;
       setCoords(coords);
+      setVisibleMenu(menu);
     },
     [editor]
   );
 
-  const $handleSelectionChange = useCallback(() => {
+  const $handleEditorUpdate = useCallback(() => {
     if (
       editor.isComposing() ||
       editor.getRootElement() !== document.activeElement
@@ -70,23 +71,22 @@ export function FloatingMenuPlugin({
     }
 
     if (newVisibleMenu) {
-      setVisibleMenu(newVisibleMenu);
-      calculatePosition(selection, newVisibleMenu);
+      updateMenu(selection, newVisibleMenu);
     } else {
       setCoords(undefined); // Hide if no matching menu
       setVisibleMenu(null);
     }
 
-  }, [editor, calculatePosition, menuConfig]);
+  }, [editor, updateMenu, menuConfig]);
 
   useEffect(() => {
     const unregisterListener = editor.registerUpdateListener(
       ({ editorState }) => {
-        editorState.read(() => $handleSelectionChange());
+        editorState.read(() => $handleEditorUpdate());
       }
     );
     return unregisterListener;
-  }, [editor, $handleSelectionChange]);
+  }, [editor, $handleEditorUpdate]);
 
   return createPortal(
     visibleMenu ? (
