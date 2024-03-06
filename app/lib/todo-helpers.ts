@@ -47,7 +47,6 @@ export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus, 
 export const $unwrapTodoContents = (node: ListItemNode) => {
   if (!hasTodo(node) || !(node.getChildren()[0] instanceof TodoCheckboxStatusNode)) return;
   const todoNode = node.getChildren()[0] as TodoCheckboxStatusNode;
-  // TODO if done, unset strikethrough format
   todoNode.remove();
 };
 
@@ -56,12 +55,6 @@ export const $handleSetTodoDoneValue = (done: boolean, nodeKey: string) => {
   if (!(decoratorNode instanceof TodoCheckboxStatusNode)) return;
   const listItem = decoratorNode.getParent();
   if (!(listItem instanceof ListItemNode)) return;
-  for (const child of listItem.getChildren()) {
-    if (child instanceof TodoCheckboxStatusNode) {
-      continue;
-    }
-    // TODO set strikethrough format based on value of done
-  }
   decoratorNode.setDone(done);
 }
 

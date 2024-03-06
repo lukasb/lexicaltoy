@@ -68,6 +68,7 @@ export class TodoCheckboxStatusNode extends DecoratorNode<JSX.Element> {
   createDOM(config: EditorConfig): HTMLElement {
     const element = document.createElement('div');
     element.classList.add('inline-flex');
+    element.classList.add('mt-0.5');
     return element;
   }
 

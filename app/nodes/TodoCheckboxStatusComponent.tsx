@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { TodoStatus } from '@/app/nodes/TodoNode';
 import { 
   SET_TODO_DONE_VALUE_COMMAND,
   SET_TODO_STATUS_COMMAND
  } from '../lib/todo-commands';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+
+const TodoDoneCheckboxClass = "PlaygroundEditorTheme__todoDone";
 
 export default function TodoCheckboxStatusComponent(
   { todoStatus,
@@ -20,6 +22,7 @@ export default function TodoCheckboxStatusComponent(
   const [isChecked, setIsChecked] = useState<boolean>(todoDone);
   const [status, setStatus] = useState<TodoStatus>(todoStatus);
   const [editor] = useLexicalComposerContext();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsChecked(e.target.checked);
@@ -28,7 +31,14 @@ export default function TodoCheckboxStatusComponent(
       {
         done: e.target.checked,
         todoNodeKey: nodeKey
-      }); 
+      });
+      if (inputRef.current) {
+        if (e.target.checked) {
+          inputRef.current.classList.add(TodoDoneCheckboxClass);
+        } else {
+          inputRef.current.classList.remove(TodoDoneCheckboxClass);
+        }
+      } 
   };
 
   const handleStatusClick = () => {
@@ -61,6 +71,7 @@ export default function TodoCheckboxStatusComponent(
   return (
     <div className="inline-flex">
       <input
+        ref={inputRef}
         type="checkbox"
         checked={isChecked}
         className="mr-2"

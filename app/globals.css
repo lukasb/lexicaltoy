@@ -184,6 +184,9 @@ body {
   display: flex;
 }
 .PlaygroundEditorTheme__todoDone {
+  background: rgb(99, 102, 233);
+}
+.PlaygroundEditorTheme__todoDone + span {
   color: gray;
   text-decoration: line-through;
 }
