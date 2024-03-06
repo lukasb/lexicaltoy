@@ -196,8 +196,8 @@ body {
 }
 .PlaygroundEditorTheme__todoCheckbox {
   position: relative;
-  width: 1.5em;
-  height: 1.5em;
+  width: 1em;
+  height: 1em;
   color: black;
   border: 1px solid gray;
   border-radius: 4px;
@@ -208,10 +208,10 @@ body {
     position: absolute;
     content: '';
     display: block;
-    top: 2px;
-    left: 7px;
-    width: 8px;
-    height: 14px;
+    top: 1.3px;
+    left: 4.6px;
+    width: 5.3px;
+    height: 9.3px;
     border-style: solid;
     border-color: white;
     border-width: 0 2px 2px 0;
@@ -220,8 +220,8 @@ body {
   }
   &:checked {
     color: white;
-    border-color: black;
-    background: black;
+    border-color: rgb(99, 102, 233);
+    background: rgb(99, 102, 233);
     &::before {
       opacity: 1;
     }

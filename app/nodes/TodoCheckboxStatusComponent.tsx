@@ -74,7 +74,7 @@ export default function TodoCheckboxStatusComponent(
         ref={inputRef}
         type="checkbox"
         checked={isChecked}
-        className="mr-2"
+        className="mr-2 PlaygroundEditorTheme__todoCheckbox"
         onChange={handleCheckboxChange}
       />
       {!isChecked && (
