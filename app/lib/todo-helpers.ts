@@ -2,6 +2,8 @@ import {
   $getNodeByKey,
   $getSelection,
   $isRangeSelection,
+  $isTextNode,
+  LexicalEditor,
 } from "lexical";
 
 import { ListItemNode } from "@lexical/list"
@@ -10,6 +12,8 @@ import {
   $createTodoCheckboxStatusNode, TodoCheckboxStatusNode,
   TodoStatus
 } from '@/app/nodes/TodoNode';
+
+const TodoDoneTextClass = "PlaygroundEditorTheme__todoDoneText";
 
 const hasTodo = (node: ListItemNode): boolean => {
   if (node.getChildren().length === 0) {
@@ -50,11 +54,22 @@ export const $unwrapTodoContents = (node: ListItemNode) => {
   todoNode.remove();
 };
 
-export const $handleSetTodoDoneValue = (done: boolean, nodeKey: string) => {
+export const $handleSetTodoDoneValue = (editor: LexicalEditor, done: boolean, nodeKey: string) => {
   const decoratorNode = $getNodeByKey(nodeKey);
   if (!(decoratorNode instanceof TodoCheckboxStatusNode)) return;
   const listItem = decoratorNode.getParent();
   if (!(listItem instanceof ListItemNode)) return;
+  for (const child of listItem.getChildren()) {
+    if ($isTextNode(child)) {
+      const elem = editor.getElementByKey(child.getKey());
+      console.log("elem", elem);
+      if (elem) {
+        if (done) elem.classList.add(TodoDoneTextClass);
+        else elem.classList.remove(TodoDoneTextClass);
+        // TODO still need to handle removing this class if decoratorNode is removed
+      }
+    }
+  }
   decoratorNode.setDone(done);
 }
 

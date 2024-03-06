@@ -89,7 +89,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       SET_TODO_DONE_VALUE_COMMAND,
       ({ done, todoNodeKey }) => {
-        $handleSetTodoDoneValue(done, todoNodeKey);
+        $handleSetTodoDoneValue(editor, done, todoNodeKey);
         return true;
       },
       COMMAND_PRIORITY_EDITOR
