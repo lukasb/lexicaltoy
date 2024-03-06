@@ -6,7 +6,14 @@ import {
   TodoStatus
 } from '@/app/nodes/TodoNode';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
-import { $wrapLIContentsWithTodo, $unwrapTodoContents, $handleSetTodoStatus, $handleSetTodoDoneValue } from '@/app/lib/todo-helpers';
+import { 
+  $wrapLIContentsWithTodo,
+  $unwrapTodoContents,
+  $handleSetTodoStatus,
+  $handleSetTodoDoneValue,
+  hasTodo,
+  TodoDoneTextClass
+} from '@/app/lib/todo-helpers';
 import { 
   INSERT_TODO_COMMAND,
   INSERT_DOING_TODO_COMMAND,
@@ -108,7 +115,17 @@ function registerTodoHandlers(editor: LexicalEditor) {
         return true;
       },
       COMMAND_PRIORITY_EDITOR
-    )
+    ),
+    editor.registerNodeTransform(ListItemNode, (node) => {
+      if (!hasTodo(node)) {
+        for (const child of node.getChildren()) {
+          const elem = editor.getElementByKey(child.getKey());
+          if (elem && elem.classList.contains(TodoDoneTextClass)) {
+            elem.classList.remove(TodoDoneTextClass);
+          }
+        }
+      }
+    })
   );
 }
 

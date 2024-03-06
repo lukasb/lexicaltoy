@@ -13,9 +13,9 @@ import {
   TodoStatus
 } from '@/app/nodes/TodoNode';
 
-const TodoDoneTextClass = "PlaygroundEditorTheme__todoDoneText";
+export const TodoDoneTextClass = "PlaygroundEditorTheme__todoDoneText";
 
-const hasTodo = (node: ListItemNode): boolean => {
+export const hasTodo = (node: ListItemNode): boolean => {
   if (node.getChildren().length === 0) {
     return false;
   }
