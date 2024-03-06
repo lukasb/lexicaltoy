@@ -72,8 +72,8 @@ export class TodoCheckboxStatusNode extends DecoratorNode<JSX.Element> {
     return element;
   }
 
-  updateDOM(_prevNode: unknown, _dom: HTMLElement, config: EditorConfig): boolean {
-    return false;
+  updateDOM(_prevNode: TodoCheckboxStatusNode, _dom: HTMLElement, config: EditorConfig): boolean {
+    return this.__status !== _prevNode.__status;
   }
 
   static importJSON(serializedNode: SerializedTodoCheckboxStatusNode): TodoCheckboxStatusNode {
