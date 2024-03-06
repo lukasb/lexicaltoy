@@ -117,7 +117,12 @@ function registerTodoHandlers(editor: LexicalEditor) {
       COMMAND_PRIORITY_EDITOR
     ),
     editor.registerNodeTransform(ListItemNode, (node) => {
-      // I suppose I've committed worse crimes
+      // I suppose I've committed worse crimes ...
+      // This is really only here to make sure the strikethrough is set correctly when
+      // the editor is loaded from a serialized state.
+      // Probably this means we should be wrapping all the text in an ElementNode, but 
+      // that created a problem with not being able to insert text in the todo if
+      // all the text and the TextNode was deleted.
       if (!hasTodo(node)) {
         for (const child of node.getChildren()) {
           const elem = editor.getElementByKey(child.getKey());
