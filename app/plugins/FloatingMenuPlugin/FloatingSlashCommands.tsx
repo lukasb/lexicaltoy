@@ -31,6 +31,7 @@ import {
   INSERT_TODO_COMMAND,
   REMOVE_TODO_COMMAND
 } from "@/app/lib/todo-commands";
+import { URL_REGEX } from "../AutoLinkPlugin";
 
 // TODO figure out actual line height instead of hardcoding 30
 // this is copied from FloatingWikiPageNames.tsx should probably be shared
@@ -122,6 +123,7 @@ export function shouldShowFloatingSlashCommands(selection: BaseSelection) {
 
 // tries to find "/slashcommand" before the cursor, within the current TextNode, based on valid slash commands
 // returns [true, "slashcommand"] if it finds one
+// TODO this doesn't actually search backwards from the cursor location, but it should
 function $search(selection: null | BaseSelection): [boolean, string] {
   if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
     return [false, ""];
@@ -134,10 +136,22 @@ function $search(selection: null | BaseSelection): [boolean, string] {
   }
   const searchText = [];
   const text = node.getTextContent();
+  
   let i = node.getTextContentSize();
   let c;
   while (i-- && i >= 0 && (c = text[i]) !== "/") {
     searchText.push(c);
+  }
+  if (i > 0 && text[i] === "/") {
+    const WHITESPACE_REGEX = /\s/;
+    let urlSearchText = searchText;
+    let j = i;
+    while (j-- && j >= 0 && !WHITESPACE_REGEX.test(text[j])) {
+      urlSearchText.push(text[j]);
+    }
+    if (urlSearchText.length > 0 && URL_REGEX.test(urlSearchText.join(""))) {
+      return [false, ""];
+    }
   }
   // just a slash works
   if (text[i] === "/" && searchText.length === 0) {
