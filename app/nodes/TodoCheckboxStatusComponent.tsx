@@ -69,7 +69,7 @@ export default function TodoCheckboxStatusComponent(
   };
 
   return (
-    <div className="inline-flex items-center">
+    <div className="inline-flex items-baseline">
       <input
         ref={inputRef}
         type="checkbox"

@@ -95,8 +95,7 @@ body {
   padding-left: 1.2rem;
   position: relative; /* Needed for positioning the pseudo-element */
   line-height: 1.4;
-  display: flex;
-  align-items: center;
+  display: block;
 }
 
 .PlaygroundEditorTheme__listItem::before {
@@ -197,6 +196,7 @@ body {
   position: relative;
   width: 1.2em;
   height: 1.2em;
+  margin-top: auto;
   color: black;
   border: 1px solid gray;
   border-radius: 4px;
