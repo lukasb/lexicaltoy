@@ -110,7 +110,7 @@ function Editor({
     } catch (error) {
       alert("Failed to save page");
     }
-  }, 500);
+  }, 2000);
 
   function onChange(editorState: EditorState) {
     if (!editorState) return;
