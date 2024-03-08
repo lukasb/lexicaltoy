@@ -47,6 +47,18 @@ function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   formulaDisplayNode.insertAfter(textNode);
 }
 
+function haveExistingFormulaEditorNode(): boolean {
+  return __formulaEditorNodeKey !== "";
+}
+
+function replaceExistingFormulaEditorNode() {
+  const formulaEditorNode = $getNodeByKey(__formulaEditorNodeKey);
+  if (formulaEditorNode instanceof FormulaEditorNode) {
+    $replaceWithFormulaDisplayNode(formulaEditorNode);
+  }
+  __formulaEditorNodeKey = "";
+}
+
 function registerFormulaHandlers(editor: LexicalEditor) {
   return mergeRegister(
     editor.registerNodeTransform(TextNode, (node) => {
@@ -70,6 +82,18 @@ function registerFormulaHandlers(editor: LexicalEditor) {
         const textNode = new TextNode(textContents);
         node.replace(textNode);
         __formulaEditorNodeKey = "";
+      } else {
+        const selection = $getSelection();
+        if (selection === null || !$isRangeSelection(selection) || !selection.isCollapsed()) {
+          $replaceWithFormulaDisplayNode(node);
+        }
+        const selectionListItemNode = $getActiveListItemFromSelection(selection);
+        if (selectionListItemNode) {
+          const editorListItemNode = node.getParent();
+          if (selectionListItemNode.getKey() !== editorListItemNode.getKey()) {
+            $replaceWithFormulaDisplayNode(node);
+          }
+        }
       }
     }),
     editor.registerCommand(
@@ -80,6 +104,9 @@ function registerFormulaHandlers(editor: LexicalEditor) {
 
         if ($isNodeSelection(selection)) {
           const node = selection.getNodes()[0];
+          if (haveExistingFormulaEditorNode() && node.getKey() !== __formulaEditorNodeKey) {
+            replaceExistingFormulaEditorNode();
+          }
           if ($isFormulaDisplayNode(node)) {
             $replaceWithFormulaEditorNode(node);
           } else if ($isListItemNode(node)) {
@@ -88,6 +115,7 @@ function registerFormulaHandlers(editor: LexicalEditor) {
               $replaceWithFormulaEditorNode(listItemNode.getChildren()[0] as FormulaDisplayNode);
             }
           }
+          return false;
         }
         
         if (
@@ -99,12 +127,8 @@ function registerFormulaHandlers(editor: LexicalEditor) {
 
         const activeNode = selection.anchor.getNode();
 
-        if (__formulaEditorNodeKey !== "" && activeNode.getKey() !== __formulaEditorNodeKey) {
-          const formulaEditorNode = $getNodeByKey(__formulaEditorNodeKey);
-          if (formulaEditorNode instanceof FormulaEditorNode) {
-            $replaceWithFormulaDisplayNode(formulaEditorNode);
-          }
-          __formulaEditorNodeKey = "";
+        if (haveExistingFormulaEditorNode() && activeNode.getKey() !== __formulaEditorNodeKey) {
+          replaceExistingFormulaEditorNode();
         }
 
         const listItemNode = $getActiveListItemFromSelection(selection);

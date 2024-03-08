@@ -162,6 +162,10 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   isInline(): boolean {
     return true;
   }
+
+  isTextSelectable(): boolean {
+    return true;
+  }
 }
 
 export function $isFormulaDisplayNode(node: LexicalNode): node is FormulaDisplayNode {
