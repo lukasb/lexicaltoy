@@ -22,7 +22,8 @@ import {
   $isListItemNode
 } from "@lexical/list";
 import { mergeRegister } from "@lexical/utils";
-import { $getActiveListItemFromSelection, $isNodeWithinListItem } from "@/app/lib/list-utils";
+import { $getActiveListItemFromSelection } from "@/app/lib/list-utils";
+import { SWAP_FORMULA_DISPLAY_FOR_EDITOR } from "../lib/formula-commands";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -35,6 +36,7 @@ function $replaceWithFormulaEditorNode(node: FormulaDisplayNode) {
   }
   const formulaEditorNode = new FormulaEditorNode(node.getFormula());
   node.replace(formulaEditorNode);
+  formulaEditorNode.selectEnd();
   __formulaEditorNodeKey = formulaEditorNode.getKey();
 }
 
@@ -77,6 +79,9 @@ function registerFormulaHandlers(editor: LexicalEditor) {
       }
     }),
     editor.registerNodeTransform(FormulaEditorNode, (node) => {
+      // this logic is mostly around making sure if we serialize a FormulaEditorNode
+      // that it is turned back into a FormulaDisplayNode when the editor is reloaded
+      // TODO maybe handle this in FormulaEditorNode.importJSON instead?
       const textContents = node.getTextContent();
       if (!textContents.startsWith("=")) {
         const textNode = new TextNode(textContents);
@@ -140,6 +145,17 @@ function registerFormulaHandlers(editor: LexicalEditor) {
       },
       COMMAND_PRIORITY_EDITOR,
     ),
+    editor.registerCommand(
+      SWAP_FORMULA_DISPLAY_FOR_EDITOR,
+      ({ displayNodeKey }) => {
+        const displayNode = $getNodeByKey(displayNodeKey);
+        if (displayNode && $isFormulaDisplayNode(displayNode)) {
+          $replaceWithFormulaEditorNode(displayNode);
+        }
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    )
   );
 }
 

@@ -155,6 +155,7 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
         formula={this.__formula}
         caption={this.__caption}
         output={this.__output}
+        nodeKey={this.getKey()}
       />
     );
   }
