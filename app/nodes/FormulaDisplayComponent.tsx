@@ -20,7 +20,7 @@ export default function FormulaDisplayComponent(
   }, [formula]);
 
   return (
-    <div className="inline-flex items-baseline border-dashed">
+    <div className="inline-flex items-baseline border-2 border-dashed border-red-600">
       <span>{caption}: </span>
       <span>{output}</span>
     </div>

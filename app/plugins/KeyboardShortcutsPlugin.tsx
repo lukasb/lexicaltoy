@@ -20,7 +20,7 @@ import {
 } from "lexical";
 import { useEffect } from "react";
 import { mergeRegister } from "@lexical/utils";
-import { $canIndentListItem, $getActiveListItem, $hasChildListItems } from "../lib/list-utils";
+import { $canIndentListItem, $getActiveListItemFromSelection, $hasChildListItems } from "../lib/list-utils";
 import {
   DELETE_LISTITEM_COMMAND,
   INDENT_LISTITEM_COMMAND,
@@ -55,7 +55,7 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
       KEY_TAB_COMMAND,
       (event) => {
         const selection = $getSelection();
-        const listItem = $getActiveListItem(selection);
+        const listItem = $getActiveListItemFromSelection(selection);
         if (!listItem) return false;
         // allow the user to tab out of the note if they're at the beginning or end
         if (
@@ -77,7 +77,7 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
       (event) => {
         if (!event.ctrlKey) return false;
         const selection = $getSelection();
-        const listItem = $getActiveListItem(selection);
+        const listItem = $getActiveListItemFromSelection(selection);
         const fixSelection = true;
         if (!listItem) return false;
         event.preventDefault();
@@ -94,7 +94,7 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
           (event.key == "ArrowUp" || event.key == "ArrowDown")
         ) {
           const selection = $getSelection();
-          const listItem = $getActiveListItem(selection);
+          const listItem = $getActiveListItemFromSelection(selection);
           if (!listItem) return false;
           event.preventDefault();
           editor.dispatchCommand(
@@ -114,7 +114,7 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
       (event) => {
         const selection = $getSelection();
         if (!$isRangeSelection(selection) || !selection.isCollapsed()) return false;
-        const listItem = $getActiveListItem(selection);
+        const listItem = $getActiveListItemFromSelection(selection);
         if (!listItem) return false;
         // if we're hitting enter at the end of a node that has children, prepend a new child node
         if ($hasChildListItems(listItem) && selection.anchor.offset === listItem.getTextContent().length){

@@ -5,7 +5,7 @@ import {
   INDENT_LISTITEM_COMMAND,
   OUTDENT_LISTITEM_COMMAND,
 } from "@/app/lib/list-commands";
-import { $getActiveListItem, $isListItemActive } from "@/app/lib/list-utils";
+import { $getActiveListItemFromSelection, $isListItemActive } from "@/app/lib/list-utils";
 import { ListItemNode } from "@lexical/list";
 import { FloatingMenuCoords, FloatingMenuProps } from "./index";
 import { computePosition } from '@floating-ui/dom';
@@ -27,7 +27,7 @@ export async function computeFloatingIndentButtonsPosition(
   ref: React.RefObject<HTMLElement> | null
 ): Promise<FloatingMenuCoords> {
 
-  const listItem = $getActiveListItem(selection);
+  const listItem = $getActiveListItemFromSelection(selection);
   if (!listItem || !ref || !ref.current) return undefined;
 
   const listItemDOM = editor.getElementByKey(
@@ -60,7 +60,7 @@ const FloatingIndentButtons = forwardRef<HTMLDivElement, FloatingMenuProps>(({ e
           editorState.read(() => {
             const selection = $getSelection();
             if (!$isRangeSelection(selection)) return;
-            const listItem = $getActiveListItem(selection);
+            const listItem = $getActiveListItemFromSelection(selection);
 
             setState({
               canIndent: $canIndent(selection),

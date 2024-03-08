@@ -114,7 +114,7 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   }
 
   static clone(node: FormulaDisplayNode): FormulaDisplayNode {
-    return new FormulaDisplayNode(node.getFormula(), node.__key);
+    return new FormulaDisplayNode(node.getFormula(), node.getCaption(), node.getOutput(), node.__key);
   }
 
   constructor(formula: string, caption?: string, output?: string, key?: NodeKey) {
@@ -127,6 +127,7 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
 
   createDOM(config: EditorConfig): HTMLElement {
     const element = document.createElement('div');
+    element.classList.add('inline-flex');
     return element;
   }
 
@@ -158,17 +159,13 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
     );
   }
 
-  isIsolated(): boolean {
-    return false;
-  }
-
   isInline(): boolean {
     return true;
   }
-  
-  isKeyboardSelectable(): boolean {
-    return true;
-  }
+}
+
+export function $isFormulaDisplayNode(node: LexicalNode): node is FormulaDisplayNode {
+  return node instanceof FormulaDisplayNode;
 }
 
 export function $createFormulaDisplayNode(

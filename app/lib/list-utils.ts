@@ -1,4 +1,4 @@
-import { BaseSelection, $isRootNode, LexicalCommand, createCommand } from "lexical";
+import { BaseSelection, $isRootNode, $isRangeSelection, $isNodeSelection } from "lexical";
 import { $isListItemNode, $isListNode, ListItemNode, ListNode } from "@lexical/list";
 import { LexicalNode } from "lexical";
 
@@ -16,13 +16,13 @@ export function $isNodeWithinListItem(node: LexicalNode): boolean {
 // only allow indent/outdent if the selection is collapsed (nothing is selected)
 // I don't feel like tackling all the edge cases involved in selection right now
 
-export function $getActiveListItem(
+export function $getActiveListItemFromSelection(
   selection: BaseSelection | null
 ): ListItemNode | null {
-  if (!selection || !selection.isCollapsed()) return null;
-  const nodes = selection.getNodes();
-  // TODO I think with a collapsed selection, we only need to check the first node
-  for (const node of nodes) {
+  if (!selection) return null;
+  if ($isRangeSelection(selection)) {
+    if (!selection.isCollapsed()) return null;
+    const node = selection.anchor.getNode();
     if ($isListItemNode(node)) return node;
     let parent = node.getParent();
     while (parent && !$isRootNode(parent)) {
@@ -30,6 +30,19 @@ export function $getActiveListItem(
         return parent;
       }
       parent = parent.getParent();
+    }
+  } else if ($isNodeSelection(selection)) {
+    const nodes = selection.getNodes();
+    // TODO I think with a collapsed selection, we only need to check the first node
+    for (const node of nodes) {
+      if ($isListItemNode(node)) return node;
+      let parent = node.getParent();
+      while (parent && !$isRootNode(parent)) {
+        if ($isListItemNode(parent)) {
+          return parent;
+        }
+        parent = parent.getParent();
+      }
     }
   }
   return null;
@@ -55,17 +68,17 @@ export function $canOutdentListItem(listItemNode: ListItemNode | null): boolean 
 }
 
 export function $isListItemActive(selection: BaseSelection | null): boolean {
-  const listItemNode = $getActiveListItem(selection);
+  const listItemNode = $getActiveListItemFromSelection(selection);
   return listItemNode ? true : false;
 }
 
 export function $canIndent(selection: BaseSelection | null): boolean {
-   const listItemNode = $getActiveListItem(selection);
+   const listItemNode = $getActiveListItemFromSelection(selection);
    return $canIndentListItem(listItemNode);
  }
  
  export function $canOutdent(selection: BaseSelection | null): boolean {
-   const listItemNode = $getActiveListItem(selection);
+   const listItemNode = $getActiveListItemFromSelection(selection);
    return $canOutdentListItem(listItemNode);
  }
 
