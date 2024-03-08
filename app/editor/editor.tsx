@@ -39,6 +39,8 @@ import { TodoCheckboxStatusNode } from "@/app/nodes/TodoNode";
 import { TodosPlugin } from "@/app/plugins/TodosPlugin";
 import FloatingSlashCommands from '../plugins/FloatingMenuPlugin/FloatingSlashCommands';
 import { shouldShowFloatingSlashCommands, computeFloatingSlashCommandsPosition } from "../plugins/FloatingMenuPlugin/FloatingSlashCommands";
+import { FormulaEditorNode, FormulaDisplayNode } from "@/app/nodes/FormulaNode";
+import { FormulaPlugin } from "@/app/plugins/FormulaPlugin";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -67,6 +69,8 @@ function Editor({
       WikilinkNode,
       WikilinkInternalNode,
       TodoCheckboxStatusNode,
+      FormulaEditorNode,
+      FormulaDisplayNode,
     ],
     onError,
   };
@@ -140,6 +144,7 @@ function Editor({
       <WikilinkPlugin />
       <WikilinkEventListenerPlugin openOrCreatePageByTitle={openOrCreatePageByTitle} />
       <TodosPlugin />
+      <FormulaPlugin />
       {floatingAnchorElem && !isSmallWidthViewport && (
         <>
           <DraggableBlockPlugin anchorElem={floatingAnchorElem} />

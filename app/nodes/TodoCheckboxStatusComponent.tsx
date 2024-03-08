@@ -15,7 +15,7 @@ export default function TodoCheckboxStatusComponent(
   }: 
   {
     todoStatus: TodoStatus,
-    todoDone: boolean
+    todoDone: boolean,
     nodeKey: string
   }
 ): JSX.Element {

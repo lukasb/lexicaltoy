@@ -2,7 +2,7 @@ import { BaseSelection, $isRootNode, LexicalCommand, createCommand } from "lexic
 import { $isListItemNode, $isListNode, ListItemNode, ListNode } from "@lexical/list";
 import { LexicalNode } from "lexical";
 
-function $isNodeWithinListItem(node: LexicalNode): boolean {
+export function $isNodeWithinListItem(node: LexicalNode): boolean {
   let parent = node.getParent();
   while (parent && !$isRootNode(parent)) {
     if ($isListItemNode(parent)) {
