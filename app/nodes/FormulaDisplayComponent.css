@@ -1,0 +1,62 @@
+.lds-roller {
+  display: inline-block;
+  position: relative;
+  width: calc(8 * var(--base-size)); /* 80px */
+  height: calc(8 * var(--base-size)); /* 80px */
+}
+.lds-roller div {
+  animation: lds-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  transform-origin: calc(4 * var(--base-size)) calc(4 * var(--base-size)); /* 40px 40px */
+}
+.lds-roller div:after {
+  content: " ";
+  display: block;
+  position: absolute;
+  width: calc(0.7 * var(--base-size)); /* 7px */
+  height: calc(0.7 * var(--base-size)); /* 7px */
+  border-radius: 50%;
+  background: #fff;
+  margin: calc(-0.4 * var(--base-size)) 0 0 calc(-0.4 * var(--base-size)); /* -4px 0 0 -4px */
+}
+
+.lds-roller div:nth-child(1):after {
+  top: calc(6.3 * var(--base-size)); /* 63px */
+  left: calc(6.3 * var(--base-size)); /* 63px */
+}
+.lds-roller div:nth-child(2):after {
+  top: calc(6.8 * var(--base-size)); /* 68px */
+  left: calc(5.6 * var(--base-size)); /* 56px */
+}
+.lds-roller div:nth-child(3):after {
+  top: calc(7.1 * var(--base-size)); /* 71px */
+  left: calc(4.8 * var(--base-size)); /* 48px */
+}
+.lds-roller div:nth-child(4):after {
+  top: calc(7.2 * var(--base-size)); /* 72px */
+  left: calc(4 * var(--base-size)); /* 40px */
+}
+.lds-roller div:nth-child(5):after {
+  top: calc(7.1 * var(--base-size)); /* 71px */
+  left: calc(3.2 * var(--base-size)); /* 32px */
+}
+.lds-roller div:nth-child(6):after {
+  top: calc(6.8 * var(--base-size)); /* 68px */
+  left: calc(2.4 * var(--base-size)); /* 24px */
+}
+.lds-roller div:nth-child(7):after {
+  top: calc(6.3 * var(--base-size)); /* 63px */
+  left: calc(1.7 * var(--base-size)); /* 17px */
+}
+.lds-roller div:nth-child(8):after {
+  top: calc(5.6 * var(--base-size)); /* 56px */
+  left: calc(1.2 * var(--base-size)); /* 12px */
+}
+
+@keyframes lds-roller {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

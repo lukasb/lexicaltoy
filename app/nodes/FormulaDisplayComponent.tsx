@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { SWAP_FORMULA_DISPLAY_FOR_EDITOR } from '@/app/lib/formula-commands';
+import { getShortGPTChatResponse } from '@/app/lib/ai-actions';
+
+import './FormulaDisplayComponent.css';
+import { get } from 'http';
 
 export default function FormulaDisplayComponent(
   { formula: initialFormula,
@@ -20,8 +24,16 @@ export default function FormulaDisplayComponent(
   const [output, setOutput] = useState<string>(initialOutput);
   const [editor] = useLexicalComposerContext();
 
+  const getGPTResponse = async (prompt: string) => {
+    const response = await getShortGPTChatResponse(prompt);
+    if (response) {
+      setOutput(response);
+    }
+  }
+
   useEffect(() => {
-    setOutput(formula.length.toString());
+    setOutput("(getting response...)");
+    getGPTResponse(formula);
   }, [formula]);
 
   const replaceSelfWithEditorNode = () => {
