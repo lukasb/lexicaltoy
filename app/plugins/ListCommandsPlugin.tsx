@@ -1,4 +1,4 @@
-import type { LexicalEditor } from "lexical";
+import type { LexicalEditor, ElementNode } from "lexical";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $setSelection, COMMAND_PRIORITY_EDITOR } from "lexical";
 import { useEffect } from "react";
@@ -19,18 +19,47 @@ import {
   $getPreviousListItem,
   $isNestedListItem,
 } from "../lib/list-utils";
-import { ListItemNode, $createListItemNode, $createListNode, ListNode } from "@lexical/list";
+import { 
+  ListItemNode,
+  $createListItemNode,
+  $createListNode,
+  ListNode,
+  $isListItemNode,
+  $isListNode
+} from "@lexical/list";
 
 function indentOutdentListItemAndChildren(listItem: ListItemNode, indentChange: number) {
-  let nodesToOutdent: ListItemNode[] = [];
-  nodesToOutdent.push(listItem);
-  const childrenList = $getListContainingChildren(listItem);
-  if (childrenList && childrenList.getChildren()) {
-    nodesToOutdent.push(...childrenList.getChildren() as ListItemNode[]);
+  function collectDescendants(node: ListNode | ListItemNode): ListItemNode[] {
+    let descendants: ListItemNode[] = [];
+    const children = node.getChildren();
+    if (children) {
+      children.forEach(child => {
+        if (child) {
+          if ($isListItemNode(child)) {
+            descendants.push(child as ListItemNode);  // Add direct child
+            descendants.push(...collectDescendants(child));
+          } else if ($isListNode(child)) {
+            descendants.push(...collectDescendants(child)); // Add child's descendants
+          }
+        }
+      });
+    }
+    return descendants;
   }
-  for (let node of nodesToOutdent) {
+  // if the node has children, they're in a list node that's a child of its next sibling
+  // $getListItemContainingChildren gets that next sibling
+  let nodesToChange: ListItemNode[] = [];
+  const listItemContainingChildren = $getListItemContainingChildren(listItem);
+  if (listItemContainingChildren) {
+    nodesToChange.push(...collectDescendants(listItemContainingChildren));
+  }
+  nodesToChange.push(listItem);
+
+  // we have to build the list before changing indents, because changing indents will
+  // change the node tree and we won't be able to find the children
+  nodesToChange.forEach(node => {
     node.setIndent(node.getIndent() + indentChange);
-  }
+  });
 }
 
 function removeListItemAndChildren(listItem: ListItemNode) {
