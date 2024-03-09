@@ -23,7 +23,10 @@ import {
 } from "@lexical/list";
 import { mergeRegister } from "@lexical/utils";
 import { $getActiveListItemFromSelection } from "@/app/lib/list-utils";
-import { SWAP_FORMULA_DISPLAY_FOR_EDITOR } from "../lib/formula-commands";
+import { 
+  SWAP_FORMULA_DISPLAY_FOR_EDITOR,
+  STORE_FORMULA_OUTPUT
+} from "../lib/formula-commands";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -42,7 +45,7 @@ function $replaceWithFormulaEditorNode(node: FormulaDisplayNode) {
 
 function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   const textContents = node.getTextContent();
-  const formulaDisplayNode = new FormulaDisplayNode(textContents, "ChatGPT says: ");
+  const formulaDisplayNode = new FormulaDisplayNode(textContents, "ChatGPT says");
   node.replace(formulaDisplayNode);
   // For reasons of its own, Lexical inserts a <br> after a DecoratorNode if it's the last child - create this dummy node to avoid that
   const textNode = $createTextNode(" ");
@@ -151,6 +154,17 @@ function registerFormulaHandlers(editor: LexicalEditor) {
         const displayNode = $getNodeByKey(displayNodeKey);
         if (displayNode && $isFormulaDisplayNode(displayNode)) {
           $replaceWithFormulaEditorNode(displayNode);
+        }
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    ),
+    editor.registerCommand(
+      STORE_FORMULA_OUTPUT,
+      ({ displayNodeKey, output }) => {
+        const displayNode = $getNodeByKey(displayNodeKey);
+        if (displayNode && $isFormulaDisplayNode(displayNode)) {
+          displayNode.setOutput(output);
         }
         return true;
       },

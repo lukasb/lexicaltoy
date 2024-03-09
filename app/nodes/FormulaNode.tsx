@@ -150,6 +150,7 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   }
 
   decorate(): JSX.Element {
+    console.log("rendering component", this.__output);
     return (
       <FormulaDisplayComponent
         formula={this.__formula}

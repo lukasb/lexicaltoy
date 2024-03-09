@@ -6,9 +6,12 @@ const openai = new OpenAI({
   apiKey: process.env['OPENAI_API_KEY']
 });
 
+const modelName = "gpt-3.5-turbo";
+
 export async function getShortGPTChatResponse(prompt: string): Promise<string | null> {
 
-  const modelName = "gpt-3.5-turbo";
+  console.log("getting response from GPT");
+  
   const system_propt = "Answer the user question. Your response should be a single sentence.";
   const chatCompletion = await openai.chat.completions.create({
       messages: [
