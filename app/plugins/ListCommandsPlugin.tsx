@@ -36,10 +36,10 @@ function indentOutdentListItemAndChildren(listItem: ListItemNode, indentChange: 
       children.forEach(child => {
         if (child) {
           if ($isListItemNode(child)) {
-            descendants.push(child as ListItemNode);  // Add direct child
+            descendants.push(child as ListItemNode);
             descendants.push(...collectDescendants(child));
           } else if ($isListNode(child)) {
-            descendants.push(...collectDescendants(child)); // Add child's descendants
+            descendants.push(...collectDescendants(child));
           }
         }
       });
