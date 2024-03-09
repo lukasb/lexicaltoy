@@ -39,11 +39,8 @@ export default function FormulaDisplayComponent(
 
   useEffect(() => {
     if (output === "") {
-      console.log("getting output");
       setOutput("(getting response...)");
       getGPTResponse(formula);
-    } else {
-      console.log("output already set");
     }
   }, [formula, output, getGPTResponse]);
 
