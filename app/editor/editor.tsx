@@ -49,11 +49,13 @@ function onError(error: Error) {
 function Editor({
   page,
   showDebugInfo,
+  requestFocus,
   updatePageContentsLocal,
   openOrCreatePageByTitle,
 }: {
   page: Page;
   showDebugInfo: boolean;
+  requestFocus: boolean;
   updatePageContentsLocal: (id: string, newValue: string, revisionNumber: number) => void;
   openOrCreatePageByTitle: (title: string) => void;
 }) {
@@ -124,7 +126,7 @@ function Editor({
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <AutoFocusPlugin />
+      {requestFocus && <AutoFocusPlugin />}
       <RichTextPlugin
         contentEditable={
           <div ref={onRef} className="relative">

@@ -8,6 +8,7 @@ import { Page } from "@/app/lib/definitions";
 
 function EditorContainer({
   page,
+  requestFocus,
   updatePageTitleLocal,
   updatePageContentsLocal,
   closePage,
@@ -15,6 +16,7 @@ function EditorContainer({
   deletePage,
 }: {
   page: Page;
+  requestFocus: boolean;
   updatePageTitleLocal: (id: string, newTitle: string, newRevisionNumber: number) => void;
   updatePageContentsLocal: (id: string, newValue: string, newRevisionNumber: number) => void;
   closePage: (id: string) => void;
@@ -60,6 +62,7 @@ function EditorContainer({
           showDebugInfo={showDebug}
           updatePageContentsLocal={updatePageContentsLocal}
           openOrCreatePageByTitle={openOrCreatePageByTitle}
+          requestFocus={requestFocus}
         />
       </div>
     </div>

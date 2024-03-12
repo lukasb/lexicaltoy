@@ -178,11 +178,10 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                   openOrCreatePageByTitle={openOrCreatePageByTitle}
                   deletePage={handleDeletePage}
             />
-          )};
+          )}
       </PagesContext.Provider>
     </div>
-  );
-  
+  )  
 }
 
 export default EditingArea;
