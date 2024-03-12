@@ -1,6 +1,5 @@
 "use client";
 
-import EditorContainer from "@/app/editor/editor-container";
 import { Page, isPage } from "@/app/lib/definitions";
 import Omnibar from "./Omnibar";
 import { findMostRecentlyEditedPage } from "@/app/lib/pages-helpers";
@@ -13,6 +12,7 @@ import { DEFAULT_JOURNAL_CONTENTS } from "@/app/lib/journal-helpers";
 import { fetchPages } from "@/app/lib/db";
 import { getJournalTitle } from '@/app/lib/journal-helpers';
 import { handleNewJournalPage, handleDeleteStaleJournalPages, getTodayJournalPage } from "@/app/lib/journal-helpers";
+import FlexibleEditorLayout from "./FlexibleEditorContainer";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -143,16 +143,11 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
-            {openPageIds.map((pageId) => {
-              const page = currentPages.find(p => p.id === pageId);
-              if (!page) return null;
-              return (
-                <EditorContainer
-                  key={page.id}
-                  page={page}
-                  updatePageTitleLocal={(id, newTitle, newRevisionNumber) => {
-                    setCurrentPages((prevPages) =>
+          <FlexibleEditorLayout
+            openPageIds={openPageIds}
+            currentPages={currentPages}
+            updatePageTitleLocal={(id, newTitle, newRevisionNumber) => {
+                setCurrentPages((prevPages) =>
                       prevPages.map((page) =>
                         page.id === id
                           ? {
@@ -182,11 +177,8 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                   }}
                   openOrCreatePageByTitle={openOrCreatePageByTitle}
                   deletePage={handleDeletePage}
-                />
-              );
-            })}
-          </div>
-        )}
+            />
+          )};
       </PagesContext.Provider>
     </div>
   );
