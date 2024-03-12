@@ -9,6 +9,10 @@ export function isSmallWidthViewport(breakpoint: number): boolean {
   return CAN_USE_DOM && window.matchMedia(`(max-width: ${breakpoint}px)`).matches;
 };
 
+export function isTouchDevice(): boolean {
+  return CAN_USE_DOM && window.matchMedia(`(pointer: coarse)`).matches;
+}
+
 export function useBreakpoint(
   breakpoint: number,
   isCurrentSmallWidthViewport: boolean,

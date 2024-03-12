@@ -5,6 +5,7 @@ import EditablePageTitle from "./pageTitle";
 import { Button } from "../ui/button";
 import { useState } from "react";
 import { Page } from "@/app/lib/definitions";
+import { isTouchDevice } from "@/app/lib/window-helpers";
 
 function EditorContainer({
   page,
@@ -25,6 +26,8 @@ function EditorContainer({
 }) {
   const [showDebug, setShowDebug] = useState(false);
 
+  const touchDevice = isTouchDevice();
+
   return (
     <div className="flex flex-col items-start mb-4">
       <div className="relative border-solid border-4 border-indigo-300 rounded-lg m-0 p-7 w-full max-w-7xl">
@@ -42,7 +45,7 @@ function EditorContainer({
               isJournal={page.isJournal}
               updatePageTitleLocal={updatePageTitleLocal}
             />
-            <div className="flex">
+            <div className={`flex ${touchDevice ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
               {!page.isJournal && (
                 <Button
                   className="mx-1"
