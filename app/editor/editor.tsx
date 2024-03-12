@@ -96,7 +96,7 @@ function Editor({
   };
 
   useEffect(() => {
-    console.log("re-rendering editor", page.id);
+    console.log("re-rendering editor", page.title);
   });
 
   // TODO this assumes the page content won't be changed elsewhere in the same PagesContext
