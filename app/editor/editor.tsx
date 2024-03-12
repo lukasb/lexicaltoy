@@ -97,10 +97,6 @@ function Editor({
     }
   };
 
-  useEffect(() => {
-    console.log("re-rendering editor", page.title);
-  });
-
   // TODO this assumes the page content won't be changed elsewhere in the same PagesContext
   const storePage = useDebouncedCallback(async (outline) => {
     console.log("Storing page");
