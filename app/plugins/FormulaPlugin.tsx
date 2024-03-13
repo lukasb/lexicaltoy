@@ -161,10 +161,11 @@ function registerFormulaHandlers(editor: LexicalEditor) {
     ),
     editor.registerCommand(
       STORE_FORMULA_OUTPUT,
-      ({ displayNodeKey, output }) => {
+      ({ displayNodeKey, output, caption }) => {
         const displayNode = $getNodeByKey(displayNodeKey);
         if (displayNode && $isFormulaDisplayNode(displayNode)) {
           displayNode.setOutput(output);
+          displayNode.setCaption(caption);
         }
         return true;
       },

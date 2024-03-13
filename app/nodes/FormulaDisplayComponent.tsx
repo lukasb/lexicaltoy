@@ -4,7 +4,8 @@ import {
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
   STORE_FORMULA_OUTPUT
 } from '@/app/lib/formula-commands';
-import { getShortGPTChatResponse } from '@/app/lib/ai-actions';
+import { getFormulaOutput } from '@/app/lib/formula/FormulaOutput';
+import { FormulaStringOutput } from '@/app/lib/formula/formula-definitions';
 
 import './FormulaDisplayComponent.css';
 
@@ -27,12 +28,14 @@ export default function FormulaDisplayComponent(
   const [editor] = useLexicalComposerContext();
 
   const getGPTResponse = useCallback(async (prompt: string) => {
-    const response = await getShortGPTChatResponse(prompt);
+    const response = await getFormulaOutput(prompt);
     if (response) {
-      setOutput(response);
+      setOutput(response.output);
+      setCaption(response.caption);
       editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
         displayNodeKey: nodeKey,
-        output: response,
+        output: response.output,
+        caption: response.caption
       });
     }
   }, [editor, nodeKey, setOutput]);
