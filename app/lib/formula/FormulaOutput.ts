@@ -24,7 +24,10 @@ Items marked with DONE are complete, all other items are incomplete.
 export async function getFormulaOutput(formula: string, pages: Page[]): Promise<FormulaStringOutput | null> {
   
   const formulaDefinition = await getFormulaDefinition(formula);
-  if (!formulaDefinition) return null;
+  if (!formulaDefinition) {
+    console.log("no formula definition");
+    return null;
+  }
   
   let prompt = formulaDefinition.prompt;
   if (isFormulaDefinitionWithPage(formulaDefinition) && formulaDefinition.inputPage) {

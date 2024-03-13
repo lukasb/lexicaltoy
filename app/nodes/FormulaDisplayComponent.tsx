@@ -65,7 +65,7 @@ export default function FormulaDisplayComponent(
 
   return (
     <div 
-      className="inline items-baseline border-2 border-dashed border-red-600"
+      className="inline items-baseline border border-dashed border-red-600"
       onClick={() => replaceSelfWithEditorNode()}
     >
       <span>{caption}: </span>

@@ -13,7 +13,7 @@ const openai = new OpenAI({
   apiKey: process.env['OPENAI_API_KEY']
 });
 
-const modelName = "gpt-4";
+const modelName = "gpt-4-turbo-preview";
 
 export async function getShortGPTChatResponse(prompt: string): Promise<string | null> {
 
@@ -30,9 +30,12 @@ export async function getShortGPTChatResponse(prompt: string): Promise<string | 
 
 }
 
+const formulaDefinitionSystemPrompt = `You will be given a user prompt. Your task is to define a prompt template that will matches the user's intent.`;
+
 export async function getFormulaDefinition(
   prompt: string
 ): Promise<FormulaDefinition | null> {
+  if (prompt[0] === '=') prompt = prompt.slice(1);
   console.log('getting formula definition', prompt);
   try {
     const promptDefiner = getPromptDefiner(prompt);
@@ -40,7 +43,10 @@ export async function getFormulaDefinition(
     console.log("toolList", toolList);
     const completion = await openai.chat.completions.create({
       model: modelName,
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        { role: "system", content: formulaDefinitionSystemPrompt},
+        { role: "user", content: prompt }
+      ],
       tools: toolList,
     });
 
@@ -55,7 +61,11 @@ export async function getFormulaDefinition(
         );
         console.log("formulaDefinition", formulaDefinition);
         return formulaDefinition;
+      } else {
+        console.log("func name doesn't match promptDefiner name", func.name, promptDefiner.name);
       }
+    } else {
+      console.log("no tool calls", message);
     }
   } catch (e) {
     console.error(e);
