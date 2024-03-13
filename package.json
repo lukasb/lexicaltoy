@@ -13,6 +13,7 @@
   "dependencies": {
     "@floating-ui/dom": "^1.6.1",
     "@heroicons/react": "^2.1.1",
+    "@lexical/headless": "^0.13.1",
     "@lexical/link": "^0.13.1",
     "@lexical/list": "^0.13.1",
     "@lexical/react": "^0.13.1",

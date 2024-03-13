@@ -4,7 +4,7 @@ import {
   SerializedElementNode,
   SerializedLexicalNode,
   DecoratorNode,
-  Spread
+  Spread,
 } from 'lexical';
 
 import TodoCheckboxStatusComponent from './TodoCheckboxStatusComponent';
@@ -96,6 +96,14 @@ export class TodoCheckboxStatusNode extends DecoratorNode<JSX.Element> {
         nodeKey={this.getKey()}
       />
     );
+  }
+
+  // you can't create Markdown transformers for DecoratorNodes for some reason
+  // hopefully this is the only time getTextContent is called
+  getTextContent(): string {
+    const self = this.getLatest();
+    const textStatus = self.getDone() ? 'DONE' : self.getStatus();
+    return textStatus + ' ';
   }
 }
 

@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { 
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
   STORE_FORMULA_OUTPUT
 } from '@/app/lib/formula-commands';
 import { getFormulaOutput } from '@/app/lib/formula/FormulaOutput';
-import { FormulaStringOutput } from '@/app/lib/formula/formula-definitions';
+import { PagesContext } from '../context/pages-context';
 
 import './FormulaDisplayComponent.css';
 
@@ -26,9 +26,14 @@ export default function FormulaDisplayComponent(
   const [caption, setCaption] = useState<string>(initialCaption);
   const [output, setOutput] = useState<string>(initialOutput);
   const [editor] = useLexicalComposerContext();
+  const pages = useContext(PagesContext);
+
+  useEffect(() => {
+    console.log("mounting FormulaDisplayComponent");
+  }, []);
 
   const getGPTResponse = useCallback(async (prompt: string) => {
-    const response = await getFormulaOutput(prompt);
+    const response = await getFormulaOutput(prompt, pages);
     if (response) {
       setOutput(response.output);
       setCaption(response.caption);
@@ -38,7 +43,7 @@ export default function FormulaDisplayComponent(
         caption: response.caption
       });
     }
-  }, [editor, nodeKey, setOutput]);
+  }, [editor, nodeKey, setOutput, pages]);
 
   useEffect(() => {
     if (output === "") {

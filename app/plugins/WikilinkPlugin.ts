@@ -1,34 +1,10 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
-import type {TextNode} from 'lexical';
+'use client';
 
 import {$createWikilinkNode, WikilinkNode} from '../nodes/WikilinkNode';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {useLexicalElementEntity} from '../lib/transform-helpers';
 import {useCallback, useEffect} from 'react';
-
-function getWikilinkRegexString(): string {
-  const wikiLinkStartSequence = '\\[\\[';
-  const wikiLinkEndSequence = '\]\]';
-
-  // A wikilink looks like [[this]]
-  // TODO check the inner text to make sure it's valid when
-  // used as a filename or something
-  const wikilink =
-    '(' + wikiLinkStartSequence + ')' + 
-    "([^\\[\\]]+)" + 
-    '(' + wikiLinkEndSequence + ')';
-    
-  return wikilink;
-}
-
-const REGEX = new RegExp(getWikilinkRegexString(), 'i');
+import { WIKILINK_REGEX } from '@/app/lib/text-utils';
 
 export function WikilinkPlugin(): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
@@ -44,7 +20,7 @@ export function WikilinkPlugin(): JSX.Element | null {
   }, []);
 
   const getWikilinkMatch = useCallback((text: string) => {
-    const matchArr = REGEX.exec(text);
+    const matchArr = WIKILINK_REGEX.exec(text);
 
     if (matchArr === null) {
       return null;
