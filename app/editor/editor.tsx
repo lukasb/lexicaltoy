@@ -112,7 +112,7 @@ function Editor({
     } catch (error) {
       alert("Failed to save page");
     }
-  }, 2000);
+  }, 500);
 
   function onChange(editorState: EditorState) {
     if (!editorState) return;
