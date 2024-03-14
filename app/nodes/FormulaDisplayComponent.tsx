@@ -30,16 +30,8 @@ export default function FormulaDisplayComponent(
   const pages = useContext(PagesContext);
   const { promisesMap, addPromise, removePromise, hasPromise } = usePromises();
 
-  useEffect(() => {
-    console.log("FormulaDisplayComponent mounted");
-    return () => {
-      console.log("FormulaDisplayComponent unmounted");
-    }
-  }, []);
-
   const getGPTResponse = useCallback(async (prompt: string) => {
     if (!hasPromise(nodeKey)) {
-      console.log("don't have a promise yet for nodekey", nodeKey);
       const promise = getFormulaOutput(prompt, pages)
         .then(response => {
           if (response) {
@@ -59,7 +51,6 @@ export default function FormulaDisplayComponent(
         .finally(() => {
           removePromise(nodeKey);
         });
-        console.log("adding promise for nodekey", nodeKey);
         addPromise(nodeKey, promise);
       }
   }, [addPromise, removePromise, hasPromise, editor, nodeKey, pages]);

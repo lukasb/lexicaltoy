@@ -28,13 +28,6 @@ function EditorContainer({
 
   const touchDevice = isTouchDevice();
 
-  useEffect(() => {
-    console.log("Container mounted");
-    return () => {
-      console.log("Container unmounted");
-    }
-  }, []);
-
   return (
     <div className="flex flex-col items-start mb-4">
       <div className="relative border-solid border-4 border-indigo-300 rounded-lg m-0 p-7 w-full max-w-7xl">

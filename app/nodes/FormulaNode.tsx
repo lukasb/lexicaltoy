@@ -114,12 +114,10 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   }
 
   static clone(node: FormulaDisplayNode): FormulaDisplayNode {
-    console.log("cloning");
     return new FormulaDisplayNode(node.getFormula(), node.getCaption(), node.getOutput(), node.__key);
   }
 
   constructor(formula: string, caption?: string, output?: string, key?: NodeKey) {
-    console.log("constructing");
     super(key);
     this.__formula = formula;
     this.__caption = caption ? caption : "";
@@ -152,7 +150,6 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   }
 
   decorate(): JSX.Element {
-    console.log("decorating");
     return (
       <FormulaDisplayComponent
         formula={this.__formula}

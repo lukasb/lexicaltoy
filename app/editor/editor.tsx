@@ -80,13 +80,6 @@ function Editor({
 
   const pages = useContext(PagesContext);
 
-  useEffect(() => {
-    console.log("Editor mounted");
-    return () => {
-      console.log("Editor unmounted");
-    }
-  }, []);
-
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
   }, [pages]);
