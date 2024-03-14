@@ -41,6 +41,7 @@ import FloatingSlashCommands from '../plugins/FloatingMenuPlugin/FloatingSlashCo
 import { shouldShowFloatingSlashCommands, computeFloatingSlashCommandsPosition } from "../plugins/FloatingMenuPlugin/FloatingSlashCommands";
 import { FormulaEditorNode, FormulaDisplayNode } from "@/app/nodes/FormulaNode";
 import { FormulaPlugin } from "@/app/plugins/FormulaPlugin";
+import { PromisesProvider } from "../context/formula-request-context";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -78,6 +79,13 @@ function Editor({
   };
 
   const pages = useContext(PagesContext);
+
+  useEffect(() => {
+    console.log("Editor mounted");
+    return () => {
+      console.log("Editor unmounted");
+    }
+  }, []);
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
@@ -121,83 +129,85 @@ function Editor({
   }
 
   return (
-    <LexicalComposer initialConfig={initialConfig}>
-      {requestFocus && <AutoFocusPlugin />}
-      <RichTextPlugin
-        contentEditable={
-          <div ref={onRef} className="relative">
-            <ContentEditable className="w-full outline-none" />
-          </div>
-        }
-        // absolute positioning is the Lexical team's official recommendation for placeholders
-        placeholder={
-          <div className="absolute top-10 left-10"></div>
-        }
-        ErrorBoundary={LexicalErrorBoundary}
-      />
-      <ListPlugin />
-      <OnChangePlugin onChange={onChange} ignoreSelectionChange={true} />
-      <MarkdownShortcutPlugin transformers={[UNORDERED_LIST]} />
-      <KeyboardShortcutsPlugin />
-      <ListCommandsPlugin />
-      <HistoryPlugin />
-      <AutoLinkPlugin />
-      <LexicalClickableLinkPlugin />
-      <WikilinkPlugin />
-      <WikilinkEventListenerPlugin openOrCreatePageByTitle={openOrCreatePageByTitle} />
-      <TodosPlugin />
-      <FormulaPlugin />
-      {floatingAnchorElem && !isSmallWidthViewport && (
-        <>
-          <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
-          <FloatingMenuPlugin 
-            anchorElem={floatingAnchorElem}
-            menuConfig={[
-              {
-                component: FloatingWikiPageNames,
-                shouldShow: shouldShowFloatingWikiPageNames,
-                computePosition: computeFloatingWikiPageNamesPosition,
-                priority: 20
-              },
-              {
-                component: FloatingSlashCommands,
-                shouldShow: shouldShowFloatingSlashCommands,
-                computePosition: computeFloatingSlashCommandsPosition,
-                priority: 30
-              }
-            ]}
-          />
-        </>
-      )}
-      {floatingAnchorElem && isSmallWidthViewport && (
-        <>
-          <FloatingMenuPlugin 
-            anchorElem={floatingAnchorElem}
-            menuConfig={[
-              {
-                component: FloatingIndentButtons,
-                shouldShow: shouldShowFloatingIndentButtons,
-                computePosition: computeFloatingIndentButtonsPosition,
-                priority: 10
-              },
-              {
-                component: FloatingWikiPageNames,
-                shouldShow: shouldShowFloatingWikiPageNames,
-                computePosition: computeFloatingWikiPageNamesPosition,
-                priority: 20
-              },
-              {
-                component: FloatingSlashCommands,
-                shouldShow: shouldShowFloatingSlashCommands,
-                computePosition: computeFloatingSlashCommandsPosition,
-                priority: 30
-              }
-            ]}
-          />
-        </>
-      )}
-      {showDebugInfo && <TreeViewPlugin />}
-    </LexicalComposer>
+    <PromisesProvider>
+      <LexicalComposer initialConfig={initialConfig}>
+        {requestFocus && <AutoFocusPlugin />}
+        <RichTextPlugin
+          contentEditable={
+            <div ref={onRef} className="relative">
+              <ContentEditable className="w-full outline-none" />
+            </div>
+          }
+          // absolute positioning is the Lexical team's official recommendation for placeholders
+          placeholder={<div className="absolute top-10 left-10"></div>}
+          ErrorBoundary={LexicalErrorBoundary}
+        />
+        <ListPlugin />
+        <OnChangePlugin onChange={onChange} ignoreSelectionChange={true} />
+        <MarkdownShortcutPlugin transformers={[UNORDERED_LIST]} />
+        <KeyboardShortcutsPlugin />
+        <ListCommandsPlugin />
+        <HistoryPlugin />
+        <AutoLinkPlugin />
+        <LexicalClickableLinkPlugin />
+        <WikilinkPlugin />
+        <WikilinkEventListenerPlugin
+          openOrCreatePageByTitle={openOrCreatePageByTitle}
+        />
+        <TodosPlugin />
+        <FormulaPlugin />
+        {floatingAnchorElem && !isSmallWidthViewport && (
+          <>
+            <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
+            <FloatingMenuPlugin
+              anchorElem={floatingAnchorElem}
+              menuConfig={[
+                {
+                  component: FloatingWikiPageNames,
+                  shouldShow: shouldShowFloatingWikiPageNames,
+                  computePosition: computeFloatingWikiPageNamesPosition,
+                  priority: 20,
+                },
+                {
+                  component: FloatingSlashCommands,
+                  shouldShow: shouldShowFloatingSlashCommands,
+                  computePosition: computeFloatingSlashCommandsPosition,
+                  priority: 30,
+                },
+              ]}
+            />
+          </>
+        )}
+        {floatingAnchorElem && isSmallWidthViewport && (
+          <>
+            <FloatingMenuPlugin
+              anchorElem={floatingAnchorElem}
+              menuConfig={[
+                {
+                  component: FloatingIndentButtons,
+                  shouldShow: shouldShowFloatingIndentButtons,
+                  computePosition: computeFloatingIndentButtonsPosition,
+                  priority: 10,
+                },
+                {
+                  component: FloatingWikiPageNames,
+                  shouldShow: shouldShowFloatingWikiPageNames,
+                  computePosition: computeFloatingWikiPageNamesPosition,
+                  priority: 20,
+                },
+                {
+                  component: FloatingSlashCommands,
+                  shouldShow: shouldShowFloatingSlashCommands,
+                  computePosition: computeFloatingSlashCommandsPosition,
+                  priority: 30,
+                },
+              ]}
+            />
+          </>
+        )}
+        {showDebugInfo && <TreeViewPlugin />}
+      </LexicalComposer>
+    </PromisesProvider>
   );
 }
 

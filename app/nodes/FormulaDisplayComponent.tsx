@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useContext } from 'react';
+import { useState, useEffect, useCallback, useContext, use } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { 
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
@@ -6,6 +6,7 @@ import {
 } from '@/app/lib/formula-commands';
 import { getFormulaOutput } from '@/app/lib/formula/FormulaOutput';
 import { PagesContext } from '../context/pages-context';
+import { usePromises } from '../context/formula-request-context';
 
 import './FormulaDisplayComponent.css';
 
@@ -27,23 +28,41 @@ export default function FormulaDisplayComponent(
   const [output, setOutput] = useState<string>(initialOutput);
   const [editor] = useLexicalComposerContext();
   const pages = useContext(PagesContext);
+  const { promisesMap, addPromise, removePromise, hasPromise } = usePromises();
 
   useEffect(() => {
-    console.log("mounting FormulaDisplayComponent");
+    console.log("FormulaDisplayComponent mounted");
+    return () => {
+      console.log("FormulaDisplayComponent unmounted");
+    }
   }, []);
 
   const getGPTResponse = useCallback(async (prompt: string) => {
-    const response = await getFormulaOutput(prompt, pages);
-    if (response) {
-      setOutput(response.output);
-      setCaption(response.caption);
-      editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
-        displayNodeKey: nodeKey,
-        output: response.output,
-        caption: response.caption
-      });
-    }
-  }, [editor, nodeKey, setOutput, pages]);
+    if (!hasPromise(nodeKey)) {
+      console.log("don't have a promise yet for nodekey", nodeKey);
+      const promise = getFormulaOutput(prompt, pages)
+        .then(response => {
+          if (response) {
+            setOutput(response.output);
+            setCaption(response.caption);
+            editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
+              displayNodeKey: nodeKey,
+              output: response.output,
+              caption: response.caption
+            });
+            return response;
+          } else {
+            console.log("no response");
+            return null;
+          }
+        })
+        .finally(() => {
+          removePromise(nodeKey);
+        });
+        console.log("adding promise for nodekey", nodeKey);
+        addPromise(nodeKey, promise);
+      }
+  }, [addPromise, removePromise, hasPromise, editor, nodeKey, pages]);
 
   useEffect(() => {
     if (output === "") {

@@ -3,7 +3,7 @@
 import Editor from "../editor/editor";
 import EditablePageTitle from "./pageTitle";
 import { Button } from "../ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Page } from "@/app/lib/definitions";
 import { isTouchDevice } from "@/app/lib/window-helpers";
 
@@ -27,6 +27,13 @@ function EditorContainer({
   const [showDebug, setShowDebug] = useState(false);
 
   const touchDevice = isTouchDevice();
+
+  useEffect(() => {
+    console.log("Container mounted");
+    return () => {
+      console.log("Container unmounted");
+    }
+  }, []);
 
   return (
     <div className="flex flex-col items-start mb-4">
