@@ -20,7 +20,7 @@ import {
 
 export type EntityMatch = { end: number; start: number };
 
-function stripBrackets(input: string): string {
+export function stripBrackets(input: string): string {
   let result = input;
 
   // Function to strip one set of brackets
