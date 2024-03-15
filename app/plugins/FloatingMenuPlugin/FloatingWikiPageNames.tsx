@@ -24,6 +24,7 @@ import { FloatingMenuCoords, FloatingMenuProps } from ".";
 import { PagesContext } from "@/app/context/pages-context";
 import { isSmallWidthViewport } from "@/app/lib/window-helpers";
 import { createDOMRange } from "@lexical/selection";
+import { $isFormulaEditorNode } from "@/app/nodes/FormulaNode";
 
 // TODO figure out actual line height instead of hardcoding 30
 const editorLineHeight = 30;
@@ -46,7 +47,11 @@ function $search(selection: null | BaseSelection): [boolean, string] {
   const node = selection.getNodes()[0];
   const anchor = selection.anchor;
   // Check siblings?
-  if (!$isTextNode(node) || !node.isSimpleText() || !$isAtNodeEnd(anchor)) {
+  if (
+    !$isTextNode(node) ||
+    (!node.isSimpleText() && !$isFormulaEditorNode(node)) ||
+    !$isAtNodeEnd(anchor)
+  ) {
     return [false, ""];
   }
   const searchText = [];
