@@ -1,4 +1,4 @@
-import { format, parse, isBefore, startOfDay } from 'date-fns';
+import { parse, isBefore, startOfDay, subWeeks } from 'date-fns';
 import { Page, isPage } from "@/app/lib/definitions";
 import { deleteStaleJournalPages } from "@/app/lib/actions";
 import { insertJournalPage } from '@/app/lib/actions';
@@ -16,12 +16,11 @@ export function getJournalTitle(date: Date) {
     }
   }
   
-  const today = new Date();
-  const day = today.getDate();
+  const day = date.getDate();
   const ordinalSuffix = getOrdinalSuffix(day);
   
   const options: Intl.DateTimeFormatOptions = { year: "numeric", month: "short", day: "numeric" };
-  const dateString = today.toLocaleDateString('en-US', options);
+  const dateString = date.toLocaleDateString('en-US', options);
   
   return dateString.replace(new RegExp(` ${day},`), ` ${day}${ordinalSuffix},`);
 }
@@ -56,14 +55,34 @@ export const handleDeleteStaleJournalPages = async (today: Date, defaultValue: s
   }
 }
 
-export const getTodayJournalPage = (currentPages: Page[]) => {
-  const today = new Date();
-  const todayStr = getJournalTitle(today);
-  const todaysJournalPage = currentPages.find((page) => {
+function getJournalPageByDate(currentPages: Page[], date: Date) {
+  const dateStr = getJournalTitle(date);
+  const journalPage = currentPages.find((page) => {
     if (!page.isJournal) {
       return false;
     }
-    return page.title === todayStr;
+    return page.title === dateStr;
   });
+  return journalPage;
+}
+
+export const getTodayJournalPage = (currentPages: Page[]) => {
+  const today = new Date();
+  const todaysJournalPage = getJournalPageByDate(currentPages, today);
   return todaysJournalPage;
+}
+
+export async function getLastTwoWeeksJournalPages(currentPages: Page[]): Promise<Page[]> {
+  const today = new Date();
+  const twoWeeksAgo = subWeeks(today, 2);
+  const journalPages: Page[] = [];
+
+  for (let date = twoWeeksAgo; date <= today; date.setDate(date.getDate() + 1)) {
+    const journalPage = getJournalPageByDate(currentPages, date);
+    if (journalPage) {
+      journalPages.push(journalPage);
+    }
+  }
+
+  return journalPages;
 }

@@ -9,6 +9,7 @@ import {
 import { Page } from '@/app/lib/definitions';
 import { getPageMarkdown } from '@/app/lib/pages-helpers';
 import { stripBrackets } from '@/app/lib/transform-helpers';
+import { getLastTwoWeeksJournalPages } from '@/app/lib/journal-helpers';
 
 const todoInstructions = `
 Below you'll see the contents of one or more pages. Pages may include to-do list items that look like this:
@@ -23,27 +24,34 @@ Items marked with DONE are complete, all other items are incomplete.
 `;
 
 async function getPagesContext(pageSpec: string, pages: Page[]): Promise<string | null> {
+
   const pageTitle = stripBrackets(pageSpec);
-  if (pageTitle.endsWith("/")) {
-    const matchingPages = pages.filter((p) =>
-      p.title.startsWith(pageTitle.slice(0, -1))
-    );
-    if (matchingPages.length === 0) return null;
+
+  async function generateContextStr(pagesToProcess: Page[]): Promise<string> {
     let contextStr = "\n" + todoInstructions;
-    for (const page of matchingPages) {
+    for (const page of pagesToProcess) {
       const pageMarkdown = await getPageMarkdown(page);
-      contextStr = contextStr + "\n" + "##" + page.title + "\n" + pageMarkdown;
+      contextStr += "\n##" + page.title + "\n" + pageMarkdown;
     }
     return contextStr;
+  }
+
+  if (pageTitle.endsWith("/")) {
+    let selectedPages: Page[] = [];
+    if (pageTitle === "journals/") {
+      selectedPages = await getLastTwoWeeksJournalPages(pages);
+    } else {
+      selectedPages = pages.filter((p) =>
+        p.title.startsWith(pageTitle.slice(0, -1))
+      );
+    }
+    return selectedPages.length === 0 ? null : await generateContextStr(selectedPages);
   } else {
     const page = pages.find((p) => p.title === pageSpec);
-    if (!page) return null;
-    const pageMarkdown = await getPageMarkdown(page);
-    let contextStr = "\n" + todoInstructions;
-    contextStr = contextStr + "\n" + "##" + page.title + "\n" + pageMarkdown;
-    return contextStr;
+    return page ? await generateContextStr([page]) : null;
   }
 }
+
 
 export async function getFormulaOutput(formula: string, pages: Page[]): Promise<FormulaStringOutput | null> {
   
@@ -62,6 +70,8 @@ export async function getFormulaOutput(formula: string, pages: Page[]): Promise<
     const pagesContext = await getPagesContext(formulaDefinition.inputPage, pages);
     if (pagesContext) {
       prompt = prompt + pagesContext;
+    } else {
+      console.log("no pages context");
     }
   }
   console.log("getting short response");
