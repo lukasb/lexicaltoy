@@ -23,6 +23,7 @@ const Omnibar = forwardRef(({
   const [results, setResults] = useState<Page[]>([]);
   const [displayValue, setDisplayValue] = useState(""); // the displayed value
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [showCreatePageOption, setShowCreatePageOption] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const ulRef = useRef<HTMLUListElement>(null);
   const skipTermResolutionRef = useRef(false);
@@ -74,6 +75,7 @@ const Omnibar = forwardRef(({
         setDisplayValue(term);
       }
       setResults(filteredPages);
+      setShowCreatePageOption(filteredPages.length === 0 && term.trim() !== "");
     } else {
       resetSelf();
     }
@@ -130,6 +132,7 @@ const Omnibar = forwardRef(({
     setDisplayValue("");
     setResults([]);
     setSelectedIndex(-1);
+    setShowCreatePageOption(false);
   }
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -181,7 +184,7 @@ const Omnibar = forwardRef(({
         onKeyDown={handleKeyDown}
         placeholder="Search or Create"
       />
-      {results.length > 0 && (
+      {(results.length > 0 || showCreatePageOption) && (
         <ul
           ref={ulRef}
           className="absolute z-10 w-full max-w-5xl bg-white shadow-md max-h-[400px] md:max-h-[500px] lg:max-h-[600px] overflow-auto mt-1 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
@@ -204,6 +207,20 @@ const Omnibar = forwardRef(({
               )}
             </li>
           ))}
+          {showCreatePageOption && (
+            <li
+              className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
+                selectedIndex === results.length
+                  ? "selected-item bg-gray-200 dark:bg-gray-700"
+                  : ""
+              } dark:text-white`}
+              onMouseEnter={() => setSelectedIndex(results.length)}
+              onClick={() => openOrCreatePageByTitle(term)}
+              data-testid="create-page-option"
+            >
+              Create page <i>{term}</i>
+            </li>
+          )}
         </ul>
       )}
     </div>
