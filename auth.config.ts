@@ -21,12 +21,14 @@ export const authConfig = {
     authorized({ auth, request: { nextUrl } }: { auth: any, request: { nextUrl: any } }) {
       const isLoggedIn = !!auth?.user;
       const isRequestingEditorPage = nextUrl.pathname.startsWith('/page');
+      const isRequestingLogout = nextUrl.pathname.startsWith('/logout');
       if (isRequestingEditorPage) {
         if (isLoggedIn) return true;
         return false; // Redirect unauthenticated users to login page
       } else if (isLoggedIn) {
-        return Response.redirect(new URL('/page', nextUrl));
-        return true;
+        if (!isRequestingLogout) {
+          return Response.redirect(new URL('/page', nextUrl));
+        }
       }
       return true;
     },
