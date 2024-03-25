@@ -19,7 +19,7 @@
     "@lexical/react": "^0.14.2",
     "@lexical/rich-text": "^0.14.2",
     "@vercel/postgres": "^0.7.2",
-    "bcryptjs": "^2.4.3",
+    "bcrypt": "^5.1.1",
     "clsx": "^2.1.0",
     "date-fns": "^3.3.1",
     "dotenv": "^16.4.1",
@@ -35,7 +35,6 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.41.2",
-    "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.12",
     "@types/node": "^20",
     "@types/react": "^18",
