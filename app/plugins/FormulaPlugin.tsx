@@ -47,7 +47,8 @@ function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   const textContents = node.getTextContent();
   const formulaDisplayNode = new FormulaDisplayNode(textContents, "ChatGPT says");
   node.replace(formulaDisplayNode);
-  // For reasons of its own, Lexical inserts a <br> after a DecoratorNode if it's the last child - create this dummy node to avoid that
+  // For reasons of its own, Lexical inserts a <br> after a DecoratorNode if it's the last child
+  // create this dummy node to avoid that
   const textNode = $createTextNode(" ");
   formulaDisplayNode.insertAfter(textNode);
 }

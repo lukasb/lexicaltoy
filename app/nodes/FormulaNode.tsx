@@ -124,7 +124,6 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
     this.__output = output ? output : "";
   }
 
-
   createDOM(config: EditorConfig): HTMLElement {
     const element = document.createElement('div');
     element.classList.add('inline-flex');
@@ -166,6 +165,13 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
 
   isTextSelectable(): boolean {
     return true;
+  }
+
+  getTextContent(): string {
+    // TODO maybe, eventually ... also include the caption and the output.
+    // but that would mean overhauling the node transforms in FormulaPlugin.tsx
+    const text = this.getFormula();
+    return text;
   }
 }
 
