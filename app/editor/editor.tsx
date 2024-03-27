@@ -11,7 +11,11 @@ import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
-import { UNORDERED_LIST } from "@lexical/markdown";
+import { 
+  UNORDERED_LIST,
+  $convertFromMarkdownString,
+  TRANSFORMERS
+} from "@lexical/markdown";
 import { LinkNode, AutoLinkNode } from "@lexical/link";
 import { KeyboardShortcutsPlugin } from "../plugins/KeyboardShortcutsPlugin";
 import DraggableBlockPlugin from "../plugins/DraggableBlockPlugin";
@@ -61,7 +65,9 @@ function Editor({
   openOrCreatePageByTitle: (title: string) => void;
 }) {
   const initialConfig = {
-    editorState: page.value,
+    editorState: page.value.startsWith("{") 
+      ? page.value
+      : () => $convertFromMarkdownString(page.value, TRANSFORMERS),
     namespace: "orangetask",
     theme,
     nodes: [
