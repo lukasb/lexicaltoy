@@ -19,7 +19,13 @@ export type SerializedTodoCheckboxStatusNode = Spread<
   SerializedLexicalNode
 >;
 
-export type TodoStatus = 'NOW' | 'LATER' | 'TODO' | 'DOING' | 'DONE';
+export enum TodoStatus {
+  NOW = 'NOW',
+  LATER = 'LATER',
+  TODO = 'TODO',
+  DOING = 'DOING',
+  DONE = 'DONE',
+}
 
 export class TodoCheckboxStatusNode extends DecoratorNode<JSX.Element> {
   

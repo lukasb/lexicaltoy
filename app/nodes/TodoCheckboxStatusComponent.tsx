@@ -45,16 +45,16 @@ export default function TodoCheckboxStatusComponent(
     let newStatus = status;
     switch (status) {
       case "TODO":
-        newStatus = "DOING";
+        newStatus = TodoStatus.DOING;
         break;
       case "DOING":
-        newStatus = "TODO";
+        newStatus = TodoStatus.TODO;
         break;
       case "NOW":
-        newStatus = "LATER";
+        newStatus = TodoStatus.LATER;
         break;
       case "LATER":
-        newStatus = "NOW";
+        newStatus = TodoStatus.NOW;
         break;  
       default:
         break;

@@ -76,25 +76,25 @@ const slashCommands = [
     shortName: "TODO",
     description: "Create a new todo",
     command: INSERT_TODO_COMMAND,
-    shouldShow: canCreateOrChangeTodo("TODO")
+    shouldShow: canCreateOrChangeTodo(TodoStatus.TODO)
   },
   {
     shortName: "DOING",
     description: "Create a new todo set to DOING",
     command: INSERT_DOING_TODO_COMMAND,
-    shouldShow: canCreateOrChangeTodo("DOING")
+    shouldShow: canCreateOrChangeTodo(TodoStatus.DOING)
   },
   {
     shortName: "LATER",
     description: "Create a new todo set to LATER",
     command: INSERT_LATER_TODO_COMMAND,
-    shouldShow: canCreateOrChangeTodo("LATER")
+    shouldShow: canCreateOrChangeTodo(TodoStatus.LATER)
   },
   {
     shortName: "NOW",
     description: "Create a new todo set to NOW",
     command: INSERT_NOW_TODO_COMMAND,
-    shouldShow: canCreateOrChangeTodo("NOW")
+    shouldShow: canCreateOrChangeTodo(TodoStatus.NOW)
   },
   {
     shortName: "Remove",

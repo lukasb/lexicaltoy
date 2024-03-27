@@ -56,12 +56,19 @@ function todoAddOrChangeCommand(status: TodoStatus, done: boolean) {
   }
 }
 
+function extractTodoStatus(input: string): TodoStatus | null {
+  const prefixes = Object.values(TodoStatus);
+  const regex = new RegExp(`^(${prefixes.join('|')})\\s`);
+  const match = input.match(regex);
+  return match ? TodoStatus[match[1] as keyof typeof TodoStatus] : null;
+}
+
 function registerTodoHandlers(editor: LexicalEditor) {
   return mergeRegister(
     editor.registerCommand(
       INSERT_TODO_COMMAND,
       () => {
-        todoAddOrChangeCommand("TODO", false);
+        todoAddOrChangeCommand(TodoStatus.TODO, false);
         return true;
       },
       COMMAND_PRIORITY_EDITOR
@@ -69,7 +76,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       INSERT_DOING_TODO_COMMAND,
       () => {
-        todoAddOrChangeCommand("DOING", false);
+        todoAddOrChangeCommand(TodoStatus.DOING, false);
         return true;
       },
       COMMAND_PRIORITY_EDITOR
@@ -77,7 +84,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       INSERT_NOW_TODO_COMMAND,
       () => {
-        todoAddOrChangeCommand("NOW", false);
+        todoAddOrChangeCommand(TodoStatus.NOW, false);
         return true;
       },
       COMMAND_PRIORITY_EDITOR
@@ -85,7 +92,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       INSERT_LATER_TODO_COMMAND,
       () => {
-        todoAddOrChangeCommand("LATER", false);
+        todoAddOrChangeCommand(TodoStatus.LATER, false);
         return true;
       },
       COMMAND_PRIORITY_EDITOR
@@ -129,10 +136,31 @@ function registerTodoHandlers(editor: LexicalEditor) {
       // that created a problem with not being able to insert text in the todo if
       // all the text and the TextNode was deleted.
       if (!hasTodo(node)) {
+        // if we removed a todo node, remove leftover styles
         for (const child of node.getChildren()) {
           const elem = editor.getElementByKey(child.getKey());
           if (elem && elem.classList.contains(TodoDoneTextClass)) {
             elem.classList.remove(TodoDoneTextClass);
+          }
+        }
+        // this is mostly for deserializing todos from markdown
+        // and i'm not even sure if it will work for that
+        const status = extractTodoStatus(node.getTextContent());
+        if (status) {
+          const firstChild = node.getFirstChild();
+          if (firstChild) {
+            if ($isTextNode(firstChild)) {
+              firstChild.setTextContent(firstChild.getTextContent().replace(`${status} `, ''));
+            }
+            let newStatus = status;
+            if (status === TodoStatus.DONE) {
+              newStatus = TodoStatus.TODO;
+            }
+            $wrapLIContentsWithTodo(node, newStatus as TodoStatus, false);
+            if (status === TodoStatus.DONE) {
+              const todoNode = node.getChildren()[0] as TodoCheckboxStatusNode;
+              $handleSetTodoDoneValue(editor, true, todoNode.getKey());
+            }
           }
         }
       } else {
