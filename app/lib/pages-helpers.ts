@@ -1,6 +1,10 @@
 import { Page } from './definitions';
 import { createHeadlessEditor } from '@lexical/headless';
-import { $convertToMarkdownString, TRANSFORMERS } from '@lexical/markdown';
+import { 
+  $convertToMarkdownString, 
+  TRANSFORMERS,
+  $convertFromMarkdownString
+} from '@lexical/markdown';
 import { ListNode, ListItemNode } from "@lexical/list";
 import { LinkNode, AutoLinkNode } from "@lexical/link";
 import { WikilinkNode, WikilinkInternalNode } from "../nodes/WikilinkNode";

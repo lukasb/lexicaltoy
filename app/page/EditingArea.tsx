@@ -17,8 +17,7 @@ import FlexibleEditorLayout from "./FlexibleEditorContainer";
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
   const [currentPages, setCurrentPages] = useState(pages);
-  const emptyPageJSONString =
-    '{"root":{"children":[{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"listitem","version":1,"value":1}],"direction":null,"format":"","indent":0,"type":"list","version":1,"listType":"bullet","start":1,"tag":"ul"}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
+  const emptyPageMarkdownString = '- ';
 
   const initialPageId = findMostRecentlyEditedPage(currentPages)?.id;
   const todayJournalPageId = getTodayJournalPage(currentPages)?.id;
@@ -107,7 +106,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   };  
 
   const handleNewPage = async (title: string) => {
-    const result = await insertPage(title, emptyPageJSONString, userId);
+    const result = await insertPage(title, emptyPageMarkdownString, userId);
     if (typeof result === "string") {
       console.error("expected page, got string", result);
       return;
