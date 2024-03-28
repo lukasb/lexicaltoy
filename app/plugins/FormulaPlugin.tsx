@@ -4,7 +4,8 @@ import {
   FormulaEditorNode,
   FormulaDisplayNode,
   $isFormulaDisplayNode,
-  $createFormulaDisplayNode
+  $createFormulaDisplayNode,
+  $createFormulaEditorNode
 } from "@/app/nodes/FormulaNode";
 import { 
   LexicalEditor,
@@ -39,8 +40,7 @@ function $replaceWithFormulaEditorNode(node: FormulaDisplayNode) {
   if (textSibling && $isTextNode(textSibling)) {
     textSibling.remove();
   }
-  const prepend = node.getFormula().startsWith("=") ? "" : "="; // TODO yech
-  const formulaEditorNode = new FormulaEditorNode(prepend + node.getFormula());
+  const formulaEditorNode = $createFormulaEditorNode(node.getFormula());
   node.replace(formulaEditorNode);
   formulaEditorNode.selectEnd();
   __formulaEditorNodeKey = formulaEditorNode.getKey();
@@ -52,7 +52,7 @@ function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   if (!formulaText) return;
   let formulaDisplayNode = null;
   if (resultString) {
-    formulaDisplayNode = new FormulaDisplayNode(formulaText, resultString);
+    formulaDisplayNode = $createFormulaDisplayNode(formulaText, resultString);
   } else {
     formulaDisplayNode = $createFormulaDisplayNode(formulaText);
   }

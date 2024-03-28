@@ -153,12 +153,12 @@ function Editor({
         <HistoryPlugin />
         <AutoLinkPlugin />
         <LexicalClickableLinkPlugin />
+        <FormulaPlugin />
         <WikilinkPlugin />
         <WikilinkEventListenerPlugin
           openOrCreatePageByTitle={openOrCreatePageByTitle}
         />
         <TodosPlugin />
-        <FormulaPlugin />
         {floatingAnchorElem && !isSmallWidthViewport && (
           <>
             <DraggableBlockPlugin anchorElem={floatingAnchorElem} />

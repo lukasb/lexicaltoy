@@ -48,7 +48,8 @@ export class FormulaEditorNode extends TextNode {
 }
 
 export function $createFormulaEditorNode(text: string): FormulaEditorNode {
-  return new FormulaEditorNode(text);
+  const prepend = text.startsWith("=") ? "" : "=";
+  return new FormulaEditorNode(prepend + text);
 }
 
 /**
