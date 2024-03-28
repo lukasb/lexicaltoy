@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import { useState, useEffect } from "react";
 import { Page } from "@/app/lib/definitions";
 import { isTouchDevice } from "@/app/lib/window-helpers";
+import NoSSRWrapper from "../editor/NoSSRWrapper";
 
 function EditorContainer({
   page,
@@ -60,13 +61,15 @@ function EditorContainer({
             </div>
           </div>
         </div>
-        <Editor
-          page={page}
-          showDebugInfo={showDebug}
-          updatePageContentsLocal={updatePageContentsLocal}
-          openOrCreatePageByTitle={openOrCreatePageByTitle}
-          requestFocus={requestFocus}
-        />
+        <NoSSRWrapper>
+          <Editor
+            page={page}
+            showDebugInfo={showDebug}
+            updatePageContentsLocal={updatePageContentsLocal}
+            openOrCreatePageByTitle={openOrCreatePageByTitle}
+            requestFocus={requestFocus}
+          />
+        </NoSSRWrapper>
       </div>
     </div>
   );
