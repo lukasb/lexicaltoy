@@ -64,18 +64,15 @@ export function $isFormulaEditorNode(
 
 export type SerializedFormulaDisplayNode = Spread<
   {
-    formula: string;
-    caption: string;
+    formula: string
     output: string;
   },
   SerializedLexicalNode
 >;
 
-// TODO get rid of the caption, just use the formula
 export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   
   __formula: string;
-  __caption: string;
   __output: string;
 
   getFormula(): string {
@@ -86,16 +83,6 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   setFormula(formula: string): void {
     const self = this.getWritable();
     self.__formula = formula;
-  }
-
-  getCaption(): string {
-    const self = this.getLatest();
-    return self.__caption;
-  }
-
-  setCaption(caption: string): void {
-    const self = this.getWritable();
-    self.__caption = caption;
   }
 
   getOutput(): string {
@@ -114,13 +101,12 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   }
 
   static clone(node: FormulaDisplayNode): FormulaDisplayNode {
-    return new FormulaDisplayNode(node.getFormula(), node.getCaption(), node.getOutput(), node.__key);
+    return new FormulaDisplayNode(node.getFormula(), node.getOutput(), node.__key);
   }
 
-  constructor(formula: string, caption?: string, output?: string, key?: NodeKey) {
+  constructor(formula: string, output?: string, key?: NodeKey) {
     super(key);
     this.__formula = formula;
-    this.__caption = caption ? caption : "";
     this.__output = output ? output : "";
   }
 
@@ -131,11 +117,11 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   }
 
   updateDOM(_prevNode: FormulaDisplayNode, _dom: HTMLElement, config: EditorConfig): boolean {
-    return (this.__caption !== _prevNode.__caption || this.__output !== _prevNode.__output);
+    return (this.__output !== _prevNode.__output);
   }
 
   static importJSON(serializedNode: SerializedFormulaDisplayNode): FormulaDisplayNode {
-    return $createFormulaDisplayNode(serializedNode.formula, serializedNode.caption, serializedNode.output);
+    return $createFormulaDisplayNode(serializedNode.formula, serializedNode.output);
   }
 
   exportJSON(): SerializedFormulaDisplayNode {
@@ -143,7 +129,6 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
       type: 'formula-display',
       version: 1,
       formula: this.__formula,
-      caption: this.__caption,
       output: this.__output
     };
   }
@@ -152,7 +137,6 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
     return (
       <FormulaDisplayComponent
         formula={this.__formula}
-        caption={this.__caption}
         output={this.__output}
         nodeKey={this.getKey()}
       />
@@ -178,7 +162,7 @@ export function $isFormulaDisplayNode(node: LexicalNode): node is FormulaDisplay
 }
 
 export function $createFormulaDisplayNode(
-  formula: string, caption?: string, output?: string
+  formula: string, output?: string
 ): FormulaDisplayNode {
-  return new FormulaDisplayNode(formula, caption, output);
+  return new FormulaDisplayNode(formula, output);
 }

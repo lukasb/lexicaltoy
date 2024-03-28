@@ -12,19 +12,16 @@ import './FormulaDisplayComponent.css';
 
 export default function FormulaDisplayComponent(
   { formula: initialFormula,
-    caption: initialCaption, 
     output: initialOutput,
     nodeKey
   }: 
   {
     formula: string,
-    caption: string,
     output: string,
     nodeKey: string
   }
 ): JSX.Element {
   const [formula, setFormula] = useState<string>(initialFormula);
-  const [caption, setCaption] = useState<string>(initialCaption);
   const [output, setOutput] = useState<string>(initialOutput);
   const [editor] = useLexicalComposerContext();
   const pages = useContext(PagesContext);
@@ -36,11 +33,9 @@ export default function FormulaDisplayComponent(
         .then(response => {
           if (response) {
             setOutput(response.output);
-            setCaption(response.caption);
             editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
               displayNodeKey: nodeKey,
               output: response.output,
-              caption: response.caption
             });
             return response;
           } else {
@@ -78,7 +73,7 @@ export default function FormulaDisplayComponent(
       className="inline items-baseline border border-dashed border-red-600"
       onClick={() => replaceSelfWithEditorNode()}
     >
-      <span>{caption}: </span>
+      <span>{formula}: </span>
       <span>{output}</span>
     </div>
   );

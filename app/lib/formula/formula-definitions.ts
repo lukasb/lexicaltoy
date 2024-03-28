@@ -9,8 +9,6 @@ import { WIKILINK_REGEX } from '@/app/lib/text-utils';
 const FormulaDefinitionSchemaWithPage = z.object({
   prompt: z.string()
     .describe("A prompt that describes what ChatGPT should do."),
-  outputCaption: z.string()
-    .describe("Short caption to be displayed to the user to explain what the prompt output is."),
   inputPage: z.string()
     .describe(`If the user asked a question about a page, give the name of the page here. Page names look like this: [[PageName]], or [[Berlin trip ideas]]. The contents of the page will be appended to the prompt.`),
 });
@@ -23,8 +21,6 @@ export function isFormulaDefinitionWithPage(obj: any): obj is FormulaDefinitionW
 const FormulaDefinitionSchemaWithoutPage = z.object({
   prompt: z.string()
     .describe("A prompt that describes what ChatGPT should do."),
-  outputCaption: z.string()
-    .describe("Short caption to be displayed to the user to explain what the prompt output is."),
 });
 export type FormulaDefinitionWithoutPage = z.infer<typeof FormulaDefinitionSchemaWithoutPage>;
 
@@ -35,7 +31,6 @@ export type UserPrompt = z.infer<typeof UserPromptSchema>;
 */
 const FormulaStringOutputSchema = z.object({ 
   output: z.string(),
-  caption: z.string()
 });
 export type FormulaStringOutput = z.infer<typeof FormulaStringOutputSchema>;
 /*

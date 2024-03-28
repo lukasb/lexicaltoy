@@ -52,9 +52,9 @@ function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   if (!formulaText) return;
   let formulaDisplayNode = null;
   if (resultString) {
-    formulaDisplayNode = new FormulaDisplayNode(formulaText, formulaText, resultString);
+    formulaDisplayNode = new FormulaDisplayNode(formulaText, resultString);
   } else {
-    formulaDisplayNode = $createFormulaDisplayNode(formulaText, formulaText);
+    formulaDisplayNode = $createFormulaDisplayNode(formulaText);
   }
   node.replace(formulaDisplayNode);
   // For reasons of its own, Lexical inserts a <br> after a DecoratorNode if it's the last child
@@ -88,7 +88,7 @@ function registerFormulaHandlers(editor: LexicalEditor) {
       const textContents = node.getTextContent();
       const { formula: formulaText, result: resultString } = parseFormulaMarkdown(textContents);
       if (formulaText && resultString) {
-        const formulaDisplayNode = $createFormulaDisplayNode(formulaText, formulaText, resultString);
+        const formulaDisplayNode = $createFormulaDisplayNode(formulaText, resultString);
         node.replace(formulaDisplayNode);
       } else if (textContents.startsWith("=")) {
         const formulaEditorNode = new FormulaEditorNode(textContents);
@@ -176,11 +176,10 @@ function registerFormulaHandlers(editor: LexicalEditor) {
     ),
     editor.registerCommand(
       STORE_FORMULA_OUTPUT,
-      ({ displayNodeKey, output, caption }) => {
+      ({ displayNodeKey, output }) => {
         const displayNode = $getNodeByKey(displayNodeKey);
         if (displayNode && $isFormulaDisplayNode(displayNode)) {
           displayNode.setOutput(output);
-          displayNode.setCaption(caption);
         }
         return true;
       },

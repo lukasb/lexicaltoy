@@ -80,6 +80,5 @@ export async function getFormulaOutput(formula: string, pages: Page[]): Promise<
 
   return {
     output: gptResponse,
-    caption: formulaDefinition.outputCaption
   };
 }
