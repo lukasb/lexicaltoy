@@ -22,11 +22,12 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const isRequestingEditorPage = nextUrl.pathname.startsWith('/page');
       const isRequestingLogout = nextUrl.pathname.startsWith('/logout');
+      const isRequestingAdmin = nextUrl.pathname.startsWith('/admin');
       if (isRequestingEditorPage) {
         if (isLoggedIn) return true;
         return false; // Redirect unauthenticated users to login page
       } else if (isLoggedIn) {
-        if (!isRequestingLogout) {
+        if (!isRequestingLogout && !isRequestingAdmin) {
           return Response.redirect(new URL('/page', nextUrl));
         }
       }
