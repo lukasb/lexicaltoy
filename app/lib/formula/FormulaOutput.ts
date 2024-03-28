@@ -30,8 +30,12 @@ async function getPagesContext(pageSpec: string, pages: Page[]): Promise<string 
   async function generateContextStr(pagesToProcess: Page[]): Promise<string> {
     let contextStr = "\n" + todoInstructions;
     for (const page of pagesToProcess) {
-      const pageMarkdown = await getPageMarkdown(page);
-      contextStr += "\n##" + page.title + "\n" + pageMarkdown;
+      if (page.value.startsWith("{")) {
+        const pageMarkdown = await getPageMarkdown(page);
+        contextStr += "\n## " + page.title + "\n" + pageMarkdown;
+      } else {
+        contextStr += "\n## " + page.title + "\n" + page.value;
+      }
     }
     return contextStr;
   }
