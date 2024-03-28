@@ -14,6 +14,7 @@ import { getLastTwoWeeksJournalPages } from '@/app/lib/journal-helpers';
 const todoInstructions = `
 Below you'll see the contents of one or more pages. Pages may include to-do list items that look like this:
 
+Example content:
 - TODO buy groceries
 - DOING prepare taxes
 - NOW call janet
@@ -21,6 +22,7 @@ Below you'll see the contents of one or more pages. Pages may include to-do list
 - DONE make a cake
 
 Items marked with DONE are complete, all other items are incomplete.
+User content:
 `;
 
 async function getPagesContext(pageSpec: string, pages: Page[]): Promise<string | null> {
