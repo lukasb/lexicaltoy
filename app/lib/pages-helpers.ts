@@ -13,13 +13,22 @@ import { FormulaEditorNode, FormulaDisplayNode } from "@/app/nodes/FormulaNode";
 
 export function searchPages(pages: Page[], term: string): Page[] {
   const normalizedTerm = term.toLowerCase();
+  const matchingPages = new Set<Page>();
 
-  const startsWithTerm = pages.filter(page => 
+  pages.forEach(page => {
+    const normalizedTitle = page.title.toLowerCase();
+    const normalizedValue = page.value.toLowerCase();
+
+    if (normalizedTitle.includes(normalizedTerm) || normalizedValue.includes(normalizedTerm)) {
+      matchingPages.add(page);
+    }
+  });
+
+  const startsWithTerm = Array.from(matchingPages).filter(page =>
     page.title.toLowerCase().startsWith(normalizedTerm)
   );
 
-  const includesTerm = pages.filter(page => 
-    page.title.toLowerCase().includes(normalizedTerm) && 
+  const includesTerm = Array.from(matchingPages).filter(page =>
     !page.title.toLowerCase().startsWith(normalizedTerm)
   );
 
