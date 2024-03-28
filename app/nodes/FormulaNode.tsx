@@ -7,10 +7,9 @@ import {
   SerializedLexicalNode,
   Spread
 } from 'lexical';
-
-import { TextNode, $isTextNode } from 'lexical';
-
+import { TextNode } from 'lexical';
 import FormulaDisplayComponent from './FormulaDisplayComponent';
+import { getFormulaMarkdown } from '@/app/lib/formula/formula-markdown-converters';
 
 export class FormulaEditorNode extends TextNode {
   static getType(): string {
@@ -72,6 +71,7 @@ export type SerializedFormulaDisplayNode = Spread<
   SerializedLexicalNode
 >;
 
+// TODO get rid of the caption, just use the formula
 export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   
   __formula: string;
@@ -168,9 +168,7 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   }
 
   getTextContent(): string {
-    // TODO maybe, eventually ... also include the caption and the output.
-    // but that would mean overhauling the node transforms in FormulaPlugin.tsx
-    const text = this.getFormula();
+    const text = getFormulaMarkdown(this.getFormula(), this.getOutput());
     return text;
   }
 }

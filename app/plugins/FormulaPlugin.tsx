@@ -3,7 +3,8 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { 
   FormulaEditorNode,
   FormulaDisplayNode,
-  $isFormulaDisplayNode
+  $isFormulaDisplayNode,
+  $createFormulaDisplayNode
 } from "@/app/nodes/FormulaNode";
 import { 
   LexicalEditor,
@@ -27,6 +28,8 @@ import {
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
   STORE_FORMULA_OUTPUT
 } from "../lib/formula-commands";
+import { parseFormulaMarkdown } from "../lib/formula/formula-markdown-converters";
+import { text } from "stream/consumers";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -37,7 +40,7 @@ function $replaceWithFormulaEditorNode(node: FormulaDisplayNode) {
   if (textSibling && $isTextNode(textSibling)) {
     textSibling.remove();
   }
-  const formulaEditorNode = new FormulaEditorNode(node.getFormula());
+  const formulaEditorNode = new FormulaEditorNode("=" + node.getFormula());
   node.replace(formulaEditorNode);
   formulaEditorNode.selectEnd();
   __formulaEditorNodeKey = formulaEditorNode.getKey();
@@ -45,7 +48,14 @@ function $replaceWithFormulaEditorNode(node: FormulaDisplayNode) {
 
 function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   const textContents = node.getTextContent();
-  const formulaDisplayNode = new FormulaDisplayNode(textContents, "ChatGPT says");
+  const { formula: formulaText, result: resultString } = parseFormulaMarkdown(textContents);
+  if (!formulaText) return;
+  let formulaDisplayNode = null;
+  if (resultString) {
+    formulaDisplayNode = new FormulaDisplayNode(formulaText, formulaText, resultString);
+  } else {
+    formulaDisplayNode = $createFormulaDisplayNode(formulaText, formulaText);
+  }
   node.replace(formulaDisplayNode);
   // For reasons of its own, Lexical inserts a <br> after a DecoratorNode if it's the last child
   // create this dummy node to avoid that
@@ -76,7 +86,16 @@ function registerFormulaHandlers(editor: LexicalEditor) {
         return;
       }
       const textContents = node.getTextContent();
+      const { formula: formulaText, result: resultString } = parseFormulaMarkdown(textContents);
       if (textContents.startsWith("=")) {
+        console.log("textContents", textContents);
+        console.log("formula: ", formulaText);
+        console.log("result: ", resultString);
+      }
+      if (formulaText && resultString) {
+        const formulaDisplayNode = $createFormulaDisplayNode(formulaText, formulaText, resultString);
+        node.replace(formulaDisplayNode);
+      } else if (textContents.startsWith("=")) {
         const formulaEditorNode = new FormulaEditorNode(textContents);
         node.replace(formulaEditorNode);
         __formulaEditorNodeKey = formulaEditorNode.getKey();
