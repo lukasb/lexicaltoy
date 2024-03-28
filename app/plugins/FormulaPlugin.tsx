@@ -29,7 +29,6 @@ import {
   STORE_FORMULA_OUTPUT
 } from "../lib/formula-commands";
 import { parseFormulaMarkdown } from "../lib/formula/formula-markdown-converters";
-import { text } from "stream/consumers";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -40,7 +39,8 @@ function $replaceWithFormulaEditorNode(node: FormulaDisplayNode) {
   if (textSibling && $isTextNode(textSibling)) {
     textSibling.remove();
   }
-  const formulaEditorNode = new FormulaEditorNode("=" + node.getFormula());
+  const prepend = node.getFormula().startsWith("=") ? "" : "="; // TODO yech
+  const formulaEditorNode = new FormulaEditorNode(prepend + node.getFormula());
   node.replace(formulaEditorNode);
   formulaEditorNode.selectEnd();
   __formulaEditorNodeKey = formulaEditorNode.getKey();
