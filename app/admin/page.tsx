@@ -11,7 +11,7 @@ export default function AdminPage() {
   const [pageIds, setPageIds] = useState<string[]>([]);
 
   const convertAllToMarkdown = async (userid: string) => {
-    const pages = await fetchPages(userid.trim());
+    const pages = await fetchPages(userid.trim(), true);
     let ids = [];
     for (const page of pages) {
       if (page.value.startsWith("{")) {

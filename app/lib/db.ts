@@ -1,16 +1,17 @@
-'use server';
+"use server";
 
-import { sql } from '@vercel/postgres';
-import { unstable_noStore as noStore } from 'next/cache';
+import { sql } from "@vercel/postgres";
+import { unstable_noStore as noStore } from "next/cache";
 
-export async function fetchPages(userId: string) {
-    noStore();
+export async function fetchPages(userId: string, fetchDeleted?: boolean) {
+  noStore();
+  
+  if (fetchDeleted) {
     const result = await sql`
       SELECT * FROM pages
       WHERE userId = ${userId}
-      AND deleted = false
     `;
-    const pages = result.rows.map(row => ({
+    const pages = result.rows.map((row) => ({
       id: row.id,
       title: row.title,
       value: row.value,
@@ -18,8 +19,27 @@ export async function fetchPages(userId: string) {
       lastModified: row.last_modified,
       revisionNumber: row.revision_number,
       isJournal: row.is_journal,
-      deleted: row.deleted
+      deleted: row.deleted,
     }));
-  
+
     return pages;
   }
+
+  const result = await sql`
+      SELECT * FROM pages
+      WHERE userId = ${userId}
+      AND deleted = false
+    `;
+  const pages = result.rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    value: row.value,
+    userId: row.userId,
+    lastModified: row.last_modified,
+    revisionNumber: row.revision_number,
+    isJournal: row.is_journal,
+    deleted: row.deleted,
+  }));
+
+  return pages;
+}
