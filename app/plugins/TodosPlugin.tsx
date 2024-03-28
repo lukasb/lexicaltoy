@@ -150,16 +150,19 @@ function registerTodoHandlers(editor: LexicalEditor) {
           const firstChild = node.getFirstChild();
           if (firstChild) {
             if ($isTextNode(firstChild)) {
-              firstChild.setTextContent(firstChild.getTextContent().replace(`${status} `, ''));
-            }
-            let newStatus = status;
-            if (status === TodoStatus.DONE) {
-              newStatus = TodoStatus.TODO;
-            }
-            $wrapLIContentsWithTodo(node, newStatus as TodoStatus, false);
-            if (status === TodoStatus.DONE) {
-              const todoNode = node.getChildren()[0] as TodoCheckboxStatusNode;
-              $handleSetTodoDoneValue(editor, true, todoNode.getKey());
+              firstChild.setTextContent(
+                firstChild.getTextContent().replace(`${status} `, "")
+              );
+              let newStatus = status;
+              if (status === TodoStatus.DONE) {
+                newStatus = TodoStatus.TODO;
+              }
+              $wrapLIContentsWithTodo(node, newStatus as TodoStatus, false);
+              if (status === TodoStatus.DONE) {
+                const todoNode =
+                  node.getChildren()[0] as TodoCheckboxStatusNode;
+                $handleSetTodoDoneValue(editor, true, todoNode.getKey());
+              }
             }
           }
         }
