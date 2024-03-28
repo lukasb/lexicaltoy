@@ -66,15 +66,10 @@ function Editor({
   openOrCreatePageByTitle: (title: string) => void;
 }) {
 
-  // if we're rendering on the server (window will be undefined) give a temporary value for editorState
-  // not sure if this is the best way - maybe we should create a headless editor on the server to convert the markdown to JSON
-  // or maybe we should avoid rendering the editor on the server altogether
   const initialConfig = {
-    editorState: (typeof window === 'undefined'
-      ? '{"root":{"children":[{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"listitem","version":1,"value":1}],"direction":null,"format":"","indent":0,"type":"list","version":1,"listType":"bullet","start":1,"tag":"ul"}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
-      : !page.value.startsWith("{")
-        ? () => $convertFromMarkdownString(page.value, TRANSFORMERS) 
-        : page.value),
+    editorState: page.value.startsWith("{")
+      ? page.value
+      : () => $convertFromMarkdownString(page.value, TRANSFORMERS),
     namespace: "orangetask",
     theme,
     nodes: [

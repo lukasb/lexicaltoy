@@ -87,11 +87,6 @@ function registerFormulaHandlers(editor: LexicalEditor) {
       }
       const textContents = node.getTextContent();
       const { formula: formulaText, result: resultString } = parseFormulaMarkdown(textContents);
-      if (textContents.startsWith("=")) {
-        console.log("textContents", textContents);
-        console.log("formula: ", formulaText);
-        console.log("result: ", resultString);
-      }
       if (formulaText && resultString) {
         const formulaDisplayNode = $createFormulaDisplayNode(formulaText, formulaText, resultString);
         node.replace(formulaDisplayNode);

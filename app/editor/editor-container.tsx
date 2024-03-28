@@ -29,6 +29,7 @@ function EditorContainer({
 
   const touchDevice = isTouchDevice();
 
+  // TODO maybe render a headless editor on the server to enable server-side rendering?
   return (
     <div className="flex flex-col items-start mb-4">
       <div className="relative border-solid border-4 border-indigo-300 rounded-lg m-0 p-7 w-full max-w-7xl">

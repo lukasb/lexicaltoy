@@ -44,9 +44,6 @@ export function parseFormulaMarkdown(markdownString: string): ParseResult {
     //const result = match[2] ? match[2].replace(/\\{/g, '{').replace(/\\}/g, '}') : null;
     const formula = match[1];
     const result = match[2];
-    console.log("the string*", markdownString, "*");
-    console.log("the formula: ", formula);
-    console.log("the result: ", result);
     return { formula, result };
   } else {
     return { formula: null, result: null };
