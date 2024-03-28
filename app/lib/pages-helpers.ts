@@ -11,7 +11,7 @@ import { WikilinkNode, WikilinkInternalNode } from "../nodes/WikilinkNode";
 import { TodoCheckboxStatusNode } from "@/app/nodes/TodoNode";
 import { FormulaEditorNode, FormulaDisplayNode } from "@/app/nodes/FormulaNode";
 
-export function searchPages(pages: Page[], term: string): Page[] {
+export async function searchPages(pages: Page[], term: string): Promise<Page[]> {
   const normalizedTerm = term.toLowerCase();
   const matchingPages = new Set<Page>();
 

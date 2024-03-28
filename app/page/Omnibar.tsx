@@ -60,42 +60,54 @@ const Omnibar = forwardRef(({
   }, [term, showReverseChronologicalList]); 
   
   useEffect(() => {
-    if (skipTermResolutionRef.current === true) {
-      skipTermResolutionRef.current = false;
-      return;
-    }
-    if (term) {
-      const filteredPages = searchPages(pages, term);
-      const startMatch = filteredPages.find((page) =>
-        page.title.toLowerCase().startsWith(term.toLowerCase())
-      );
-      if (startMatch && inputRef.current) {
-        setDisplayValue(startMatch.title);
-      } else {
-        setDisplayValue(term);
+    const searchPagesAsync = async () => {
+      if (skipTermResolutionRef.current === true) {
+        skipTermResolutionRef.current = false;
+        return;
       }
-      setResults(filteredPages);
-      setShowCreatePageOption(filteredPages.length === 0 && term.trim() !== "");
-    } else {
-      resetSelf();
-    }
+  
+      if (term) {
+        const filteredPages = await searchPages(pages, term);
+        const startMatch = filteredPages.find((page) =>
+          page.title.toLowerCase().startsWith(term.toLowerCase())
+        );
+  
+        if (startMatch && inputRef.current) {
+          setDisplayValue(startMatch.title);
+        } else {
+          setDisplayValue(term);
+        }
+  
+        setResults(filteredPages);
+        setShowCreatePageOption(filteredPages.length === 0 && term.trim() !== "");
+      } else {
+        resetSelf();
+      }
+    };
+  
+    searchPagesAsync();
   }, [term, pages]);
 
   useEffect(() => {
-    if (displayValue !== term && displayValue.toLowerCase().startsWith(term.toLowerCase())) {
-      const filteredPages = searchPages(pages, displayValue);
-      const exactMatchIndex = filteredPages.findIndex(
-        (page) => page.title.toLowerCase() === displayValue.toLowerCase()
-      );
-      if (inputRef.current && exactMatchIndex !== -1) {
-        const startPos = term.length;
-        const endPos = displayValue.length;
-        inputRef.current.setSelectionRange(startPos, endPos);
-        setSelectedIndex(exactMatchIndex);
-      } else {
-        setSelectedIndex(-1);
+    const searchPagesAsync = async () => {
+      if (displayValue !== term && displayValue.toLowerCase().startsWith(term.toLowerCase())) {
+        const filteredPages = await searchPages(pages, displayValue);
+        const exactMatchIndex = filteredPages.findIndex(
+          (page) => page.title.toLowerCase() === displayValue.toLowerCase()
+        );
+  
+        if (inputRef.current && exactMatchIndex !== -1) {
+          const startPos = term.length;
+          const endPos = displayValue.length;
+          inputRef.current.setSelectionRange(startPos, endPos);
+          setSelectedIndex(exactMatchIndex);
+        } else {
+          setSelectedIndex(-1);
+        }
       }
-    }
+    };
+  
+    searchPagesAsync();
   }, [displayValue, term, pages]);
   
   const handleClickOutside = useCallback((event: { target: Node | null}) => {
