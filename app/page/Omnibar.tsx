@@ -104,6 +104,9 @@ const Omnibar = forwardRef(({
           const endPos = displayValue.length;
           inputRef.current.setSelectionRange(startPos, endPos);
           setSelectedIndex(exactMatchIndex);
+          if (!isTouchDevice()) {
+            setShowPageContent(true);
+          }
         } else {
           setSelectedIndex(-1);
         }
