@@ -11,5 +11,6 @@ export const theme = {
           listitem: 'PlaygroundEditorTheme__nestedListItem',
         },
         ul: 'PlaygroundEditorTheme__ul',
-      }
+      },
+    paragraph: 'PlaygroundEditorTheme__paragraph',
 }
