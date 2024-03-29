@@ -67,9 +67,7 @@ function Editor({
 }) {
 
   const initialConfig = {
-    editorState: page.value.startsWith("{")
-      ? page.value
-      : () => $convertFromMarkdownString(page.value, TRANSFORMERS),
+    editorState: () => $convertFromMarkdownString(page.value, TRANSFORMERS),
     namespace: "orangetask",
     theme,
     nodes: [
