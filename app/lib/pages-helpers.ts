@@ -2,14 +2,26 @@ import { Page } from './definitions';
 import { createHeadlessEditor } from '@lexical/headless';
 import { 
   $convertToMarkdownString, 
-  TRANSFORMERS,
-  $convertFromMarkdownString
+  TRANSFORMERS
 } from '@lexical/markdown';
 import { ListNode, ListItemNode } from "@lexical/list";
 import { LinkNode, AutoLinkNode } from "@lexical/link";
 import { WikilinkNode, WikilinkInternalNode } from "../nodes/WikilinkNode";
 import { TodoCheckboxStatusNode } from "@/app/nodes/TodoNode";
 import { FormulaEditorNode, FormulaDisplayNode } from "@/app/nodes/FormulaNode";
+
+export function searchPageTitles(pages: Page[], term: string): Page[] {
+  const normalizedTerm = term.toLowerCase();
+  const startsWithTerm = pages.filter((page) =>
+    page.title.toLowerCase().startsWith(normalizedTerm)
+  );
+  const includesTerm = pages.filter(
+    (page) =>
+      page.title.toLowerCase().includes(normalizedTerm) &&
+      !page.title.toLowerCase().startsWith(normalizedTerm)
+  );
+  return [...startsWithTerm, ...includesTerm];
+}
 
 export async function searchPages(pages: Page[], term: string): Promise<Page[]> {
   const normalizedTerm = term.toLowerCase();

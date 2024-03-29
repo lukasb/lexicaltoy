@@ -7,7 +7,7 @@ import React, {
   useRef,
   createRef
 } from "react";
-import { searchPages } from "@/app/lib/pages-helpers";
+import { searchPageTitles } from "@/app/lib/pages-helpers";
 import { Page } from "@/app/lib/definitions";
 import {
   BaseSelection,
@@ -201,7 +201,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
               return;
             }
             console.log("searching pages");
-            const filteredPages = searchPages(pages, match);
+            const filteredPages = searchPageTitles(pages, match);
             setResults(filteredPages);
           });
         }
