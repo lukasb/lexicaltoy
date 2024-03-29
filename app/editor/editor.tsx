@@ -21,7 +21,6 @@ import { LinkNode, AutoLinkNode } from "@lexical/link";
 import { KeyboardShortcutsPlugin } from "../plugins/KeyboardShortcutsPlugin";
 import DraggableBlockPlugin from "../plugins/DraggableBlockPlugin";
 import { useDebouncedCallback } from "use-debounce";
-import { updatePageContentsWithHistory } from "../lib/actions";
 import { theme } from "./editor-theme";
 import { FloatingMenuPlugin } from "../plugins/FloatingMenuPlugin";
 import { useBreakpoint } from "../lib/window-helpers";
@@ -106,19 +105,10 @@ function Editor({
 
   // TODO this assumes the page content won't be changed elsewhere in the same PagesContext
   const storePage = useDebouncedCallback(async (outline) => {
-    console.log("Storing page");
+    console.log("Updating local page ");
     const currentPage = getPage(page.id);
     if (!currentPage) return;
-    try {
-      const newRevisionNumber = await updatePageContentsWithHistory(page.id, outline, currentPage.revisionNumber);
-      if (newRevisionNumber === -1) {
-        alert("Failed to save page because you edited an old version, please relead for the latest version.");
-        return;
-      }
-      updatePageContentsLocal(page.id, outline, newRevisionNumber);
-    } catch (error) {
-      alert("Failed to save page");
-    }
+    updatePageContentsLocal(page.id, outline, currentPage.revisionNumber);
   }, 500);
 
   function onChange(editorState: EditorState) {

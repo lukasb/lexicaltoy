@@ -14,6 +14,7 @@ export type User = {
     revisionNumber: number;
     isJournal: boolean;
     deleted: boolean;
+    pendingWrite: boolean;
   }
 
   export function isPage(obj: any): obj is Page {

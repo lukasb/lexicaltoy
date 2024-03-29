@@ -13,10 +13,11 @@ import { fetchPages } from "@/app/lib/db";
 import { getJournalTitle } from '@/app/lib/journal-helpers';
 import { handleNewJournalPage, handleDeleteStaleJournalPages, getTodayJournalPage } from "@/app/lib/journal-helpers";
 import FlexibleEditorLayout from "./FlexibleEditorContainer";
+import PagesManager from "./PagesManager";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
-  const [currentPages, setCurrentPages] = useState(pages);
+  const [currentPages, setCurrentPages] = useState<Page[]>(pages);
   const emptyPageMarkdownString = '- ';
 
   const initialPageId = findMostRecentlyEditedPage(currentPages)?.id;
@@ -131,6 +132,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <PagesContext.Provider value={currentPages}>
+        <PagesManager setPages={setCurrentPages} />
         <Omnibar
           ref={omnibarRef}
           openOrCreatePageByTitle={openOrCreatePageByTitle}
@@ -166,6 +168,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                               ...page,
                               value: newValue,
                               revisionNumber: newRevisionNumber,
+                              pendingWrite: true
                             }
                           : page
                       )

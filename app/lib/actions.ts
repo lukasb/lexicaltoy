@@ -60,6 +60,7 @@ export async function insertPage(title: string, value: string, userId: string) {
       revisionNumber: result.rows[0].revision_number,
       isJournal: result.rows[0].is_journal,
       deleted: result.rows[0].deleted,
+      pendingWrite: false
     };
     return page;
   } catch (error) {
@@ -85,6 +86,7 @@ export async function insertJournalPage(title: string, value: string, userId: st
       revisionNumber: result.rows[0].revision_number,
       isJournal: result.rows[0].is_journal,
       deleted: result.rows[0].deleted,
+      pendingWrite: false
     };
     return page;
   } catch (error) {

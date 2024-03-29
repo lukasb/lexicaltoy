@@ -20,6 +20,7 @@ export async function fetchPages(userId: string, fetchDeleted?: boolean) {
       revisionNumber: row.revision_number,
       isJournal: row.is_journal,
       deleted: row.deleted,
+      pendingWrite: false
     }));
 
     return pages;
@@ -39,6 +40,7 @@ export async function fetchPages(userId: string, fetchDeleted?: boolean) {
     revisionNumber: row.revision_number,
     isJournal: row.is_journal,
     deleted: row.deleted,
+    pendingWrite: false
   }));
 
   return pages;
