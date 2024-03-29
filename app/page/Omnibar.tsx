@@ -12,6 +12,8 @@ import React, {
 import { searchPages } from "../lib/pages-helpers";
 import { Page } from "../lib/definitions";
 import { PagesContext } from "@/app/context/pages-context";
+import { isTouchDevice } from "../lib/window-helpers";
+import { set } from "date-fns";
  
 const Omnibar = forwardRef(({
   openOrCreatePageByTitle
@@ -24,6 +26,7 @@ const Omnibar = forwardRef(({
   const [displayValue, setDisplayValue] = useState(""); // the displayed value
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showCreatePageOption, setShowCreatePageOption] = useState(false);
+  const [showPageContent, setShowPageContent] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const ulRef = useRef<HTMLUListElement>(null);
   const skipTermResolutionRef = useRef(false);
@@ -145,6 +148,7 @@ const Omnibar = forwardRef(({
     setResults([]);
     setSelectedIndex(-1);
     setShowCreatePageOption(false);
+    setShowPageContent(false);
   }
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -156,9 +160,15 @@ const Omnibar = forwardRef(({
       setSelectedIndex((prevIndex) =>
         Math.min(prevIndex + 1, results.length - 1)
       );
+      if (!isTouchDevice()) {
+        setShowPageContent(true);
+      }
       event.preventDefault();
     } else if (event.key === "ArrowUp") {
       setSelectedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+      if (!isTouchDevice()) {
+        setShowPageContent(true);
+      }
       event.preventDefault();
     } else if (event.key === "Enter") {
       if (selectedIndex > -1 && results.length > 0) {
@@ -185,6 +195,19 @@ const Omnibar = forwardRef(({
     resetSelf();
   };
 
+  const handleMouseEnter = (index: number) => {
+    setSelectedIndex(index);
+    if (!isTouchDevice()) {
+      setShowPageContent(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isTouchDevice()) {
+      setShowPageContent(false);
+    }
+  };
+
   return (
     <div className="relative my-4 max-w-7xl">
       <input
@@ -196,45 +219,55 @@ const Omnibar = forwardRef(({
         onKeyDown={handleKeyDown}
         placeholder="Search or Create"
       />
-      {(results.length > 0 || showCreatePageOption) && (
-        <ul
-          ref={ulRef}
-          className="absolute z-10 w-full max-w-5xl bg-white shadow-md max-h-[400px] md:max-h-[500px] lg:max-h-[600px] overflow-auto mt-1 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-        >
-          {results.map((result, index) => (
-            <li
-              key={index}
-              className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
-                selectedIndex === index
-                  ? "selected-item bg-gray-200 dark:bg-gray-700"
-                  : ""
-              } dark:text-white`}
-              onMouseEnter={() => setSelectedIndex(index)}
-              onClick={() => handleSearchResultsClick(result)}
-              data-testid="search-result"
-            >
-              {result.title}
-              {result.isJournal && (
-                <span className="text-gray-400 ml-2">journal</span>
-              )}
-            </li>
-          ))}
-          {showCreatePageOption && (
-            <li
-              className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
-                selectedIndex === results.length
-                  ? "selected-item bg-gray-200 dark:bg-gray-700"
-                  : ""
-              } dark:text-white`}
-              onMouseEnter={() => setSelectedIndex(results.length)}
-              onClick={() => openOrCreatePageByTitle(term)}
-              data-testid="create-page-option"
-            >
-              Create page <i>{term}</i>
-            </li>
-          )}
-        </ul>
-      )}
+      <div className="absolute top-full left-0 right-0 mt-1 z-50">
+        {(results.length > 0 || showCreatePageOption) && (
+          <ul
+            ref={ulRef}
+            className="w-full max-w-5xl bg-white shadow-md max-h-[400px] md:max-h-[500px] lg:max-h-[600px] overflow-auto rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          >
+            {results.map((result, index) => (
+              <li
+                key={index}
+                className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
+                  selectedIndex === index
+                    ? "selected-item bg-gray-200 dark:bg-gray-700"
+                    : ""
+                } dark:text-white`}
+                onMouseEnter={() => handleMouseEnter(index)}
+                onMouseLeave={handleMouseLeave}
+                onClick={() => handleSearchResultsClick(result)}
+                data-testid="search-result"
+              >
+                {result.title}
+                {result.isJournal && (
+                  <span className="text-gray-400 ml-2">journal</span>
+                )}
+              </li>
+            ))}
+            {showCreatePageOption && (
+              <li
+                className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
+                  selectedIndex === results.length
+                    ? "selected-item bg-gray-200 dark:bg-gray-700"
+                    : ""
+                } dark:text-white`}
+                onMouseEnter={() => setSelectedIndex(results.length)}
+                onClick={() => openOrCreatePageByTitle(term)}
+                data-testid="create-page-option"
+              >
+                Create page <i>{term}</i>
+              </li>
+            )}
+          </ul>
+        )}
+        {showPageContent && !showCreatePageOption && selectedIndex >= 0 && selectedIndex < results.length && (
+          <div className="w-full max-w-5xl bg-white shadow-md mt-2 p-4 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+            <div className="whitespace-pre-wrap break-words">
+              {results[selectedIndex].value}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 });
