@@ -58,21 +58,31 @@ async function getPagesContext(pageSpec: string, pages: Page[]): Promise<string 
   }
 }
 
+// Define a list of regex-callback pairs outside the function
+const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray) => Promise<FormulaStringOutput>]> = [
+  [/^find\(\)$/, async () => ({ output: '- hello there' })],
+];
 
 export async function getFormulaOutput(formula: string, pages: Page[]): Promise<FormulaStringOutput | null> {
-  
   console.log("getting formula output", formula);
+
+  // Check if the formula matches any of the regex patterns
+  for (const [regex, callback] of regexCallbacks) {
+    const match = formula.match(regex);
+    if (match) {
+      return await callback(match);
+    }
+  }
+
+  // If no match is found, proceed with the original code
   const formulaDefinition = await getFormulaDefinition(formula);
   if (!formulaDefinition) {
     console.log("no formula definition");
     return null;
   }
-  
+
   let prompt = formulaDefinition.prompt;
-  if (
-    isFormulaDefinitionWithPage(formulaDefinition) &&
-    formulaDefinition.inputPage
-  ) {
+  if (isFormulaDefinitionWithPage(formulaDefinition) && formulaDefinition.inputPage) {
     const pagesContext = await getPagesContext(formulaDefinition.inputPage, pages);
     if (pagesContext) {
       prompt = prompt + pagesContext;
@@ -80,11 +90,10 @@ export async function getFormulaOutput(formula: string, pages: Page[]): Promise<
       console.log("no pages context");
     }
   }
+
   console.log("getting short response");
   const gptResponse = await getShortGPTChatResponse(prompt);
   if (!gptResponse) return null;
 
-  return {
-    output: gptResponse,
-  };
+  return { output: gptResponse };
 }
