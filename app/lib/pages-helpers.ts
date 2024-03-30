@@ -25,26 +25,24 @@ export function searchPageTitles(pages: Page[], term: string): Page[] {
 
 export async function searchPages(pages: Page[], term: string): Promise<Page[]> {
   const normalizedTerm = term.toLowerCase();
-  const matchingPages = new Set<Page>();
+  const titleStartsWith: Page[] = [];
+  const titleIncludes: Page[] = [];
+  const contentIncludes: Page[] = [];
 
   pages.forEach(page => {
     const normalizedTitle = page.title.toLowerCase();
     const normalizedValue = page.value.toLowerCase();
 
-    if (normalizedTitle.includes(normalizedTerm) || normalizedValue.includes(normalizedTerm)) {
-      matchingPages.add(page);
+    if (normalizedTitle.startsWith(normalizedTerm)) {
+      titleStartsWith.push(page);
+    } else if (normalizedTitle.includes(normalizedTerm)) {
+      titleIncludes.push(page);
+    } else if (normalizedValue.includes(normalizedTerm)) {
+      contentIncludes.push(page);
     }
   });
 
-  const startsWithTerm = Array.from(matchingPages).filter(page =>
-    page.title.toLowerCase().startsWith(normalizedTerm)
-  );
-
-  const includesTerm = Array.from(matchingPages).filter(page =>
-    !page.title.toLowerCase().startsWith(normalizedTerm)
-  );
-
-  return [...startsWithTerm, ...includesTerm];
+  return [...titleStartsWith, ...titleIncludes, ...contentIncludes];
 }
 
 export function findMostRecentlyEditedPage(pages: Page[]): Page | null {
