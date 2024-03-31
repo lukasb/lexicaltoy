@@ -46,6 +46,7 @@ import { shouldShowFloatingSlashCommands, computeFloatingSlashCommandsPosition }
 import { FormulaEditorNode, FormulaDisplayNode } from "@/app/nodes/FormulaNode";
 import { FormulaPlugin } from "@/app/plugins/FormulaPlugin";
 import { PromisesProvider } from "../context/formula-request-context";
+import { stripSharedNodesFromMarkdown } from "@/app/lib/formula/formula-markdown-converters";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -115,7 +116,7 @@ function Editor({
     if (!editorState) return;
     editorState.read(() => {
       const editorStateMarkdown = $convertToMarkdownString(TRANSFORMERS);
-      storePage(editorStateMarkdown);
+      storePage(stripSharedNodesFromMarkdown(editorStateMarkdown));
     });
   }
 
