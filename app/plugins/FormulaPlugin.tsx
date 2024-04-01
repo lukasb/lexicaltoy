@@ -27,7 +27,8 @@ import { mergeRegister } from "@lexical/utils";
 import { 
   $getActiveListItemFromSelection,
   getListItemParentNode,
-  $addChildListItem
+  $addChildListItem,
+  $deleteChildrenFromListItem
 } from "@/app/lib/list-utils";
 import { 
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
@@ -42,6 +43,18 @@ import { NodeMarkdown } from "../lib/formula/formula-definitions";
 let __formulaEditorNodeKey = "";
 
 function $replaceWithFormulaEditorNode(node: FormulaDisplayNode) {
+
+  if (node.getOutput() === "@@childnodes") {
+    let parent = node.getParent();
+    while (parent && !$isListItemNode(parent)) {
+      parent = parent.getParent();
+    }
+    if (parent) {
+      const listItem = parent as ListItemNode;
+      $deleteChildrenFromListItem(listItem);
+    }
+  }
+
   const textSibling = node.getNextSibling();
   if (textSibling && $isTextNode(textSibling)) {
     textSibling.remove();

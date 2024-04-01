@@ -18,7 +18,8 @@ import {
   $getListItemContainingChildren,
   $getPreviousListItem,
   $isNestedListItem,
-  $addChildListItem
+  $addChildListItem,
+  $deleteListItem
 } from "../lib/list-utils";
 import { 
   ListItemNode,
@@ -61,46 +62,6 @@ function indentOutdentListItemAndChildren(listItem: ListItemNode, indentChange: 
   });
 }
 
-function removeListItemAndChildren(listItem: ListItemNode) {
-  let nodesToRemove: ListItemNode[] = [];
-  nodesToRemove.push(listItem);
-  const childrenList = $getListContainingChildren(listItem);
-  if (childrenList && childrenList.getChildren()) {
-    nodesToRemove.push($getListItemContainingChildren(listItem) as ListItemNode);
-    nodesToRemove.push(...childrenList.getChildren() as ListItemNode[]);
-  }
-  for (let node of nodesToRemove) {
-    node.remove();
-  }
-}
-
-// return true if we're the only child of our parent
-// (if we have children they will appear as the grandchildren of a sibling of ours)
-function isOnlyChild(listItem: ListItemNode): boolean {
-  if (
-    $isNestedListItem(listItem) &&
-    listItem.getIndexWithinParent() === 0 &&
-    listItem.getParent().getChildrenSize() === 1
-  ) {
-    return true;
-  }
-  if (
-    $isNestedListItem(listItem) &&
-    listItem.getIndexWithinParent() === 0 &&
-    listItem.getParent().getChildrenSize() === 2
-  ) {
-    const nextSibling = listItem.getNextSibling() as ListItemNode;
-    if (nextSibling &&
-      nextSibling.getChildrenSize() === 1) {
-        const siblingChild = nextSibling.getChildAtIndex(0);
-        if (siblingChild && siblingChild.getType() === "list") {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
 export function registerListCommands(editor: LexicalEditor) {
   return mergeRegister(
     editor.registerCommand(
@@ -127,22 +88,9 @@ export function registerListCommands(editor: LexicalEditor) {
     ),
     editor.registerCommand(
       DELETE_LISTITEM_COMMAND,
-      (payload, fixSelection) => {
-        const { listItem } = payload;
-        if (isOnlyChild(listItem)) {
-          // if we're an only child and we don't delete our grandparent list item, removal
-          // leaves an empty listitem
-          removeListItemAndChildren(listItem.getParent().getParent());
-        } else {
-          let previousListItem: ListItemNode | null = null;
-          if (fixSelection) {
-            previousListItem = $getPreviousListItem(listItem);
-          }
-          removeListItemAndChildren(listItem);
-          if (fixSelection && previousListItem) {
-            previousListItem.selectEnd();
-          }
-        }
+      (payload) => {
+        const { listItem, fixSelection } = payload;
+        $deleteListItem(listItem, fixSelection);
         return true;
       },
       COMMAND_PRIORITY_EDITOR

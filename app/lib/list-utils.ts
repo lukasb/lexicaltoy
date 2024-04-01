@@ -169,3 +169,76 @@ export function $addChildListItem(parent: ListItemNode, prepend: boolean, change
   }
   if (changeSelection) newListItem.selectEnd();
 }
+// return true if we're the only child of our parent
+// (if we have children they will appear as the grandchildren of a sibling of ours)
+function isOnlyChild(listItem: ListItemNode): boolean {
+  if (
+    $isNestedListItem(listItem) &&
+    listItem.getIndexWithinParent() === 0 &&
+    listItem.getParent().getChildrenSize() === 1
+  ) {
+    return true;
+  }
+  if (
+    $isNestedListItem(listItem) &&
+    listItem.getIndexWithinParent() === 0 &&
+    listItem.getParent().getChildrenSize() === 2
+  ) {
+    const nextSibling = listItem.getNextSibling() as ListItemNode;
+    if (nextSibling &&
+      nextSibling.getChildrenSize() === 1) {
+        const siblingChild = nextSibling.getChildAtIndex(0);
+        if (siblingChild && siblingChild.getType() === "list") {
+          return true;
+        }
+      }
+    }
+    return false;
+}
+
+export function $removeChildrenFromListItem(listItem: ListItemNode) {
+
+}
+
+function getChildrenToRemove(listItem: ListItemNode): ListItemNode[] {
+  const nodesToRemove: ListItemNode[] = [];
+  const childrenList = $getListContainingChildren(listItem);
+  if (childrenList && childrenList.getChildren()) {
+    nodesToRemove.push($getListItemContainingChildren(listItem) as ListItemNode);
+    nodesToRemove.push(...childrenList.getChildren() as ListItemNode[]);
+  }
+  return nodesToRemove;
+}
+
+export function $deleteChildrenFromListItem(listItem: ListItemNode) { 
+  const nodesToRemove = getChildrenToRemove(listItem);
+  for (let node of nodesToRemove) {
+    node.remove();
+  }
+}
+
+function removeListItemAndChildren(listItem: ListItemNode) {
+  let nodesToRemove: ListItemNode[] = [];
+  nodesToRemove.push(listItem);
+  nodesToRemove.push(...getChildrenToRemove(listItem));
+  for (let node of nodesToRemove) {
+    node.remove();
+  }
+}
+
+export function $deleteListItem(listItem: ListItemNode, fixSelection: boolean) {
+  if (isOnlyChild(listItem)) {
+    // if we're an only child and we don't delete our grandparent list item, removal
+    // leaves an empty listitem
+    removeListItemAndChildren(listItem.getParent().getParent());
+  } else {
+    let previousListItem: ListItemNode | null = null;
+    if (fixSelection) {
+      previousListItem = $getPreviousListItem(listItem);
+    }
+    removeListItemAndChildren(listItem);
+    if (fixSelection && previousListItem) {
+      previousListItem.selectEnd();
+    }
+  }
+}
