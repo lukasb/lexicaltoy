@@ -24,10 +24,15 @@ import {
   $isListItemNode
 } from "@lexical/list";
 import { mergeRegister } from "@lexical/utils";
-import { $getActiveListItemFromSelection } from "@/app/lib/list-utils";
+import { 
+  $getActiveListItemFromSelection,
+  getListItemParentNode,
+  $addChildListItem
+} from "@/app/lib/list-utils";
 import { 
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
-  STORE_FORMULA_OUTPUT
+  STORE_FORMULA_OUTPUT,
+  CREATE_FORMULA_NODES
 } from "../lib/formula-commands";
 import { parseFormulaMarkdown } from "../lib/formula/formula-markdown-converters";
 
@@ -180,6 +185,27 @@ function registerFormulaHandlers(editor: LexicalEditor) {
         const displayNode = $getNodeByKey(displayNodeKey);
         if (displayNode && $isFormulaDisplayNode(displayNode)) {
           displayNode.setOutput(output);
+        }
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    ),
+    editor.registerCommand(
+      CREATE_FORMULA_NODES,
+      ({ displayNodeKey, output }) => {
+        const displayNode = $getNodeByKey(displayNodeKey);
+        if (displayNode && $isFormulaDisplayNode(displayNode)) {
+          const parentListItem = getListItemParentNode(displayNode);
+          if (!parentListItem) return true;
+          const listItemRegex = /^\s*-\s*(.+)$/;
+          for (const line of output.split("\n")) {
+            const match = line.match(listItemRegex);
+            if (match) {
+              const listItemNode = new ListItemNode();
+              listItemNode.append(new TextNode(match[1]));
+              $addChildListItem(parentListItem, false, false, listItemNode);
+            }
+          }
         }
         return true;
       },

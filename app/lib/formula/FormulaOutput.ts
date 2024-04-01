@@ -1,6 +1,7 @@
 import { 
   FormulaStringOutput,
-  isFormulaDefinitionWithPage
+  isFormulaDefinitionWithPage,
+  FormulaOutputType
 } from './formula-definitions';
 import { 
   getShortGPTChatResponse,
@@ -60,7 +61,7 @@ async function getPagesContext(pageSpec: string, pages: Page[]): Promise<string 
 
 // Define a list of regex-callback pairs outside the function
 const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray) => Promise<FormulaStringOutput>]> = [
-  [/^find\(\)$/, async () => ({ output: '- hello there' })],
+  [/^find\(\)$/, async () => ({ output: '- hello there', type: FormulaOutputType.NodeMarkdown })],
 ];
 
 export async function getFormulaOutput(formula: string, pages: Page[]): Promise<FormulaStringOutput | null> {
@@ -95,5 +96,5 @@ export async function getFormulaOutput(formula: string, pages: Page[]): Promise<
   const gptResponse = await getShortGPTChatResponse(prompt);
   if (!gptResponse) return null;
 
-  return { output: gptResponse };
+  return { output: gptResponse, type: FormulaOutputType.Text };
 }

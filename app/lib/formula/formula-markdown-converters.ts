@@ -10,7 +10,7 @@
   */
 
 const FORMULA_REGEX = /^=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
-const FORMULA_LIST_ITEM_REGEX = /^(\s*)-=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
+const FORMULA_LIST_ITEM_REGEX = /^(\s*)-\s?=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
 
 function escapeContentForMarkdown(str: string) {
   return str.replace(/{/g, '\\{').replace(/}/g, '\\}');
@@ -59,7 +59,6 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const match = line.match(FORMULA_LIST_ITEM_REGEX);
-
     if (match && match[2].startsWith('find(') && match[3] === '@@childnodes') {
       const currentIndent = match[1].length;
       const resultStrIndex = line.indexOf(' {result:');

@@ -18,11 +18,10 @@ import {
   $getListItemContainingChildren,
   $getPreviousListItem,
   $isNestedListItem,
+  $addChildListItem
 } from "../lib/list-utils";
 import { 
   ListItemNode,
-  $createListItemNode,
-  $createListNode,
   ListNode,
   $isListItemNode,
   $isListNode
@@ -170,23 +169,7 @@ export function registerListCommands(editor: LexicalEditor) {
       PREPEND_NEW_CHILD_COMMAND,
       (payload) => {
         const { listItem } = payload;
-        const newListItem = $createListItemNode();
-        let childrenList = $getListContainingChildren(listItem);
-        if (childrenList) {
-          if (childrenList.getChildrenSize() > 0) {
-            childrenList.getChildren()[0].insertBefore(newListItem);
-          } else {
-            childrenList.getChildren().push(newListItem);
-          }
-        } else {
-          childrenList = $createListNode((listItem.getParent() as ListNode).getListType());
-          childrenList.append(newListItem);
-          const newSibling = $createListItemNode();
-          newSibling.append(childrenList);
-          listItem.insertAfter(newSibling);
-          const cList = $getListContainingChildren(listItem);
-        }
-        newListItem.selectEnd();
+        $addChildListItem(listItem, true, true);
         return true;
       },
       COMMAND_PRIORITY_EDITOR

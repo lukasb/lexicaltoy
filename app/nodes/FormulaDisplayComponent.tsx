@@ -2,11 +2,13 @@ import { useState, useEffect, useCallback, useContext, use } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { 
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
-  STORE_FORMULA_OUTPUT
+  STORE_FORMULA_OUTPUT,
+  CREATE_FORMULA_NODES
 } from '@/app/lib/formula-commands';
 import { getFormulaOutput } from '@/app/lib/formula/FormulaOutput';
 import { PagesContext } from '../context/pages-context';
 import { usePromises } from '../context/formula-request-context';
+import { FormulaOutputType } from '../lib/formula/formula-definitions';
 
 import './FormulaDisplayComponent.css';
 
@@ -32,11 +34,23 @@ export default function FormulaDisplayComponent(
       const promise = getFormulaOutput(prompt, pages)
         .then(response => {
           if (response) {
-            setOutput(response.output);
-            editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
-              displayNodeKey: nodeKey,
-              output: response.output,
-            });
+            if (response.type === FormulaOutputType.Text) {
+              setOutput(response.output);
+              editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
+                displayNodeKey: nodeKey,
+                output: response.output,
+              });
+            } else if (response.type === FormulaOutputType.NodeMarkdown) {
+              setOutput("@@childnodes");
+              editor.dispatchCommand(CREATE_FORMULA_NODES, {
+                displayNodeKey: nodeKey,
+                output: response.output,
+              });
+              editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
+                displayNodeKey: nodeKey,
+                output: "@@childnodes",
+              });
+            }
             return response;
           } else {
             console.log("no response");
@@ -74,7 +88,7 @@ export default function FormulaDisplayComponent(
       onClick={() => replaceSelfWithEditorNode()}
     >
       <span>{formula}: </span>
-      <span>{output}</span>
+      {!output.startsWith("@@") && <span>{output}</span>}
     </div>
   );
 }

@@ -29,9 +29,17 @@ export type FormulaDefinition = FormulaDefinitionWithPage | FormulaDefinitionWit
 const UserPromptSchema = z.object({ prompt: z.string() });
 export type UserPrompt = z.infer<typeof UserPromptSchema>;
 */
-const FormulaStringOutputSchema = z.object({ 
+
+export enum FormulaOutputType {
+  Text = 'text',
+  NodeMarkdown = 'nodeMarkdown',
+};
+
+const FormulaStringOutputSchema = z.object({
   output: z.string(),
+  type: z.nativeEnum(FormulaOutputType),
 });
+
 export type FormulaStringOutput = z.infer<typeof FormulaStringOutputSchema>;
 /*
 const FormulaInputSchema = z.union([ FormulaDefinitionSchema, UserPromptSchema ]);

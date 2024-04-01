@@ -1,16 +1,27 @@
 import { BaseSelection, $isRootNode, $isRangeSelection, $isNodeSelection } from "lexical";
-import { $isListItemNode, $isListNode, ListItemNode, ListNode } from "@lexical/list";
+import { 
+  ListItemNode,
+  $createListItemNode,
+  $createListNode,
+  ListNode,
+  $isListItemNode,
+  $isListNode
+} from "@lexical/list";
 import { LexicalNode } from "lexical";
 
 export function $isNodeWithinListItem(node: LexicalNode): boolean {
+  return getListItemParentNode(node) !== null;
+}
+
+export function getListItemParentNode(node: LexicalNode): ListItemNode | null {
   let parent = node.getParent();
   while (parent && !$isRootNode(parent)) {
     if ($isListItemNode(parent)) {
-      return true;
+      return parent;
     }
     parent = parent.getParent();
   }
-  return false;
+  return null;
 }
 
 // only allow indent/outdent if the selection is collapsed (nothing is selected)
@@ -136,4 +147,25 @@ export function $getPreviousListItem(listItem: ListItemNode): ListItemNode | nul
   if (!previousSibling) return null;
   if (previousSibling.getChildrenSize() === 0) return previousSibling;
   return getLastDescendantListItem(previousSibling);
+}
+
+export function $addChildListItem(parent: ListItemNode, prepend: boolean, changeSelection: boolean, child?: ListItemNode) {
+  
+  const newListItem = child || $createListItemNode();
+
+  let childrenList = $getListContainingChildren(parent);
+  if (childrenList) {
+    if (childrenList.getChildrenSize() > 0 && prepend) {
+      childrenList.getChildren()[0].insertBefore(newListItem);
+    } else {
+      childrenList.getChildren().push(newListItem);
+    }
+  } else {
+    childrenList = $createListNode((parent.getParent() as ListNode).getListType());
+    childrenList.append(newListItem);
+    const newSibling = $createListItemNode();
+    newSibling.append(childrenList);
+    parent.insertAfter(newSibling);
+  }
+  if (changeSelection) newListItem.selectEnd();
 }
