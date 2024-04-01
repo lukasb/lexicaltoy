@@ -93,7 +93,7 @@ function createFormulaOutputNodes(displayNode: FormulaDisplayNode, nodesMarkdown
   const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
 
   let currentPageName = "";
-  let currentListItem: ListItemNode | null = null;
+  let currentPageListItem: ListItemNode | null = null;
 
   for (const node of sortedNodes) {
     const match = node.node.match(listItemRegex);
@@ -103,17 +103,18 @@ function createFormulaOutputNodes(displayNode: FormulaDisplayNode, nodesMarkdown
         const pageNameListItem = new ListItemNode();
         pageNameListItem.append(new TextNode("[[" + currentPageName + "]]"));
         $addChildListItem(parentListItem, false, false, pageNameListItem);
-        currentListItem = pageNameListItem;
+        currentPageListItem = pageNameListItem;
       }
 
-      if (currentListItem) {
+      if (currentPageListItem) {
         const listItemNode = new ListItemNode();
         listItemNode.append(new TextNode(match[1]));
-        $addChildListItem(currentListItem, false, false, listItemNode);
+        $addChildListItem(currentPageListItem, false, false, listItemNode);
       }
     }
   }
 }
+
 function registerFormulaHandlers(editor: LexicalEditor) {
   return mergeRegister(
     editor.registerNodeTransform(TextNode, (node) => {

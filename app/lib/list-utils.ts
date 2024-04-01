@@ -158,7 +158,7 @@ export function $addChildListItem(parent: ListItemNode, prepend: boolean, change
     if (childrenList.getChildrenSize() > 0 && prepend) {
       childrenList.getChildren()[0].insertBefore(newListItem);
     } else {
-      childrenList.getChildren().push(newListItem);
+      childrenList.append(newListItem);
     }
   } else {
     childrenList = $createListNode((parent.getParent() as ListNode).getListType());

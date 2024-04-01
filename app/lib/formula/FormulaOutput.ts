@@ -61,7 +61,12 @@ async function getPagesContext(pageSpec: string, pages: Page[]): Promise<string 
 
 // Define a list of regex-callback pairs outside the function
 const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray) => Promise<FormulaStringOutput>]> = [
-  [/^find\(\)$/, async () => ({ output: [{node: '- hello there', pageName: 'some page'}], type: FormulaOutputType.NodeMarkdown })],
+  [/^find\(\)$/, async () => (
+    { output: [
+      {node: '- hello there', pageName: 'some page'},
+      {node: '- general kenobi', pageName: 'another page'},
+      {node: '- you are a bold one', pageName: 'another page'}
+    ], type: FormulaOutputType.NodeMarkdown })],
 ];
 
 export async function getFormulaOutput(formula: string, pages: Page[]): Promise<FormulaStringOutput | null> {
