@@ -35,6 +35,7 @@ import {
   CREATE_FORMULA_NODES
 } from "../lib/formula-commands";
 import { parseFormulaMarkdown } from "../lib/formula/formula-markdown-converters";
+import { NodeMarkdown } from "../lib/formula/formula-definitions";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -80,6 +81,39 @@ function replaceExistingFormulaEditorNode() {
   __formulaEditorNodeKey = "";
 }
 
+function sortNodeMarkdownByPageName(nodes: NodeMarkdown[]): NodeMarkdown[] {
+  return nodes.slice().sort((a, b) => a.pageName.localeCompare(b.pageName));
+}
+
+function createFormulaOutputNodes(displayNode: FormulaDisplayNode, nodesMarkdown: NodeMarkdown[]) {
+  const parentListItem = getListItemParentNode(displayNode);
+  if (!parentListItem) return;
+
+  const listItemRegex = /^\s*-\s*(.+)$/;
+  const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
+
+  let currentPageName = "";
+  let currentListItem: ListItemNode | null = null;
+
+  for (const node of sortedNodes) {
+    const match = node.node.match(listItemRegex);
+    if (match) {
+      if (node.pageName !== currentPageName) {
+        currentPageName = node.pageName;
+        const pageNameListItem = new ListItemNode();
+        pageNameListItem.append(new TextNode("[[" + currentPageName + "]]"));
+        $addChildListItem(parentListItem, false, false, pageNameListItem);
+        currentListItem = pageNameListItem;
+      }
+
+      if (currentListItem) {
+        const listItemNode = new ListItemNode();
+        listItemNode.append(new TextNode(match[1]));
+        $addChildListItem(currentListItem, false, false, listItemNode);
+      }
+    }
+  }
+}
 function registerFormulaHandlers(editor: LexicalEditor) {
   return mergeRegister(
     editor.registerNodeTransform(TextNode, (node) => {
@@ -192,20 +226,10 @@ function registerFormulaHandlers(editor: LexicalEditor) {
     ),
     editor.registerCommand(
       CREATE_FORMULA_NODES,
-      ({ displayNodeKey, output }) => {
+      ({ displayNodeKey, nodesMarkdown }) => {
         const displayNode = $getNodeByKey(displayNodeKey);
         if (displayNode && $isFormulaDisplayNode(displayNode)) {
-          const parentListItem = getListItemParentNode(displayNode);
-          if (!parentListItem) return true;
-          const listItemRegex = /^\s*-\s*(.+)$/;
-          for (const line of output.split("\n")) {
-            const match = line.match(listItemRegex);
-            if (match) {
-              const listItemNode = new ListItemNode();
-              listItemNode.append(new TextNode(match[1]));
-              $addChildListItem(parentListItem, false, false, listItemNode);
-            }
-          }
+          createFormulaOutputNodes(displayNode, nodesMarkdown);
         }
         return true;
       },

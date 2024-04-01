@@ -8,7 +8,7 @@ import {
 import { getFormulaOutput } from '@/app/lib/formula/FormulaOutput';
 import { PagesContext } from '../context/pages-context';
 import { usePromises } from '../context/formula-request-context';
-import { FormulaOutputType } from '../lib/formula/formula-definitions';
+import { FormulaOutputType, NodeMarkdown } from '../lib/formula/formula-definitions';
 
 import './FormulaDisplayComponent.css';
 
@@ -35,16 +35,16 @@ export default function FormulaDisplayComponent(
         .then(response => {
           if (response) {
             if (response.type === FormulaOutputType.Text) {
-              setOutput(response.output);
+              setOutput(response.output as string);
               editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
                 displayNodeKey: nodeKey,
-                output: response.output,
+                output: response.output as string,
               });
             } else if (response.type === FormulaOutputType.NodeMarkdown) {
               setOutput("@@childnodes");
               editor.dispatchCommand(CREATE_FORMULA_NODES, {
                 displayNodeKey: nodeKey,
-                output: response.output,
+                nodesMarkdown: response.output as NodeMarkdown[],
               });
               editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
                 displayNodeKey: nodeKey,
