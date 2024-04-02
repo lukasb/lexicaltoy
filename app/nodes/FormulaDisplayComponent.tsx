@@ -85,7 +85,6 @@ export default function FormulaDisplayComponent(
       setOutput("(getting response...)");
       getGPTResponse(formula);
     } else if (output === "@@childnodes") {
-    
       const sharedNodes: NodeMarkdown[] = [];
 
       // TODO maybe this should be a different map so we don't have to iterate?
@@ -95,39 +94,38 @@ export default function FormulaDisplayComponent(
         }
       }
 
-      if (sharedNodes.length > 0) {
-        let shouldUpdate = false;
-        if (sharedNodes.length !== pageLineMarkdownMap.size) {
-          shouldUpdate = true;
-        } else {
-          for (const node of sharedNodes) {
-            if (pageLineMarkdownMap.get(node.pageName + "-" + node.lineNumber.toString())
-                !== node.nodeMarkdown
-            ) {
-              shouldUpdate = true;
-              break;
-            }
-          }
-        }
-
-        // the plugin will handle removing our existing nodes before adding the new ones
-        if (shouldUpdate) {
-
-          console.log("updating shared nodes...", formula);
-          
-          const newPageLineMarkdownMap = new Map<string, string>();
-          for (const node of sharedNodes) {
-            newPageLineMarkdownMap.set(node.pageName + "-" + node.lineNumber.toString(), node.nodeMarkdown);
-          }
-          setPageLineMarkdownMap(newPageLineMarkdownMap);
-
-          editor.dispatchCommand(CREATE_FORMULA_NODES, {
-            displayNodeKey: nodeKey,
-            nodesMarkdown: sharedNodes,
-          });
-        }
+      let shouldUpdate = false;
+      if (sharedNodes.length !== pageLineMarkdownMap.size) {
+        shouldUpdate = true;
       } else {
-        // TODO what if there are no results?
+        for (const node of sharedNodes) {
+          if (
+            pageLineMarkdownMap.get(
+              node.pageName + "-" + node.lineNumber.toString()
+            ) !== node.nodeMarkdown
+          ) {
+            shouldUpdate = true;
+            break;
+          }
+        }
+      }
+
+      if (shouldUpdate) {
+        console.log("updating shared nodes...", formula);
+
+        const newPageLineMarkdownMap = new Map<string, string>();
+        for (const node of sharedNodes) {
+          newPageLineMarkdownMap.set(
+            node.pageName + "-" + node.lineNumber.toString(),
+            node.nodeMarkdown
+          );
+        }
+        setPageLineMarkdownMap(newPageLineMarkdownMap);
+
+        editor.dispatchCommand(CREATE_FORMULA_NODES, {
+          displayNodeKey: nodeKey,
+          nodesMarkdown: sharedNodes,
+        });
       }
     }
   }, [formula, output, sharedNodeMap, editor, nodeKey, getGPTResponse, pageLineMarkdownMap]);
