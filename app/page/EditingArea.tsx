@@ -14,6 +14,7 @@ import { getJournalTitle } from '@/app/lib/journal-helpers';
 import { handleNewJournalPage, handleDeleteStaleJournalPages, getTodayJournalPage } from "@/app/lib/journal-helpers";
 import FlexibleEditorLayout from "./FlexibleEditorContainer";
 import PagesManager from "./PagesManager";
+import { SharedNodeProvider } from "../context/shared-node-context";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -132,6 +133,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <PagesContext.Provider value={currentPages}>
+        <SharedNodeProvider>
         <PagesManager setPages={setCurrentPages} />
         <Omnibar
           ref={omnibarRef}
@@ -181,6 +183,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                   deletePage={handleDeletePage}
             />
           )}
+          </SharedNodeProvider>
       </PagesContext.Provider>
     </div>
   )  

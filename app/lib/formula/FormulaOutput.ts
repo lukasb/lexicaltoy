@@ -1,5 +1,5 @@
 import { 
-  FormulaStringOutput,
+  FormulaOutput,
   isFormulaDefinitionWithPage,
   FormulaOutputType
 } from './formula-definitions';
@@ -60,16 +60,16 @@ async function getPagesContext(pageSpec: string, pages: Page[]): Promise<string 
 }
 
 // Define a list of regex-callback pairs outside the function
-const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray) => Promise<FormulaStringOutput>]> = [
+const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray) => Promise<FormulaOutput>]> = [
   [/^find\(\)$/, async () => (
     { output: [
-      {node: '- hello there', pageName: 'some page'},
-      {node: '- general kenobi', pageName: 'another page'},
-      {node: '- you are a bold one', pageName: 'another page'}
+      {nodeMarkdown: '- hello there', pageName: 'some page', lineNumber: 1},
+      {nodeMarkdown: '- general kenobi', pageName: 'another page', lineNumber: 2},
+      {nodeMarkdown: '- you are a bold one', pageName: 'another page', lineNumber: 3}
     ], type: FormulaOutputType.NodeMarkdown })],
 ];
 
-export async function getFormulaOutput(formula: string, pages: Page[]): Promise<FormulaStringOutput | null> {
+export async function getFormulaOutput(formula: string, pages: Page[]): Promise<FormulaOutput | null> {
   console.log("getting formula output", formula);
 
   // Check if the formula matches any of the regex patterns

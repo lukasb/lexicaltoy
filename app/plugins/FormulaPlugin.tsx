@@ -42,10 +42,8 @@ import { NodeMarkdown } from "../lib/formula/formula-definitions";
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
 let __formulaEditorNodeKey = "";
 
-function $replaceWithFormulaEditorNode(node: FormulaDisplayNode) {
-
-  if (node.getOutput() === "@@childnodes") {
-    let parent = node.getParent();
+function $deleteFormulaDisplayNodeChildren(node: FormulaDisplayNode) {
+  let parent = node.getParent();
     while (parent && !$isListItemNode(parent)) {
       parent = parent.getParent();
     }
@@ -53,6 +51,13 @@ function $replaceWithFormulaEditorNode(node: FormulaDisplayNode) {
       const listItem = parent as ListItemNode;
       $deleteChildrenFromListItem(listItem);
     }
+}
+
+function $replaceWithFormulaEditorNode(node: FormulaDisplayNode) {
+
+  // TODO there's probably a better way
+  if (node.getOutput() === "@@childnodes") {
+    $deleteFormulaDisplayNodeChildren(node);
   }
 
   const textSibling = node.getNextSibling();
@@ -105,11 +110,14 @@ function createFormulaOutputNodes(displayNode: FormulaDisplayNode, nodesMarkdown
   const listItemRegex = /^\s*-\s*(.+)$/;
   const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
 
+  // TODO maybe warn the user that any existing children will be deleted?
+  $deleteFormulaDisplayNodeChildren(displayNode);
+
   let currentPageName = "";
   let currentPageListItem: ListItemNode | null = null;
 
   for (const node of sortedNodes) {
-    const match = node.node.match(listItemRegex);
+    const match = node.nodeMarkdown.match(listItemRegex);
     if (match) {
       if (node.pageName !== currentPageName) {
         currentPageName = node.pageName;

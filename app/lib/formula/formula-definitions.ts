@@ -35,22 +35,23 @@ export enum FormulaOutputType {
   NodeMarkdown = 'nodeMarkdown',
 }
 
-const NodeMarkdownSchema = z.object({
-  node: z.string(),
+export const NodeMarkdownSchema = z.object({
+  nodeMarkdown: z.string(),
   pageName: z.string(),
+  lineNumber: z.number()
 });
 
 export type NodeMarkdown = z.infer<typeof NodeMarkdownSchema>;
 
-const FormulaStringOutputSchema = z.object({
+const FormulaOutputSchema = z.object({
   output: z.union([
     z.string(),
     z.array(NodeMarkdownSchema),
   ]),
-  type: z.nativeEnum(FormulaOutputType),
+  type: z.nativeEnum(FormulaOutputType)
 });
 
-export type FormulaStringOutput = z.infer<typeof FormulaStringOutputSchema>;
+export type FormulaOutput = z.infer<typeof FormulaOutputSchema>;
 /*
 const FormulaInputSchema = z.union([ FormulaDefinitionSchema, UserPromptSchema ]);
 export type FormulaInput = z.infer<typeof FormulaInputSchema>;
