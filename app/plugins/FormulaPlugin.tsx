@@ -10,6 +10,7 @@ import {
 import { 
   LexicalEditor,
   TextNode,
+  LexicalNode,
   ElementNode,
   SELECTION_CHANGE_COMMAND,
   COMMAND_PRIORITY_EDITOR,
@@ -22,6 +23,7 @@ import {
 } from "lexical";
 import {
   ListItemNode,
+  ListNode,
   $isListItemNode
 } from "@lexical/list";
 import { mergeRegister } from "@lexical/utils";
@@ -29,7 +31,8 @@ import {
   $getActiveListItemFromSelection,
   getListItemParentNode,
   $addChildListItem,
-  $deleteChildrenFromListItem
+  $deleteChildrenFromListItem,
+  $getListItemContainingChildren
 } from "@/app/lib/list-utils";
 import { 
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
@@ -45,15 +48,20 @@ import { useSharedNodeContext } from "../context/shared-node-context";
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
 let __formulaEditorNodeKey = "";
 
-function $deleteFormulaDisplayNodeChildren(node: FormulaDisplayNode) {
+function $getContainingListItemNode(node: LexicalNode): ListItemNode | null {
   let parent = node.getParent();
-    while (parent && !$isListItemNode(parent)) {
-      parent = parent.getParent();
-    }
-    if (parent) {
-      const listItem = parent as ListItemNode;
-      $deleteChildrenFromListItem(listItem);
-    }
+  while (parent && !$isListItemNode(parent)) {
+    parent = parent.getParent();
+  }
+  return parent;
+}
+
+function $deleteFormulaDisplayNodeChildren(node: FormulaDisplayNode) {
+  const parent = $getContainingListItemNode(node);
+  if (parent) {
+    const listItem = parent as ListItemNode;
+    $deleteChildrenFromListItem(listItem);
+  }
 }
 
 function $replaceWithFormulaEditorNode(node: FormulaDisplayNode) {
@@ -137,6 +145,14 @@ function createFormulaOutputNodes(
         const listItemNode = new ListItemNode();
         listItemNode.append(new TextNode(match[1]));
         $addChildListItem(currentPageListItem, false, false, listItemNode);
+
+        console.log("added", listItemNode.getKey());
+        const listNode = $getListItemContainingChildren(currentPageListItem)?.getChildren()[0] as ListNode;
+        if (listNode) {
+        for (const child in listNode.getChildren()) {
+          console.log("child", child);
+        }
+        }
         setLocalSharedNodeMap((prevMap) => {
           const updatedMap = new Map(prevMap);
           updatedMap.set(listItemNode.getKey(), node);
@@ -153,142 +169,165 @@ function registerFormulaHandlers(
   setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>,
   updateNodeMarkdownGlobal: (updatedNodeMarkdown: NodeMarkdown) => void
   ) {
-  return mergeRegister(
-    editor.registerNodeTransform(TextNode, (node) => {
-      if (
-        !(node.getParent() instanceof ListItemNode) ||
-        node.getIndexWithinParent() !== 0 ||
-        node instanceof FormulaEditorNode
-      ) {
-        return;
-      }
-      const textContents = node.getTextContent();
-      const { formula: formulaText, result: resultString } = parseFormulaMarkdown(textContents);
-      if (formulaText && resultString) {
-        const formulaDisplayNode = $createFormulaDisplayNode(formulaText, resultString);
-        node.replace(formulaDisplayNode);
-      } else if (textContents.startsWith("=")) {
-        const formulaEditorNode = new FormulaEditorNode(textContents);
-        node.replace(formulaEditorNode);
-        __formulaEditorNodeKey = formulaEditorNode.getKey();
-      }
-    }),
-    editor.registerNodeTransform(FormulaEditorNode, (node) => {
-      // this logic is mostly around making sure if we serialize a FormulaEditorNode
-      // that it is turned back into a FormulaDisplayNode when the editor is reloaded
-      // TODO maybe handle this in FormulaEditorNode.importJSON instead?
-      const textContents = node.getTextContent();
-
-      if (!textContents.startsWith("=")) {
-        const textNode = new TextNode(textContents);
-        node.replace(textNode);
-        __formulaEditorNodeKey = "";
-      } else {
-        const selection = $getSelection();
-        if (selection === null || !$isRangeSelection(selection) || !selection.isCollapsed()) {
-          $replaceWithFormulaDisplayNode(node);
+    return mergeRegister(
+      editor.registerNodeTransform(TextNode, (node) => {
+        if (
+          !(node.getParent() instanceof ListItemNode) ||
+          node.getIndexWithinParent() !== 0 ||
+          node instanceof FormulaEditorNode
+        ) {
+          return;
         }
-        const selectionListItemNode = $getActiveListItemFromSelection(selection);
-        if (selectionListItemNode) {
-          const editorListItemNode = node.getParent();
-          if (selectionListItemNode.getKey() !== editorListItemNode.getKey()) {
+        const textContents = node.getTextContent();
+        const { formula: formulaText, result: resultString } =
+          parseFormulaMarkdown(textContents);
+        if (formulaText && resultString) {
+          const formulaDisplayNode = $createFormulaDisplayNode(
+            formulaText,
+            resultString
+          );
+          node.replace(formulaDisplayNode);
+        } else if (textContents.startsWith("=")) {
+          const formulaEditorNode = new FormulaEditorNode(textContents);
+          node.replace(formulaEditorNode);
+          __formulaEditorNodeKey = formulaEditorNode.getKey();
+        }
+      }),
+      editor.registerNodeTransform(FormulaEditorNode, (node) => {
+        // this logic is mostly around making sure if we serialize a FormulaEditorNode
+        // that it is turned back into a FormulaDisplayNode when the editor is reloaded
+        // TODO maybe handle this in FormulaEditorNode.importJSON instead?
+        const textContents = node.getTextContent();
+
+        if (!textContents.startsWith("=")) {
+          const textNode = new TextNode(textContents);
+          node.replace(textNode);
+          __formulaEditorNodeKey = "";
+        } else {
+          const selection = $getSelection();
+          if (
+            selection === null ||
+            !$isRangeSelection(selection) ||
+            !selection.isCollapsed()
+          ) {
             $replaceWithFormulaDisplayNode(node);
           }
-        }
-      }
-    }),
-    editor.registerCommand(
-      SELECTION_CHANGE_COMMAND,
-      () => {
-        
-        const selection = $getSelection();
-        if (selection === null) return false;
-
-        if ($isNodeSelection(selection)) {
-          const node = selection.getNodes()[0];
-          if (haveExistingFormulaEditorNode() && node.getKey() !== __formulaEditorNodeKey) {
-            replaceExistingFormulaEditorNode();
-          }
-          if ($isFormulaDisplayNode(node)) {
-            $replaceWithFormulaEditorNode(node);
-          } else if ($isListItemNode(node)) {
-            const listItemNode = node;
-            if (listItemNode?.getChildren()[0] instanceof FormulaDisplayNode) {
-              $replaceWithFormulaEditorNode(listItemNode.getChildren()[0] as FormulaDisplayNode);
+          const selectionListItemNode =
+            $getActiveListItemFromSelection(selection);
+          if (selectionListItemNode) {
+            const editorListItemNode = node.getParent();
+            if (
+              selectionListItemNode.getKey() !== editorListItemNode.getKey()
+            ) {
+              $replaceWithFormulaDisplayNode(node);
             }
           }
+        }
+      }),
+      editor.registerCommand(
+        SELECTION_CHANGE_COMMAND,
+        () => {
+          const selection = $getSelection();
+          if (selection === null) return false;
+
+          if ($isNodeSelection(selection)) {
+            const node = selection.getNodes()[0];
+            if (
+              haveExistingFormulaEditorNode() &&
+              node.getKey() !== __formulaEditorNodeKey
+            ) {
+              replaceExistingFormulaEditorNode();
+            }
+            if ($isFormulaDisplayNode(node)) {
+              $replaceWithFormulaEditorNode(node);
+            } else if ($isListItemNode(node)) {
+              const listItemNode = node;
+              if (
+                listItemNode?.getChildren()[0] instanceof FormulaDisplayNode
+              ) {
+                $replaceWithFormulaEditorNode(
+                  listItemNode.getChildren()[0] as FormulaDisplayNode
+                );
+              }
+            }
+            return false;
+          }
+
+          if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
+            return false;
+          }
+
+          const activeNode = selection.anchor.getNode();
+
+          if (
+            haveExistingFormulaEditorNode() &&
+            activeNode.getKey() !== __formulaEditorNodeKey
+          ) {
+            replaceExistingFormulaEditorNode();
+          }
+
+          const listItemNode = $getActiveListItemFromSelection(selection);
+          if (
+            listItemNode &&
+            listItemNode.getChildren()[0] instanceof FormulaDisplayNode
+          ) {
+            $replaceWithFormulaEditorNode(
+              listItemNode.getChildren()[0] as FormulaDisplayNode
+            );
+          }
+
           return false;
-        }
-        
-        if (
-          !$isRangeSelection(selection) ||
-          !selection.isCollapsed()
-        ) {
-          return false;
-        }
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+      editor.registerCommand(
+        SWAP_FORMULA_DISPLAY_FOR_EDITOR,
+        ({ displayNodeKey }) => {
+          const displayNode = $getNodeByKey(displayNodeKey);
+          if (displayNode && $isFormulaDisplayNode(displayNode)) {
+            $replaceWithFormulaEditorNode(displayNode);
+          }
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+      editor.registerCommand(
+        STORE_FORMULA_OUTPUT,
+        ({ displayNodeKey, output }) => {
+          const displayNode = $getNodeByKey(displayNodeKey);
+          if (displayNode && $isFormulaDisplayNode(displayNode)) {
+            displayNode.setOutput(output);
+          }
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+      editor.registerCommand(
+        CREATE_FORMULA_NODES,
+        ({ displayNodeKey, nodesMarkdown }) => {
+          const displayNode = $getNodeByKey(displayNodeKey);
+          if (displayNode && $isFormulaDisplayNode(displayNode)) {
+            createFormulaOutputNodes(
+              displayNode,
+              nodesMarkdown,
+              setLocalSharedNodeMap
+            );
+          }
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+      editor.registerMutationListener(ListItemNode, (mutations) => {
+        console.log("mutation listener");
 
-        const activeNode = selection.anchor.getNode();
+        if (localSharedNodeMap.size === 0) return;
 
-        if (haveExistingFormulaEditorNode() && activeNode.getKey() !== __formulaEditorNodeKey) {
-          replaceExistingFormulaEditorNode();
-        }
+        editor.getEditorState().read(() => {
+          for (const [key, type] of mutations) {
+            if (key in localSharedNodeMap.keys()) {
+              // this doesn't work but the code might be useful later
 
-        const listItemNode = $getActiveListItemFromSelection(selection);
-        if (listItemNode && listItemNode.getChildren()[0] instanceof FormulaDisplayNode) {
-          $replaceWithFormulaEditorNode(listItemNode.getChildren()[0] as FormulaDisplayNode);
-        }
-        
-        return false;
-        
-      },
-      COMMAND_PRIORITY_EDITOR,
-    ),
-    editor.registerCommand(
-      SWAP_FORMULA_DISPLAY_FOR_EDITOR,
-      ({ displayNodeKey }) => {
-        const displayNode = $getNodeByKey(displayNodeKey);
-        if (displayNode && $isFormulaDisplayNode(displayNode)) {
-          $replaceWithFormulaEditorNode(displayNode);
-        }
-        return true;
-      },
-      COMMAND_PRIORITY_EDITOR
-    ),
-    editor.registerCommand(
-      STORE_FORMULA_OUTPUT,
-      ({ displayNodeKey, output }) => {
-        const displayNode = $getNodeByKey(displayNodeKey);
-        if (displayNode && $isFormulaDisplayNode(displayNode)) {
-          displayNode.setOutput(output);
-        }
-        return true;
-      },
-      COMMAND_PRIORITY_EDITOR
-    ),
-    editor.registerCommand(
-      CREATE_FORMULA_NODES,
-      ({ displayNodeKey, nodesMarkdown }) => {
-        const displayNode = $getNodeByKey(displayNodeKey);
-        if (displayNode && $isFormulaDisplayNode(displayNode)) {
-          createFormulaOutputNodes(displayNode, nodesMarkdown, setLocalSharedNodeMap);
-        }
-        return true;
-      },
-      COMMAND_PRIORITY_EDITOR
-    ),
-    editor.registerMutationListener(ListItemNode, (mutations) => {
-
-      console.log("mutation listener");
-
-      if (localSharedNodeMap.size === 0) return;
-      
-      editor.getEditorState().read(() => {
-        for (const [key, type] of mutations) {
-          if (key in localSharedNodeMap.keys()) {
-            
-            // this doesn't work but the code might be useful later
-
-            /*
+              /*
             if (type === "updated") {
               const node = $getNodeByKey(key);
               const updatedNodeMarkdown = $convertToMarkdownString(
@@ -304,16 +343,59 @@ function registerFormulaHandlers(
             }
             */
 
-            if (type === "destroyed") {
-              // TODO handle this
+              if (type === "destroyed") {
+                // TODO handle this
+              }
             }
           }
-        }
-      });
+        });
+      }),
+      editor.registerMutationListener(TextNode, (mutations) => {
+        console.log("mutation listener for TextNodes");
+        if (localSharedNodeMap.size === 0) return;
 
-    })
-  );
-}
+        editor.getEditorState().read(() => {
+          for (const [key, type] of mutations) {
+            const node = $getNodeByKey(key);
+            if (!node) continue;
+
+            const listItem = $getContainingListItemNode(node);
+            if (!listItem) continue;
+
+            if (localSharedNodeMap.has(listItem.getKey())) {
+                           
+              const listItemKey = listItem.getKey();
+
+              // TODO a better way to normalize node markdown
+              const updatedNodeMarkdown = "- " + $convertToMarkdownString(
+                TRANSFORMERS,
+                { getChildren: () => [listItem] } as unknown as ElementNode
+              );
+
+              if (
+                updatedNodeMarkdown !==
+                localSharedNodeMap.get(listItemKey)?.nodeMarkdown
+              ) {
+                const oldNodeMarkdown = localSharedNodeMap.get(listItemKey);
+                if (oldNodeMarkdown) {
+                  localSharedNodeMap.set(listItemKey, {
+                    pageName: oldNodeMarkdown.pageName,
+                    lineNumber: oldNodeMarkdown.lineNumber,
+                    nodeMarkdown: updatedNodeMarkdown,
+                  });
+                  console.log("updating node markdown, was", oldNodeMarkdown.nodeMarkdown);
+                  updateNodeMarkdownGlobal({
+                    ...oldNodeMarkdown,
+                    nodeMarkdown: updatedNodeMarkdown,
+                  });
+                }
+              }
+            }
+          }
+        });
+      })
+    );
+  }
 
 export function FormulaPlugin(): null {
 
