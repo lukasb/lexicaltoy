@@ -287,7 +287,7 @@ function registerFormulaHandlers(
           if (key in localSharedNodeMap.keys()) {
             
             // this doesn't work but the code might be useful later
-            
+
             /*
             if (type === "updated") {
               const node = $getNodeByKey(key);
@@ -326,7 +326,6 @@ export function FormulaPlugin(): null {
       throw new Error('FormulaPlugin: FormulaEditorNode and/or FormulaDisplayNode not registered on editor');
     }
     return registerFormulaHandlers(editor, localSharedNodeMap, setLocalSharedNodeMap, updateNodeMarkdown);
-    //return registerFormulaHandlers(editor, localSharedNodeMap, setLocalSharedNodeMap);
   }, [editor, localSharedNodeMap, updateNodeMarkdown]);
 
   return null;
