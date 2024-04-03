@@ -23,7 +23,8 @@ export const useFormulaResultService = () => {
     if (output.type === FormulaOutputType.NodeMarkdown) {
       const resultNodes = output.output as NodeMarkdown[];
 
-      // Update the context with the query results
+      // TODO maybe only update the map if things have actually changed
+
       setSharedNodeMap((prevMap) => {
         const updatedMap = new Map(prevMap);
         resultNodes.forEach((result) => {

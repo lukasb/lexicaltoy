@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { 
   FormulaEditorNode,
@@ -10,6 +10,7 @@ import {
 import { 
   LexicalEditor,
   TextNode,
+  ElementNode,
   SELECTION_CHANGE_COMMAND,
   COMMAND_PRIORITY_EDITOR,
   $getSelection,
@@ -37,6 +38,8 @@ import {
 } from "../lib/formula-commands";
 import { parseFormulaMarkdown } from "../lib/formula/formula-markdown-converters";
 import { NodeMarkdown } from "../lib/formula/formula-definitions";
+import { $convertToMarkdownString, TRANSFORMERS } from "@lexical/markdown";
+import { useSharedNodeContext } from "../context/shared-node-context";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -103,7 +106,10 @@ function sortNodeMarkdownByPageName(nodes: NodeMarkdown[]): NodeMarkdown[] {
   return nodes.slice().sort((a, b) => a.pageName.localeCompare(b.pageName));
 }
 
-function createFormulaOutputNodes(displayNode: FormulaDisplayNode, nodesMarkdown: NodeMarkdown[]) {
+function createFormulaOutputNodes(
+  displayNode: FormulaDisplayNode, nodesMarkdown: NodeMarkdown[],
+  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>) {
+
   const parentListItem = getListItemParentNode(displayNode);
   if (!parentListItem) return;
 
@@ -131,12 +137,22 @@ function createFormulaOutputNodes(displayNode: FormulaDisplayNode, nodesMarkdown
         const listItemNode = new ListItemNode();
         listItemNode.append(new TextNode(match[1]));
         $addChildListItem(currentPageListItem, false, false, listItemNode);
+        setLocalSharedNodeMap((prevMap) => {
+          const updatedMap = new Map(prevMap);
+          updatedMap.set(listItemNode.getKey(), node);
+          return updatedMap;
+        });
       }
     }
   }
 }
 
-function registerFormulaHandlers(editor: LexicalEditor) {
+function registerFormulaHandlers(
+  editor: LexicalEditor,
+  localSharedNodeMap: Map<string, NodeMarkdown>,
+  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>,
+  updateNodeMarkdownGlobal: (updatedNodeMarkdown: NodeMarkdown) => void
+  ) {
   return mergeRegister(
     editor.registerNodeTransform(TextNode, (node) => {
       if (
@@ -162,6 +178,7 @@ function registerFormulaHandlers(editor: LexicalEditor) {
       // that it is turned back into a FormulaDisplayNode when the editor is reloaded
       // TODO maybe handle this in FormulaEditorNode.importJSON instead?
       const textContents = node.getTextContent();
+
       if (!textContents.startsWith("=")) {
         const textNode = new TextNode(textContents);
         node.replace(textNode);
@@ -183,6 +200,7 @@ function registerFormulaHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       SELECTION_CHANGE_COMMAND,
       () => {
+        
         const selection = $getSelection();
         if (selection === null) return false;
 
@@ -219,8 +237,9 @@ function registerFormulaHandlers(editor: LexicalEditor) {
         if (listItemNode && listItemNode.getChildren()[0] instanceof FormulaDisplayNode) {
           $replaceWithFormulaEditorNode(listItemNode.getChildren()[0] as FormulaDisplayNode);
         }
-      
+        
         return false;
+        
       },
       COMMAND_PRIORITY_EDITOR,
     ),
@@ -251,23 +270,53 @@ function registerFormulaHandlers(editor: LexicalEditor) {
       ({ displayNodeKey, nodesMarkdown }) => {
         const displayNode = $getNodeByKey(displayNodeKey);
         if (displayNode && $isFormulaDisplayNode(displayNode)) {
-          createFormulaOutputNodes(displayNode, nodesMarkdown);
+          createFormulaOutputNodes(displayNode, nodesMarkdown, setLocalSharedNodeMap);
         }
         return true;
       },
       COMMAND_PRIORITY_EDITOR
-    )
+    ),
+    editor.registerMutationListener(ListItemNode, (mutations) => {
+      if (localSharedNodeMap.size === 0) return;
+      
+      editor.getEditorState().read(() => {
+        for (const [key, type] of mutations) {
+          if (key in localSharedNodeMap.keys()) {
+            if (type === "updated") {
+              const node = $getNodeByKey(key);
+              const updatedNodeMarkdown = $convertToMarkdownString(
+                TRANSFORMERS,
+                { getChildren: () => [node] } as unknown as ElementNode
+              );
+              if (updatedNodeMarkdown !== localSharedNodeMap.get(key)?.nodeMarkdown) {
+                const oldNodeMarkdown = localSharedNodeMap.get(key);
+                if (oldNodeMarkdown) {
+                  updateNodeMarkdownGlobal({ ...oldNodeMarkdown, nodeMarkdown: updatedNodeMarkdown });
+                }
+              }
+            } else if (type === "destroyed") {
+              // TODO handle this
+            }
+          }
+        }
+      });
+
+    })
   );
 }
 
 export function FormulaPlugin(): null {
+
   const [editor] = useLexicalComposerContext();
+  const [localSharedNodeMap, setLocalSharedNodeMap] = useState(new Map<string, NodeMarkdown>());
+  const { sharedNodeMap: globalSharedNodeMap, setSharedNodeMap, updateNodeMarkdown } = useSharedNodeContext();
+
   useEffect(() => {
     if (!editor.hasNodes([FormulaEditorNode, FormulaDisplayNode])) {
       throw new Error('FormulaPlugin: FormulaEditorNode and/or FormulaDisplayNode not registered on editor');
     }
-    return registerFormulaHandlers(editor);
-  }, [editor]);
+    return registerFormulaHandlers(editor, localSharedNodeMap, setLocalSharedNodeMap, updateNodeMarkdown);
+  }, [editor, localSharedNodeMap, updateNodeMarkdown]);
 
   return null;
 }
