@@ -277,11 +277,18 @@ function registerFormulaHandlers(
       COMMAND_PRIORITY_EDITOR
     ),
     editor.registerMutationListener(ListItemNode, (mutations) => {
+
+      console.log("mutation listener");
+
       if (localSharedNodeMap.size === 0) return;
       
       editor.getEditorState().read(() => {
         for (const [key, type] of mutations) {
           if (key in localSharedNodeMap.keys()) {
+            
+            // this doesn't work but the code might be useful later
+            
+            /*
             if (type === "updated") {
               const node = $getNodeByKey(key);
               const updatedNodeMarkdown = $convertToMarkdownString(
@@ -291,10 +298,13 @@ function registerFormulaHandlers(
               if (updatedNodeMarkdown !== localSharedNodeMap.get(key)?.nodeMarkdown) {
                 const oldNodeMarkdown = localSharedNodeMap.get(key);
                 if (oldNodeMarkdown) {
-                 // updateNodeMarkdownGlobal({ ...oldNodeMarkdown, nodeMarkdown: updatedNodeMarkdown });
+                  updateNodeMarkdownGlobal({ ...oldNodeMarkdown, nodeMarkdown: updatedNodeMarkdown });
                 }
               }
-            } else if (type === "destroyed") {
+            }
+            */
+
+            if (type === "destroyed") {
               // TODO handle this
             }
           }
