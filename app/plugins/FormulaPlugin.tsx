@@ -291,7 +291,7 @@ function registerFormulaHandlers(
               if (updatedNodeMarkdown !== localSharedNodeMap.get(key)?.nodeMarkdown) {
                 const oldNodeMarkdown = localSharedNodeMap.get(key);
                 if (oldNodeMarkdown) {
-                  updateNodeMarkdownGlobal({ ...oldNodeMarkdown, nodeMarkdown: updatedNodeMarkdown });
+                 // updateNodeMarkdownGlobal({ ...oldNodeMarkdown, nodeMarkdown: updatedNodeMarkdown });
                 }
               }
             } else if (type === "destroyed") {
@@ -316,6 +316,7 @@ export function FormulaPlugin(): null {
       throw new Error('FormulaPlugin: FormulaEditorNode and/or FormulaDisplayNode not registered on editor');
     }
     return registerFormulaHandlers(editor, localSharedNodeMap, setLocalSharedNodeMap, updateNodeMarkdown);
+    //return registerFormulaHandlers(editor, localSharedNodeMap, setLocalSharedNodeMap);
   }, [editor, localSharedNodeMap, updateNodeMarkdown]);
 
   return null;

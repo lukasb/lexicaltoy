@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { NodeMarkdown, NodeMarkdownSchema } from '@/app/lib/formula/formula-definitions';
 import { z } from 'zod';
 
@@ -36,7 +36,7 @@ type Props = {
 export const SharedNodeProvider: React.FC<Props> = ({ children }) => {
   const [sharedNodeMap, setSharedNodeMap] = useState<SharedNodeMap>(new Map());
 
-  const updateSharedNode = (updatedNodeMarkdown: NodeMarkdown) => {
+  const updateSharedNode = useCallback((updatedNodeMarkdown: NodeMarkdown) => {
     console.log("updating shared node");
     const key = createSharedNodeKey(updatedNodeMarkdown.pageName, updatedNodeMarkdown.lineNumber);
     if (sharedNodeMap.get(key)?.output === updatedNodeMarkdown) return;
@@ -48,7 +48,7 @@ export const SharedNodeProvider: React.FC<Props> = ({ children }) => {
       };
       return new Map(prevMap).set(key, newNode);
     });
-  };
+  }, [sharedNodeMap]);
 
   return (
     <SharedNodeContext.Provider value={{ sharedNodeMap: sharedNodeMap, setSharedNodeMap: setSharedNodeMap, updateNodeMarkdown: updateSharedNode }}>
