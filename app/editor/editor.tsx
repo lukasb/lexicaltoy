@@ -1,7 +1,7 @@
 "use client";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useContext, useCallback } from "react";
 import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";

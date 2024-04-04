@@ -34,7 +34,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const setupDoneRef = useRef(false);
 
   const executeJournalLogic = useCallback(() => {
-    console.log('Executing journal logic');
     const today = new Date();
     const todayJournalTitle = getJournalTitle(today);
     if (!currentPages.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
@@ -87,7 +86,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   }
 
   const openPage = (page: Page) => {
-    console.log("opening page", page);
     setOpenPageIds((prevPageIds) => {
       // doing all this inside the setOpenPages is necessary in some cases (like when opening from clicking a wikilink)
       // and not in others (like when opening from the omnibar.) I have no idea why.

@@ -13,8 +13,6 @@ export const useFormulaResultService = () => {
 
   const getFormulaResults = async (query: string): Promise<FormulaOutput | null> => {
 
-    console.log("getting formula results", query);
-
     // Perform the query and fetch the results
     const output = await getFormulaOutput(query, pages);
 

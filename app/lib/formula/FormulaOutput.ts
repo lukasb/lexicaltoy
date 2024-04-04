@@ -70,7 +70,6 @@ const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray) => Promise<Formul
 ];
 
 export async function getFormulaOutput(formula: string, pages: Page[]): Promise<FormulaOutput | null> {
-  console.log("getting formula output", formula);
 
   // Check if the formula matches any of the regex patterns
   for (const [regex, callback] of regexCallbacks) {
@@ -97,7 +96,6 @@ export async function getFormulaOutput(formula: string, pages: Page[]): Promise<
     }
   }
 
-  console.log("getting short response");
   const gptResponse = await getShortGPTChatResponse(prompt);
   if (!gptResponse) return null;
 

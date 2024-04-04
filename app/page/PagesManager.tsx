@@ -17,7 +17,7 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
           try {
             const newRevisionNumber = await updatePageContentsWithHistory(page.id, page.value, page.revisionNumber);
             if (newRevisionNumber === -1) {
-              alert("Failed to save page because you edited an old version, please relead for the latest version.");
+              alert(`Failed to save page ${page.title} because you edited an old version, please relead for the latest version.`);
               return;
             }
             // Update the pages context with the new revision number

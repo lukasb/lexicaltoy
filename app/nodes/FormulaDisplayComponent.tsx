@@ -33,7 +33,6 @@ export default function FormulaDisplayComponent(
 
   const getFormulaOutput = useCallback(async (prompt: string) => {
     if (!hasPromise(nodeKey)) {
-      console.log("no promise");
       const promise = getFormulaResults(prompt)
         .then(response => {
           if (response) {
@@ -77,7 +76,6 @@ export default function FormulaDisplayComponent(
   useEffect(() => {
 
     if (output === "") {
-      console.log("getting response...", formula);
       setOutput("(getting response...)");
       getFormulaOutput(formula);
     } else if (output === "@@childnodes") {

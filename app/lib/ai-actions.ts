@@ -39,7 +39,6 @@ export async function getFormulaDefinition(
   prompt: string
 ): Promise<FormulaDefinition | null> {
   if (prompt[0] === '=') prompt = prompt.slice(1);
-  console.log('getting formula definition', prompt);
   try {
     const promptDefiner = getPromptDefiner(prompt);
     const toolList = [toTool(promptDefiner)];
