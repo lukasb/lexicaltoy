@@ -406,6 +406,12 @@ export function FormulaPlugin(): null {
     return registerFormulaHandlers(editor, setLocalSharedNodeMap);
   }, [editor, setLocalSharedNodeMap]);
 
+  // we register commands in two different places because if we registered the command listeners in the 
+  // same useEffect as the mutation listeners (which are dependent on updateNodeMarkdown), we would get a
+  // race condition where a change to the global shared node map would update updateNodeMarkdown, causing
+  // the command listeners to be re-registered at the same time FormulaDisplayComponent is trying to 
+  // dispatch CREATE_FORMULA_NODES to render the updated nodes ... but the command would be dropped
+
   useEffect(() => {
     if (!editor.hasNodes([FormulaEditorNode, FormulaDisplayNode])) {
       throw new Error('FormulaPlugin: FormulaEditorNode and/or FormulaDisplayNode not registered on editor');
