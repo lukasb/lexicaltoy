@@ -47,7 +47,6 @@ import { FormulaEditorNode, FormulaDisplayNode } from "@/app/nodes/FormulaNode";
 import { FormulaPlugin } from "@/app/plugins/FormulaPlugin";
 import { PromisesProvider } from "../context/formula-request-context";
 import { stripSharedNodesFromMarkdown } from "@/app/lib/formula/formula-markdown-converters";
-import { highlightChanges } from "@/app/lib/debug-helpers";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -121,7 +120,6 @@ function Editor({
       const trimmedPageContents = pageContentsWithoutSharedNodes.replace(/\s$/, '');
       const trimmedPageValue = page.value.replace(/\s$/, '');
       if (trimmedPageContents !== trimmedPageValue) {
-        console.log("Page contents changed for", page.title, highlightChanges(trimmedPageValue, trimmedPageContents));
         storePage(pageContentsWithoutSharedNodes);
       }
     });
