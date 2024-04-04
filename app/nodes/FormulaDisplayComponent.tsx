@@ -87,6 +87,9 @@ export default function FormulaDisplayComponent(
     } else if (output === "@@childnodes") {
       const sharedNodes: NodeMarkdown[] = [];
 
+      // TODO this might be triggered by a change to our own nodes, in which case we don't need to do anything
+      // when we move to Redux, maybe the action should include a node key so we can check
+
       // TODO maybe this should be a different map so we don't have to iterate?
       for (const [key, value] of sharedNodeMap.entries()) {
         if (value.queries.includes(formula)) {
@@ -111,8 +114,7 @@ export default function FormulaDisplayComponent(
       }
 
       if (shouldUpdate) {
-        console.log("updating shared nodes...", formula);
-
+        
         const newPageLineMarkdownMap = new Map<string, string>();
         for (const node of sharedNodes) {
           newPageLineMarkdownMap.set(
@@ -122,6 +124,8 @@ export default function FormulaDisplayComponent(
         }
         setPageLineMarkdownMap(newPageLineMarkdownMap);
 
+        // TODO WHY ISN"T THIS COMMAND BEING RECEIVED?
+        console.log("dispatching create formula nodes...", nodeKey, sharedNodes);
         editor.dispatchCommand(CREATE_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: sharedNodes,

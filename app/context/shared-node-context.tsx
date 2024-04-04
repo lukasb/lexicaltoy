@@ -37,10 +37,8 @@ export const SharedNodeProvider: React.FC<Props> = ({ children }) => {
   const [sharedNodeMap, setSharedNodeMap] = useState<SharedNodeMap>(new Map());
 
   const updateSharedNode = useCallback((updatedNodeMarkdown: NodeMarkdown) => {
-    console.log("updating shared node", updatedNodeMarkdown);
     const key = createSharedNodeKey(updatedNodeMarkdown.pageName, updatedNodeMarkdown.lineNumber);
     if (sharedNodeMap.get(key)?.output === updatedNodeMarkdown) return;
-    console.log("not a match");
     setSharedNodeMap((prevMap) => {
       const existingNode = prevMap.get(key);
       const newNode: QueryNode = {

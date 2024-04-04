@@ -116,7 +116,11 @@ function Editor({
     if (!editorState) return;
     editorState.read(() => {
       const editorStateMarkdown = $convertToMarkdownString(TRANSFORMERS);
-      storePage(stripSharedNodesFromMarkdown(editorStateMarkdown));
+      const pageContentsWithoutSharedNodes = stripSharedNodesFromMarkdown(editorStateMarkdown);
+      if (pageContentsWithoutSharedNodes.replace(/\s$/, '') !== page.value.replace(/\s$/, '')) {
+        console.log("Page contents changed\n", page.value, "\n", pageContentsWithoutSharedNodes);
+        storePage(pageContentsWithoutSharedNodes);
+      }
     });
   }
 

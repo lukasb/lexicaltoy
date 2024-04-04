@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { 
   FormulaEditorNode,
@@ -146,13 +146,6 @@ function createFormulaOutputNodes(
         listItemNode.append(new TextNode(match[1]));
         $addChildListItem(currentPageListItem, false, false, listItemNode);
 
-        console.log("added", listItemNode.getKey());
-        const listNode = $getListItemContainingChildren(currentPageListItem)?.getChildren()[0] as ListNode;
-        if (listNode) {
-        for (const child in listNode.getChildren()) {
-          console.log("child", child);
-        }
-        }
         setLocalSharedNodeMap((prevMap) => {
           const updatedMap = new Map(prevMap);
           updatedMap.set(listItemNode.getKey(), node);
@@ -165,9 +158,7 @@ function createFormulaOutputNodes(
 
 function registerFormulaHandlers(
   editor: LexicalEditor,
-  localSharedNodeMap: Map<string, NodeMarkdown>,
-  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>,
-  updateNodeMarkdownGlobal: (updatedNodeMarkdown: NodeMarkdown) => void
+  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>
   ) {
     return mergeRegister(
       editor.registerNodeTransform(TextNode, (node) => {
@@ -306,96 +297,110 @@ function registerFormulaHandlers(
         CREATE_FORMULA_NODES,
         ({ displayNodeKey, nodesMarkdown }) => {
           const displayNode = $getNodeByKey(displayNodeKey);
+
+          console.log("MAYBE creating formula nodes");
+
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
+
             createFormulaOutputNodes(
               displayNode,
               nodesMarkdown,
               setLocalSharedNodeMap
             );
+          } else {
+            console.error("CREATE_FORMULA_NODES: displayNode not found");
           }
           return true;
         },
         COMMAND_PRIORITY_EDITOR
-      ),
-      editor.registerMutationListener(ListItemNode, (mutations) => {
-        console.log("mutation listener");
-
-        if (localSharedNodeMap.size === 0) return;
-
-        editor.getEditorState().read(() => {
-          for (const [key, type] of mutations) {
-            if (key in localSharedNodeMap.keys()) {
-              // this doesn't work but the code might be useful later
-
-              /*
-            if (type === "updated") {
-              const node = $getNodeByKey(key);
-              const updatedNodeMarkdown = $convertToMarkdownString(
-                TRANSFORMERS,
-                { getChildren: () => [node] } as unknown as ElementNode
-              );
-              if (updatedNodeMarkdown !== localSharedNodeMap.get(key)?.nodeMarkdown) {
-                const oldNodeMarkdown = localSharedNodeMap.get(key);
-                if (oldNodeMarkdown) {
-                  updateNodeMarkdownGlobal({ ...oldNodeMarkdown, nodeMarkdown: updatedNodeMarkdown });
-                }
-              }
-            }
-            */
-
-              if (type === "destroyed") {
-                // TODO handle this
-              }
-            }
-          }
-        });
-      }),
-      editor.registerMutationListener(TextNode, (mutations) => {
-        console.log("mutation listener for TextNodes");
-        if (localSharedNodeMap.size === 0) return;
-
-        editor.getEditorState().read(() => {
-          for (const [key, type] of mutations) {
-            const node = $getNodeByKey(key);
-            if (!node) continue;
-
-            const listItem = $getContainingListItemNode(node);
-            if (!listItem) continue;
-
-            if (localSharedNodeMap.has(listItem.getKey())) {
-                           
-              const listItemKey = listItem.getKey();
-
-              // TODO a better way to normalize node markdown
-              const updatedNodeMarkdown = "- " + $convertToMarkdownString(
-                TRANSFORMERS,
-                { getChildren: () => [listItem] } as unknown as ElementNode
-              );
-
-              if (
-                updatedNodeMarkdown !==
-                localSharedNodeMap.get(listItemKey)?.nodeMarkdown
-              ) {
-                const oldNodeMarkdown = localSharedNodeMap.get(listItemKey);
-                if (oldNodeMarkdown) {
-                  localSharedNodeMap.set(listItemKey, {
-                    pageName: oldNodeMarkdown.pageName,
-                    lineNumber: oldNodeMarkdown.lineNumber,
-                    nodeMarkdown: updatedNodeMarkdown,
-                  });
-                  console.log("updating node markdown, was", oldNodeMarkdown.nodeMarkdown);
-                  updateNodeMarkdownGlobal({
-                    ...oldNodeMarkdown,
-                    nodeMarkdown: updatedNodeMarkdown,
-                  });
-                }
-              }
-            }
-          }
-        });
-      })
+      )
     );
   }
+
+  function registerFormulaMutationListeners(
+    editor: LexicalEditor,
+    localSharedNodeMap: Map<string, NodeMarkdown>,
+    updateNodeMarkdownGlobal: (updatedNodeMarkdown: NodeMarkdown) => void
+    ) {
+      return mergeRegister(
+        editor.registerMutationListener(ListItemNode, (mutations) => {
+  
+          if (localSharedNodeMap.size === 0) return;
+  
+          editor.getEditorState().read(() => {
+            for (const [key, type] of mutations) {
+              if (key in localSharedNodeMap.keys()) {
+                // this doesn't work but the code might be useful later
+  
+                /*
+              if (type === "updated") {
+                const node = $getNodeByKey(key);
+                const updatedNodeMarkdown = $convertToMarkdownString(
+                  TRANSFORMERS,
+                  { getChildren: () => [node] } as unknown as ElementNode
+                );
+                if (updatedNodeMarkdown !== localSharedNodeMap.get(key)?.nodeMarkdown) {
+                  const oldNodeMarkdown = localSharedNodeMap.get(key);
+                  if (oldNodeMarkdown) {
+                    updateNodeMarkdownGlobal({ ...oldNodeMarkdown, nodeMarkdown: updatedNodeMarkdown });
+                  }
+                }
+              }
+              */
+  
+                if (type === "destroyed") {
+                  // TODO handle this
+                }
+              }
+            }
+          });
+        }),
+        editor.registerMutationListener(TextNode, (mutations) => {
+          
+          if (localSharedNodeMap.size === 0) return;
+  
+          editor.getEditorState().read(() => {
+            for (const [key, type] of mutations) {
+              const node = $getNodeByKey(key);
+              if (!node) continue;
+  
+              const listItem = $getContainingListItemNode(node);
+              if (!listItem) continue;
+  
+              if (localSharedNodeMap.has(listItem.getKey())) {
+                             
+                const listItemKey = listItem.getKey();
+  
+                // TODO a better way to normalize node markdown
+                const updatedNodeMarkdown = "- " + $convertToMarkdownString(
+                  TRANSFORMERS,
+                  { getChildren: () => [listItem] } as unknown as ElementNode
+                );
+  
+                if (
+                  updatedNodeMarkdown !==
+                  localSharedNodeMap.get(listItemKey)?.nodeMarkdown
+                ) {
+                  const oldNodeMarkdown = localSharedNodeMap.get(listItemKey);
+                  if (oldNodeMarkdown) {
+                    localSharedNodeMap.set(listItemKey, {
+                      pageName: oldNodeMarkdown.pageName,
+                      lineNumber: oldNodeMarkdown.lineNumber,
+                      nodeMarkdown: updatedNodeMarkdown,
+                    });
+                    console.log("updating node markdown, was", oldNodeMarkdown.nodeMarkdown);
+                    updateNodeMarkdownGlobal({
+                      ...oldNodeMarkdown,
+                      nodeMarkdown: updatedNodeMarkdown,
+                    });
+                  }
+                }
+              }
+            }
+          });
+        })
+      );
+    }
 
 export function FormulaPlugin(): null {
 
@@ -404,10 +409,31 @@ export function FormulaPlugin(): null {
   const { sharedNodeMap: globalSharedNodeMap, setSharedNodeMap, updateNodeMarkdown } = useSharedNodeContext();
 
   useEffect(() => {
+    console.log("registering formula handlers");
+
+    // race condition ... at least I think that's the problem
+    // 1) we update the shared node map in the TextNdoe mutation listener above
+    // 2) FormulaDisplayComponent dispatches CREATE_FORMULA_NODES to get updated nodes
+    // 3) at the same time, more or less, this useEffect gets called and we register the handlers again
+    
     if (!editor.hasNodes([FormulaEditorNode, FormulaDisplayNode])) {
       throw new Error('FormulaPlugin: FormulaEditorNode and/or FormulaDisplayNode not registered on editor');
     }
-    return registerFormulaHandlers(editor, localSharedNodeMap, setLocalSharedNodeMap, updateNodeMarkdown);
+    return registerFormulaHandlers(editor, setLocalSharedNodeMap);
+  }, [editor, setLocalSharedNodeMap]);
+
+  useEffect(() => {
+    console.log("registering formula mutation listeners");
+
+    // race condition ... at least I think that's the problem
+    // 1) we update the shared node map in the TextNdoe mutation listener above
+    // 2) FormulaDisplayComponent dispatches CREATE_FORMULA_NODES to get updated nodes
+    // 3) at the same time, more or less, this useEffect gets called and we register the handlers again
+    
+    if (!editor.hasNodes([FormulaEditorNode, FormulaDisplayNode])) {
+      throw new Error('FormulaPlugin: FormulaEditorNode and/or FormulaDisplayNode not registered on editor');
+    }
+    return registerFormulaMutationListeners(editor, localSharedNodeMap, updateNodeMarkdown);
   }, [editor, localSharedNodeMap, updateNodeMarkdown]);
 
   return null;

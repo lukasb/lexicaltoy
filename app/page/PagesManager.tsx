@@ -2,9 +2,12 @@ import { useContext, useEffect } from 'react';
 import { PagesContext } from '@/app/context/pages-context';
 import { updatePageContentsWithHistory } from "../lib/actions";
 import { Page } from "@/app/lib/definitions";
+import { useSharedNodeContext } from '../context/shared-node-context';
 
+// TODO maybe use Redux so we don't have an O(n) operation here every time
 function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAction<Page[]>> }) {
   const pages = useContext(PagesContext);
+  const { sharedNodeMap } = useSharedNodeContext();
 
   useEffect(() => {
     const savePagesToDatabase = async () => {
@@ -32,6 +35,27 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
 
     savePagesToDatabase();
   }, [pages, setPages]);
+
+  // TODO maybe use Redux so we don't have an O(n) operation here every time
+  useEffect(() => {
+    for (const [key, value] of sharedNodeMap.entries()) {
+      const [pageName, lineNumber] = key.split("-");
+      const page = pages.find((p) => p.title === pageName);
+      if (page) {
+        const lines = page.value.split("\n");
+        const line = lines[parseInt(lineNumber) - 1];
+        if (!line || line !== value.output.nodeMarkdown) {
+          const updatedLine = value.output.nodeMarkdown;
+          // TODO this will break if we've added a new node/line
+          lines[parseInt(lineNumber) - 1] = updatedLine;
+          const updatedPage = lines.join("\n");
+          setPages((prevPages) =>
+            prevPages.map((p) => (p.title === pageName ? { ...p, value: updatedPage, pendingWrite: true } : p))
+          );
+        }
+      }
+    }
+  }, [sharedNodeMap, pages, setPages]);
 
   return null;
 }
