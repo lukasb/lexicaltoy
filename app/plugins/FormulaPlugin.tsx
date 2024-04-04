@@ -23,7 +23,6 @@ import {
 } from "lexical";
 import {
   ListItemNode,
-  ListNode,
   $isListItemNode
 } from "@lexical/list";
 import { mergeRegister } from "@lexical/utils";
@@ -32,7 +31,6 @@ import {
   getListItemParentNode,
   $addChildListItem,
   $deleteChildrenFromListItem,
-  $getListItemContainingChildren
 } from "@/app/lib/list-utils";
 import { 
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
@@ -297,18 +295,12 @@ function registerFormulaHandlers(
         CREATE_FORMULA_NODES,
         ({ displayNodeKey, nodesMarkdown }) => {
           const displayNode = $getNodeByKey(displayNodeKey);
-
-          console.log("MAYBE creating formula nodes");
-
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
-
             createFormulaOutputNodes(
               displayNode,
               nodesMarkdown,
               setLocalSharedNodeMap
             );
-          } else {
-            console.error("CREATE_FORMULA_NODES: displayNode not found");
           }
           return true;
         },
@@ -388,7 +380,6 @@ function registerFormulaHandlers(
                       lineNumber: oldNodeMarkdown.lineNumber,
                       nodeMarkdown: updatedNodeMarkdown,
                     });
-                    console.log("updating node markdown, was", oldNodeMarkdown.nodeMarkdown);
                     updateNodeMarkdownGlobal({
                       ...oldNodeMarkdown,
                       nodeMarkdown: updatedNodeMarkdown,
@@ -409,13 +400,6 @@ export function FormulaPlugin(): null {
   const { sharedNodeMap: globalSharedNodeMap, setSharedNodeMap, updateNodeMarkdown } = useSharedNodeContext();
 
   useEffect(() => {
-    console.log("registering formula handlers");
-
-    // race condition ... at least I think that's the problem
-    // 1) we update the shared node map in the TextNdoe mutation listener above
-    // 2) FormulaDisplayComponent dispatches CREATE_FORMULA_NODES to get updated nodes
-    // 3) at the same time, more or less, this useEffect gets called and we register the handlers again
-    
     if (!editor.hasNodes([FormulaEditorNode, FormulaDisplayNode])) {
       throw new Error('FormulaPlugin: FormulaEditorNode and/or FormulaDisplayNode not registered on editor');
     }
@@ -423,13 +407,6 @@ export function FormulaPlugin(): null {
   }, [editor, setLocalSharedNodeMap]);
 
   useEffect(() => {
-    console.log("registering formula mutation listeners");
-
-    // race condition ... at least I think that's the problem
-    // 1) we update the shared node map in the TextNdoe mutation listener above
-    // 2) FormulaDisplayComponent dispatches CREATE_FORMULA_NODES to get updated nodes
-    // 3) at the same time, more or less, this useEffect gets called and we register the handlers again
-    
     if (!editor.hasNodes([FormulaEditorNode, FormulaDisplayNode])) {
       throw new Error('FormulaPlugin: FormulaEditorNode and/or FormulaDisplayNode not registered on editor');
     }

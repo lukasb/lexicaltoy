@@ -5,7 +5,6 @@ import {
   STORE_FORMULA_OUTPUT,
   CREATE_FORMULA_NODES
 } from '@/app/lib/formula-commands';
-import { PagesContext } from '../context/pages-context';
 import { usePromises } from '../context/formula-request-context';
 import { FormulaOutputType, NodeMarkdown } from '../lib/formula/formula-definitions';
 import { useSharedNodeContext } from '../context/shared-node-context';
@@ -27,15 +26,12 @@ export default function FormulaDisplayComponent(
   const [formula, setFormula] = useState<string>(initialFormula);
   const [output, setOutput] = useState<string>(initialOutput);
   const [editor] = useLexicalComposerContext();
-  const pages = useContext(PagesContext);
   const { promisesMap, addPromise, removePromise, hasPromise } = usePromises();
   const { sharedNodeMap } = useSharedNodeContext();
   const { getFormulaResults } = useFormulaResultService();
   const [pageLineMarkdownMap, setPageLineMarkdownMap] = useState<Map<string, string>>(new Map<string, string>());
 
-  const getGPTResponse = useCallback(async (prompt: string) => {
-    console.log("getGPTResponse", prompt);
-
+  const getFormulaOutput = useCallback(async (prompt: string) => {
     if (!hasPromise(nodeKey)) {
       console.log("no promise");
       const promise = getFormulaResults(prompt)
@@ -83,11 +79,12 @@ export default function FormulaDisplayComponent(
     if (output === "") {
       console.log("getting response...", formula);
       setOutput("(getting response...)");
-      getGPTResponse(formula);
+      getFormulaOutput(formula);
     } else if (output === "@@childnodes") {
       const sharedNodes: NodeMarkdown[] = [];
 
       // TODO this might be triggered by a change to our own nodes, in which case we don't need to do anything
+      // we don't know that here though
       // when we move to Redux, maybe the action should include a node key so we can check
 
       // TODO maybe this should be a different map so we don't have to iterate?
@@ -113,8 +110,7 @@ export default function FormulaDisplayComponent(
         }
       }
 
-      if (shouldUpdate) {
-        
+      if (shouldUpdate) {        
         const newPageLineMarkdownMap = new Map<string, string>();
         for (const node of sharedNodes) {
           newPageLineMarkdownMap.set(
@@ -122,17 +118,16 @@ export default function FormulaDisplayComponent(
             node.nodeMarkdown
           );
         }
+
         setPageLineMarkdownMap(newPageLineMarkdownMap);
 
-        // TODO WHY ISN"T THIS COMMAND BEING RECEIVED?
-        console.log("dispatching create formula nodes...", nodeKey, sharedNodes);
         editor.dispatchCommand(CREATE_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: sharedNodes,
         });
       }
     }
-  }, [formula, output, sharedNodeMap, editor, nodeKey, getGPTResponse, pageLineMarkdownMap]);
+  }, [formula, output, sharedNodeMap, editor, nodeKey, getFormulaOutput, pageLineMarkdownMap]);
 
   const replaceSelfWithEditorNode = () => {
     // TODO this will create an entry in the undo history which we don't necessarily want
