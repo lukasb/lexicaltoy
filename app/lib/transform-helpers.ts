@@ -112,6 +112,17 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       return;
     }
 
+    const selection = $getSelection();
+    let shouldSetSelection = true;
+    if (
+      selection === null || 
+      !$isRangeSelection(selection) || 
+      !selection.isCollapsed() ||
+      node !== selection.anchor.getNode()
+    ) {
+      shouldSetSelection = false;
+    }
+    
     const prevSibling = node.getPreviousSibling();
     let text = node.getTextContent();
     let currentNode = node;
@@ -132,7 +143,7 @@ export function registerLexicalElementEntity<T extends ElementNode>(
           if (diff > 0) {
             const concatText = text.slice(0, diff);
             const newTextContent = previousText + concatText;
-            prevSibling.select();
+            if (shouldSetSelection) prevSibling.select();
             prevSibling.setTextContent(newTextContent);
 
             if (diff === text.length) {
@@ -204,13 +215,11 @@ export function registerLexicalElementEntity<T extends ElementNode>(
         );
       }
 
-      const selection = $getSelection();
-      if (selection === null || !$isRangeSelection(selection) || !selection.isCollapsed()) {
-        return;
-      }
+      
 
       const replacementNode = createNode();
-      const start = selection.anchor.offset;
+      let start;
+      if (shouldSetSelection && $isRangeSelection(selection)) start = selection.anchor.offset;
 
       const openingBracket = $createWikilinkInternalNode('[[');
       replacementNode.append(openingBracket);
@@ -220,12 +229,14 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       replacementNode.append(endBracket);
       nodeToReplace.replace(replacementNode);
 
-      if (start < 2) {
-        openingBracket.select(start, start);
-      } else if (start < title.getTextContent().length + 2) {
-        title.select(start - 2, start - 2);
-      } else {
-        endBracket.select(start - title.getTextContent().length - 2, start - title.getTextContent().length - 2);
+      if (shouldSetSelection && $isRangeSelection(selection) && start !== undefined) {
+        if (start < 2) {
+          openingBracket.select(start, start);
+        } else if (start < title.getTextContent().length + 2) {
+          title.select(start - 2, start - 2);
+        } else {
+          endBracket.select(start - title.getTextContent().length - 2, start - title.getTextContent().length - 2);
+        }
       }
     
       if (currentNode == null) {

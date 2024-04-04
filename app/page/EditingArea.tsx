@@ -46,6 +46,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   useEffect(() => {
     const fetchAndSetPages = async () => {
       const pages = await fetchPages(userId);
+      console.log("setting pages after a fetch");
       setCurrentPages(pages);
     };
     fetchAndSetPages();

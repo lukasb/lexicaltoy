@@ -92,8 +92,8 @@ function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   node.replace(formulaDisplayNode);
   // For reasons of its own, Lexical inserts a <br> after a DecoratorNode if it's the last child
   // create this dummy node to avoid that
-  const textNode = $createTextNode(" ");
-  formulaDisplayNode.insertAfter(textNode);
+  //const textNode = $createTextNode(" ");
+  //formulaDisplayNode.insertAfter(textNode);
 }
 
 function haveExistingFormulaEditorNode(): boolean {
