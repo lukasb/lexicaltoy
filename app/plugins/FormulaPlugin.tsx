@@ -109,7 +109,9 @@ function sortNodeMarkdownByPageName(nodes: NodeMarkdown[]): NodeMarkdown[] {
 }
 
 function createFormulaOutputNodes(
-  displayNode: FormulaDisplayNode, nodesMarkdown: NodeMarkdown[],
+  editor: LexicalEditor,
+  displayNode: FormulaDisplayNode,
+  nodesMarkdown: NodeMarkdown[],
   setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>) {
 
   const parentListItem = getListItemParentNode(displayNode);
@@ -117,6 +119,10 @@ function createFormulaOutputNodes(
 
   const listItemRegex = /^\s*-\s*(.+)$/;
   const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
+
+  // prevent this editor from stealing focus
+  // we make it editable again in an update listener below
+  editor.setEditable(false);
 
   // TODO maybe warn the user that any existing children will be deleted?
   $deleteFormulaDisplayNodeChildren(displayNode);
@@ -293,6 +299,7 @@ function registerFormulaHandlers(
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
             createFormulaOutputNodes(
+              editor,
               displayNode,
               nodesMarkdown,
               setLocalSharedNodeMap
@@ -301,7 +308,13 @@ function registerFormulaHandlers(
           return true;
         },
         COMMAND_PRIORITY_EDITOR
-      )
+      ),
+      editor.registerUpdateListener(({editorState}) => {
+        if (editor.isEditable()) return;
+        editor.update(() => {
+          editor.setEditable(true);
+        });
+      })
     );
   }
 
