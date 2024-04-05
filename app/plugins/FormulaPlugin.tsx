@@ -23,7 +23,8 @@ import {
 } from "lexical";
 import {
   ListItemNode,
-  $isListItemNode
+  $isListItemNode,
+  ListNode
 } from "@lexical/list";
 import { mergeRegister } from "@lexical/utils";
 import { 
@@ -45,6 +46,24 @@ import { useSharedNodeContext } from "../context/shared-node-context";
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
 let __formulaEditorNodeKey = "";
+
+function $getFormulaNodeFromSharedNode(listItemNode: ListItemNode): FormulaDisplayNode | null {
+  const parentList = listItemNode.getParent() as ListNode;
+  if (!parentList) return null;
+  const parentListItem = parentList.getParent() as ListItemNode;
+  if (!parentListItem) return null;
+  const grandparentList = parentListItem.getParent() as ListNode;
+  if (!grandparentList) return null;
+  const grandparentListItem = grandparentList.getParent() as ListItemNode;
+  if (!grandparentListItem) return null;
+  const prevSibling = grandparentListItem.getPreviousSibling() as ListItemNode;
+  if (!prevSibling) return null;
+  const formulaNode = prevSibling.getChildren()[0];
+  if (formulaNode && $isFormulaDisplayNode(formulaNode)) {
+    return formulaNode;
+  }
+  return null;
+}
 
 function $getContainingListItemNode(node: LexicalNode): ListItemNode | null {
   let parent = node.getParent();
@@ -158,6 +177,8 @@ function createFormulaOutputNodes(
 
 function registerFormulaHandlers(
   editor: LexicalEditor,
+  updatingNodeKey: string | null,
+  setUpdatingNodeKey: React.Dispatch<React.SetStateAction<string | null>>,
   setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>
   ) {
     return mergeRegister(
@@ -189,6 +210,7 @@ function registerFormulaHandlers(
         // that it is turned back into a FormulaDisplayNode when the editor is reloaded
         // TODO maybe handle this in FormulaEditorNode.importJSON instead?
         const textContents = node.getTextContent();
+
 
         if (!textContents.startsWith("=")) {
           const textNode = new TextNode(textContents);
@@ -296,6 +318,10 @@ function registerFormulaHandlers(
       editor.registerCommand(
         CREATE_FORMULA_NODES,
         ({ displayNodeKey, nodesMarkdown }) => {
+          if (displayNodeKey === updatingNodeKey) {
+            setUpdatingNodeKey(null);
+            return true;
+          }
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
             createFormulaOutputNodes(
@@ -321,7 +347,8 @@ function registerFormulaHandlers(
   function registerFormulaMutationListeners(
     editor: LexicalEditor,
     localSharedNodeMap: Map<string, NodeMarkdown>,
-    updateNodeMarkdownGlobal: (updatedNodeMarkdown: NodeMarkdown) => void
+    updateNodeMarkdownGlobal: (updatedNodeMarkdown: NodeMarkdown) => void,
+    setUpdatingNodeKey: React.Dispatch<React.SetStateAction<string | null>>
     ) {
       return mergeRegister(
         editor.registerMutationListener(ListItemNode, (mutations) => {
@@ -384,6 +411,10 @@ function registerFormulaHandlers(
                 ) {
                   const oldNodeMarkdown = localSharedNodeMap.get(listItemKey);
                   if (oldNodeMarkdown) {
+
+                    const formulaDisplayNode = $getFormulaNodeFromSharedNode(listItem);
+                    setUpdatingNodeKey(formulaDisplayNode?.getKey() ?? null);
+
                     localSharedNodeMap.set(listItemKey, {
                       pageName: oldNodeMarkdown.pageName,
                       lineNumber: oldNodeMarkdown.lineNumber,
@@ -407,13 +438,14 @@ export function FormulaPlugin(): null {
   const [editor] = useLexicalComposerContext();
   const [localSharedNodeMap, setLocalSharedNodeMap] = useState(new Map<string, NodeMarkdown>());
   const { sharedNodeMap: globalSharedNodeMap, setSharedNodeMap, updateNodeMarkdown } = useSharedNodeContext();
+  const [updatingNodeKey, setUpdatingNodeKey] = useState<string | null>(null);
 
   useEffect(() => {
     if (!editor.hasNodes([FormulaEditorNode, FormulaDisplayNode])) {
       throw new Error('FormulaPlugin: FormulaEditorNode and/or FormulaDisplayNode not registered on editor');
     }
-    return registerFormulaHandlers(editor, setLocalSharedNodeMap);
-  }, [editor, setLocalSharedNodeMap]);
+    return registerFormulaHandlers(editor, updatingNodeKey, setUpdatingNodeKey, setLocalSharedNodeMap);
+  }, [editor, setLocalSharedNodeMap, updatingNodeKey]);
 
   // we register commands in two different places because if we registered the command listeners in the 
   // same useEffect as the mutation listeners (which are dependent on updateNodeMarkdown), we would get a
@@ -425,7 +457,7 @@ export function FormulaPlugin(): null {
     if (!editor.hasNodes([FormulaEditorNode, FormulaDisplayNode])) {
       throw new Error('FormulaPlugin: FormulaEditorNode and/or FormulaDisplayNode not registered on editor');
     }
-    return registerFormulaMutationListeners(editor, localSharedNodeMap, updateNodeMarkdown);
+    return registerFormulaMutationListeners(editor, localSharedNodeMap, updateNodeMarkdown, setUpdatingNodeKey);
   }, [editor, localSharedNodeMap, updateNodeMarkdown]);
 
   return null;
