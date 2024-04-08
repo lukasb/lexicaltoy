@@ -1,4 +1,5 @@
 import { useContext } from 'react';
+import { Page } from '../lib/definitions';
 import { 
   useSharedNodeContext,
   createSharedNodeKey,
@@ -53,36 +54,47 @@ export const useFormulaResultService = () => {
     return output;
   };
 
-  const updatePageResults = async (pageName: string, queries: string[]): Promise<void> => {
-    
-    const page = pages.find((p) => p.title === pageName);
-    if (!page) return;
-    
-    // Fetch all the formula outputs first
-    const queryOutputs = await Promise.all(queries.map(async (query) => {
-      const output = await getFormulaOutput(query, [page]);
-      // Return both the query and its output for further processing
-      return { query, output };
-    }));
+  async function getFormulaOutputs(formulas: Set<string>, pages: Page[]): Promise<Map<string, FormulaOutput>> {
+    const promises = Array.from(formulas).map(async (formula) => {
+      const output = await getFormulaOutput(formula, pages);
+      return [formula, output] as [string, FormulaOutput];
+    });
   
+    const results = await Promise.all(promises);
+    return new Map(results);
+  }
+
+  const updatePagesResults = async (pageNames: Set<string>): Promise<void> => {
+    
+    const pagesToQuery = pages.filter((page) => pageNames.has(page.title));
+
     setSharedNodeMap((prevMap) => {
-      let updatedMap = new Map(prevMap);
       
-      // Delete current results for the page
+      let updatedMap = new Map(prevMap);
+      const formulas = new Set<string>();
+
+      // Delete current results for the page while collecting all the formulas
       for (const [key] of updatedMap.entries()) {
-        const pageKey = key.split("-")[0];
-        if (pageKey === pageName) {
-          updatedMap.delete(key);
+        const pageName = key.split("-")[0];
+        for (const query of updatedMap.get(key)?.queries??[]) {
+          formulas.add(query);
         }
+        if (pageNames.has(pageName)) updatedMap.delete(key);
       }
   
-      // Add the new results
-      queryOutputs.forEach(({ query, output }) => {
-        if (output && output.type === FormulaOutputType.NodeMarkdown) {
-          const resultNodes = output.output as NodeMarkdown[];
-          updatedMap = mergeResults(resultNodes, query, updatedMap);
-        }
-      });
+      // run all the formulas over the updated pages and add to the shared node map
+      getFormulaOutputs(formulas, pagesToQuery)
+        .then((outputMap) => {
+          outputMap.forEach(( formulaOutput, formula ) => {
+            if (formulaOutput && formulaOutput.type === FormulaOutputType.NodeMarkdown) {
+              const resultNodes = formulaOutput.output as NodeMarkdown[];
+              updatedMap = mergeResults(resultNodes, formula, updatedMap);
+            }
+          });
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
   
       return updatedMap;
     });
@@ -90,6 +102,6 @@ export const useFormulaResultService = () => {
   
   return {
     getFormulaResults,
-    updatePageResults
+    updatePagesResults
   }
 };

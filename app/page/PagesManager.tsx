@@ -4,11 +4,13 @@ import { updatePageContentsWithHistory } from "../lib/actions";
 import { Page } from "@/app/lib/definitions";
 import { useSharedNodeContext } from '../context/shared-node-context';
 import { useDebouncedCallback } from "use-debounce";
+import { useFormulaResultService } from './FormulaResultService';
 
 // TODO maybe use Redux so we don't have an O(n) operation here every time
 function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAction<Page[]>> }) {
   const pages = useContext(PagesContext);
   const { sharedNodeMap, setSharedNodeMap } = useSharedNodeContext();
+  const { getFormulaResults, updatePagesResults } = useFormulaResultService();
 
   const savePagesToDatabase = useDebouncedCallback(async () => {
     for (const page of pages) {
@@ -39,26 +41,14 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
     savePagesToDatabase();
   }, [pages, setPages, savePagesToDatabase]);
 
-  const invalidatePageResults = useCallback((pageNames: Set<string>) => {
+  // TODO maybe use Redux or some kind of message bus so we don't have an O(n) operation here every time
+  // TODO make this async
 
-    setSharedNodeMap((prevMap) => {
-      const updatedMap = new Map(prevMap);
-      for (const [key, value] of updatedMap.entries()) {
-        const pageName = key.split("-")[0];
-        if (pageNames.has(pageName)) {
-          updatedMap.delete(key);
-        }
-      }
-
-      // we need to go get the updated stuff here, FDC just takes the shared node map as gospel
-
-      return updatedMap;
-    });
-
-  }, [setSharedNodeMap]);
-
-  // TODO maybe use Redux so we don't have an O(n) operation here every time
   useEffect(() => {
+
+    // If shared nodes have been updated, update the pages
+    // If pages have been updated, invalidate their shared nodes
+
     const pagesToInvalidate = new Set<string>();
     for (const [key, value] of sharedNodeMap.entries()) {
       const [pageName, lineNumber] = key.split("-");
@@ -81,8 +71,8 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
         }
       }
     }
-    invalidatePageResults(pagesToInvalidate);
-  }, [sharedNodeMap, setSharedNodeMap, pages, setPages, invalidatePageResults]);
+    updatePagesResults(pagesToInvalidate);
+  }, [sharedNodeMap, setSharedNodeMap, pages, setPages, updatePagesResults]);
 
   return null;
 }
