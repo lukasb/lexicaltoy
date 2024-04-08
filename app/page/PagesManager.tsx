@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useCallback } from 'react';
 import { PagesContext } from '@/app/context/pages-context';
 import { updatePageContentsWithHistory } from "../lib/actions";
 import { Page } from "@/app/lib/definitions";
@@ -8,7 +8,7 @@ import { useDebouncedCallback } from "use-debounce";
 // TODO maybe use Redux so we don't have an O(n) operation here every time
 function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAction<Page[]>> }) {
   const pages = useContext(PagesContext);
-  const { sharedNodeMap } = useSharedNodeContext();
+  const { sharedNodeMap, setSharedNodeMap } = useSharedNodeContext();
 
   const savePagesToDatabase = useDebouncedCallback(async () => {
     for (const page of pages) {
@@ -26,6 +26,8 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
               p.id === page.id ? { ...p, pendingWrite: false, revisionNumber: newRevisionNumber } : p
             )
           );
+
+
         } catch (error) {
           alert("Failed to save page");
         }
@@ -37,8 +39,27 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
     savePagesToDatabase();
   }, [pages, setPages, savePagesToDatabase]);
 
+  const invalidatePageResults = useCallback((pageNames: Set<string>) => {
+
+    setSharedNodeMap((prevMap) => {
+      const updatedMap = new Map(prevMap);
+      for (const [key, value] of updatedMap.entries()) {
+        const pageName = key.split("-")[0];
+        if (pageNames.has(pageName)) {
+          updatedMap.delete(key);
+        }
+      }
+
+      // we need to go get the updated stuff here, FDC just takes the shared node map as gospel
+
+      return updatedMap;
+    });
+
+  }, [setSharedNodeMap]);
+
   // TODO maybe use Redux so we don't have an O(n) operation here every time
   useEffect(() => {
+    const pagesToInvalidate = new Set<string>();
     for (const [key, value] of sharedNodeMap.entries()) {
       const [pageName, lineNumber] = key.split("-");
       const page = pages.find((p) => p.title === pageName);
@@ -46,17 +67,22 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
         const lines = page.value.split("\n");
         const line = lines[parseInt(lineNumber) - 1];
         if (!line || line !== value.output.nodeMarkdown) {
-          const updatedLine = value.output.nodeMarkdown;
-          // TODO this will break if we've added a new node/line
-          lines[parseInt(lineNumber) - 1] = updatedLine;
-          const updatedPage = lines.join("\n");
-          setPages((prevPages) =>
-            prevPages.map((p) => (p.title === pageName ? { ...p, value: updatedPage, pendingWrite: true } : p))
-          );
+          if (page.pendingWrite === false) {
+            const updatedLine = value.output.nodeMarkdown;
+            // TODO this will break if we've added a new node/line
+            lines[parseInt(lineNumber) - 1] = updatedLine;
+            const updatedPage = lines.join("\n");
+            setPages((prevPages) =>
+              prevPages.map((p) => (p.title === pageName ? { ...p, value: updatedPage, pendingWrite: true } : p))
+            );
+          } else {
+            pagesToInvalidate.add(pageName);
+          }
         }
       }
     }
-  }, [sharedNodeMap, pages, setPages]);
+    invalidatePageResults(pagesToInvalidate);
+  }, [sharedNodeMap, setSharedNodeMap, pages, setPages, invalidatePageResults]);
 
   return null;
 }
