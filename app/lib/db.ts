@@ -2,6 +2,7 @@
 
 import { sql } from "@vercel/postgres";
 import { unstable_noStore as noStore } from "next/cache";
+import { PageStatus } from "./definitions";
 
 export async function fetchPages(userId: string, fetchDeleted?: boolean) {
   noStore();
@@ -20,7 +21,7 @@ export async function fetchPages(userId: string, fetchDeleted?: boolean) {
       revisionNumber: row.revision_number,
       isJournal: row.is_journal,
       deleted: row.deleted,
-      pendingWrite: false
+      status: PageStatus.Quiescent
     }));
 
     return pages;
@@ -40,7 +41,7 @@ export async function fetchPages(userId: string, fetchDeleted?: boolean) {
     revisionNumber: row.revision_number,
     isJournal: row.is_journal,
     deleted: row.deleted,
-    pendingWrite: false
+    status: PageStatus.Quiescent
   }));
 
   return pages;

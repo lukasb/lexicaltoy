@@ -4,7 +4,8 @@ import { z } from 'zod';
 
 const QueryNodeSchema = z.object({
   output: NodeMarkdownSchema,
-  queries: z.array(z.string())
+  queries: z.array(z.string()),
+  needsSyncToPage: z.boolean().default(false)
 });
 
 export type QueryNode = z.infer<typeof QueryNodeSchema>;
@@ -14,7 +15,7 @@ type SharedNodeMap = Map<string, QueryNode>;
 type SharedNodeContextType = {
   sharedNodeMap: SharedNodeMap;
   setSharedNodeMap: React.Dispatch<React.SetStateAction<SharedNodeMap>>;
-  updateNodeMarkdown: (updatedNodeMarkdown: NodeMarkdown) => void;
+  updateNodeMarkdown: (updatedNodeMarkdown: NodeMarkdown, needsSyncToPage: boolean) => void;
 };
 
 const SharedNodeContext = createContext<SharedNodeContextType>({
@@ -36,7 +37,7 @@ type Props = {
 export const SharedNodeProvider: React.FC<Props> = ({ children }) => {
   const [sharedNodeMap, setSharedNodeMap] = useState<SharedNodeMap>(new Map());
 
-  const updateSharedNode = useCallback((updatedNodeMarkdown: NodeMarkdown) => {
+  const updateSharedNode = useCallback((updatedNodeMarkdown: NodeMarkdown, updatedNeedsSyncToPage: boolean) => {
     const key = createSharedNodeKey(updatedNodeMarkdown.pageName, updatedNodeMarkdown.lineNumber);
     if (sharedNodeMap.get(key)?.output === updatedNodeMarkdown) return;
     setSharedNodeMap((prevMap) => {
@@ -44,6 +45,7 @@ export const SharedNodeProvider: React.FC<Props> = ({ children }) => {
       const newNode: QueryNode = {
         output: updatedNodeMarkdown,
         queries: existingNode ? existingNode.queries : [],
+        needsSyncToPage: updatedNeedsSyncToPage
       };
       return new Map(prevMap).set(key, newNode);
     });

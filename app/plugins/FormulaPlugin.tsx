@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, MutableRefObject } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { 
   FormulaEditorNode,
@@ -177,8 +177,8 @@ function createFormulaOutputNodes(
 
 function registerFormulaHandlers(
   editor: LexicalEditor,
-  updatingNodeKey: string | null,
-  setUpdatingNodeKey: React.Dispatch<React.SetStateAction<string | null>>,
+  updatingNodeKey: MutableRefObject<string | null>,
+  setUpdatingNodeKey: (updatingNodeKey: string | null) => void,
   setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>
   ) {
     return mergeRegister(
@@ -318,10 +318,14 @@ function registerFormulaHandlers(
       editor.registerCommand(
         CREATE_FORMULA_NODES,
         ({ displayNodeKey, nodesMarkdown }) => {
-          if (displayNodeKey === updatingNodeKey) {
+
+          // don't recreate the nodes if the given display node is the source of the update
+          if (displayNodeKey === updatingNodeKey.current) {
+            console.log("not creating shared nodes because we're the source");
             setUpdatingNodeKey(null);
             return true;
           }
+          console.log("creating shared nodes");
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
             createFormulaOutputNodes(
@@ -347,8 +351,8 @@ function registerFormulaHandlers(
   function registerFormulaMutationListeners(
     editor: LexicalEditor,
     localSharedNodeMap: Map<string, NodeMarkdown>,
-    updateNodeMarkdownGlobal: (updatedNodeMarkdown: NodeMarkdown) => void,
-    setUpdatingNodeKey: React.Dispatch<React.SetStateAction<string | null>>
+    updateNodeMarkdownGlobal: (updatedNodeMarkdown: NodeMarkdown, needsSyncToPage: boolean) => void,
+    setUpdatingNodeKey: (updatingNodeKey: string | null) => void,
     ) {
       return mergeRegister(
         editor.registerMutationListener(ListItemNode, (mutations) => {
@@ -413,6 +417,8 @@ function registerFormulaHandlers(
                   if (oldNodeMarkdown) {
 
                     const formulaDisplayNode = $getFormulaNodeFromSharedNode(listItem);
+                    const nodeKey = formulaDisplayNode?.getKey() ?? null;
+                    console.log("updating node key", nodeKey);
                     setUpdatingNodeKey(formulaDisplayNode?.getKey() ?? null);
 
                     localSharedNodeMap.set(listItemKey, {
@@ -420,10 +426,10 @@ function registerFormulaHandlers(
                       lineNumber: oldNodeMarkdown.lineNumber,
                       nodeMarkdown: updatedNodeMarkdown,
                     });
-                    updateNodeMarkdownGlobal({
-                      ...oldNodeMarkdown,
-                      nodeMarkdown: updatedNodeMarkdown,
-                    });
+                    updateNodeMarkdownGlobal(
+                      { ...oldNodeMarkdown, nodeMarkdown: updatedNodeMarkdown },
+                      true // set needsSyncToPage to true
+                    );
                   }
                 }
               }
@@ -438,7 +444,11 @@ export function FormulaPlugin(): null {
   const [editor] = useLexicalComposerContext();
   const [localSharedNodeMap, setLocalSharedNodeMap] = useState(new Map<string, NodeMarkdown>());
   const { sharedNodeMap: globalSharedNodeMap, setSharedNodeMap, updateNodeMarkdown } = useSharedNodeContext();
-  const [updatingNodeKey, setUpdatingNodeKey] = useState<string | null>(null);
+  const updatingNodeKey = useRef<string | null>(null);
+
+  const setUpdatingNodeKey = (key: string | null) => {
+    updatingNodeKey.current = key;
+  };
 
   useEffect(() => {
     if (!editor.hasNodes([FormulaEditorNode, FormulaDisplayNode])) {

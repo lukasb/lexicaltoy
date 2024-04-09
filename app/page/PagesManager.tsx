@@ -1,7 +1,7 @@
 import { useContext, useEffect, useCallback } from 'react';
 import { PagesContext } from '@/app/context/pages-context';
 import { updatePageContentsWithHistory } from "../lib/actions";
-import { Page } from "@/app/lib/definitions";
+import { Page, PageStatus } from "@/app/lib/definitions";
 import { useSharedNodeContext } from '../context/shared-node-context';
 import { useDebouncedCallback } from "use-debounce";
 import { useFormulaResultService } from './FormulaResultService';
@@ -14,7 +14,7 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
 
   const savePagesToDatabase = useDebouncedCallback(async () => {
     for (const page of pages) {
-      if (page.pendingWrite) {
+      if (page.status === PageStatus.PendingWrite) {
         console.log("Saving page to database", page.title);
         try {
           const newRevisionNumber = await updatePageContentsWithHistory(page.id, page.value, page.revisionNumber);
@@ -25,7 +25,7 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
           // Update the pages context with the new revision number
           setPages((prevPages) =>
             prevPages.map((p) =>
-              p.id === page.id ? { ...p, pendingWrite: false, revisionNumber: newRevisionNumber } : p
+              p.id === page.id ? { ...p, status: PageStatus.Quiescent, revisionNumber: newRevisionNumber } : p
             )
           );
 
@@ -46,10 +46,14 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
 
   useEffect(() => {
 
+    console.log("checking for updates to shared nodes and pages");
+
     // If shared nodes have been updated, update the pages
     // If pages have been updated, invalidate their shared nodes
 
     const pagesToInvalidate = new Set<string>();
+    const pagesToUpdate = new Map<string, string>();
+
     for (const [key, value] of sharedNodeMap.entries()) {
       const [pageName, lineNumber] = key.split("-");
       const page = pages.find((p) => p.title === pageName);
@@ -57,21 +61,51 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
         const lines = page.value.split("\n");
         const line = lines[parseInt(lineNumber) - 1];
         if (!line || line !== value.output.nodeMarkdown) {
-          if (page.pendingWrite === false) {
+          if (page.status !== PageStatus.UserEdit && value.needsSyncToPage) {
             const updatedLine = value.output.nodeMarkdown;
             // TODO this will break if we've added a new node/line
             lines[parseInt(lineNumber) - 1] = updatedLine;
             const updatedPage = lines.join("\n");
-            setPages((prevPages) =>
-              prevPages.map((p) => (p.title === pageName ? { ...p, value: updatedPage, pendingWrite: true } : p))
-            );
-          } else {
+            pagesToUpdate.set(pageName, updatedPage);
+            sharedNodeMap.set(key, { ...value, needsSyncToPage: false });
+          } else if (page.status === PageStatus.UserEdit && value.needsSyncToPage) {
+            console.error("Page has a user edit, but shared node also needs sync to page");
+          } else if (page.status === PageStatus.UserEdit) {
             pagesToInvalidate.add(pageName);
           }
         }
       }
     }
-    updatePagesResults(pagesToInvalidate);
+    if (pagesToInvalidate.size > 0) {
+      console.log("updating formula results based on page edits", pagesToInvalidate);
+      updatePagesResults(pagesToInvalidate);
+    }
+    if (pagesToUpdate.size > 0) {
+      console.log("updating pages based on shared node updates", pagesToUpdate);
+      for (const [pageName, updatedPage] of pagesToUpdate.entries()) {
+        const page = pages.find((p) => p.title === pageName);
+        if (page) {
+          setPages((prevPages) =>
+            prevPages.map((p) =>
+              p.id === page.id ? { ...p, value: updatedPage, status: PageStatus.PendingWrite } : p
+            )
+          );
+        }
+      }
+    }
+    for (const page of pages) {
+      if (!pagesToUpdate.has(page.title)) {
+        // these are either pages we invalidated or pages that didn't have any shared nodes that had a user edit
+        if (page.status === PageStatus.UserEdit) {
+          console.log('allowing user edit to be written to disk', page.title);
+          setPages((prevPages) =>
+            prevPages.map((p) =>
+              p.id === page.id ? { ...p, status: PageStatus.PendingWrite } : p
+            )
+          );
+        }
+      }
+    }
   }, [sharedNodeMap, setSharedNodeMap, pages, setPages, updatePagesResults]);
 
   return null;

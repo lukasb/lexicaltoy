@@ -1,6 +1,6 @@
 "use client";
 
-import { Page, isPage } from "@/app/lib/definitions";
+import { Page, isPage, PageStatus } from "@/app/lib/definitions";
 import Omnibar from "./Omnibar";
 import { findMostRecentlyEditedPage } from "@/app/lib/pages-helpers";
 import { useState, useCallback } from "react";
@@ -169,7 +169,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                               ...page,
                               value: newValue,
                               revisionNumber: newRevisionNumber,
-                              pendingWrite: true
+                              status: PageStatus.UserEdit
                             }
                           : page
                       )

@@ -5,6 +5,12 @@ export type User = {
     password: string;
   };
   
+  export enum PageStatus {
+    UserEdit = 'user_edit',
+    PendingWrite = 'pending_write',
+    Quiescent = 'quiescent'
+  }
+  
   export type Page = {
     id: string;
     value: string;
@@ -14,8 +20,8 @@ export type User = {
     revisionNumber: number;
     isJournal: boolean;
     deleted: boolean;
-    pendingWrite: boolean;
-  }
+    status: PageStatus;
+  };
 
   export function isPage(obj: any): obj is Page {
     return (

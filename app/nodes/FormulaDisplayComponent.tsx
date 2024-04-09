@@ -119,6 +119,7 @@ export default function FormulaDisplayComponent(
 
         setPageLineMarkdownMap(newPageLineMarkdownMap);
 
+        console.log("creating nodes for key", nodeKey);
         editor.dispatchCommand(CREATE_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: sharedNodes,

@@ -3,7 +3,7 @@
 import { sql } from "@vercel/postgres";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import { Page } from "./definitions"
+import { Page, PageStatus } from "./definitions"
 
 export async function updatePageContentsWithHistory(id: string, value: string, oldRevisionNumber: number): Promise<number> {
   try {
@@ -60,7 +60,7 @@ export async function insertPage(title: string, value: string, userId: string) {
       revisionNumber: result.rows[0].revision_number,
       isJournal: result.rows[0].is_journal,
       deleted: result.rows[0].deleted,
-      pendingWrite: false
+      status: PageStatus.Quiescent
     };
     return page;
   } catch (error) {
@@ -86,7 +86,7 @@ export async function insertJournalPage(title: string, value: string, userId: st
       revisionNumber: result.rows[0].revision_number,
       isJournal: result.rows[0].is_journal,
       deleted: result.rows[0].deleted,
-      pendingWrite: false
+      status: PageStatus.Quiescent
     };
     return page;
   } catch (error) {

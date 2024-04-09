@@ -13,7 +13,7 @@ export const useFormulaResultService = () => {
   const { sharedNodeMap, setSharedNodeMap } = useSharedNodeContext();
   const pages = useContext(PagesContext);
 
-  const mergeResults = (resultNodes: NodeMarkdown[], query: string, nodeMap: Map<string, QueryNode>): Map<string, QueryNode> => {
+  const mergeResults = (resultNodes: NodeMarkdown[], query: string, nodeMap: Map<string, QueryNode>, updatedNeedsSyncToPage: boolean): Map<string, QueryNode> => {
     const updatedMap = new Map(nodeMap);
     resultNodes.forEach((result) => {
       const key = createSharedNodeKey(result.pageName, result.lineNumber);
@@ -27,7 +27,7 @@ export const useFormulaResultService = () => {
           updatedMap.set(key, mergedResult);
         }
       } else {
-        const newQueryNode = { output: result, queries: [query] };
+        const newQueryNode = { output: result, queries: [query], needsSyncToPage: updatedNeedsSyncToPage };
         updatedMap.set(key, newQueryNode);
       }
     });
@@ -47,7 +47,7 @@ export const useFormulaResultService = () => {
       // TODO maybe only update the map if things have actually changed
 
       setSharedNodeMap((prevMap) => {
-        return mergeResults(resultNodes, query, prevMap);
+        return mergeResults(resultNodes, query, prevMap, false);
       });
     }
 
@@ -67,37 +67,34 @@ export const useFormulaResultService = () => {
   const updatePagesResults = async (pageNames: Set<string>): Promise<void> => {
     
     const pagesToQuery = pages.filter((page) => pageNames.has(page.title));
+    let updatedMap = new Map(sharedNodeMap);
+    const formulas = new Set<string>();
 
-    setSharedNodeMap((prevMap) => {
-      
-      let updatedMap = new Map(prevMap);
-      const formulas = new Set<string>();
-
-      // Delete current results for the page while collecting all the formulas
-      for (const [key] of updatedMap.entries()) {
-        const pageName = key.split("-")[0];
-        for (const query of updatedMap.get(key)?.queries??[]) {
-          formulas.add(query);
-        }
-        if (pageNames.has(pageName)) updatedMap.delete(key);
+    // Delete current results for the page while collecting all the formulas
+    for (const [key] of updatedMap.entries()) {
+      const pageName = key.split("-")[0];
+      for (const query of updatedMap.get(key)?.queries??[]) {
+        formulas.add(query);
       }
-  
-      // run all the formulas over the updated pages and add to the shared node map
-      getFormulaOutputs(formulas, pagesToQuery)
-        .then((outputMap) => {
-          outputMap.forEach(( formulaOutput, formula ) => {
-            if (formulaOutput && formulaOutput.type === FormulaOutputType.NodeMarkdown) {
-              const resultNodes = formulaOutput.output as NodeMarkdown[];
-              updatedMap = mergeResults(resultNodes, formula, updatedMap);
-            }
-          });
-        })
-        .catch((error) => {
-          console.error("Error:", error);
+      if (pageNames.has(pageName)) updatedMap.delete(key);
+    }
+
+    // run all the formulas over the updated pages and add to the shared node map
+    getFormulaOutputs(formulas, pagesToQuery)
+      .then((outputMap) => {
+        outputMap.forEach(( formulaOutput, formula ) => {
+          if (formulaOutput && formulaOutput.type === FormulaOutputType.NodeMarkdown) {
+            const resultNodes = formulaOutput.output as NodeMarkdown[];
+            updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
+            console.log("Updated shared node map", updatedMap, resultNodes);
+          }
         });
-  
-      return updatedMap;
-    });
+        console.log("Updated shared node map", updatedMap);
+        setSharedNodeMap(updatedMap);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      })
   };
   
   return {
