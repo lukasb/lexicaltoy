@@ -14,6 +14,7 @@ import {
   $getFormulaNodeFromSharedNode,
   $getContainingListItemNode,
 } from "./formula-node-helpers";
+import { FormulaDisplayNode } from "@/app/nodes/FormulaNode";
 
 export function registerFormulaMutationListeners(
   editor: LexicalEditor,
@@ -23,7 +24,6 @@ export function registerFormulaMutationListeners(
   ) {
     return mergeRegister(
       editor.registerMutationListener(ListItemNode, (mutations) => {
-
         if (localSharedNodeMap.size === 0) return;
 
         editor.getEditorState().read(() => {
@@ -55,7 +55,6 @@ export function registerFormulaMutationListeners(
         });
       }),
       editor.registerMutationListener(TextNode, (mutations) => {
-        
         if (localSharedNodeMap.size === 0) return;
 
         editor.getEditorState().read(() => {
@@ -67,14 +66,14 @@ export function registerFormulaMutationListeners(
             if (!listItem) continue;
 
             if (localSharedNodeMap.has(listItem.getKey())) {
-                           
               const listItemKey = listItem.getKey();
 
               // TODO a better way to normalize node markdown
-              const updatedNodeMarkdown = "- " + $convertToMarkdownString(
-                TRANSFORMERS,
-                { getChildren: () => [listItem] } as unknown as ElementNode
-              );
+              const updatedNodeMarkdown =
+                "- " +
+                $convertToMarkdownString(TRANSFORMERS, {
+                  getChildren: () => [listItem],
+                } as unknown as ElementNode);
 
               if (
                 updatedNodeMarkdown !==
@@ -82,8 +81,8 @@ export function registerFormulaMutationListeners(
               ) {
                 const oldNodeMarkdown = localSharedNodeMap.get(listItemKey);
                 if (oldNodeMarkdown) {
-
-                  const formulaDisplayNode = $getFormulaNodeFromSharedNode(listItem);
+                  const formulaDisplayNode =
+                    $getFormulaNodeFromSharedNode(listItem);
                   setUpdatingNodeKey(formulaDisplayNode?.getKey() ?? null);
 
                   localSharedNodeMap.set(listItemKey, {
@@ -96,6 +95,28 @@ export function registerFormulaMutationListeners(
                     true // set needsSyncToPage to true
                   );
                 }
+              }
+            }
+          }
+        });
+      }),
+      editor.registerMutationListener(FormulaDisplayNode, (mutations) => {
+
+        // right now if any formula display node is destroyed, we check
+        // all the local shared nodes to see if they still have a display node
+        // maybe make this more efficient by keeping a mapping from shared nodes to display nodes
+
+        if (localSharedNodeMap.size === 0) return;
+        editor.getEditorState().read(() => {
+          for (const [key, type] of mutations) {
+            if (type !== "destroyed") continue;
+            for (const [listItemKey, nodeMarkdown] of localSharedNodeMap) {
+              const listItemNode = $getNodeByKey(listItemKey) as ListItemNode;
+              if (
+                listItemNode &&
+                $getFormulaNodeFromSharedNode(listItemNode) === null
+              ) {
+                localSharedNodeMap.delete(listItemKey);
               }
             }
           }

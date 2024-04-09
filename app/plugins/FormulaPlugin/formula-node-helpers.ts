@@ -78,6 +78,7 @@ export function $replaceEditorWithTextNode(node: FormulaEditorNode) {
 }
 
 export function $getFormulaNodeFromSharedNode(listItemNode: ListItemNode): FormulaDisplayNode | null {
+  if (!listItemNode) return null;
   const parentList = listItemNode.getParent() as ListNode;
   if (!parentList) return null;
   const parentListItem = parentList.getParent() as ListItemNode;
