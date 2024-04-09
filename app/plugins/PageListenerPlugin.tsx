@@ -17,6 +17,11 @@ export function PageListenerPlugin({
 
   // make sure open editors update their contents when updates from shared nodes occur
 
+  // TODO this is sort of race-y since FormulaPlugin is also listening for this PageStatus
+  // and will change the status when it's done processing. we maybe should introduce another status
+  // that we set here when we're done using the updated page value
+  // (works so far though...)
+
   useEffect(() => {
     for (const page of pages) {
       if (page.id === pageId && page.status === PageStatus.EditFromSharedNodes) {

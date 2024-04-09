@@ -321,11 +321,9 @@ function registerFormulaHandlers(
 
           // don't recreate the nodes if the given display node is the source of the update
           if (displayNodeKey === updatingNodeKey.current) {
-            console.log("not creating shared nodes because we're the source");
             setUpdatingNodeKey(null);
             return true;
           }
-          console.log("creating shared nodes");
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
             createFormulaOutputNodes(
@@ -417,8 +415,6 @@ function registerFormulaHandlers(
                   if (oldNodeMarkdown) {
 
                     const formulaDisplayNode = $getFormulaNodeFromSharedNode(listItem);
-                    const nodeKey = formulaDisplayNode?.getKey() ?? null;
-                    console.log("updating node key", nodeKey);
                     setUpdatingNodeKey(formulaDisplayNode?.getKey() ?? null);
 
                     localSharedNodeMap.set(listItemKey, {
