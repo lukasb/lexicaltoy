@@ -13,8 +13,11 @@ import { $convertToMarkdownString, TRANSFORMERS } from "@lexical/markdown";
 import {
   $getFormulaNodeFromSharedNode,
   $getContainingListItemNode,
+  $getWikilinkNodeFromSharedNode,
+  $replaceDisplayNodeWithEditor
 } from "./formula-node-helpers";
 import { FormulaDisplayNode } from "@/app/nodes/FormulaNode";
+import { WikilinkNode } from "@/app/nodes/WikilinkNode";
 
 export function registerFormulaMutationListeners(
   editor: LexicalEditor,
@@ -121,6 +124,33 @@ export function registerFormulaMutationListeners(
             }
           }
         });
+      }),
+      editor.registerMutationListener(WikilinkNode, (mutations) => {
+
+        if (localSharedNodeMap.size === 0) return;
+        const displayNodes = new Set<FormulaDisplayNode>();
+        editor.getEditorState().read(() => {
+          for (const [key, type] of mutations) {
+            if (type !== "destroyed") continue;
+            for (const [listItemKey, nodeMarkdown] of localSharedNodeMap) {
+              const listItemNode = $getNodeByKey(listItemKey) as ListItemNode;
+              if (
+                listItemNode &&
+                $getWikilinkNodeFromSharedNode(listItemNode) === null
+              ) {
+                const displayNode = $getFormulaNodeFromSharedNode(listItemNode);
+                if (displayNode) displayNodes.add(displayNode);
+              }
+            }
+          }
+        });
+        if (displayNodes.size > 0) {
+          editor.update(() => {
+            for (const displayNode of displayNodes) {
+              $replaceDisplayNodeWithEditor(displayNode);
+            }
+          });
+        }
       })
     );
   }

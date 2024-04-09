@@ -26,6 +26,7 @@ import {
 } from "@/app/lib/list-utils";
 import { parseFormulaMarkdown } from "../../lib/formula/formula-markdown-converters";
 import { NodeMarkdown } from "../../lib/formula/formula-definitions";
+import { $isWikilinkNode, WikilinkNode } from "@/app/nodes/WikilinkNode";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -77,6 +78,7 @@ export function $replaceEditorWithTextNode(node: FormulaEditorNode) {
   __formulaEditorNodeKey = "";
 }
 
+// get the related FormulaDisplayNode from a shared node assuming our node structure is in place
 export function $getFormulaNodeFromSharedNode(listItemNode: ListItemNode): FormulaDisplayNode | null {
   if (!listItemNode) return null;
   const parentList = listItemNode.getParent() as ListNode;
@@ -92,6 +94,21 @@ export function $getFormulaNodeFromSharedNode(listItemNode: ListItemNode): Formu
   const formulaNode = prevSibling.getChildren()[0];
   if (formulaNode && $isFormulaDisplayNode(formulaNode)) {
     return formulaNode;
+  }
+  return null;
+}
+
+export function $getWikilinkNodeFromSharedNode(listItemNode: ListItemNode): WikilinkNode | null {
+  if (!listItemNode) return null;
+  const parentList = listItemNode.getParent() as ListNode;
+  if (!parentList) return null;
+  const parentListItem = parentList.getParent() as ListItemNode;
+  if (!parentListItem) return null;
+  const prevSibling = parentListItem.getPreviousSibling() as ListItemNode;
+  if (!prevSibling) return null;
+  const wikilinkNode = prevSibling.getChildren()[0];
+  if (wikilinkNode && $isWikilinkNode(wikilinkNode)) {
+    return wikilinkNode;
   }
   return null;
 }
