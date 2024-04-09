@@ -28,8 +28,6 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
               p.id === page.id ? { ...p, status: PageStatus.Quiescent, revisionNumber: newRevisionNumber } : p
             )
           );
-
-
         } catch (error) {
           alert("Failed to save page");
         }

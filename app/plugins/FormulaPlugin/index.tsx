@@ -5,12 +5,10 @@ import {
   FormulaDisplayNode,
   $isFormulaDisplayNode,
   $createFormulaDisplayNode,
-  $createFormulaEditorNode
 } from "@/app/nodes/FormulaNode";
 import { 
   LexicalEditor,
   TextNode,
-  LexicalNode,
   ElementNode,
   SELECTION_CHANGE_COMMAND,
   COMMAND_PRIORITY_EDITOR,
@@ -18,162 +16,37 @@ import {
   $isRangeSelection,
   $getNodeByKey,
   $isNodeSelection,
-  $isTextNode,
-  $createTextNode
+  $isTextNode
 } from "lexical";
 import {
   ListItemNode,
   $isListItemNode,
-  ListNode
 } from "@lexical/list";
 import { mergeRegister } from "@lexical/utils";
 import { 
   $getActiveListItemFromSelection,
-  getListItemParentNode,
-  $addChildListItem,
-  $deleteChildrenFromListItem,
 } from "@/app/lib/list-utils";
 import { 
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
   STORE_FORMULA_OUTPUT,
   CREATE_FORMULA_NODES
-} from "../lib/formula-commands";
-import { parseFormulaMarkdown } from "../lib/formula/formula-markdown-converters";
-import { NodeMarkdown } from "../lib/formula/formula-definitions";
+} from "../../lib/formula-commands";
+import { parseFormulaMarkdown } from "../../lib/formula/formula-markdown-converters";
+import { NodeMarkdown } from "../../lib/formula/formula-definitions";
 import { $convertToMarkdownString, TRANSFORMERS } from "@lexical/markdown";
-import { useSharedNodeContext } from "../context/shared-node-context";
-
-// if the selection is in a FormulaEditorEditorNode, we track its node key here
-// then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
-let __formulaEditorNodeKey = "";
-
-function $getFormulaNodeFromSharedNode(listItemNode: ListItemNode): FormulaDisplayNode | null {
-  const parentList = listItemNode.getParent() as ListNode;
-  if (!parentList) return null;
-  const parentListItem = parentList.getParent() as ListItemNode;
-  if (!parentListItem) return null;
-  const grandparentList = parentListItem.getParent() as ListNode;
-  if (!grandparentList) return null;
-  const grandparentListItem = grandparentList.getParent() as ListItemNode;
-  if (!grandparentListItem) return null;
-  const prevSibling = grandparentListItem.getPreviousSibling() as ListItemNode;
-  if (!prevSibling) return null;
-  const formulaNode = prevSibling.getChildren()[0];
-  if (formulaNode && $isFormulaDisplayNode(formulaNode)) {
-    return formulaNode;
-  }
-  return null;
-}
-
-function $getContainingListItemNode(node: LexicalNode): ListItemNode | null {
-  let parent = node.getParent();
-  while (parent && !$isListItemNode(parent)) {
-    parent = parent.getParent();
-  }
-  return parent;
-}
-
-function $deleteFormulaDisplayNodeChildren(node: FormulaDisplayNode) {
-  const parent = $getContainingListItemNode(node);
-  if (parent) {
-    const listItem = parent as ListItemNode;
-    $deleteChildrenFromListItem(listItem);
-  }
-}
-
-function $replaceWithFormulaEditorNode(node: FormulaDisplayNode) {
-
-  // TODO there's probably a better way
-  if (node.getOutput() === "@@childnodes") {
-    $deleteFormulaDisplayNodeChildren(node);
-  }
-
-  const textSibling = node.getNextSibling();
-  if (textSibling && $isTextNode(textSibling)) {
-    textSibling.remove();
-  }
-  const formulaEditorNode = $createFormulaEditorNode(node.getFormula());
-  node.replace(formulaEditorNode);
-  formulaEditorNode.selectEnd();
-  __formulaEditorNodeKey = formulaEditorNode.getKey();
-}
-
-function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
-  const textContents = node.getTextContent();
-  const { formula: formulaText, result: resultString } = parseFormulaMarkdown(textContents);
-  if (!formulaText) return;
-  let formulaDisplayNode = null;
-  if (resultString) {
-    formulaDisplayNode = $createFormulaDisplayNode(formulaText, resultString);
-  } else {
-    formulaDisplayNode = $createFormulaDisplayNode(formulaText);
-  }
-  node.replace(formulaDisplayNode);
-}
-
-function haveExistingFormulaEditorNode(): boolean {
-  return __formulaEditorNodeKey !== "";
-}
-
-function replaceExistingFormulaEditorNode() {
-  const formulaEditorNode = $getNodeByKey(__formulaEditorNodeKey);
-  if (formulaEditorNode instanceof FormulaEditorNode) {
-    $replaceWithFormulaDisplayNode(formulaEditorNode);
-  }
-  __formulaEditorNodeKey = "";
-}
-
-function sortNodeMarkdownByPageName(nodes: NodeMarkdown[]): NodeMarkdown[] {
-  return nodes.slice().sort((a, b) => a.pageName.localeCompare(b.pageName));
-}
-
-function createFormulaOutputNodes(
-  editor: LexicalEditor,
-  displayNode: FormulaDisplayNode,
-  nodesMarkdown: NodeMarkdown[],
-  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>) {
-
-  const parentListItem = getListItemParentNode(displayNode);
-  if (!parentListItem) return;
-
-  const listItemRegex = /^\s*-\s*(.+)$/;
-  const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
-
-  // prevent this editor from stealing focus
-  // we make it editable again in an update listener below
-  editor.setEditable(false);
-
-  // TODO maybe warn the user that any existing children will be deleted?
-  $deleteFormulaDisplayNodeChildren(displayNode);
-
-  let currentPageName = "";
-  let currentPageListItem: ListItemNode | null = null;
-
-  for (const node of sortedNodes) {
-    const match = node.nodeMarkdown.match(listItemRegex);
-    if (match) {
-      if (node.pageName !== currentPageName) {
-        currentPageName = node.pageName;
-        const pageNameListItem = new ListItemNode();
-        pageNameListItem.append(new TextNode("[[" + currentPageName + "]]"));
-        $addChildListItem(parentListItem, false, false, pageNameListItem);
-        currentPageListItem = pageNameListItem;
-      }
-
-      if (currentPageListItem) {
-        const listItemNode = new ListItemNode();
-        listItemNode.append(new TextNode(match[1]));
-        $addChildListItem(currentPageListItem, false, false, listItemNode);
-
-        setLocalSharedNodeMap((prevMap) => {
-          const updatedMap = new Map(prevMap);
-          updatedMap.set(listItemNode.getKey(), node);
-          return updatedMap;
-        });
-      }
-    }
-  }
-}
+import { useSharedNodeContext } from "../../context/shared-node-context";
+import {
+  $getFormulaNodeFromSharedNode,
+  $replaceWithFormulaDisplayNode,
+  createFormulaOutputNodes,
+  $getContainingListItemNode,
+  haveExistingFormulaEditorNode,
+  replaceExistingFormulaEditorNode,
+  $replaceDisplayNodeWithEditor,
+  $replaceTextNodeWithEditor,
+  $replaceEditorWithTextNode,
+  getFormulaEditorNodeKey
+} from "./formula-node-helpers"
 
 function registerFormulaHandlers(
   editor: LexicalEditor,
@@ -200,9 +73,7 @@ function registerFormulaHandlers(
           );
           node.replace(formulaDisplayNode);
         } else if (textContents.startsWith("=")) {
-          const formulaEditorNode = new FormulaEditorNode(textContents);
-          node.replace(formulaEditorNode);
-          __formulaEditorNodeKey = formulaEditorNode.getKey();
+          $replaceTextNodeWithEditor(node);
         }
       }),
       editor.registerNodeTransform(FormulaEditorNode, (node) => {
@@ -210,12 +81,8 @@ function registerFormulaHandlers(
         // that it is turned back into a FormulaDisplayNode when the editor is reloaded
         // TODO maybe handle this in FormulaEditorNode.importJSON instead?
         const textContents = node.getTextContent();
-
-
         if (!textContents.startsWith("=")) {
-          const textNode = new TextNode(textContents);
-          node.replace(textNode);
-          __formulaEditorNodeKey = "";
+          $replaceEditorWithTextNode(node);
         } else {
           const selection = $getSelection();
           if (
@@ -247,18 +114,18 @@ function registerFormulaHandlers(
             const node = selection.getNodes()[0];
             if (
               haveExistingFormulaEditorNode() &&
-              node.getKey() !== __formulaEditorNodeKey
+              node.getKey() !== getFormulaEditorNodeKey()
             ) {
               replaceExistingFormulaEditorNode();
             }
             if ($isFormulaDisplayNode(node)) {
-              $replaceWithFormulaEditorNode(node);
+              $replaceDisplayNodeWithEditor(node);
             } else if ($isListItemNode(node)) {
               const listItemNode = node;
               if (
                 listItemNode?.getChildren()[0] instanceof FormulaDisplayNode
               ) {
-                $replaceWithFormulaEditorNode(
+                $replaceDisplayNodeWithEditor(
                   listItemNode.getChildren()[0] as FormulaDisplayNode
                 );
               }
@@ -274,7 +141,7 @@ function registerFormulaHandlers(
 
           if (
             haveExistingFormulaEditorNode() &&
-            activeNode.getKey() !== __formulaEditorNodeKey
+            activeNode.getKey() !== getFormulaEditorNodeKey()
           ) {
             replaceExistingFormulaEditorNode();
           }
@@ -284,7 +151,7 @@ function registerFormulaHandlers(
             listItemNode &&
             listItemNode.getChildren()[0] instanceof FormulaDisplayNode
           ) {
-            $replaceWithFormulaEditorNode(
+            $replaceDisplayNodeWithEditor(
               listItemNode.getChildren()[0] as FormulaDisplayNode
             );
           }
@@ -298,7 +165,7 @@ function registerFormulaHandlers(
         ({ displayNodeKey }) => {
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
-            $replaceWithFormulaEditorNode(displayNode);
+            $replaceDisplayNodeWithEditor(displayNode);
           }
           return true;
         },
