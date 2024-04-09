@@ -14,6 +14,7 @@ import {
   $isRangeSelection,
   $getNodeByKey,
   $isNodeSelection,
+  KEY_BACKSPACE_COMMAND,
 } from "lexical";
 import {
   ListItemNode,

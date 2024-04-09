@@ -11,6 +11,8 @@ import {
   LexicalNode,
   $getNodeByKey,
   $isTextNode,
+  $getSelection,
+  $isRangeSelection
 } from "lexical";
 import {
   ListItemNode,
@@ -139,7 +141,7 @@ export function createFormulaOutputNodes(
   const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
 
   // prevent this editor from stealing focus
-  // we make it editable again in an update listener below
+  // we make it editable again in an update listener in formula-command-handlers.ts
   editor.setEditable(false);
 
   // TODO maybe warn the user that any existing children will be deleted?
