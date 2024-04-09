@@ -46,8 +46,6 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
 
   useEffect(() => {
 
-    console.log("checking for updates to shared nodes and pages");
-
     // If shared nodes have been updated, update the pages
     // If pages have been updated, invalidate their shared nodes
 
@@ -77,17 +75,17 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
       }
     }
     if (pagesToInvalidate.size > 0) {
-      console.log("updating formula results based on page edits", pagesToInvalidate);
+      // get new formula results for pages that have changed
       updatePagesResults(pagesToInvalidate);
     }
     if (pagesToUpdate.size > 0) {
-      console.log("updating pages based on shared node updates", pagesToUpdate);
+      // update pages that have shared nodes that have changed
       for (const [pageName, updatedPage] of pagesToUpdate.entries()) {
         const page = pages.find((p) => p.title === pageName);
         if (page) {
           setPages((prevPages) =>
             prevPages.map((p) =>
-              p.id === page.id ? { ...p, value: updatedPage, status: PageStatus.PendingWrite } : p
+              p.id === page.id ? { ...p, value: updatedPage, status: PageStatus.EditFromSharedNodes } : p
             )
           );
         }
@@ -95,9 +93,7 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
     }
     for (const page of pages) {
       if (!pagesToUpdate.has(page.title)) {
-        // these are either pages we invalidated or pages that didn't have any shared nodes that had a user edit
-        if (page.status === PageStatus.UserEdit) {
-          console.log('allowing user edit to be written to disk', page.title);
+        if (page.status === PageStatus.UserEdit || page.status === PageStatus.EditFromSharedNodes) {
           setPages((prevPages) =>
             prevPages.map((p) =>
               p.id === page.id ? { ...p, status: PageStatus.PendingWrite } : p

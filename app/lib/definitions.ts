@@ -7,6 +7,7 @@ export type User = {
   
   export enum PageStatus {
     UserEdit = 'user_edit',
+    EditFromSharedNodes = 'edit_from_shared_nodes',
     PendingWrite = 'pending_write',
     Quiescent = 'quiescent'
   }

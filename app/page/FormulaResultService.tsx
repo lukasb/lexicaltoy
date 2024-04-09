@@ -86,10 +86,8 @@ export const useFormulaResultService = () => {
           if (formulaOutput && formulaOutput.type === FormulaOutputType.NodeMarkdown) {
             const resultNodes = formulaOutput.output as NodeMarkdown[];
             updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
-            console.log("Updated shared node map", updatedMap, resultNodes);
           }
         });
-        console.log("Updated shared node map", updatedMap);
         setSharedNodeMap(updatedMap);
       })
       .catch((error) => {

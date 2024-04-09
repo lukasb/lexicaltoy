@@ -47,6 +47,7 @@ import { FormulaEditorNode, FormulaDisplayNode } from "@/app/nodes/FormulaNode";
 import { FormulaPlugin } from "@/app/plugins/FormulaPlugin";
 import { PromisesProvider } from "../context/formula-request-context";
 import { stripSharedNodesFromMarkdown } from "@/app/lib/formula/formula-markdown-converters";
+import { PageListenerPlugin } from "../plugins/PageListenerPlugin";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -140,6 +141,7 @@ function Editor({
         />
         <ListPlugin />
         <OnChangePlugin onChange={onChange} ignoreSelectionChange={true} />
+        <PageListenerPlugin pageId={page.id} />
         <MarkdownShortcutPlugin transformers={[UNORDERED_LIST]} />
         <KeyboardShortcutsPlugin />
         <ListCommandsPlugin />
