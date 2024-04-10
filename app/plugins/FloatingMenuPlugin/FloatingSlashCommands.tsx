@@ -169,11 +169,11 @@ function $search(selection: null | BaseSelection): [boolean, string] {
 }
 
 // TODO duplicate code from FloatingWikiPageNames.tsx, refactor to share
-export async function computeFloatingSlashCommandsPosition(
+export function computeFloatingSlashCommandsPosition(
   editor: LexicalEditor,
   selection: BaseSelection,
   ref: React.RefObject<HTMLElement> | null
-): Promise<FloatingMenuCoords> {
+): FloatingMenuCoords {
   const position = computeFloatingSlashCommandsPositionInternal(editor);
   if (!position) return { x: 0, y: 0 };
   const {cursorLeft, cursorTop, rootX, rootY} = position;

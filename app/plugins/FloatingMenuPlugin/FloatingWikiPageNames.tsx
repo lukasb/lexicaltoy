@@ -67,11 +67,11 @@ function $search(selection: null | BaseSelection): [boolean, string] {
   return [true, searchText.reverse().join("")];
 }
 
-export async function computeFloatingWikiPageNamesPosition(
+export function computeFloatingWikiPageNamesPosition(
   editor: LexicalEditor,
   selection: BaseSelection,
   ref: React.RefObject<HTMLElement> | null
-): Promise<FloatingMenuCoords> {
+): FloatingMenuCoords {
   const position = computeFloatingWikiPageNamesPositionInternal(editor);
   if (!position) return { x: 0, y: 0 };
   const {cursorLeft, cursorTop, rootX, rootY} = position;

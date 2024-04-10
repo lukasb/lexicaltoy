@@ -145,6 +145,7 @@ export function registerFormulaMutationListeners(
           }
         });
         if (displayNodes.size > 0) {
+          console.log("replacing display nodes with editor nodes");
           editor.update(() => {
             for (const displayNode of displayNodes) {
               $replaceDisplayNodeWithEditor(displayNode);

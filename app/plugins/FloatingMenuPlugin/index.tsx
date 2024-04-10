@@ -9,7 +9,8 @@ export type FloatingMenuCoords = { x: number; y: number } | undefined;
 interface FloatingMenuConfig {
   component: React.ComponentType<any>;
   shouldShow: (selection: BaseSelection) => boolean;
-  computePosition: (editor: LexicalEditor, selection: BaseSelection, ref: React.RefObject<HTMLElement> | null) => Promise<FloatingMenuCoords>;
+  computePositionAsync?: (editor: LexicalEditor, selection: BaseSelection, ref: React.RefObject<HTMLElement> | null) => Promise<FloatingMenuCoords>;
+  computePosition?: (editor: LexicalEditor, selection: BaseSelection, ref: React.RefObject<HTMLElement> | null) => FloatingMenuCoords;
   priority: number;
 }
 
@@ -31,20 +32,27 @@ export function FloatingMenuPlugin({
   const [visibleMenu, setVisibleMenu] = useState<FloatingMenuConfig | null>(null);
   const [editor] = useLexicalComposerContext();
 
-  const updateMenu = useCallback(
+  const updateMenuAsync = useCallback(
     async (
       selection: BaseSelection,
       menu: FloatingMenuConfig | null
     ) => {
-      if (!selection) return setCoords(undefined);
+      if (!selection || !menu?.computePositionAsync) return setCoords(undefined);
       const coords = menu
-        ? await menu.computePosition(editor, selection, ref)
+        ? await menu.computePositionAsync(editor, selection, ref)
         : undefined;
       setCoords(coords);
       setVisibleMenu(menu);
     },
     [editor]
   );
+
+  const updateMenu = useCallback((selection: BaseSelection, menu: FloatingMenuConfig | null) => {
+    if (!selection || !menu?.computePosition) return setCoords(undefined);
+    const coords = menu ? menu.computePosition(editor, selection, ref) : undefined;
+    setCoords(coords);
+    setVisibleMenu(menu);
+  }, [editor, ref, setCoords, setVisibleMenu]);
 
   const $handleEditorUpdate = useCallback(() => {
     if (
@@ -55,6 +63,7 @@ export function FloatingMenuPlugin({
       return;
     }
 
+    console.log("FloatingMenuPlugin: $handleEditorUpdate");
     const selection = $getSelection();
     if (!selection) {
       setCoords(undefined);
@@ -71,13 +80,19 @@ export function FloatingMenuPlugin({
     }
 
     if (newVisibleMenu) {
-      updateMenu(selection, newVisibleMenu);
+      console.log("FloatingMenuPlugin: updateMenu", ref);
+      if (newVisibleMenu.computePositionAsync) {
+        updateMenuAsync(selection, newVisibleMenu);
+      } else if (newVisibleMenu.computePosition) {
+        updateMenu(selection, newVisibleMenu);
+      }
     } else {
+      console.log("FloatingMenuPlugin: no match", ref);
       setCoords(undefined); // Hide if no matching menu
       setVisibleMenu(null);
     }
 
-  }, [editor, updateMenu, menuConfig]);
+  }, [editor, updateMenuAsync, menuConfig, updateMenu]);
 
   useEffect(() => {
     const unregisterListener = editor.registerUpdateListener(

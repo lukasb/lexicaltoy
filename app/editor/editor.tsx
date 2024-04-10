@@ -184,7 +184,7 @@ function Editor({
                 {
                   component: FloatingIndentButtons,
                   shouldShow: shouldShowFloatingIndentButtons,
-                  computePosition: computeFloatingIndentButtonsPosition,
+                  computePositionAsync: computeFloatingIndentButtonsPosition,
                   priority: 10,
                 },
                 {
