@@ -63,10 +63,8 @@ export function createLinkMatcherWithRegExp(
   return (text: string) => {
     const match = regExp.exec(text);
     if (match === null) {
-      console.log('no match');
       return null;
     }
-    console.log('got a match');
     return {
       index: match.index,
       length: match[0].length,
