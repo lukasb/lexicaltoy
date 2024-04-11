@@ -60,12 +60,8 @@ export const $unwrapTodoContents = (node: ListItemNode) => {
   todoNode.remove();
 };
 
-export const $handleSetTodoDoneValue = (editor: LexicalEditor, done: boolean, nodeKey: string) => {
-  const decoratorNode = $getNodeByKey(nodeKey);
-  if (!(decoratorNode instanceof TodoCheckboxStatusNode)) return;
-  const listItem = decoratorNode.getParent();
-  if (!(listItem instanceof ListItemNode)) return;
-  for (const child of listItem.getChildren()) {
+export const $setTodoStrikethrough = (editor: LexicalEditor, node: ListItemNode, done: boolean) => {
+  for (const child of node.getChildren()) {
     if ($isTextNode(child)) {
       const elem = editor.getElementByKey(child.getKey());
       if (elem) {
@@ -74,6 +70,14 @@ export const $handleSetTodoDoneValue = (editor: LexicalEditor, done: boolean, no
       }
     }
   }
+}
+
+export const $handleSetTodoDoneValue = (editor: LexicalEditor, done: boolean, nodeKey: string) => {
+  const decoratorNode = $getNodeByKey(nodeKey);
+  if (!(decoratorNode instanceof TodoCheckboxStatusNode)) return;
+  const listItem = decoratorNode.getParent();
+  if (!(listItem instanceof ListItemNode)) return;
+  $setTodoStrikethrough(editor, listItem, done);
   decoratorNode.setDone(done);
 }
 
