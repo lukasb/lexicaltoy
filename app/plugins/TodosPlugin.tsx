@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { LexicalEditor, COMMAND_PRIORITY_EDITOR, BaseSelection, $isTextNode } from 'lexical';
+import { LexicalEditor, COMMAND_PRIORITY_EDITOR, BaseSelection, $isTextNode, RangeSelection } from 'lexical';
 import { mergeRegister } from '@lexical/utils';
 import {
   TodoCheckboxStatusNode,
@@ -12,8 +12,8 @@ import {
   $handleSetTodoStatus,
   $handleSetTodoDoneValue,
   hasTodo,
-  TodoDoneTextClass,
-  $changeTodoStatus
+  $changeTodoStatus,
+  $setTodoStrikethrough
 } from '@/app/lib/todo-helpers';
 import { 
   INSERT_TODO_COMMAND,
@@ -27,6 +27,7 @@ import {
 import { ListItemNode } from '@lexical/list';
 import { $isRangeSelection } from 'lexical';
 import { $getSelection } from 'lexical';
+import { $isListNode } from '@lexical/list';
 
 function getListItemFromSelection(selection: BaseSelection): ListItemNode | null {
   if (
@@ -136,13 +137,15 @@ function registerTodoHandlers(editor: LexicalEditor) {
       // that created a problem with not being able to insert text in the todo if
       // all the text and the TextNode was deleted.
       if (!hasTodo(node)) {
-        // if we removed a todo node, remove leftover styles
-        for (const child of node.getChildren()) {
-          const elem = editor.getElementByKey(child.getKey());
-          if (elem && elem.classList.contains(TodoDoneTextClass)) {
-            elem.classList.remove(TodoDoneTextClass);
-          }
+
+        if (node.getChildren().length === 0 
+          || $isListNode(node.getChildren()[0])) {
+          return;
         }
+
+        // if we removed a todo node, remove leftover styles
+        $setTodoStrikethrough(node, false);
+
         // this is mostly for deserializing todos from markdown
         // and i'm not even sure if it will work for that
         const status = extractTodoStatus(node.getTextContent());
@@ -150,9 +153,8 @@ function registerTodoHandlers(editor: LexicalEditor) {
           const firstChild = node.getFirstChild();
           if (firstChild) {
             if ($isTextNode(firstChild)) {
-              firstChild.setTextContent(
-                firstChild.getTextContent().replace(`${status} `, "")
-              );
+              const newText = firstChild.getTextContent().replace(`${status} `, "");
+              firstChild.setTextContent(newText);
               let newStatus = status;
               if (status === TodoStatus.DONE) {
                 newStatus = TodoStatus.TODO;
@@ -168,16 +170,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
         }
       } else {
         const todoNode = node.getChildren()[0] as TodoCheckboxStatusNode;
-        if (todoNode.getDone()) {
-          for (const child of node.getChildren()) {
-            if ($isTextNode(child)) {
-              const elem = editor.getElementByKey(child.getKey());
-              if (elem) {
-                elem.classList.add(TodoDoneTextClass);
-              }
-            }
-          }
-        }
+        $setTodoStrikethrough(node, todoNode.getDone());
       }
     })
   );

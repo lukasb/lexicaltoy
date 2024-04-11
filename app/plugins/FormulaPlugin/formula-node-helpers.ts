@@ -27,6 +27,10 @@ import {
 import { parseFormulaMarkdown } from "../../lib/formula/formula-markdown-converters";
 import { NodeMarkdown } from "../../lib/formula/formula-definitions";
 import { $isWikilinkNode, WikilinkNode } from "@/app/nodes/WikilinkNode";
+import { 
+  $createFormattableTextNode,
+  FormattableTextNode
+} from "@/app/nodes/FormattableTextNode";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -66,14 +70,14 @@ export function $replaceDisplayNodeWithEditor(node: FormulaDisplayNode) {
   __formulaEditorNodeKey = formulaEditorNode.getKey();
 }
 
-export function $replaceTextNodeWithEditor(node: TextNode) {
+export function $replaceTextNodeWithEditor(node: FormattableTextNode) {
   const formulaEditorNode = $createFormulaEditorNode(node.getTextContent());
   node.replace(formulaEditorNode);
   __formulaEditorNodeKey = formulaEditorNode.getKey();
 }
 
 export function $replaceEditorWithTextNode(node: FormulaEditorNode) {
-  const textNode = new TextNode(node.getTextContent());
+  const textNode = $createFormattableTextNode(node.getTextContent());
   node.replace(textNode);
   __formulaEditorNodeKey = "";
 }
@@ -174,14 +178,14 @@ export function createFormulaOutputNodes(
       if (node.pageName !== currentPageName) {
         currentPageName = node.pageName;
         const pageNameListItem = new ListItemNode();
-        pageNameListItem.append(new TextNode("[[" + currentPageName + "]]"));
+        pageNameListItem.append($createFormattableTextNode("[[" + currentPageName + "]]"));
         $addChildListItem(parentListItem, false, false, pageNameListItem);
         currentPageListItem = pageNameListItem;
       }
 
       if (currentPageListItem) {
         const listItemNode = new ListItemNode();
-        listItemNode.append(new TextNode(match[1]));
+        listItemNode.append($createFormattableTextNode(match[1]));
         $addChildListItem(currentPageListItem, false, false, listItemNode);
 
         setLocalSharedNodeMap((prevMap) => {

@@ -7,7 +7,6 @@ import {
 } from "@/app/nodes/FormulaNode";
 import { 
   LexicalEditor,
-  TextNode,
   SELECTION_CHANGE_COMMAND,
   COMMAND_PRIORITY_EDITOR,
   $getSelection,
@@ -41,6 +40,9 @@ import {
   $replaceEditorWithTextNode,
   getFormulaEditorNodeKey
 } from "./formula-node-helpers"
+import { 
+  FormattableTextNode
+} from "@/app/nodes/FormattableTextNode";
 
 export function registerFormulaCommandHandlers(
   editor: LexicalEditor,
@@ -49,7 +51,7 @@ export function registerFormulaCommandHandlers(
   setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>
   ) {
     return mergeRegister(
-      editor.registerNodeTransform(TextNode, (node) => {
+      editor.registerNodeTransform(FormattableTextNode, (node) => {
         if (
           !(node.getParent() instanceof ListItemNode) ||
           node.getIndexWithinParent() !== 0 ||

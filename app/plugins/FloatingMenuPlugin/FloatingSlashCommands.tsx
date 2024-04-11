@@ -32,6 +32,7 @@ import {
   REMOVE_TODO_COMMAND
 } from "@/app/lib/todo-commands";
 import { URL_REGEX } from "../AutoLinkPlugin";
+import { $isFormattableTextNode } from "@/app/nodes/FormattableTextNode";
 
 // TODO figure out actual line height instead of hardcoding 30
 // this is copied from FloatingWikiPageNames.tsx should probably be shared
@@ -131,7 +132,9 @@ function $search(selection: null | BaseSelection): [boolean, string] {
   const node = selection.getNodes()[0];
   const anchor = selection.anchor;
   // Check siblings?
-  if (!$isTextNode(node) || !node.isSimpleText() || !$isAtNodeEnd(anchor)) {
+  if (!$isTextNode(node) 
+    || (!node.isSimpleText() && !$isFormattableTextNode(node))
+    || !$isAtNodeEnd(anchor)) {
     return [false, ""];
   }
   const searchText = [];

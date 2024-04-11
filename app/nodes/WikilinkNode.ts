@@ -6,12 +6,15 @@ import type {
   SerializedElementNode,
   SerializedTextNode,
 } from 'lexical';
-
-import { ElementNode, TextNode } from 'lexical';
+import { ElementNode } from 'lexical';
+import { 
+  FormattableTextNode,
+  SerializedFormattableTextNode
+} from './FormattableTextNode';
 
 export type SerializedWikilinkNode = SerializedElementNode;
 
-export class WikilinkInternalNode extends TextNode {
+export class WikilinkInternalNode extends FormattableTextNode {
   static getType(): string {
     return 'wikilink-internal';
   }
@@ -19,14 +22,16 @@ export class WikilinkInternalNode extends TextNode {
   createDOM(config: EditorConfig): HTMLElement {
     const dom = super.createDOM(config);
     if (this.getTextContent().startsWith('[') || this.getTextContent().startsWith(']')) {
-      dom.className = 'PlaygroundEditorTheme__wikilinkBracket';
+      console.log('bracket', dom.classList);
+      dom.classList.add('PlaygroundEditorTheme__wikilinkBracket');
     } else {
-      dom.className = 'PlaygroundEditorTheme__wikilinkPageTitle';
+      console.log('title', dom.classList);
+      dom.classList.add('PlaygroundEditorTheme__wikilinkPageTitle');
     }
     return dom;
   }
 
-  exportJSON(): SerializedTextNode {
+  exportJSON(): SerializedFormattableTextNode {
     return {
       ...super.exportJSON(),
       type: 'wikilink-internal',
@@ -57,6 +62,10 @@ export class WikilinkInternalNode extends TextNode {
     } else {
       return true;
     }
+  }
+  
+  isUnmergeable(): boolean {
+    return true;
   }
 }
 

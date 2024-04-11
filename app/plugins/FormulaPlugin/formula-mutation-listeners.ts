@@ -1,6 +1,5 @@
 import { 
   LexicalEditor,
-  TextNode,
   ElementNode,
   $getNodeByKey,
 } from "lexical";
@@ -18,6 +17,10 @@ import {
 } from "./formula-node-helpers";
 import { FormulaDisplayNode } from "@/app/nodes/FormulaNode";
 import { WikilinkNode } from "@/app/nodes/WikilinkNode";
+import { 
+  $createFormattableTextNode,
+  FormattableTextNode
+} from "@/app/nodes/FormattableTextNode";
 
 export function registerFormulaMutationListeners(
   editor: LexicalEditor,
@@ -57,7 +60,7 @@ export function registerFormulaMutationListeners(
           }
         });
       }),
-      editor.registerMutationListener(TextNode, (mutations) => {
+      editor.registerMutationListener(FormattableTextNode, (mutations) => {
         if (localSharedNodeMap.size === 0) return;
 
         editor.getEditorState().read(() => {
