@@ -61,9 +61,21 @@ export class FormattableTextNode extends TextNode {
   static clone(node: FormattableTextNode): FormattableTextNode {
     return new FormattableTextNode(node.getTextContent(), node.__key);
   }
+
+  canHaveFormat(): boolean {
+    return true;
+  }
+  
+  canInsertTextBefore(): boolean {
+    return true;
+  }
+
+  canInsertTextAfter(): boolean {
+    return true;
+  }
 }
 
-function $createFormattableTextNode(text: string): FormattableTextNode {
+export function $createFormattableTextNode(text: string): FormattableTextNode {
   return new FormattableTextNode(text);
 }
 

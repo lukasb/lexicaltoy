@@ -1,9 +1,7 @@
 import type { Klass, LexicalEditor, LexicalNode } from "lexical";
-
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { mergeRegister } from "@lexical/utils";
 import { useEffect } from "react";
-
 import { 
   $createTextNode,
   $isTextNode,
@@ -12,11 +10,11 @@ import {
   $getSelection,
   $isRangeSelection,
 } from "lexical";
-
 import { 
   WikilinkInternalNode,
   $createWikilinkInternalNode
 } from "../nodes/WikilinkNode";
+import { $isFormattableTextNode } from '@/app/nodes/FormattableTextNode';
 
 export type EntityMatch = { end: number; start: number };
 
@@ -108,7 +106,7 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       return;
     }
 
-    if (!node.isSimpleText()) {
+    if (!node.isSimpleText() && !$isFormattableTextNode(node)) {
       return;
     }
 

@@ -25,6 +25,7 @@ import { PagesContext } from "@/app/context/pages-context";
 import { isSmallWidthViewport } from "@/app/lib/window-helpers";
 import { createDOMRange } from "@lexical/selection";
 import { $isFormulaEditorNode } from "@/app/nodes/FormulaNode";
+import { $isFormattableTextNode } from "@/app/nodes/FormattableTextNode";
 
 // TODO figure out actual line height instead of hardcoding 30
 const editorLineHeight = 30;
@@ -49,7 +50,7 @@ function $search(selection: null | BaseSelection): [boolean, string] {
   // Check siblings?
   if (
     !$isTextNode(node) ||
-    (!node.isSimpleText() && !$isFormulaEditorNode(node)) ||
+    (!$isFormattableTextNode(node) && !$isFormulaEditorNode(node)) ||
     !$isAtNodeEnd(anchor)
   ) {
     return [false, ""];

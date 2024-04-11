@@ -85,7 +85,7 @@ function Editor({
       {
         replace: TextNode,
         with: (node: TextNode) => {
-          return new FormattableTextNode(node.getTextContent());
+          return new FormattableTextNode(node.getTextContent(), node.getKey());
         }
       }
     ],
