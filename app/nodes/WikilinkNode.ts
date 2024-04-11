@@ -22,10 +22,8 @@ export class WikilinkInternalNode extends FormattableTextNode {
   createDOM(config: EditorConfig): HTMLElement {
     const dom = super.createDOM(config);
     if (this.getTextContent().startsWith('[') || this.getTextContent().startsWith(']')) {
-      console.log('bracket', dom.classList);
       dom.classList.add('PlaygroundEditorTheme__wikilinkBracket');
     } else {
-      console.log('title', dom.classList);
       dom.classList.add('PlaygroundEditorTheme__wikilinkPageTitle');
     }
     return dom;

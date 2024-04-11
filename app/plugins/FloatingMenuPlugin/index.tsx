@@ -63,7 +63,6 @@ export function FloatingMenuPlugin({
       return;
     }
 
-    console.log("FloatingMenuPlugin: $handleEditorUpdate");
     const selection = $getSelection();
     if (!selection) {
       setCoords(undefined);
@@ -80,14 +79,12 @@ export function FloatingMenuPlugin({
     }
 
     if (newVisibleMenu) {
-      console.log("FloatingMenuPlugin: updateMenu", ref);
       if (newVisibleMenu.computePositionAsync) {
         updateMenuAsync(selection, newVisibleMenu);
       } else if (newVisibleMenu.computePosition) {
         updateMenu(selection, newVisibleMenu);
       }
     } else {
-      console.log("FloatingMenuPlugin: no match", ref);
       setCoords(undefined); // Hide if no matching menu
       setVisibleMenu(null);
     }
