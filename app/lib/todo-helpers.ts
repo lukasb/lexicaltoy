@@ -1,6 +1,7 @@
 import { 
   $getNodeByKey,
   $getSelection,
+  $isElementNode,
   $isRangeSelection,
   $isTextNode,
   LexicalEditor,
@@ -64,12 +65,14 @@ export const $unwrapTodoContents = (node: ListItemNode) => {
 // setting textDecoration to none as I do below could break some stuff
 export const $setTodoStrikethrough = (node: ListItemNode, done: boolean) => {
   for (const child of node.getChildren()) {
-    if ($isTextNode(child)) { 
     if ($isFormattableTextNode(child)) {
       child.setStrikethrough(done);
-    } else {
-      console.log("not a formattable text node");
-    }
+    } else if ($isElementNode(child)) {
+      for (const nestedChild of child.getChildren()) {
+        if ($isFormattableTextNode(nestedChild)) {
+          nestedChild.setStrikethrough(done);
+        }
+      }
     }
   }
 };

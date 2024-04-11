@@ -2,7 +2,8 @@ import {
   EditorConfig,
   TextNode,
   SerializedTextNode,
-  Spread
+  Spread,
+  LexicalNode
 } from 'lexical';
 
 export type SerializedFormattableTextNode = Spread<
@@ -90,6 +91,6 @@ export function $createFormattableTextNode(text: string): FormattableTextNode {
   return new FormattableTextNode(text);
 }
 
-export function $isFormattableTextNode(node: TextNode): node is FormattableTextNode {
+export function $isFormattableTextNode(node: LexicalNode): node is FormattableTextNode {
   return node instanceof FormattableTextNode;
 }
