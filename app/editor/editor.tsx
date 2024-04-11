@@ -6,6 +6,7 @@ import { useContext, useCallback } from "react";
 import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import type { EditorState } from "lexical";
+import { TextNode } from 'lexical';
 import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
@@ -46,6 +47,7 @@ import { shouldShowFloatingSlashCommands, computeFloatingSlashCommandsPosition }
 import { FormulaEditorNode, FormulaDisplayNode } from "@/app/nodes/FormulaNode";
 import { FormulaPlugin } from "@/app/plugins/FormulaPlugin";
 import { PromisesProvider } from "../context/formula-request-context";
+import { FormattableTextNode } from "../nodes/FormattableTextNode";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -79,6 +81,13 @@ function Editor({
       TodoCheckboxStatusNode,
       FormulaEditorNode,
       FormulaDisplayNode,
+      FormattableTextNode,
+      {
+        replace: TextNode,
+        with: (node: TextNode) => {
+          return new FormattableTextNode(node.getTextContent());
+        }
+      }
     ],
     onError,
   };

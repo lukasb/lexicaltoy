@@ -27,6 +27,7 @@ import {
 import { ListItemNode } from '@lexical/list';
 import { $isRangeSelection } from 'lexical';
 import { $getSelection } from 'lexical';
+import { $isListNode } from '@lexical/list';
 
 function getListItemFromSelection(selection: BaseSelection): ListItemNode | null {
   if (
@@ -136,8 +137,14 @@ function registerTodoHandlers(editor: LexicalEditor) {
       // that created a problem with not being able to insert text in the todo if
       // all the text and the TextNode was deleted.
       if (!hasTodo(node)) {
+
+        if (node.getChildren().length === 0 
+          || $isListNode(node.getChildren()[0])) {
+          return;
+        }
+
         // if we removed a todo node, remove leftover styles
-        $setTodoStrikethrough(editor, node, false);
+        $setTodoStrikethrough(node, false);
 
         // this is mostly for deserializing todos from markdown
         // and i'm not even sure if it will work for that
@@ -164,7 +171,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
         }
       } else {
         const todoNode = node.getChildren()[0] as TodoCheckboxStatusNode;
-        $setTodoStrikethrough(editor, node, todoNode.getDone());
+        $setTodoStrikethrough(node, todoNode.getDone());
       }
     })
   );

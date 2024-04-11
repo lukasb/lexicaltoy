@@ -1,17 +1,20 @@
 import { 
   $getNodeByKey,
   $getSelection,
+  $setSelection,
   $isRangeSelection,
   $isTextNode,
   LexicalEditor,
+  $createRangeSelection,
+  $createPoint
 } from "lexical";
-
+import { $patchStyleText } from "@lexical/selection";
 import { ListItemNode } from "@lexical/list"
-
 import {
   $createTodoCheckboxStatusNode, TodoCheckboxStatusNode,
   TodoStatus
 } from '@/app/nodes/TodoNode';
+import { FormattableTextNode, $isFormattableTextNode } from "../nodes/FormattableTextNode";
 
 export const TodoDoneTextClass = "PlaygroundEditorTheme__todoDoneText";
 
@@ -60,24 +63,27 @@ export const $unwrapTodoContents = (node: ListItemNode) => {
   todoNode.remove();
 };
 
-export const $setTodoStrikethrough = (editor: LexicalEditor, node: ListItemNode, done: boolean) => {
+// TODO probably what I should do here is subclass TextNode to have a property that
+// causes it to add (or not) a class in createDOM / updateDOM
+// setting textDecoration to none as I do below could break some stuff
+export const $setTodoStrikethrough = (node: ListItemNode, done: boolean) => {
   for (const child of node.getChildren()) {
-    if ($isTextNode(child)) {
-      const elem = editor.getElementByKey(child.getKey());
-      if (elem) {
-        if (done) elem.classList.add(TodoDoneTextClass);
-        else elem.classList.remove(TodoDoneTextClass);
-      }
+    if ($isTextNode(child)) { 
+    if ($isFormattableTextNode(child)) {
+      child.setStrikethrough(done);
+    } else {
+      console.log("not a formattable text node");
+    }
     }
   }
-}
+};
 
 export const $handleSetTodoDoneValue = (editor: LexicalEditor, done: boolean, nodeKey: string) => {
   const decoratorNode = $getNodeByKey(nodeKey);
   if (!(decoratorNode instanceof TodoCheckboxStatusNode)) return;
   const listItem = decoratorNode.getParent();
   if (!(listItem instanceof ListItemNode)) return;
-  $setTodoStrikethrough(editor, listItem, done);
+  $setTodoStrikethrough(listItem, done);
   decoratorNode.setDone(done);
 }
 
