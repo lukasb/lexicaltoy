@@ -42,7 +42,8 @@ export class FormattableTextNode extends TextNode {
     || !self.__strikeThrough && dom.classList.contains('PlaygroundEditorTheme__todoDoneText')) {
       return true;
     }
-    return false;
+    const update = super.updateDOM(prevNode, dom, config);
+    return update;
   }
 
   exportJSON(): SerializedFormattableTextNode {
@@ -62,9 +63,23 @@ export class FormattableTextNode extends TextNode {
     return new FormattableTextNode(node.getTextContent(), node.__key);
   }
 
+  // without this users can't type in the text node
+  // docs should mention that maybe??
   isSimpleText(): boolean {
     return true;
   }
+
+  setTextContent(text: string): this {
+    if (this.__text === text) {
+      console.log("same text content");
+      return this;
+    }
+    const self = this.getWritable();
+    console.log("setting text content", text);
+    self.__text = text;
+    return self;
+  }
+
 /*
   canHaveFormat(): boolean {
     return true;
