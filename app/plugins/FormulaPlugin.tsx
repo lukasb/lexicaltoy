@@ -17,7 +17,6 @@ import {
   $getNodeByKey,
   $isNodeSelection,
   $isTextNode,
-  $createTextNode
 } from "lexical";
 import {
   ListItemNode,
@@ -30,6 +29,10 @@ import {
   STORE_FORMULA_OUTPUT
 } from "../lib/formula-commands";
 import { parseFormulaMarkdown } from "../lib/formula/formula-markdown-converters";
+import { 
+  $createFormattableTextNode,
+  FormattableTextNode
+} from "../nodes/FormattableTextNode";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -59,7 +62,7 @@ function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   node.replace(formulaDisplayNode);
   // For reasons of its own, Lexical inserts a <br> after a DecoratorNode if it's the last child
   // create this dummy node to avoid that
-  const textNode = $createTextNode(" ");
+  const textNode = $createFormattableTextNode(" ");
   formulaDisplayNode.insertAfter(textNode);
 }
 
@@ -77,7 +80,7 @@ function replaceExistingFormulaEditorNode() {
 
 function registerFormulaHandlers(editor: LexicalEditor) {
   return mergeRegister(
-    editor.registerNodeTransform(TextNode, (node) => {
+    editor.registerNodeTransform(FormattableTextNode, (node) => {
       if (
         !(node.getParent() instanceof ListItemNode) ||
         node.getIndexWithinParent() !== 0 ||
@@ -102,7 +105,7 @@ function registerFormulaHandlers(editor: LexicalEditor) {
       // TODO maybe handle this in FormulaEditorNode.importJSON instead?
       const textContents = node.getTextContent();
       if (!textContents.startsWith("=")) {
-        const textNode = new TextNode(textContents);
+        const textNode = $createFormattableTextNode(textContents);
         node.replace(textNode);
         __formulaEditorNodeKey = "";
       } else {

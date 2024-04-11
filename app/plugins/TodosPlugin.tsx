@@ -146,17 +146,14 @@ function registerTodoHandlers(editor: LexicalEditor) {
         // if we removed a todo node, remove leftover styles
         $setTodoStrikethrough(node, false);
 
-        console.log("node", node.getTextContent());
         // this is mostly for deserializing todos from markdown
         // and i'm not even sure if it will work for that
         const status = extractTodoStatus(node.getTextContent());
         if (status) {
-          console.log("status", status);
           const firstChild = node.getFirstChild();
           if (firstChild) {
             if ($isTextNode(firstChild)) {
               const newText = firstChild.getTextContent().replace(`${status} `, "");
-              console.log("firstChild", firstChild.getTextContent(), newText);
               firstChild.setTextContent(newText);
               let newStatus = status;
               if (status === TodoStatus.DONE) {

@@ -3,7 +3,6 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { mergeRegister } from "@lexical/utils";
 import { useEffect } from "react";
 import { 
-  $createTextNode,
   $isTextNode,
   TextNode,
   ElementNode,
@@ -14,7 +13,10 @@ import {
   WikilinkInternalNode,
   $createWikilinkInternalNode
 } from "../nodes/WikilinkNode";
-import { $isFormattableTextNode } from '@/app/nodes/FormattableTextNode';
+import { 
+  $createFormattableTextNode,
+  FormattableTextNode
+} from '@/app/nodes/FormattableTextNode';
 
 export type EntityMatch = { end: number; start: number };
 
@@ -87,7 +89,7 @@ export function registerLexicalElementEntity<T extends ElementNode>(
         offset = selection.focus.offset + 2 + node.getChildren()[1].getTextContent().length;
       }
     }
-    const textNode = $createTextNode(node.getTextContent());
+    const textNode = $createFormattableTextNode(node.getTextContent());
     const newnode = node.replace(textNode, false);
     if (offset !== -1) {
       newnode?.select(offset, offset);
@@ -100,13 +102,15 @@ export function registerLexicalElementEntity<T extends ElementNode>(
     return node.getLatest().__mode;
   };
 
-  const textNodeTransform = (node: TextNode) => {
+  const textNodeTransform = (node: FormattableTextNode) => {
+
+    console.log("textNodeTransform", node.getTextContent());
 
     if (node.getParent() instanceof targetNode) {
       return;
     }
 
-    if (!node.isSimpleText() && !$isFormattableTextNode(node)) {
+    if (!node.isSimpleText()) {
       return;
     }
 
@@ -194,12 +198,11 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       let nodeToReplace;
 
       if (match.start === 0) {
-        [nodeToReplace, currentNode] = currentNode.splitText(match.end);
+        [nodeToReplace, currentNode] = 
+          currentNode.splitText(match.end) as [FormattableTextNode, FormattableTextNode];
       } else {
-        [, nodeToReplace, currentNode] = currentNode.splitText(
-          match.start,
-          match.end
-        );
+        [, nodeToReplace, currentNode] = 
+          currentNode.splitText(match.start, match.end) as [FormattableTextNode, FormattableTextNode, FormattableTextNode];
       }
 
       const selection = $getSelection();
@@ -244,7 +247,7 @@ export function registerLexicalElementEntity<T extends ElementNode>(
   };
 
   const removePlainTextTransform = editor.registerNodeTransform(
-    TextNode,
+    FormattableTextNode,
     textNodeTransform
   );
   const removeReverseNodeTransform = editor.registerNodeTransform<T>(

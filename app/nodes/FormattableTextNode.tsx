@@ -69,17 +69,6 @@ export class FormattableTextNode extends TextNode {
     return true;
   }
 
-  setTextContent(text: string): this {
-    if (this.__text === text) {
-      console.log("same text content");
-      return this;
-    }
-    const self = this.getWritable();
-    console.log("setting text content", text);
-    self.__text = text;
-    return self;
-  }
-
 /*
   canHaveFormat(): boolean {
     return true;

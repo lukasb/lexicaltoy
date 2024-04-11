@@ -201,7 +201,6 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
               resetSelf();
               return;
             }
-            console.log("searching pages");
             const filteredPages = searchPageTitles(pages, match);
             setResults(filteredPages);
           });
