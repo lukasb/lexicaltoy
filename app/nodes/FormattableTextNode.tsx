@@ -29,9 +29,11 @@ export class FormattableTextNode extends TextNode {
     const dom = super.createDOM(config);
     const self = this.getLatest();
     if (self.__strikeThrough) {
-      dom.className = 'PlaygroundEditorTheme__todoDoneText';
+      dom.classList.add('PlaygroundEditorTheme__todoDoneText');
     } else {
-      dom.className = '';
+      if (dom.classList.contains('PlaygroundEditorTheme__todoDoneText')) {
+        dom.classList.remove('PlaygroundEditorTheme__todoDoneText');
+      }
     }
     return dom;
   }
