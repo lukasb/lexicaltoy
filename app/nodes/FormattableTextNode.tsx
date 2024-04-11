@@ -62,6 +62,10 @@ export class FormattableTextNode extends TextNode {
     return new FormattableTextNode(node.getTextContent(), node.__key);
   }
 
+  isSimpleText(): boolean {
+    return true;
+  }
+/*
   canHaveFormat(): boolean {
     return true;
   }
@@ -73,6 +77,7 @@ export class FormattableTextNode extends TextNode {
   canInsertTextAfter(): boolean {
     return true;
   }
+  */
 }
 
 export function $createFormattableTextNode(text: string): FormattableTextNode {

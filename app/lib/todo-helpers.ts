@@ -1,20 +1,16 @@
 import { 
   $getNodeByKey,
   $getSelection,
-  $setSelection,
   $isRangeSelection,
   $isTextNode,
   LexicalEditor,
-  $createRangeSelection,
-  $createPoint
 } from "lexical";
-import { $patchStyleText } from "@lexical/selection";
 import { ListItemNode } from "@lexical/list"
 import {
   $createTodoCheckboxStatusNode, TodoCheckboxStatusNode,
   TodoStatus
 } from '@/app/nodes/TodoNode';
-import { FormattableTextNode, $isFormattableTextNode } from "../nodes/FormattableTextNode";
+import { $isFormattableTextNode } from "../nodes/FormattableTextNode";
 
 export const TodoDoneTextClass = "PlaygroundEditorTheme__todoDoneText";
 
