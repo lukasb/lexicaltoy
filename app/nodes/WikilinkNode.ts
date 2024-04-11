@@ -21,9 +21,12 @@ export class WikilinkInternalNode extends FormattableTextNode {
 
   createDOM(config: EditorConfig): HTMLElement {
     const dom = super.createDOM(config);
+    console.log('wikilink internal node', this.getTextContent());
     if (this.getTextContent().startsWith('[') || this.getTextContent().startsWith(']')) {
+      console.log('bracket');
       dom.classList.add('PlaygroundEditorTheme__wikilinkBracket');
     } else {
+      console.log('title');
       dom.classList.add('PlaygroundEditorTheme__wikilinkPageTitle');
     }
     return dom;
@@ -60,6 +63,10 @@ export class WikilinkInternalNode extends FormattableTextNode {
     } else {
       return true;
     }
+  }
+  
+  isUnmergeable(): boolean {
+    return true;
   }
 }
 

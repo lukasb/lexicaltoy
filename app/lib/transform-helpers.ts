@@ -104,8 +104,6 @@ export function registerLexicalElementEntity<T extends ElementNode>(
 
   const textNodeTransform = (node: FormattableTextNode) => {
 
-    console.log("textNodeTransform", node.getTextContent());
-
     if (node.getParent() instanceof targetNode) {
       return;
     }
@@ -213,8 +211,10 @@ export function registerLexicalElementEntity<T extends ElementNode>(
       const replacementNode = createNode();
       const start = selection.anchor.offset;
 
+      console.log("creating a wikilink node");
       const openingBracket = $createWikilinkInternalNode('[[');
       replacementNode.append(openingBracket);
+      console.log("created a wikilink node", openingBracket.getTextContent());
       const title = $createWikilinkInternalNode(stripBrackets(nodeToReplace.getTextContent()));
       replacementNode.append(title);
       const endBracket = $createWikilinkInternalNode(']]');
