@@ -20,6 +20,7 @@ import {
   CUT_COMMAND,
   COMMAND_PRIORITY_CRITICAL,
   REMOVE_TEXT_COMMAND,
+  OUTDENT_CONTENT_COMMAND
 } from "lexical";
 import {
   ListItemNode,
@@ -51,6 +52,10 @@ import {
 import { 
   FormattableTextNode
 } from "@/app/nodes/FormattableTextNode";
+import { 
+  INDENT_LISTITEM_COMMAND,
+  OUTDENT_LISTITEM_COMMAND
+} from "@/app/lib/list-commands";
 
 function getAncestorFormulaDisplayNode(listItem: ListItemNode | null): FormulaDisplayNode | null {
   if (!listItem) return null;
@@ -114,6 +119,7 @@ export function registerFormulaCommandHandlers(
         // that it is turned back into a FormulaDisplayNode when the editor is reloaded
         // TODO maybe handle this in FormulaEditorNode.importJSON instead?
         const textContents = node.getTextContent();
+
         if (!textContents.startsWith("=")) {
           $replaceEditorWithTextNode(node);
         } else {
@@ -248,29 +254,60 @@ export function registerFormulaCommandHandlers(
       editor.registerCommand(
         DELETE_CHARACTER_COMMAND,
         () => {
-          const should = $shouldNotDelete();
-          console.log("should we not delete character?", should);
-          return should;
+          return $shouldNotDelete();
         },
         COMMAND_PRIORITY_HIGH
       ),
       editor.registerCommand(
         REMOVE_TEXT_COMMAND,
         () => {
-          const should = $shouldNotDelete();
-          console.log("should we not remove text?", should);
-          return should;
+          return $shouldNotDelete();
         }, 
         COMMAND_PRIORITY_CRITICAL
       ),
       editor.registerCommand(
         CUT_COMMAND,
         () => {
-          const should = $shouldNotDelete();
-          console.log("should we not cut?", should);
-          return should;
+          return $shouldNotDelete();
         }, 
         COMMAND_PRIORITY_CRITICAL
       ),
+      editor.registerCommand(
+        INDENT_LISTITEM_COMMAND,
+        (payload) => {
+          const { listItem } = payload;
+          const formulaDisplayNode = getAncestorFormulaDisplayNode(listItem);
+          if (formulaDisplayNode) {
+            return true;
+          }
+          return false;
+        },
+        COMMAND_PRIORITY_HIGH
+      ),
+      editor.registerCommand(
+        OUTDENT_LISTITEM_COMMAND,
+        (payload) => {
+          const { listItem } = payload;
+          const formulaDisplayNode = getAncestorFormulaDisplayNode(listItem);
+          if (formulaDisplayNode) {
+            return true;
+          }
+          return false;
+        },
+        COMMAND_PRIORITY_HIGH
+      ),
+      editor.registerCommand(
+        OUTDENT_CONTENT_COMMAND,
+        (payload) => {
+          const selection = $getSelection();
+          if (selection === null || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
+          const anchorLI = $getListItemContainingNode(selection.anchor.getNode());
+          if (!anchorLI) return false;
+          const anchorAncestor = getAncestorFormulaDisplayNode(anchorLI);
+          if (anchorAncestor) return true;
+          return false;
+        },
+        COMMAND_PRIORITY_HIGH
+      )
     );
   }
