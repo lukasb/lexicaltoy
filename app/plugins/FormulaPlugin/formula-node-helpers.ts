@@ -117,6 +117,20 @@ export function $getWikilinkNodeFromSharedNode(listItemNode: ListItemNode): Wiki
   return null;
 }
 
+export function $getFormulaDisplayNodeFromWikilinkNode(listItemNode: ListItemNode): FormulaDisplayNode | null {
+  const parentList = listItemNode.getParent() as ListNode;
+  if (!parentList) return null;
+  const parentListItem = parentList.getParent() as ListItemNode;
+  if (!parentListItem) return null;
+  const prevSibling = parentListItem.getPreviousSibling() as ListItemNode;
+  if (!prevSibling) return null;
+  const displayNode = prevSibling.getChildren()[0];
+  if (displayNode && $isFormulaDisplayNode(displayNode)) {
+    return displayNode;
+  }
+  return null;
+}
+
 export function $getContainingListItemNode(node: LexicalNode): ListItemNode | null {
   let parent = node.getParent();
   while (parent && !$isListItemNode(parent)) {

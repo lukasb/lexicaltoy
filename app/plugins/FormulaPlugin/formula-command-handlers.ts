@@ -20,7 +20,8 @@ import {
   CUT_COMMAND,
   COMMAND_PRIORITY_CRITICAL,
   REMOVE_TEXT_COMMAND,
-  OUTDENT_CONTENT_COMMAND
+  OUTDENT_CONTENT_COMMAND,
+  INSERT_PARAGRAPH_COMMAND
 } from "lexical";
 import {
   ListItemNode,
@@ -47,7 +48,8 @@ import {
   $replaceDisplayNodeWithEditor,
   $replaceTextNodeWithEditor,
   $replaceEditorWithTextNode,
-  getFormulaEditorNodeKey
+  getFormulaEditorNodeKey,
+  $getFormulaDisplayNodeFromWikilinkNode
 } from "./formula-node-helpers"
 import { 
   FormattableTextNode
@@ -308,6 +310,19 @@ export function registerFormulaCommandHandlers(
           return false;
         },
         COMMAND_PRIORITY_HIGH
-      )
+      ),
+      editor.registerCommand(
+        INSERT_PARAGRAPH_COMMAND,
+        (payload) => {
+          const selection = $getSelection();
+          if (selection === null || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
+          const anchorLI = $getListItemContainingNode(selection.anchor.getNode());
+          if (!anchorLI) return false;
+          const displayNode = $getFormulaDisplayNodeFromWikilinkNode(anchorLI);
+          if (displayNode) return true;
+          return false;
+        },
+        COMMAND_PRIORITY_HIGH
+      ),
     );
   }
