@@ -24,6 +24,29 @@ export function getListItemParentNode(node: LexicalNode): ListItemNode | null {
   return null;
 }
 
+export function $getListItemContainingNode(node: LexicalNode): ListItemNode | null {
+  if ($isListItemNode(node)) return node;
+  let parent = node.getParent();
+  while (parent && !$isRootNode(parent)) {
+    if ($isListItemNode(parent)) {
+      return parent;
+    }
+    parent = parent.getParent();
+  }
+  return null;
+}
+
+export function getAncestorListItem(listItemNode: ListItemNode): ListItemNode | null {
+  let parent = listItemNode.getParent();
+  while (parent && !$isRootNode(parent)) {
+    if ($isListItemNode(parent)) {
+      return parent;
+    }
+    parent = parent.getParent();
+  }
+  return null;
+}
+
 // only allow indent/outdent if the selection is collapsed (nothing is selected)
 // I don't feel like tackling all the edge cases involved in selection right now
 
@@ -34,14 +57,7 @@ export function $getActiveListItemFromSelection(
   if ($isRangeSelection(selection)) {
     if (!selection.isCollapsed()) return null;
     const node = selection.anchor.getNode();
-    if ($isListItemNode(node)) return node;
-    let parent = node.getParent();
-    while (parent && !$isRootNode(parent)) {
-      if ($isListItemNode(parent)) {
-        return parent;
-      }
-      parent = parent.getParent();
-    }
+    return $getListItemContainingNode(node);
   } else if ($isNodeSelection(selection)) {
     const nodes = selection.getNodes();
     // TODO I think with a collapsed selection, we only need to check the first node
@@ -194,10 +210,6 @@ function isOnlyChild(listItem: ListItemNode): boolean {
       }
     }
     return false;
-}
-
-export function $removeChildrenFromListItem(listItem: ListItemNode) {
-
 }
 
 function getChildrenToRemove(listItem: ListItemNode): ListItemNode[] {
