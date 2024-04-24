@@ -318,7 +318,7 @@ export function registerFormulaCommandHandlers(
           if (selection === null || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
           const anchorLI = $getListItemContainingNode(selection.anchor.getNode());
           if (!anchorLI) return false;
-          const displayNode = $getFormulaDisplayNodeFromWikilinkNode(anchorLI);
+          const displayNode = getAncestorFormulaDisplayNode(anchorLI);
           if (displayNode) return true;
           return false;
         },
