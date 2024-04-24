@@ -11,6 +11,7 @@ import { Page } from '@/app/lib/definitions';
 import { getPageMarkdown } from '@/app/lib/pages-helpers';
 import { stripBrackets } from '@/app/lib/transform-helpers';
 import { getLastTwoWeeksJournalPages } from '@/app/lib/journal-helpers';
+import { regexCallbacks } from './regex-callbacks';
 
 const todoInstructions = `
 Below you'll see the contents of one or more pages. Pages may include to-do list items that look like this:
@@ -58,16 +59,6 @@ async function getPagesContext(pageSpec: string, pages: Page[]): Promise<string 
     return page ? await generateContextStr([page]) : null;
   }
 }
-
-// Define a list of regex-callback pairs outside the function
-const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray) => Promise<FormulaOutput>]> = [
-  [/^find\(\)$/, async () => (
-    { output: [
-      {nodeMarkdown: '- hello there', pageName: 'some page', lineNumber: 1},
-      {nodeMarkdown: '- general kenobi', pageName: 'another page', lineNumber: 2},
-      {nodeMarkdown: '- you are a bold one', pageName: 'another page', lineNumber: 3}
-    ], type: FormulaOutputType.NodeMarkdown })],
-];
 
 export async function getFormulaOutput(formula: string, pages: Page[]): Promise<FormulaOutput | null> {
 
