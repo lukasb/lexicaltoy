@@ -66,7 +66,7 @@ export async function getFormulaOutput(formula: string, pages: Page[]): Promise<
   for (const [regex, callback] of regexCallbacks) {
     const match = formula.match(regex);
     if (match) {
-      return await callback(match);
+      return await callback(match, pages);
     }
   }
 
