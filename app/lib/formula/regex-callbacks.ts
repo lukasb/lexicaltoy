@@ -5,19 +5,56 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
   [
     /^find\((.+)\)$/,
     async (match, pages) => {
-      const regex = new RegExp(match[1]);
+
+      // for now, find(abc,def|ghi) will find all lines that contain "abc" AND ("def" OR "ghi")
+      // we also check the title when matching, so if one substring is in the title and another
+      // is in the line, we match
+
+      const substrings = match[1].split(",").map(s => s.trim());
+
+      const orClauses: { [key: string]: string[] } = {};
+      for (const substring of substrings) {
+        const orClause = substring.split("|").map(s => s.trim());
+        orClauses[substring] = orClause;
+      }
+
       const output: FormulaOutput["output"] = [];
+      const findFormulaRegex = /^\s*- =find\((.+)\)$/;
 
       for (const page of pages) {
         const lines = page.value.split("\n");
+        let unmatchedSubstrings = [...substrings];
+
+        unmatchedSubstrings = unmatchedSubstrings.filter(substring => {
+          const substrOrClauses = orClauses[substring];
+          for (const substrOrClause of substrOrClauses) {
+            if (page.title.includes(substrOrClause)) {
+              return false;
+            }
+          }
+          return true;
+        });
+
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i];
-          if (regex.test(line)) {
-            output.push({
-              nodeMarkdown: line,
-              pageName: page.title,
-              lineNumber: i + 1,
-            });
+          const matchesAll = unmatchedSubstrings.every(substring => {
+            const substrOrClauses = orClauses[substring];
+            for (const substrOrClause of substrOrClauses) {
+              if (line.includes(substrOrClause)) {
+                return true;
+              }
+            }
+            return false;
+          });
+          if (matchesAll) {
+            // for now, we avoid circular references by excluding any formula lines
+            if (!findFormulaRegex.test(line)) {
+              output.push({
+                nodeMarkdown: line,
+                pageName: page.title,
+                lineNumber: i + 1,
+              });
+            }
           }
         }
       }

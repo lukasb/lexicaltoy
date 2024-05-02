@@ -170,9 +170,12 @@ export function createFormulaOutputNodes(
   nodesMarkdown: NodeMarkdown[],
   setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>) {
 
+  console.log("creating formula nodes");
+
   const parentListItem = getListItemParentNode(displayNode);
   if (!parentListItem) return;
 
+  // currently we only suppor showing results that are list items
   const listItemRegex = /^\s*-\s*(.+)$/;
   const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
 
