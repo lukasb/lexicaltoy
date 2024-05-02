@@ -74,9 +74,19 @@ export function registerFormulaMutationListeners(
             if (localSharedNodeMap.has(listItem.getKey())) {
               const listItemKey = listItem.getKey();
 
+              // right now we only support list item results
+              // make sure we have the correct prefix for the list item or we'll
+              // screw up indentation
+              const listItemPrefixRegex = /^(\s*- )/;
+              const match = localSharedNodeMap.get(listItemKey)?.nodeMarkdown.match(listItemPrefixRegex);
+              let listItemPrefix = "- ";
+              if (match) {
+                listItemPrefix = match[1];
+              }
+
               // TODO a better way to normalize node markdown
               const updatedNodeMarkdown =
-                "- " +
+                listItemPrefix +
                 $convertToMarkdownString(TRANSFORMERS, {
                   getChildren: () => [listItem],
                 } as unknown as ElementNode);
