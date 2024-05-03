@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { FormulaStringOutput } from '@/app/lib/formula/formula-definitions';
+import { FormulaOutput } from '@/app/lib/formula/formula-definitions';
 
 type PromisesMap = {
-  [nodeKey: string]: Promise<FormulaStringOutput | null>;
+  [nodeKey: string]: Promise<FormulaOutput | null>;
 };
 
 // Define the context shape
 interface PromisesContextType {
   promisesMap: PromisesMap;
-  addPromise: (key: string, promise: Promise<FormulaStringOutput | null>) => void;
+  addPromise: (key: string, promise: Promise<FormulaOutput | null>) => void;
   removePromise: (key: string) => void;
   hasPromise: (key: string) => boolean;
 }
@@ -26,7 +26,7 @@ interface PromisesProviderProps {
 export const PromisesProvider: React.FC<PromisesProviderProps> = ({ children }) => {
   const [promisesMap, setPromisesMap] = useState<PromisesMap>({});
 
-  const addPromise = (key: string, promise: Promise<FormulaStringOutput | null>) => {
+  const addPromise = (key: string, promise: Promise<FormulaOutput | null>) => {
     ongoingOperations[key] = true;
     setPromisesMap(prevMap => ({ ...prevMap, [key]: promise }));
   };
