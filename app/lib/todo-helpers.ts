@@ -3,8 +3,6 @@ import {
   $getSelection,
   $isElementNode,
   $isRangeSelection,
-  $isTextNode,
-  LexicalEditor,
 } from "lexical";
 import { ListItemNode } from "@lexical/list"
 import {
