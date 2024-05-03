@@ -31,6 +31,7 @@ import {
   $createFormattableTextNode,
   FormattableTextNode
 } from "@/app/nodes/FormattableTextNode";
+import { $convertFromMarkdownString, TRANSFORMERS } from "@lexical/markdown";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -202,7 +203,7 @@ export function createFormulaOutputNodes(
 
       if (currentPageListItem) {
         const listItemNode = new ListItemNode();
-        listItemNode.append($createFormattableTextNode(match[1]));
+        $convertFromMarkdownString(match[1], TRANSFORMERS, listItemNode);
         $addChildListItem(currentPageListItem, false, false, listItemNode);
 
         setLocalSharedNodeMap((prevMap) => {
