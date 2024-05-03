@@ -109,7 +109,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       SET_TODO_DONE_VALUE_COMMAND,
       ({ done, todoNodeKey }) => {
-        $handleSetTodoDoneValue(editor, done, todoNodeKey);
+        $handleSetTodoDoneValue(done, todoNodeKey);
         return true;
       },
       COMMAND_PRIORITY_EDITOR
@@ -163,7 +163,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
               if (status === TodoStatus.DONE) {
                 const todoNode =
                   node.getChildren()[0] as TodoCheckboxStatusNode;
-                $handleSetTodoDoneValue(editor, true, todoNode.getKey());
+                $handleSetTodoDoneValue(true, todoNode.getKey());
               }
             }
           }

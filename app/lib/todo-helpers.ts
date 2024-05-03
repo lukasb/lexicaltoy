@@ -60,9 +60,6 @@ export const $unwrapTodoContents = (node: ListItemNode) => {
   todoNode.remove();
 };
 
-// TODO probably what I should do here is subclass TextNode to have a property that
-// causes it to add (or not) a class in createDOM / updateDOM
-// setting textDecoration to none as I do below could break some stuff
 export const $setTodoStrikethrough = (node: ListItemNode, done: boolean) => {
   for (const child of node.getChildren()) {
     if ($isFormattableTextNode(child)) {
@@ -77,7 +74,7 @@ export const $setTodoStrikethrough = (node: ListItemNode, done: boolean) => {
   }
 };
 
-export const $handleSetTodoDoneValue = (editor: LexicalEditor, done: boolean, nodeKey: string) => {
+export const $handleSetTodoDoneValue = (done: boolean, nodeKey: string) => {
   const decoratorNode = $getNodeByKey(nodeKey);
   if (!(decoratorNode instanceof TodoCheckboxStatusNode)) return;
   const listItem = decoratorNode.getParent();
