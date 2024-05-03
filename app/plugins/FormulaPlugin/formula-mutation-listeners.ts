@@ -124,6 +124,9 @@ export function registerFormulaMutationListeners(
         handleSharedNodeUpdate(mutations);
       }),
       editor.registerMutationListener(TodoCheckboxStatusNode, (mutations) => {
+        // TODO marking a todo done will trigger this mutation listener, and will also
+        // trigger the FormattableTextNode mutation listener by setting strikethrough,
+        // leading to double updates. this is unfortunate.
         handleSharedNodeUpdate(mutations);
       }),
       editor.registerMutationListener(FormulaDisplayNode, (mutations) => {
