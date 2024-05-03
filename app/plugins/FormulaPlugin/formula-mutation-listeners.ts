@@ -123,6 +123,9 @@ export function registerFormulaMutationListeners(
       editor.registerMutationListener(FormattableTextNode, (mutations) => {
         handleSharedNodeUpdate(mutations);
       }),
+      editor.registerMutationListener(TodoCheckboxStatusNode, (mutations) => {
+        handleSharedNodeUpdate(mutations);
+      }),
       editor.registerMutationListener(FormulaDisplayNode, (mutations) => {
 
         // right now if any formula display node is destroyed, we check
