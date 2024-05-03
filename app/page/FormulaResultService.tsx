@@ -64,9 +64,8 @@ export const useFormulaResultService = () => {
     return new Map(results);
   }
 
-  const updatePagesResults = async (pageNames: Set<string>): Promise<void> => {
+  const updatePagesResults = async (pagesToQuery: Page[]): Promise<void> => {
     
-    const pagesToQuery = pages.filter((page) => pageNames.has(page.title));
     let updatedMap = new Map(sharedNodeMap);
     const formulas = new Set<string>();
 
@@ -76,7 +75,7 @@ export const useFormulaResultService = () => {
       for (const query of updatedMap.get(key)?.queries??[]) {
         formulas.add(query);
       }
-      if (pageNames.has(pageName)) updatedMap.delete(key);
+      if (pagesToQuery.some(page => page.title === pageName)) updatedMap.delete(key);
     }
 
     // run all the formulas over the updated pages and add to the shared node map

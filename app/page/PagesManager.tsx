@@ -47,7 +47,6 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
     // If shared nodes have been updated, update the pages
     // If pages have been updated, invalidate their shared nodes
 
-    const pagesToInvalidate = new Set<string>();
     const pagesToUpdate = new Map<string, string>();
 
     for (const [key, value] of sharedNodeMap.entries()) {
@@ -66,13 +65,12 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
             sharedNodeMap.set(key, { ...value, needsSyncToPage: false });
           } else if (page.status === PageStatus.UserEdit && value.needsSyncToPage) {
             console.error("Page has a user edit, but shared node also needs sync to page");
-          } else if (page.status === PageStatus.UserEdit) {
-            pagesToInvalidate.add(pageName);
-          }
+          } 
         }
       }
     }
-    if (pagesToInvalidate.size > 0) {
+    const pagesToInvalidate: Page[] = pages.filter(page => page.status === PageStatus.UserEdit);
+    if (pagesToInvalidate.length > 0) {
       // get new formula results for pages that have changed
       updatePagesResults(pagesToInvalidate);
     }
