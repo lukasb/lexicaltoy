@@ -1,7 +1,9 @@
 import { 
   LexicalEditor,
   ElementNode,
+  LexicalNode,
   $getNodeByKey,
+  NodeMutation
 } from "lexical";
 import {
   ListItemNode,
@@ -17,10 +19,8 @@ import {
 } from "./formula-node-helpers";
 import { FormulaDisplayNode } from "@/app/nodes/FormulaNode";
 import { WikilinkNode } from "@/app/nodes/WikilinkNode";
-import { 
-  $createFormattableTextNode,
-  FormattableTextNode
-} from "@/app/nodes/FormattableTextNode";
+import { FormattableTextNode } from "@/app/nodes/FormattableTextNode";
+import { TodoCheckboxStatusNode } from "@/app/nodes/TodoNode";
 
 export function registerFormulaMutationListeners(
   editor: LexicalEditor,
@@ -28,40 +28,9 @@ export function registerFormulaMutationListeners(
   updateNodeMarkdownGlobal: (updatedNodeMarkdown: NodeMarkdown, needsSyncToPage: boolean) => void,
   setUpdatingNodeKey: (updatingNodeKey: string | null) => void,
   ) {
-    return mergeRegister(
-      /*editor.registerMutationListener(ListItemNode, (mutations) => {
-        if (localSharedNodeMap.size === 0) return;
 
-        editor.getEditorState().read(() => {
-          for (const [key, type] of mutations) {
-            if (key in localSharedNodeMap.keys()) {
-              // this doesn't work but the code might be useful later
-
-              
-            if (type === "updated") {
-              const node = $getNodeByKey(key);
-              const updatedNodeMarkdown = $convertToMarkdownString(
-                TRANSFORMERS,
-                { getChildren: () => [node] } as unknown as ElementNode
-              );
-              if (updatedNodeMarkdown !== localSharedNodeMap.get(key)?.nodeMarkdown) {
-                const oldNodeMarkdown = localSharedNodeMap.get(key);
-                if (oldNodeMarkdown) {
-                  updateNodeMarkdownGlobal({ ...oldNodeMarkdown, nodeMarkdown: updatedNodeMarkdown });
-                }
-              }
-            }
-            
-
-              if (type === "destroyed") {
-                // TODO handle this
-              }
-            }
-          }
-        });
-      }),*/
-      editor.registerMutationListener(FormattableTextNode, (mutations) => {
-        if (localSharedNodeMap.size === 0) return;
+    const handleSharedNodeUpdate = (mutations: Map<string, NodeMutation>) => {
+      if (localSharedNodeMap.size === 0) return;
 
         editor.getEditorState().read(() => {
           for (const [key, type] of mutations) {
@@ -72,6 +41,8 @@ export function registerFormulaMutationListeners(
             if (!listItem) continue;
 
             if (localSharedNodeMap.has(listItem.getKey())) {
+              console.log("mutation in query result");
+
               const listItemKey = listItem.getKey();
 
               // right now we only support list item results
@@ -115,6 +86,42 @@ export function registerFormulaMutationListeners(
             }
           }
         });
+    };
+
+    return mergeRegister(
+      /*editor.registerMutationListener(ListItemNode, (mutations) => {
+        if (localSharedNodeMap.size === 0) return;
+
+        editor.getEditorState().read(() => {
+          for (const [key, type] of mutations) {
+            if (key in localSharedNodeMap.keys()) {
+              // this doesn't work but the code might be useful later
+
+              
+            if (type === "updated") {
+              const node = $getNodeByKey(key);
+              const updatedNodeMarkdown = $convertToMarkdownString(
+                TRANSFORMERS,
+                { getChildren: () => [node] } as unknown as ElementNode
+              );
+              if (updatedNodeMarkdown !== localSharedNodeMap.get(key)?.nodeMarkdown) {
+                const oldNodeMarkdown = localSharedNodeMap.get(key);
+                if (oldNodeMarkdown) {
+                  updateNodeMarkdownGlobal({ ...oldNodeMarkdown, nodeMarkdown: updatedNodeMarkdown });
+                }
+              }
+            }
+            
+
+              if (type === "destroyed") {
+                // TODO handle this
+              }
+            }
+          }
+        });
+      }),*/
+      editor.registerMutationListener(FormattableTextNode, (mutations) => {
+        handleSharedNodeUpdate(mutations);
       }),
       editor.registerMutationListener(FormulaDisplayNode, (mutations) => {
 
@@ -165,6 +172,6 @@ export function registerFormulaMutationListeners(
             }
           });
         }
-      })
+      }),
     );
   }
