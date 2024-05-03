@@ -78,7 +78,9 @@ export class TodoCheckboxStatusNode extends DecoratorNode<JSX.Element> {
   }
 
   updateDOM(_prevNode: TodoCheckboxStatusNode, _dom: HTMLElement, config: EditorConfig): boolean {
-    return this.__status !== _prevNode.__status;
+    // if we don't do this, using a slash command to change the status will not update the node
+    // we don't have a check for done because that causes the viewport to jump, dunno why
+    return (this.__status !== _prevNode.__status);
   }
 
   static importJSON(serializedNode: SerializedTodoCheckboxStatusNode): TodoCheckboxStatusNode {

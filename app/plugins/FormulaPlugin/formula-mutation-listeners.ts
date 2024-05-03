@@ -29,7 +29,7 @@ export function registerFormulaMutationListeners(
   setUpdatingNodeKey: (updatingNodeKey: string | null) => void,
   ) {
     return mergeRegister(
-      editor.registerMutationListener(ListItemNode, (mutations) => {
+      /*editor.registerMutationListener(ListItemNode, (mutations) => {
         if (localSharedNodeMap.size === 0) return;
 
         editor.getEditorState().read(() => {
@@ -37,7 +37,7 @@ export function registerFormulaMutationListeners(
             if (key in localSharedNodeMap.keys()) {
               // this doesn't work but the code might be useful later
 
-              /*
+              
             if (type === "updated") {
               const node = $getNodeByKey(key);
               const updatedNodeMarkdown = $convertToMarkdownString(
@@ -51,7 +51,7 @@ export function registerFormulaMutationListeners(
                 }
               }
             }
-            */
+            
 
               if (type === "destroyed") {
                 // TODO handle this
@@ -59,7 +59,7 @@ export function registerFormulaMutationListeners(
             }
           }
         });
-      }),
+      }),*/
       editor.registerMutationListener(FormattableTextNode, (mutations) => {
         if (localSharedNodeMap.size === 0) return;
 
