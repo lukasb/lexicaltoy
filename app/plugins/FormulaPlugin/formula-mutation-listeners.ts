@@ -1,7 +1,6 @@
 import { 
   LexicalEditor,
   ElementNode,
-  LexicalNode,
   $getNodeByKey,
   NodeMutation
 } from "lexical";
@@ -89,37 +88,6 @@ export function registerFormulaMutationListeners(
     };
 
     return mergeRegister(
-      /*editor.registerMutationListener(ListItemNode, (mutations) => {
-        if (localSharedNodeMap.size === 0) return;
-
-        editor.getEditorState().read(() => {
-          for (const [key, type] of mutations) {
-            if (key in localSharedNodeMap.keys()) {
-              // this doesn't work but the code might be useful later
-
-              
-            if (type === "updated") {
-              const node = $getNodeByKey(key);
-              const updatedNodeMarkdown = $convertToMarkdownString(
-                TRANSFORMERS,
-                { getChildren: () => [node] } as unknown as ElementNode
-              );
-              if (updatedNodeMarkdown !== localSharedNodeMap.get(key)?.nodeMarkdown) {
-                const oldNodeMarkdown = localSharedNodeMap.get(key);
-                if (oldNodeMarkdown) {
-                  updateNodeMarkdownGlobal({ ...oldNodeMarkdown, nodeMarkdown: updatedNodeMarkdown });
-                }
-              }
-            }
-            
-
-              if (type === "destroyed") {
-                // TODO handle this
-              }
-            }
-          }
-        });
-      }),*/
       editor.registerMutationListener(FormattableTextNode, (mutations) => {
         handleSharedNodeUpdate(mutations);
       }),
