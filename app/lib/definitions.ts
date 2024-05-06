@@ -34,10 +34,3 @@ export type User = {
       obj.lastModified instanceof Date
     );
   }
-
-  export type SharedNode = {
-    pageId: string;
-    lineNumber: number;
-    markdownContent: string;
-    invalidated: boolean;
-  }
