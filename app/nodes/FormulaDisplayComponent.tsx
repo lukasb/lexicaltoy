@@ -7,7 +7,7 @@ import {
 } from '@/app/lib/formula-commands';
 import { usePromises } from '../context/formula-request-context';
 import { FormulaOutputType, NodeMarkdown } from '../lib/formula/formula-definitions';
-import { useSharedNodeContext } from '../context/shared-node-context';
+import { useSharedNodeContext, createSharedNodeKey } from '../context/shared-node-context';
 import { useFormulaResultService } from '../page/FormulaResultService';
 
 import './FormulaDisplayComponent.css';
@@ -48,7 +48,9 @@ export default function FormulaDisplayComponent(
               // TODO what if there are no results?
               const markdownMap = new Map<string, string>();
               (response.output as NodeMarkdown[]).forEach(node => {
-                markdownMap.set(node.pageName + "-" + node.lineNumber.toString(), node.nodeMarkdown);
+                markdownMap.set(
+                  createSharedNodeKey(node.pageName, node.lineNumberStart),
+                  node.nodeMarkdown);
               });
               setPageLineMarkdownMap(markdownMap);
               editor.dispatchCommand(CREATE_FORMULA_NODES, {
@@ -99,7 +101,7 @@ export default function FormulaDisplayComponent(
         for (const node of sharedNodes) {
           if (
             pageLineMarkdownMap.get(
-              node.pageName + "-" + node.lineNumber.toString()
+              createSharedNodeKey(node.pageName, node.lineNumberStart)
             ) !== node.nodeMarkdown
           ) {
             shouldUpdate = true;
@@ -112,7 +114,7 @@ export default function FormulaDisplayComponent(
         const newPageLineMarkdownMap = new Map<string, string>();
         for (const node of sharedNodes) {
           newPageLineMarkdownMap.set(
-            node.pageName + "-" + node.lineNumber.toString(),
+            createSharedNodeKey(node.pageName, node.lineNumberStart),
             node.nodeMarkdown
           );
         }

@@ -1,5 +1,9 @@
 import { Page } from "../definitions";
-import { FormulaOutput, FormulaOutputType } from "./formula-definitions";
+import { 
+  FormulaOutput,
+  FormulaOutputType,
+  createNodeMarkdown
+} from "./formula-definitions";
 
 export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Page[]) => Promise<FormulaOutput>]> = [
   [
@@ -49,11 +53,9 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
           if (matchesAll) {
             // for now, we avoid circular references by excluding any formula lines
             if (!findFormulaRegex.test(line)) {
-              output.push({
-                nodeMarkdown: line,
-                pageName: page.title,
-                lineNumber: i + 1,
-              });
+              output.push(
+                createNodeMarkdown(page.title, i+1, line)
+              );
             }
           }
         }

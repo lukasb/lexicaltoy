@@ -16,7 +16,7 @@ export const useFormulaResultService = () => {
   const mergeResults = (resultNodes: NodeMarkdown[], query: string, nodeMap: Map<string, QueryNode>, updatedNeedsSyncToPage: boolean): Map<string, QueryNode> => {
     const updatedMap = new Map(nodeMap);
     resultNodes.forEach((result) => {
-      const key = createSharedNodeKey(result.pageName, result.lineNumber);
+      const key = createSharedNodeKey(result.pageName, result.lineNumberStart);
       if (updatedMap.has(key)) {
         const mergedResult = updatedMap.get(key);
         if (mergedResult) {

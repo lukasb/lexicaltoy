@@ -38,7 +38,7 @@ export enum FormulaOutputType {
 export const NodeMarkdownSchema = z.object({
   nodeMarkdown: z.string(),
   pageName: z.string(),
-  lineNumber: z.number()
+  lineNumberStart: z.number()
 });
 
 export type NodeMarkdown = z.infer<typeof NodeMarkdownSchema>;
@@ -73,4 +73,8 @@ export function getPromptDefiner(prompt: string): ZodFunctionDef {
       schema: FormulaDefinitionSchemaWithoutPage
     };
   }
+}
+
+export function createNodeMarkdown(pageName: string, lineNumberStart: number, nodeMarkdown: string): NodeMarkdown {
+  return { pageName, lineNumberStart, nodeMarkdown };
 }

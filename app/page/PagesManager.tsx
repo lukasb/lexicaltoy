@@ -2,7 +2,11 @@ import { useContext, useEffect, useCallback } from 'react';
 import { PagesContext } from '@/app/context/pages-context';
 import { updatePageContentsWithHistory } from "../lib/actions";
 import { Page, PageStatus } from "@/app/lib/definitions";
-import { useSharedNodeContext } from '../context/shared-node-context';
+import { 
+  useSharedNodeContext,
+  SharedNodeKeyElements,
+  getSharedNodeKeyElements
+} from '../context/shared-node-context';
 import { useDebouncedCallback } from "use-debounce";
 import { useFormulaResultService } from './FormulaResultService';
 
@@ -50,18 +54,18 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
     const pagesToUpdate = new Map<string, string>();
 
     for (const [key, value] of sharedNodeMap.entries()) {
-      const [pageName, lineNumber] = key.split("-");
-      const page = pages.find((p) => p.title === pageName);
+      const keyElements: SharedNodeKeyElements = getSharedNodeKeyElements(key);
+      const page = pages.find((p) => p.title === keyElements.pageName);
       if (page) {
         const lines = page.value.split("\n");
-        const line = lines[parseInt(lineNumber) - 1];
+        const line = lines[keyElements.lineNumberStart - 1];
         if (!line || line !== value.output.nodeMarkdown) {
           if (page.status !== PageStatus.UserEdit && value.needsSyncToPage) {
             const updatedLine = value.output.nodeMarkdown;
             // TODO this will break if we've added a new node/line
-            lines[parseInt(lineNumber) - 1] = updatedLine;
+            lines[keyElements.lineNumberStart - 1] = updatedLine;
             const updatedPage = lines.join("\n");
-            pagesToUpdate.set(pageName, updatedPage);
+            pagesToUpdate.set(keyElements.pageName, updatedPage);
             sharedNodeMap.set(key, { ...value, needsSyncToPage: false });
           } else if (page.status === PageStatus.UserEdit && value.needsSyncToPage) {
             console.error("Page has a user edit, but shared node also needs sync to page");
