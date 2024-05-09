@@ -31,11 +31,12 @@ export function createSharedNodeKey(pageName: string, lineNumberStart: number, l
 export type SharedNodeKeyElements = {
   pageName: string;
   lineNumberStart: number;
+  lineNumberEnd: number;
 };
 
 export function getSharedNodeKeyElements(key: string): SharedNodeKeyElements {
-  const [pageName, lineNumberStart] = key.split("-");
-  return { pageName, lineNumberStart: parseInt(lineNumberStart) };
+  const [pageName, lineNumberStart, lineNumberEnd] = key.split("-");
+  return { pageName, lineNumberStart: parseInt(lineNumberStart), lineNumberEnd: parseInt(lineNumberEnd)};
 }
 
 export const useSharedNodeContext = () => useContext(SharedNodeContext);

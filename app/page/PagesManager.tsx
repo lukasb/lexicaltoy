@@ -58,19 +58,15 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
       const page = pages.find((p) => p.title === keyElements.pageName);
       if (page) {
         const lines = page.value.split("\n");
-        const line = lines[keyElements.lineNumberStart - 1];
-        if (!line || line !== value.output.nodeMarkdown) {
-          if (page.status !== PageStatus.UserEdit && value.needsSyncToPage) {
-            const updatedLine = value.output.nodeMarkdown;
-            // TODO this will break if we've added a new node/line
-            lines[keyElements.lineNumberStart - 1] = updatedLine;
-            const updatedPage = lines.join("\n");
-            pagesToUpdate.set(keyElements.pageName, updatedPage);
-            sharedNodeMap.set(key, { ...value, needsSyncToPage: false });
-          } else if (page.status === PageStatus.UserEdit && value.needsSyncToPage) {
-            console.error("Page has a user edit, but shared node also needs sync to page");
-          } 
+        if (lines.slice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd).join("\n") !== value.output.nodeMarkdown) {
+          lines.splice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd - keyElements.lineNumberStart + 1, ...value.output.nodeMarkdown.split("\n"));
         }
+        if (page.status !== PageStatus.UserEdit && value.needsSyncToPage) {
+          pagesToUpdate.set(keyElements.pageName, lines.join("\n"));
+          sharedNodeMap.set(key, { ...value, needsSyncToPage: false });
+        } else if (page.status === PageStatus.UserEdit && value.needsSyncToPage) {
+          console.error("Page has a user edit, but shared node also needs sync to page");
+        } 
       }
     }
     const pagesToInvalidate: Page[] = pages.filter(page => page.status === PageStatus.UserEdit);
