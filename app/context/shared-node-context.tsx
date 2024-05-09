@@ -24,8 +24,8 @@ const SharedNodeContext = createContext<SharedNodeContextType>({
   updateNodeMarkdown: () => {},
 });
 
-export function createSharedNodeKey(pageName: string, lineNumberStart: number): string {
-  return `${pageName}-${lineNumberStart}`;
+export function createSharedNodeKey(pageName: string, lineNumberStart: number, lineNumberEnd: number): string {
+  return `${pageName}-${lineNumberStart}-${lineNumberEnd}`;
 }
 
 export type SharedNodeKeyElements = {
@@ -49,7 +49,7 @@ export const SharedNodeProvider: React.FC<Props> = ({ children }) => {
 
   const updateSharedNode = useCallback((updatedNodeMarkdown: NodeMarkdown, updatedNeedsSyncToPage: boolean) => {
     const key = createSharedNodeKey(
-      updatedNodeMarkdown.pageName, updatedNodeMarkdown.lineNumberStart);
+      updatedNodeMarkdown.pageName, updatedNodeMarkdown.lineNumberStart, updatedNodeMarkdown.lineNumberEnd);
     if (sharedNodeMap.get(key)?.output === updatedNodeMarkdown) return;
     setSharedNodeMap((prevMap) => {
       const existingNode = prevMap.get(key);

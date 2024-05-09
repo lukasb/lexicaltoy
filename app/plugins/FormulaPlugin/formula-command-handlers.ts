@@ -13,7 +13,6 @@ import {
   $isRangeSelection,
   $getNodeByKey,
   $isNodeSelection,
-  KEY_BACKSPACE_COMMAND,
   DELETE_CHARACTER_COMMAND,
   $isElementNode,
   COMMAND_PRIORITY_HIGH,
@@ -48,8 +47,7 @@ import {
   $replaceDisplayNodeWithEditor,
   $replaceTextNodeWithEditor,
   $replaceEditorWithTextNode,
-  getFormulaEditorNodeKey,
-  $getFormulaDisplayNodeFromWikilinkNode
+  getFormulaEditorNodeKey
 } from "./formula-node-helpers"
 import { 
   FormattableTextNode
@@ -58,6 +56,7 @@ import {
   INDENT_LISTITEM_COMMAND,
   OUTDENT_LISTITEM_COMMAND
 } from "@/app/lib/list-commands";
+import { ChildSharedNodeReference } from ".";
 
 function getAncestorFormulaDisplayNode(listItem: ListItemNode | null): FormulaDisplayNode | null {
   if (!listItem) return null;
@@ -92,7 +91,8 @@ export function registerFormulaCommandHandlers(
   editor: LexicalEditor,
   updatingNodeKey: MutableRefObject<string | null>,
   setUpdatingNodeKey: (updatingNodeKey: string | null) => void,
-  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>
+  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>,
+  setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>>
   ) {
     return mergeRegister(
       editor.registerNodeTransform(FormattableTextNode, (node) => {
@@ -238,7 +238,8 @@ export function registerFormulaCommandHandlers(
               editor,
               displayNode,
               nodesMarkdown,
-              setLocalSharedNodeMap
+              setLocalSharedNodeMap,
+              setLocalChildNodeMap
             );
           }
           return true;

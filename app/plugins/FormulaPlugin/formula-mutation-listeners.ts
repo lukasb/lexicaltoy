@@ -20,10 +20,12 @@ import { FormulaDisplayNode } from "@/app/nodes/FormulaNode";
 import { WikilinkNode } from "@/app/nodes/WikilinkNode";
 import { FormattableTextNode } from "@/app/nodes/FormattableTextNode";
 import { TodoCheckboxStatusNode } from "@/app/nodes/TodoNode";
+import { ChildSharedNodeReference } from ".";
 
 export function registerFormulaMutationListeners(
   editor: LexicalEditor,
   localSharedNodeMap: Map<string, NodeMarkdown>,
+  childSharedNodeMap: Map<string, ChildSharedNodeReference>,
   updateNodeMarkdownGlobal: (updatedNodeMarkdown: NodeMarkdown, needsSyncToPage: boolean) => void,
   setUpdatingNodeKey: (updatingNodeKey: string | null) => void,
   ) {
@@ -39,16 +41,23 @@ export function registerFormulaMutationListeners(
             const listItem = $getContainingListItemNode(node);
             if (!listItem) continue;
 
-            if (localSharedNodeMap.has(listItem.getKey())) {
+            if (childSharedNodeMap.has(listItem.getKey())) {
               console.log("mutation in query result");
 
               const listItemKey = listItem.getKey();
 
               // right now we only support list item results
-              // make sure we have the correct prefix for the list item or we'll
-              // screw up indentation
+              // get the existing node markdown for the modified node so that
+              // we can preserve the existing indentation when updating the markdown
+
               const listItemPrefixRegex = /^(\s*- )/;
-              const match = localSharedNodeMap.get(listItemKey)?.nodeMarkdown.match(listItemPrefixRegex);
+              const childNodeReference = childSharedNodeMap.get(listItemKey);
+              if (!childNodeReference) return;
+              const parentNodeMarkdown = localSharedNodeMap.get(childNodeReference?.parentLexicalNodeKey);
+              if (!parentNodeMarkdown) return;
+              const childNodeMarkdown = 
+                parentNodeMarkdown.nodeMarkdown.split("\n")[childNodeReference.childLineNumWithinParent];
+              const match = childNodeMarkdown.match(listItemPrefixRegex);
               let listItemPrefix = "- ";
               if (match) {
                 listItemPrefix = match[1];
@@ -63,24 +72,26 @@ export function registerFormulaMutationListeners(
 
               if (
                 updatedNodeMarkdown !==
-                localSharedNodeMap.get(listItemKey)?.nodeMarkdown
+                childNodeMarkdown
               ) {
-                const oldNodeMarkdown = localSharedNodeMap.get(listItemKey);
-                if (oldNodeMarkdown) {
+                  const markdownLines = parentNodeMarkdown.nodeMarkdown.split("\n");
+                  markdownLines[childNodeReference.childLineNumWithinParent-1] = updatedNodeMarkdown;
+
                   const formulaDisplayNode =
                     $getFormulaNodeFromSharedNode(listItem);
                   setUpdatingNodeKey(formulaDisplayNode?.getKey() ?? null);
 
                   localSharedNodeMap.set(listItemKey, {
-                    pageName: oldNodeMarkdown.pageName,
-                    lineNumber: oldNodeMarkdown.lineNumber,
-                    nodeMarkdown: updatedNodeMarkdown,
+                    pageName: parentNodeMarkdown.pageName,
+                    lineNumberStart: parentNodeMarkdown.lineNumberStart,
+                    lineNumberEnd: parentNodeMarkdown.lineNumberEnd,
+                    nodeMarkdown: markdownLines.join("\n"),
                   });
+                  
                   updateNodeMarkdownGlobal(
-                    { ...oldNodeMarkdown, nodeMarkdown: updatedNodeMarkdown },
+                    { ...parentNodeMarkdown, nodeMarkdown: updatedNodeMarkdown },
                     true // set needsSyncToPage to true
                   );
-                }
               }
             }
           }

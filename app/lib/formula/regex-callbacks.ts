@@ -24,6 +24,7 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
 
       const output: FormulaOutput["output"] = [];
       const findFormulaRegex = /^\s*- =find\((.+)\)$/;
+      const indentationRegex = /^(\s*)-/;
 
       for (const page of pages) {
         const lines = page.value.split("\n");
@@ -51,11 +52,38 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
             return false;
           });
           if (matchesAll) {
-            // for now, we avoid circular references by excluding any formula lines
+            // for now, we avoid circular references by excluding any lines with find() formulas
             if (!findFormulaRegex.test(line)) {
+              let numLines = 1;
+              const indentationNum = indentationRegex.exec(line)?.[1].length ?? -1;
+              if (indentationNum > -1) {
+                // if the match is a bullet point, pull in any child nodes
+                // if we hit a child node with a find(), just stop
+                // TODO figure out something better to do here
+                while (
+                  i+numLines < lines.length && 
+                  !findFormulaRegex.test(lines[i+numLines])) {
+                    const childIndentNum = indentationRegex.exec(lines[i+numLines])?.[1].length ?? -1;
+                    if (childIndentNum > indentationNum) {
+                      numLines++;
+                      continue;
+                    } else {
+                      break;
+                    }
+                }
+              }
+              let outputLinesString = line;
+              if (numLines > 1) {
+                for (let j = 1; j < numLines; j++) {
+                  outputLinesString += "\n" + lines[i+j];
+                }
+              }
               output.push(
-                createNodeMarkdown(page.title, i+1, line)
+                createNodeMarkdown(page.title, i+1, i+1+numLines, outputLinesString)
               );
+              if (numLines > 1) {
+                i += numLines - 1;
+              }
             }
           }
         }

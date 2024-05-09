@@ -7,17 +7,16 @@ import {
 } from "@/app/nodes/FormulaNode";
 import { 
   LexicalEditor,
-  TextNode,
+  RootNode,
   LexicalNode,
   $getNodeByKey,
   $isTextNode,
-  $getSelection,
-  $isRangeSelection
 } from "lexical";
 import {
   ListItemNode,
   $isListItemNode,
-  ListNode
+  ListNode,
+  $isListNode
 } from "@lexical/list";
 import { 
   getListItemParentNode,
@@ -32,6 +31,7 @@ import {
   FormattableTextNode
 } from "@/app/nodes/FormattableTextNode";
 import { $convertFromMarkdownString, TRANSFORMERS } from "@lexical/markdown";
+import { ChildSharedNodeReference } from ".";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -165,11 +165,34 @@ function sortNodeMarkdownByPageName(nodes: NodeMarkdown[]): NodeMarkdown[] {
   return nodes.slice().sort((a, b) => a.pageName.localeCompare(b.pageName));
 }
 
+/*
+function getLeaves(nodes: ListItemNode[]): ListItemNode[] {
+  const leaves: ListItemNode[] = [];
+
+  // either a ListItemNode is a leaf within an outline (might still have TextNode children)
+  // or it has a ListNode child
+
+  for (const node of nodes) {
+    const children = node.getChildren();
+    if (children.length === 0 || !$isListNode(children[0])) {
+      leaves.push(node);
+    } else if ($isListNode(children[0])) {
+      const listNode = children[0] as ListNode;
+      const childLeaves = getLeaves(listNode.getChildren() as ListItemNode[]);
+      leaves.push(...childLeaves);
+    }
+  }
+  return leaves;
+}
+*/
+
 export function createFormulaOutputNodes(
   editor: LexicalEditor,
   displayNode: FormulaDisplayNode,
   nodesMarkdown: NodeMarkdown[],
-  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>) {
+  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>,
+  setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>>
+) {
 
   console.log("creating formula nodes");
 
@@ -177,7 +200,7 @@ export function createFormulaOutputNodes(
   if (!parentListItem) return;
 
   // currently we only suppor showing results that are list items
-  const listItemRegex = /^\s*-\s*(.+)$/;
+  const listItemRegex = /^(\s*)-\s*(.+)$/;
   const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
 
   // prevent this editor from stealing focus
@@ -191,27 +214,65 @@ export function createFormulaOutputNodes(
   let currentPageListItem: ListItemNode | null = null;
 
   for (const node of sortedNodes) {
-    const match = node.nodeMarkdown.match(listItemRegex);
-    if (match) {
-      if (node.pageName !== currentPageName) {
-        currentPageName = node.pageName;
-        const pageNameListItem = new ListItemNode();
-        pageNameListItem.append($createFormattableTextNode("[[" + currentPageName + "]]"));
-        $addChildListItem(parentListItem, false, false, pageNameListItem);
-        currentPageListItem = pageNameListItem;
+    const lines = node.nodeMarkdown.split("\n");
+    const match = lines[0].match(listItemRegex);
+    if (!match) continue;
+
+    if (node.pageName !== currentPageName) {
+      currentPageName = node.pageName;
+      const pageNameListItem = new ListItemNode();
+      pageNameListItem.append($createFormattableTextNode("[[" + currentPageName + "]]"));
+      $addChildListItem(parentListItem, false, false, pageNameListItem);
+      currentPageListItem = pageNameListItem;
+    }
+
+    if (currentPageListItem) {
+      
+      const listItemNode = new ListItemNode();
+      $convertFromMarkdownString(match[2], TRANSFORMERS, listItemNode);
+      $addChildListItem(currentPageListItem, false, false, listItemNode);
+
+      setLocalSharedNodeMap((prevMap) => {
+        const updatedMap = new Map(prevMap);
+        updatedMap.set(listItemNode.getKey(), node);
+        return updatedMap;
+      });
+
+      let indent = match[1].length;
+      let lastPeer = listItemNode;
+      let parents = [];
+      let leaves = [];
+      for (let i = 1; i < lines.length; i++) {
+        const childListItem = new ListItemNode();
+        const childMatch = lines[i].match(listItemRegex);
+        if (childMatch) {
+          $convertFromMarkdownString(childMatch[2], TRANSFORMERS, childListItem);
+          if (childMatch[1].length > indent) {
+            parents.push(lastPeer);
+            indent = childMatch[1].length;
+          } else if (childMatch[1].length < indent) {
+            parents.pop();
+            indent = childMatch[1].length;
+          }
+          const parent = parents[parents.length - 1];
+          $addChildListItem(parent, false, false, childListItem);
+          lastPeer = childListItem;
+          leaves.push(childListItem);
+        }
       }
 
-      if (currentPageListItem) {
-        const listItemNode = new ListItemNode();
-        $convertFromMarkdownString(match[1], TRANSFORMERS, listItemNode);
-        $addChildListItem(currentPageListItem, false, false, listItemNode);
-
-        setLocalSharedNodeMap((prevMap) => {
-          const updatedMap = new Map(prevMap);
-          updatedMap.set(listItemNode.getKey(), node);
-          return updatedMap;
-        });
-      }
+      setLocalChildNodeMap((prevMap) => {
+        const updatedMap = new Map(prevMap);
+        for (let i = 0; i < leaves.length; i++) {
+          updatedMap.set(leaves[i].getKey(), {
+            parentLexicalNodeKey: displayNode.getKey(),
+            childLineNumWithinParent: i+1
+          });
+        }
+        return updatedMap;
+      });
+ 
     }
   }
+
 }

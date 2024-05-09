@@ -3,7 +3,9 @@ import { Page } from '../lib/definitions';
 import { 
   useSharedNodeContext,
   createSharedNodeKey,
-  QueryNode
+  QueryNode,
+  SharedNodeKeyElements,
+  getSharedNodeKeyElements
 } from '@/app/context/shared-node-context';
 import { getFormulaOutput } from '@/app/lib/formula/FormulaOutput';
 import { PagesContext } from '@/app/context/pages-context';
@@ -16,7 +18,7 @@ export const useFormulaResultService = () => {
   const mergeResults = (resultNodes: NodeMarkdown[], query: string, nodeMap: Map<string, QueryNode>, updatedNeedsSyncToPage: boolean): Map<string, QueryNode> => {
     const updatedMap = new Map(nodeMap);
     resultNodes.forEach((result) => {
-      const key = createSharedNodeKey(result.pageName, result.lineNumberStart);
+      const key = createSharedNodeKey(result.pageName, result.lineNumberStart, result.lineNumberEnd);
       if (updatedMap.has(key)) {
         const mergedResult = updatedMap.get(key);
         if (mergedResult) {
@@ -71,11 +73,11 @@ export const useFormulaResultService = () => {
 
     // Delete current results for the page while collecting all the formulas
     for (const [key] of updatedMap.entries()) {
-      const pageName = key.split("-")[0];
+      const keyElements: SharedNodeKeyElements = getSharedNodeKeyElements(key);
       for (const query of updatedMap.get(key)?.queries??[]) {
         formulas.add(query);
       }
-      if (pagesToQuery.some(page => page.title === pageName)) updatedMap.delete(key);
+      if (pagesToQuery.some(page => page.title === keyElements.pageName)) updatedMap.delete(key);
     }
 
     // run all the formulas over the updated pages and add to the shared node map

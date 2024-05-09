@@ -9,10 +9,16 @@ import { useSharedNodeContext } from "../../context/shared-node-context";
 import { registerFormulaCommandHandlers } from "./formula-command-handlers";
 import { registerFormulaMutationListeners } from "./formula-mutation-listeners";
 
+export type ChildSharedNodeReference = {
+  parentLexicalNodeKey: string;
+  childLineNumWithinParent: number;
+}
+
 export function FormulaPlugin(): null {
 
   const [editor] = useLexicalComposerContext();
   const [localSharedNodeMap, setLocalSharedNodeMap] = useState(new Map<string, NodeMarkdown>());
+  const [localChildNodeMap, setLocalChildNodeMap] = useState(new Map<string, ChildSharedNodeReference>());
   const { sharedNodeMap: globalSharedNodeMap, setSharedNodeMap, updateNodeMarkdown } = useSharedNodeContext();
   const updatingNodeKey = useRef<string | null>(null);
 
@@ -24,7 +30,8 @@ export function FormulaPlugin(): null {
     if (!editor.hasNodes([FormulaEditorNode, FormulaDisplayNode])) {
       throw new Error('FormulaPlugin: FormulaEditorNode and/or FormulaDisplayNode not registered on editor');
     }
-    return registerFormulaCommandHandlers(editor, updatingNodeKey, setUpdatingNodeKey, setLocalSharedNodeMap);
+    return registerFormulaCommandHandlers(
+      editor, updatingNodeKey, setUpdatingNodeKey, setLocalSharedNodeMap, setLocalChildNodeMap);
   }, [editor, setLocalSharedNodeMap, updatingNodeKey]);
 
   // we register commands in two different places because if we registered the command listeners in the 
@@ -37,8 +44,9 @@ export function FormulaPlugin(): null {
     if (!editor.hasNodes([FormulaEditorNode, FormulaDisplayNode])) {
       throw new Error('FormulaPlugin: FormulaEditorNode and/or FormulaDisplayNode not registered on editor');
     }
-    return registerFormulaMutationListeners(editor, localSharedNodeMap, updateNodeMarkdown, setUpdatingNodeKey);
-  }, [editor, localSharedNodeMap, updateNodeMarkdown]);
+    return registerFormulaMutationListeners(
+      editor, localSharedNodeMap, localChildNodeMap, updateNodeMarkdown, setUpdatingNodeKey);
+  }, [editor, localSharedNodeMap, localChildNodeMap, updateNodeMarkdown]);
 
   return null;
 }

@@ -49,7 +49,7 @@ export default function FormulaDisplayComponent(
               const markdownMap = new Map<string, string>();
               (response.output as NodeMarkdown[]).forEach(node => {
                 markdownMap.set(
-                  createSharedNodeKey(node.pageName, node.lineNumberStart),
+                  createSharedNodeKey(node.pageName, node.lineNumberStart, node.lineNumberEnd),
                   node.nodeMarkdown);
               });
               setPageLineMarkdownMap(markdownMap);
@@ -101,7 +101,7 @@ export default function FormulaDisplayComponent(
         for (const node of sharedNodes) {
           if (
             pageLineMarkdownMap.get(
-              createSharedNodeKey(node.pageName, node.lineNumberStart)
+              createSharedNodeKey(node.pageName, node.lineNumberStart, node.lineNumberEnd)
             ) !== node.nodeMarkdown
           ) {
             shouldUpdate = true;
@@ -114,7 +114,7 @@ export default function FormulaDisplayComponent(
         const newPageLineMarkdownMap = new Map<string, string>();
         for (const node of sharedNodes) {
           newPageLineMarkdownMap.set(
-            createSharedNodeKey(node.pageName, node.lineNumberStart),
+            createSharedNodeKey(node.pageName, node.lineNumberStart, node.lineNumberEnd),
             node.nodeMarkdown
           );
         }
