@@ -41,7 +41,7 @@ export function registerFormulaMutationListeners(
             const listItem = $getContainingListItemNode(node);
             if (!listItem) continue;
 
-            if (childSharedNodeMap.has(listItem.getKey())) {
+            if (localSharedNodeMap.has(listItem.getKey()) || childSharedNodeMap.has(listItem.getKey())) {
               console.log("mutation in query result");
 
               const listItemKey = listItem.getKey();
@@ -53,8 +53,10 @@ export function registerFormulaMutationListeners(
               const listItemPrefixRegex = /^(\s*- )/;
               const childNodeReference = childSharedNodeMap.get(listItemKey);
               if (!childNodeReference) return;
+              console.log("childNodeReference", childNodeReference);
               const parentNodeMarkdown = localSharedNodeMap.get(childNodeReference?.parentLexicalNodeKey);
               if (!parentNodeMarkdown) return;
+              console.log("parentNodeMarkdown", parentNodeMarkdown);
               const childNodeMarkdown = 
                 parentNodeMarkdown.nodeMarkdown.split("\n")[childNodeReference.childLineNumWithinParent];
               const match = childNodeMarkdown.match(listItemPrefixRegex);
@@ -64,34 +66,41 @@ export function registerFormulaMutationListeners(
               }
 
               // TODO a better way to normalize node markdown
-              const updatedNodeMarkdown =
+              const updatedChildNodeMarkdown =
                 listItemPrefix +
                 $convertToMarkdownString(TRANSFORMERS, {
                   getChildren: () => [listItem],
                 } as unknown as ElementNode);
 
               if (
-                updatedNodeMarkdown !==
+                updatedChildNodeMarkdown !==
                 childNodeMarkdown
               ) {
+
                   const markdownLines = parentNodeMarkdown.nodeMarkdown.split("\n");
-                  markdownLines[childNodeReference.childLineNumWithinParent-1] = updatedNodeMarkdown;
+                  markdownLines[childNodeReference.childLineNumWithinParent] = updatedChildNodeMarkdown;
+                  const updatedNodeMarkdown = markdownLines.join("\n");
+
+                  console.log("updated node markdown", updatedNodeMarkdown);
 
                   const formulaDisplayNode =
                     $getFormulaNodeFromSharedNode(listItem);
+                  console.log("found formula display node", formulaDisplayNode);
                   setUpdatingNodeKey(formulaDisplayNode?.getKey() ?? null);
 
-                  localSharedNodeMap.set(listItemKey, {
+                  localSharedNodeMap.set(childNodeReference?.parentLexicalNodeKey, {
                     pageName: parentNodeMarkdown.pageName,
                     lineNumberStart: parentNodeMarkdown.lineNumberStart,
                     lineNumberEnd: parentNodeMarkdown.lineNumberEnd,
-                    nodeMarkdown: markdownLines.join("\n"),
+                    nodeMarkdown: updatedNodeMarkdown,
                   });
-                  
+
                   updateNodeMarkdownGlobal(
                     { ...parentNodeMarkdown, nodeMarkdown: updatedNodeMarkdown },
                     true // set needsSyncToPage to true
                   );
+              } else {
+                console.log("no change in shared node markdown");
               }
             }
           }

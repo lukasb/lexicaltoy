@@ -85,20 +85,20 @@ export function $replaceEditorWithTextNode(node: FormulaEditorNode) {
 
 // get the related FormulaDisplayNode from a shared node assuming our node structure is in place
 export function $getFormulaNodeFromSharedNode(listItemNode: ListItemNode): FormulaDisplayNode | null {
-  if (!listItemNode) return null;
-  const parentList = listItemNode.getParent() as ListNode;
-  if (!parentList) return null;
-  const parentListItem = parentList.getParent() as ListItemNode;
-  if (!parentListItem) return null;
-  const grandparentList = parentListItem.getParent() as ListNode;
-  if (!grandparentList) return null;
-  const grandparentListItem = grandparentList.getParent() as ListItemNode;
-  if (!grandparentListItem) return null;
-  const prevSibling = grandparentListItem.getPreviousSibling() as ListItemNode;
-  if (!prevSibling) return null;
-  const formulaNode = prevSibling.getChildren()[0];
-  if (formulaNode && $isFormulaDisplayNode(formulaNode)) {
-    return formulaNode;
+  let currentListItemNode = listItemNode;
+  while (currentListItemNode) {
+    const parentList = currentListItemNode.getParent();
+    if (!parentList || !$isListNode(parentList)) return null;
+    const parentListItem = parentList.getParent();
+    if (!parentListItem || !$isListItemNode(parentListItem)) return null;
+    const prevSibling = parentListItem.getPreviousSibling();
+    if (prevSibling && $isListItemNode(prevSibling)) {
+      const formulaNode = prevSibling.getChildren()[0];
+      if (formulaNode && $isFormulaDisplayNode(formulaNode)) {
+        return formulaNode;
+      }
+    }
+    currentListItemNode = parentListItem;
   }
   return null;
 }
@@ -241,7 +241,7 @@ export function createFormulaOutputNodes(
       let indent = match[1].length;
       let lastPeer = listItemNode;
       let parents = [];
-      let leaves = [];
+      let leaves = [listItemNode];
       for (let i = 1; i < lines.length; i++) {
         const childListItem = new ListItemNode();
         const childMatch = lines[i].match(listItemRegex);
@@ -265,8 +265,8 @@ export function createFormulaOutputNodes(
         const updatedMap = new Map(prevMap);
         for (let i = 0; i < leaves.length; i++) {
           updatedMap.set(leaves[i].getKey(), {
-            parentLexicalNodeKey: displayNode.getKey(),
-            childLineNumWithinParent: i+1
+            parentLexicalNodeKey: listItemNode.getKey(),
+            childLineNumWithinParent: i
           });
         }
         return updatedMap;
