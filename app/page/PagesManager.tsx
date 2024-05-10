@@ -1,4 +1,4 @@
-import { useContext, useEffect, useCallback } from 'react';
+import { useContext, useEffect } from 'react';
 import { PagesContext } from '@/app/context/pages-context';
 import { updatePageContentsWithHistory } from "../lib/actions";
 import { Page, PageStatus } from "@/app/lib/definitions";

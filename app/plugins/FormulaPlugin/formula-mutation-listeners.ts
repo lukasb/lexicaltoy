@@ -42,7 +42,6 @@ export function registerFormulaMutationListeners(
             if (!listItem) continue;
 
             if (localSharedNodeMap.has(listItem.getKey()) || childSharedNodeMap.has(listItem.getKey())) {
-              console.log("mutation in query result");
 
               const listItemKey = listItem.getKey();
 
@@ -77,11 +76,8 @@ export function registerFormulaMutationListeners(
                   markdownLines[childNodeReference.childLineNumWithinParent] = updatedChildNodeMarkdown;
                   const updatedNodeMarkdown = markdownLines.join("\n");
 
-                  console.log("updated node markdown", updatedNodeMarkdown);
-
                   const formulaDisplayNode =
                     $getFormulaNodeFromSharedNode(listItem);
-                  console.log("found formula display node", formulaDisplayNode);
                   setUpdatingNodeKey(formulaDisplayNode?.getKey() ?? null);
 
                   localSharedNodeMap.set(childNodeReference?.parentLexicalNodeKey, {
@@ -95,10 +91,6 @@ export function registerFormulaMutationListeners(
                     { ...parentNodeMarkdown, nodeMarkdown: updatedNodeMarkdown },
                     true // set needsSyncToPage to true
                   );
-              } else {
-                console.log("no change in shared node markdown");
-                console.log("child node markdown", childNodeMarkdown, childNodeMarkdown.length);
-                console.log("updated child node markdown", updatedChildNodeMarkdown, updatedChildNodeMarkdown.length);
               }
             }
           }

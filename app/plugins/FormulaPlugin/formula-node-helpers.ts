@@ -7,7 +7,6 @@ import {
 } from "@/app/nodes/FormulaNode";
 import { 
   LexicalEditor,
-  RootNode,
   LexicalNode,
   $getNodeByKey,
   $isTextNode,
@@ -165,27 +164,6 @@ function sortNodeMarkdownByPageName(nodes: NodeMarkdown[]): NodeMarkdown[] {
   return nodes.slice().sort((a, b) => a.pageName.localeCompare(b.pageName));
 }
 
-/*
-function getLeaves(nodes: ListItemNode[]): ListItemNode[] {
-  const leaves: ListItemNode[] = [];
-
-  // either a ListItemNode is a leaf within an outline (might still have TextNode children)
-  // or it has a ListNode child
-
-  for (const node of nodes) {
-    const children = node.getChildren();
-    if (children.length === 0 || !$isListNode(children[0])) {
-      leaves.push(node);
-    } else if ($isListNode(children[0])) {
-      const listNode = children[0] as ListNode;
-      const childLeaves = getLeaves(listNode.getChildren() as ListItemNode[]);
-      leaves.push(...childLeaves);
-    }
-  }
-  return leaves;
-}
-*/
-
 export function createFormulaOutputNodes(
   editor: LexicalEditor,
   displayNode: FormulaDisplayNode,
@@ -193,8 +171,6 @@ export function createFormulaOutputNodes(
   setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>,
   setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>>
 ) {
-
-  console.log("creating formula nodes");
 
   const parentListItem = getListItemParentNode(displayNode);
   if (!parentListItem) return;
@@ -238,6 +214,8 @@ export function createFormulaOutputNodes(
         return updatedMap;
       });
 
+      // if the list item has children/grandchildren etc, add them
+      // number of spaces before the dash determines the indent level (not 1:1 mapping)
       let indent = match[1].length;
       let lastPeer = listItemNode;
       let parents = [];
@@ -261,6 +239,7 @@ export function createFormulaOutputNodes(
         }
       }
 
+      // make sure we can map any children/grandchildren back to the global shared node map
       setLocalChildNodeMap((prevMap) => {
         const updatedMap = new Map(prevMap);
         for (let i = 0; i < leaves.length; i++) {
