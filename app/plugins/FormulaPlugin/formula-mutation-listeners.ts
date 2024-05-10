@@ -50,20 +50,16 @@ export function registerFormulaMutationListeners(
               // get the existing node markdown for the modified node so that
               // we can preserve the existing indentation when updating the markdown
 
-              const listItemPrefixRegex = /^(\s*- )/;
               const childNodeReference = childSharedNodeMap.get(listItemKey);
-              if (!childNodeReference) return;
-              console.log("childNodeReference", childNodeReference);
+              if (!childNodeReference) continue;
               const parentNodeMarkdown = localSharedNodeMap.get(childNodeReference?.parentLexicalNodeKey);
-              if (!parentNodeMarkdown) return;
-              console.log("parentNodeMarkdown", parentNodeMarkdown);
+              if (!parentNodeMarkdown) continue;
               const childNodeMarkdown = 
                 parentNodeMarkdown.nodeMarkdown.split("\n")[childNodeReference.childLineNumWithinParent];
+              
+              const listItemPrefixRegex = /^(\s*- )/;
               const match = childNodeMarkdown.match(listItemPrefixRegex);
-              let listItemPrefix = "- ";
-              if (match) {
-                listItemPrefix = match[1];
-              }
+              let listItemPrefix = match ? match[1] : "- ";
 
               // TODO a better way to normalize node markdown
               const updatedChildNodeMarkdown =
@@ -101,6 +97,8 @@ export function registerFormulaMutationListeners(
                   );
               } else {
                 console.log("no change in shared node markdown");
+                console.log("child node markdown", childNodeMarkdown, childNodeMarkdown.length);
+                console.log("updated child node markdown", updatedChildNodeMarkdown, updatedChildNodeMarkdown.length);
               }
             }
           }
