@@ -251,6 +251,7 @@ export function registerFormulaCommandHandlers(
         // don't steal focus
         if (editor.isEditable()) return;
         editor.update(() => {
+          console.log("set editable true for page after creating formula nodes");
           editor.setEditable(true);
         });
       }),

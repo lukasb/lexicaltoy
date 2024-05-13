@@ -25,6 +25,7 @@ export function PageListenerPlugin({
   useEffect(() => {
     for (const page of pages) {
       if (page.id === pageId && page.status === PageStatus.EditFromSharedNodes) {
+        console.log("set editable false for page because of shared node update", page.title);
         editor.setEditable(false); // prevent focus stealing
         editor.update(() => {
           $convertFromMarkdownString(page.value, TRANSFORMERS);
@@ -37,6 +38,7 @@ export function PageListenerPlugin({
     return editor.registerUpdateListener(() => {
       editor.update(() => {
         if (!editor.isEditable()) {
+          console.log("set editable true for page after updating page value");
           editor.setEditable(true);
         }
       });
