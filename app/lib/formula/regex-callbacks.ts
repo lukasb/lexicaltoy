@@ -24,6 +24,7 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
 
       const output: FormulaOutput["output"] = [];
       const findFormulaRegex = /^\s*- =find\((.+)\)$/;
+      const findFormulaStartRegex = /^\s*- =find\(/;
       const indentationRegex = /^(\s*)-/;
 
       for (const page of pages) {
@@ -53,7 +54,7 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
           });
           if (matchesAll) {
             // for now, we avoid circular references by excluding any lines with find() formulas
-            if (!findFormulaRegex.test(line)) {
+            if (!findFormulaStartRegex.test(line)) {
               let numLines = 1;
               const indentationNum = indentationRegex.exec(line)?.[1].length ?? -1;
               if (indentationNum > -1) {
@@ -62,7 +63,7 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
                 // TODO figure out something better to do here
                 while (
                   i+numLines < lines.length && 
-                  !findFormulaRegex.test(lines[i+numLines])) {
+                  !findFormulaStartRegex.test(lines[i+numLines])) {
                     const childIndentNum = indentationRegex.exec(lines[i+numLines])?.[1].length ?? -1;
                     if (childIndentNum > indentationNum) {
                       numLines++;
