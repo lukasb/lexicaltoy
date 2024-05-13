@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { LexicalEditor, COMMAND_PRIORITY_EDITOR, BaseSelection, $isTextNode, RangeSelection } from 'lexical';
+import { LexicalEditor, COMMAND_PRIORITY_EDITOR, BaseSelection } from 'lexical';
 import { mergeRegister } from '@lexical/utils';
 import {
   TodoCheckboxStatusNode,
@@ -28,6 +28,7 @@ import { ListItemNode } from '@lexical/list';
 import { $isRangeSelection } from 'lexical';
 import { $getSelection } from 'lexical';
 import { $isListNode } from '@lexical/list';
+import { $isFormattableTextNode } from '../nodes/FormattableTextNode';
 
 function getListItemFromSelection(selection: BaseSelection): ListItemNode | null {
   if (
@@ -136,6 +137,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
       // Probably this means we should be wrapping all the text in an ElementNode, but 
       // that created a problem with not being able to insert text in the todo if
       // all the text and the TextNode was deleted.
+
       if (!hasTodo(node)) {
 
         if (node.getChildren().length === 0 
@@ -152,7 +154,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
         if (status) {
           const firstChild = node.getFirstChild();
           if (firstChild) {
-            if ($isTextNode(firstChild)) {
+            if ($isFormattableTextNode(firstChild)) {
               const newText = firstChild.getTextContent().replace(`${status} `, "");
               firstChild.setTextContent(newText);
               let newStatus = status;
@@ -166,6 +168,7 @@ function registerTodoHandlers(editor: LexicalEditor) {
                 $handleSetTodoDoneValue(true, todoNode.getKey());
               }
             }
+            console.log("node with todo is now", node.getTextContent());
           }
         }
       } else {

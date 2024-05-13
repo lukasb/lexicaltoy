@@ -104,6 +104,9 @@ export default function FormulaDisplayComponent(
               createSharedNodeKey(node.pageName, node.lineNumberStart, node.lineNumberEnd)
             ) !== node.nodeMarkdown
           ) {
+            console.log("FDN old node markdown", pageLineMarkdownMap.get(
+              createSharedNodeKey(node.pageName, node.lineNumberStart, node.lineNumberEnd)));
+            console.log("FDN new node markdown", node.nodeMarkdown);
             shouldUpdate = true;
             break;
           }

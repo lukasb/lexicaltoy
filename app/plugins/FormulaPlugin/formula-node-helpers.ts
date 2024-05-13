@@ -172,6 +172,7 @@ export function createFormulaOutputNodes(
   setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>>
 ) {
 
+  console.log("creating formula output nodes", displayNode.__key);
   const parentListItem = getListItemParentNode(displayNode);
   if (!parentListItem) return;
 
@@ -203,7 +204,6 @@ export function createFormulaOutputNodes(
     }
 
     if (currentPageListItem) {
-      
       const listItemNode = new ListItemNode();
       $convertFromMarkdownString(match[2], TRANSFORMERS, listItemNode);
       $addChildListItem(currentPageListItem, false, false, listItemNode);

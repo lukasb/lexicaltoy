@@ -20,6 +20,7 @@ export const useFormulaResultService = () => {
     resultNodes.forEach((result) => {
       const key = createSharedNodeKey(result.pageName, result.lineNumberStart, result.lineNumberEnd);
       if (updatedMap.has(key)) {
+        console.log("updating a shared node", key);
         const mergedResult = updatedMap.get(key);
         if (mergedResult) {
           if (!mergedResult.queries.includes(query)) {

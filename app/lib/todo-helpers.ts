@@ -26,24 +26,32 @@ export const hasTodo = (node: ListItemNode): boolean => {
 
 export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus, done: boolean) => {
 
-  if (hasTodo(node)) return;
-  
-  const selection = $getSelection();
-  if (
-    selection === null ||
-    !$isRangeSelection(selection) ||
-    !selection.isCollapsed()
-  ) {
+  if (hasTodo(node)) {
     return;
   }
-
-  const start = selection.anchor.offset;
-  const selectedNode = selection.anchor.getNode();
+  
+  const selection = $getSelection();
+  let start = 0;
+  let selectedNode = node;
+  if (
+    selection && 
+    $isRangeSelection(selection) &&
+    selection.isCollapsed()
+  ) {
+    start = selection.anchor.offset;
+    selectedNode = selection.anchor.getNode();
+  }
 
   const todoNode = $createTodoCheckboxStatusNode(status, done);
   node.splice(0, 0, [todoNode]);
   
-  selectedNode.select(start, start);
+  if (
+    selection && 
+    $isRangeSelection(selection) &&
+    selection.isCollapsed()
+  ) {
+    selectedNode.select(start, start);
+  }
 };
 
 export const $changeTodoStatus = (node: ListItemNode, status: TodoStatus) => {

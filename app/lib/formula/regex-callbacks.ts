@@ -79,7 +79,7 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
                 }
               }
               output.push(
-                createNodeMarkdown(page.title, i+1, i+1+numLines, outputLinesString)
+                createNodeMarkdown(page.title, i+1, i+numLines, outputLinesString)
               );
               if (numLines > 1) {
                 i += numLines - 1;
