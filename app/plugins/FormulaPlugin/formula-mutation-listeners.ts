@@ -45,9 +45,6 @@ export function registerFormulaMutationListeners(
 
               const listItemKey = listItem.getKey();
 
-              console.log("mutation type", type); 
-              console.log("listitem key contents", listItemKey, listItem.getTextContent());
-
               // right now we only support list item results
               // get the existing node markdown for the modified node so that
               // we can preserve the existing indentation when updating the markdown
@@ -91,8 +88,6 @@ export function registerFormulaMutationListeners(
                     nodeMarkdown: updatedNodeMarkdown,
                   });
 
-                  console.log("old node markdown", parentNodeMarkdown.nodeMarkdown);
-                  console.log("updated node markdown", updatedNodeMarkdown);
                   updateNodeMarkdownGlobal(
                     { ...parentNodeMarkdown, nodeMarkdown: updatedNodeMarkdown },
                     true // set needsSyncToPage to true
@@ -105,11 +100,9 @@ export function registerFormulaMutationListeners(
 
     return mergeRegister(
       editor.registerMutationListener(FormattableTextNode, (mutations) => {
-        console.log("formattable text node mutation listener");
         handleSharedNodeUpdate(mutations);
       }),
       editor.registerMutationListener(TodoCheckboxStatusNode, (mutations) => {
-        console.log("todo checkbox status node mutation listener");
         // TODO marking a todo done will trigger this mutation listener, and will also
         // trigger the FormattableTextNode mutation listener by setting strikethrough,
         // leading to double updates. this is unfortunate.

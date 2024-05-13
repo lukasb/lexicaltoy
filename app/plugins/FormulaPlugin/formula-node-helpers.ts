@@ -172,7 +172,6 @@ export function createFormulaOutputNodes(
   setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>>
 ) {
 
-  console.log("creating formula output nodes", displayNode.__key);
   const parentListItem = getListItemParentNode(displayNode);
   if (!parentListItem) return;
 

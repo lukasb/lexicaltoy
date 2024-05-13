@@ -168,7 +168,6 @@ function registerTodoHandlers(editor: LexicalEditor) {
                 $handleSetTodoDoneValue(true, todoNode.getKey());
               }
             }
-            console.log("node with todo is now", node.getTextContent());
           }
         }
       } else {
