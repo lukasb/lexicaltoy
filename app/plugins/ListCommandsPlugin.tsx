@@ -67,7 +67,6 @@ function mergeListNodesTransform(node: ListNode) {
   const nextSibling = node.getNextSibling();
 
   if ($isListNode(nextSibling) && $isListNode(node) && nextSibling.getListType() === node.getListType()) {
-      console.log("merging lists");
       node.append(...nextSibling.getChildren());
       nextSibling.remove();
   }

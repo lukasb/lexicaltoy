@@ -41,7 +41,7 @@ export function PageListenerPlugin({
           editor.setEditable(true);
       }
     });
-  }, [editor, pageId]);
+  }, [editor]);
 
   return null;
 }
