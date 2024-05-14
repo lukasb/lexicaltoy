@@ -132,7 +132,8 @@ export function registerListCommands(editor: LexicalEditor) {
       },
       COMMAND_PRIORITY_EDITOR
     ),
-    editor.registerNodeTransform(ListNode, mergeListNodesTransform)
+    // line below was causing focus stealing by an editor that didn't have a transform happen
+    //editor.registerNodeTransform(ListNode, mergeListNodesTransform)
   );
 }
 
