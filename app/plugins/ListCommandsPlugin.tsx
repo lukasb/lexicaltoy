@@ -62,6 +62,17 @@ function indentOutdentListItemAndChildren(listItem: ListItemNode, indentChange: 
   });
 }
 
+// if user edits leave us with two adjacent lists, merge them
+function mergeListNodesTransform(node: ListNode) {
+  const nextSibling = node.getNextSibling();
+
+  if ($isListNode(nextSibling) && $isListNode(node) && nextSibling.getListType() === node.getListType()) {
+      console.log("merging lists");
+      node.append(...nextSibling.getChildren());
+      nextSibling.remove();
+  }
+}
+
 export function registerListCommands(editor: LexicalEditor) {
   return mergeRegister(
     editor.registerCommand(
@@ -121,7 +132,8 @@ export function registerListCommands(editor: LexicalEditor) {
         return true;
       },
       COMMAND_PRIORITY_EDITOR
-    )
+    ),
+    editor.registerNodeTransform(ListNode, mergeListNodesTransform)
   );
 }
 
