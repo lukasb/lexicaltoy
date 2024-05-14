@@ -25,8 +25,9 @@ export function PageListenerPlugin({
   useEffect(() => {
     for (const page of pages) {
       if (page.id === pageId && page.status === PageStatus.EditFromSharedNodes) {
-        console.log("set editable false for page because of shared node update", page.title);
-        editor.setEditable(false); // prevent focus stealing
+        if (editor.isEditable()) {
+           editor.setEditable(false); // prevent focus stealing
+        }
         editor.update(() => {
           $convertFromMarkdownString(page.value, TRANSFORMERS);
         });
@@ -36,14 +37,11 @@ export function PageListenerPlugin({
 
   useEffect(() => {
     return editor.registerUpdateListener(() => {
-      editor.update(() => {
-        if (!editor.isEditable()) {
-          console.log("set editable true for page after updating page value");
+      if (!editor.isEditable()) {
           editor.setEditable(true);
-        }
-      });
+      }
     });
-  }, [editor]);
+  }, [editor, pageId]);
 
   return null;
 }
