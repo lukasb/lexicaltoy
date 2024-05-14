@@ -7,7 +7,7 @@ import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import type { EditorState } from "lexical";
 import { TextNode } from 'lexical';
-import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
+import { AutoFocusPlugin } from "@/app/plugins/MyAutoFocusPlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { ListNode, ListItemNode } from "@lexical/list";
@@ -135,7 +135,7 @@ function Editor({
   return (
     <PromisesProvider>
       <LexicalComposer initialConfig={initialConfig}>
-        {requestFocus && <AutoFocusPlugin />}
+        {requestFocus && <AutoFocusPlugin/>}
         <RichTextPlugin
           contentEditable={
             <div ref={onRef} className="relative">
