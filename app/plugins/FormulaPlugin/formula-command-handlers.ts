@@ -246,15 +246,6 @@ export function registerFormulaCommandHandlers(
         },
         COMMAND_PRIORITY_EDITOR
       ),
-      editor.registerUpdateListener(({editorState}) => {
-        // we go non-editable when making programmatic edits so we
-        // don't steal focus
-        if (editor.isEditable()) return;
-        editor.update(() => {
-          console.log("set editable true for page after creating formula nodes");
-          editor.setEditable(true);
-        });
-      }),
       editor.registerCommand(
         DELETE_CHARACTER_COMMAND,
         () => {
