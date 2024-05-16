@@ -179,6 +179,10 @@ export function createFormulaOutputNodes(
   const listItemRegex = /^(\s*)-\s*(.+)$/;
   const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
 
+  // prevent this editor from stealing focus
+  // we make it editable again in an update listener in PageListenerPlugin
+  editor.setEditable(false);
+
   // TODO maybe warn the user that any existing children will be deleted?
   $deleteFormulaDisplayNodeChildren(displayNode);
 
