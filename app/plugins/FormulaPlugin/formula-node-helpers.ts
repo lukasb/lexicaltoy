@@ -181,7 +181,12 @@ export function createFormulaOutputNodes(
 
   // prevent this editor from stealing focus
   // we make it editable again in an update listener in PageListenerPlugin
-  editor.setEditable(false);
+  if (
+    !editor.isComposing() &&
+    editor.getRootElement() !== document.activeElement
+  ) {
+    editor.setEditable(false);
+  }
 
   // TODO maybe warn the user that any existing children will be deleted?
   $deleteFormulaDisplayNodeChildren(displayNode);
