@@ -20,11 +20,15 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
     for (const page of pages) {
       if (page.status === PageStatus.PendingWrite) {
         console.log("Saving page to database", page.title);
+        console.time("savePage");
         try {
           const newRevisionNumber = await updatePageContentsWithHistory(page.id, page.value, page.revisionNumber);
+          console.timeEnd("savePage");
           if (newRevisionNumber === -1) {
             alert(`Failed to save page ${page.title} because you edited an old version, please relead for the latest version.`);
             return;
+          } else {
+            console.log("Saved page to database", page.title);
           }
           // Update the pages context with the new revision number
           setPages((prevPages) =>

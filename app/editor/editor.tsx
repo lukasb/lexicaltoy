@@ -117,7 +117,10 @@ function Editor({
   // TODO this assumes the page content won't be changed elsewhere in the same PagesContext
   const storePage = useDebouncedCallback(async (outline) => {
     const currentPage = getPage(page.id);
-    if (!currentPage || localVersion > currentPage.revisionNumber) return;
+    if (!currentPage || localVersion > currentPage.revisionNumber) {
+      console.log("Local version is newer than current page version, not saving.");
+      return;
+    }
     updatePageContentsLocal(page.id, outline, currentPage.revisionNumber);
     localVersion = currentPage.revisionNumber + 1;
   }, 500);
