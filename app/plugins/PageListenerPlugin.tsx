@@ -15,7 +15,10 @@ import {
   $getSelection,
   $setSelection,
   $isRangeSelection,
-  $getNodeByKey
+  $getNodeByKey,
+  RangeSelection,
+  $createPoint,
+  $createRangeSelection
 } from "lexical";
 import { 
   ListItemNode,
@@ -122,21 +125,19 @@ export function PageListenerPlugin({
             let focusKey = undefined;
             let anchorOffset = 0;
             let focusOffset = 0;
-            let format = undefined;
-            let style = undefined;
-            if ($isRangeSelection(selection)) {
+            if ($isRangeSelection(selection) && selection.isCollapsed()) {
               anchorKey = selection.anchor.key;
               focusKey = selection.focus.key;
               anchorOffset = selection.anchor.offset;
               focusOffset = selection.focus.offset;
-              format = selection.format;
-              style = selection.style;
             }
             const root = $getRoot();
             $updateListItems(root, page.value.split("\n"));
             if (anchorKey && focusKey) {
-              const anchor = $getNodeByKey(anchorKey);
-              anchor?.selectEnd();
+              const newSelection = $createRangeSelection();
+              newSelection.anchor = $createPoint(anchorKey, anchorOffset, 'text');
+              newSelection.focus = $createPoint(focusKey, focusOffset, 'text'),
+              $setSelection(newSelection);
             }
             //$setSelection(selection);
           }
