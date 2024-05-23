@@ -10,6 +10,11 @@ import {
   LexicalNode,
   $getNodeByKey,
   $isTextNode,
+  $getSelection,
+  $isRangeSelection,
+  $setSelection,
+  $createRangeSelection,
+  $createPoint
 } from "lexical";
 import {
   ListItemNode,
@@ -179,6 +184,10 @@ export function createFormulaOutputNodes(
   const listItemRegex = /^(\s*)-\s*(.+)$/;
   const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
 
+  let anchorKey = undefined;
+  let focusKey = undefined;
+  let anchorOffset = 0;
+  let focusOffset = 0;
   // prevent this editor from stealing focus
   // we make it editable again in an update listener in PageListenerPlugin
   if (
@@ -186,6 +195,14 @@ export function createFormulaOutputNodes(
     editor.getRootElement() !== document.activeElement
   ) {
     editor.setEditable(false);
+  } else {
+    const selection = $getSelection();          
+    if ($isRangeSelection(selection)) {
+      anchorKey = selection.anchor.key;
+      focusKey = selection.focus.key;
+      anchorOffset = selection.anchor.offset;
+      focusOffset = selection.focus.offset;
+    }
   }
 
   // TODO maybe warn the user that any existing children will be deleted?
@@ -258,4 +275,10 @@ export function createFormulaOutputNodes(
     }
   }
 
+  if (anchorKey && focusKey) {
+    const newSelection = $createRangeSelection();
+    newSelection.anchor = $createPoint(anchorKey, anchorOffset, 'text');
+    newSelection.focus = $createPoint(focusKey, focusOffset, 'text'),
+    $setSelection(newSelection);
+  }
 }
