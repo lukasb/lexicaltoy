@@ -125,7 +125,7 @@ export function PageListenerPlugin({
             let focusKey = undefined;
             let anchorOffset = 0;
             let focusOffset = 0;
-            if ($isRangeSelection(selection) && selection.isCollapsed()) {
+            if ($isRangeSelection(selection)) {
               anchorKey = selection.anchor.key;
               focusKey = selection.focus.key;
               anchorOffset = selection.anchor.offset;
@@ -139,7 +139,6 @@ export function PageListenerPlugin({
               newSelection.focus = $createPoint(focusKey, focusOffset, 'text'),
               $setSelection(newSelection);
             }
-            //$setSelection(selection);
           }
         });
       }
