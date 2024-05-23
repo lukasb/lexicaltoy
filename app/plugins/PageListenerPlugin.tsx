@@ -6,6 +6,86 @@ import {
   TRANSFORMERS
 } from "@lexical/markdown";
 import { PageStatus } from "../lib/definitions";
+import { getNextListItem } from "../lib/list-utils";
+import { 
+  $getRoot,
+  RootNode,
+  $isRootNode,
+  ElementNode,
+  $getSelection,
+  $setSelection,
+  $isRangeSelection,
+  $getNodeByKey
+} from "lexical";
+import { 
+  ListItemNode,
+  $isListItemNode,
+  $isListNode,
+  ListNode
+} from "@lexical/list";
+import { $isFormulaDisplayNode } from "../nodes/FormulaNode";
+
+const listItemRegex = /^(\s*)-\s*(.+)$/;
+
+function $updateListItems(root: RootNode, markdownLines: string[]) {
+  let element: ElementNode | null = root;
+  let previousBlank = true;
+  for (let i = 0; i < markdownLines.length; i++) {
+    if ($isRootNode(element)) {
+      element = element.getChildAtIndex(0);
+    }
+    const match = markdownLines[i].match(listItemRegex);
+    // line is a new line within current element (ie user hit shift-enter)
+    if (markdownLines[i] !== "" && !match && !previousBlank) continue;
+    if (match) {
+      previousBlank = false;
+      if ($isListNode(element)) {
+        element = element.getChildAtIndex(0) as ListItemNode;
+      } else if ($isListItemNode(element)) {
+        const child = element.getChildAtIndex(0);
+        if (child && $isFormulaDisplayNode(child)) {
+          element = getNextListItem(element as ListItemNode, true);
+        } else {
+          element = getNextListItem(element as ListItemNode, false);
+        }
+      } else {
+        const sibling = element?.getNextSibling();
+        if ($isListNode(sibling)) {
+          element = (sibling as ListNode).getChildAtIndex(0);
+        }
+      }
+      if ($isListItemNode(element) && !match[2].startsWith("=find(")) {
+        let newMarkdown = match[2];
+        let j = i + 1;
+        for (; j < markdownLines.length; j++) {
+          if (markdownLines[j] === "") break;
+          const nextMatch = markdownLines[j].match(listItemRegex);
+          if (nextMatch) break;
+          newMarkdown = newMarkdown + "\n" + markdownLines[j];
+        }
+        //console.log('updating list item - old', element.getTextContent());
+        //console.log("updating list item - new", newMarkdown);
+        $convertFromMarkdownString(newMarkdown, TRANSFORMERS, element as ListItemNode);
+      }
+    } else if (markdownLines[i] !== "") {
+      previousBlank = false;
+      if ($isListItemNode(element)) {
+        let parent = element.getParent();
+        while (parent && parent !== root) {
+          element = parent;
+          parent = element?.getParent();
+        }
+      } 
+      if (element) {
+        element = element.getNextSibling();
+      } else {
+        return null;
+      }
+    } else {
+      previousBlank = true;
+    }
+  }
+}
 
 export function PageListenerPlugin({
   pageId
@@ -24,12 +104,42 @@ export function PageListenerPlugin({
 
   useEffect(() => {
     for (const page of pages) {
-      if (page.id === pageId && page.status === PageStatus.EditFromSharedNodes) {
-        if (editor.isEditable()) {
-           editor.setEditable(false); // prevent focus stealing
-        }
+      if (
+        page.id === pageId &&
+        page.status === PageStatus.EditFromSharedNodes
+      ) {
         editor.update(() => {
-          $convertFromMarkdownString(page.value, TRANSFORMERS);
+          if (
+            editor.isEditable() &&
+            !editor.isComposing() &&
+            editor.getRootElement() !== document.activeElement
+          ) {
+            editor.setEditable(false); // prevent focus stealing
+            $convertFromMarkdownString(page.value, TRANSFORMERS);
+          } else {
+            const selection = $getSelection();
+            let anchorKey = undefined;
+            let focusKey = undefined;
+            let anchorOffset = 0;
+            let focusOffset = 0;
+            let format = undefined;
+            let style = undefined;
+            if ($isRangeSelection(selection)) {
+              anchorKey = selection.anchor.key;
+              focusKey = selection.focus.key;
+              anchorOffset = selection.anchor.offset;
+              focusOffset = selection.focus.offset;
+              format = selection.format;
+              style = selection.style;
+            }
+            const root = $getRoot();
+            $updateListItems(root, page.value.split("\n"));
+            if (anchorKey && focusKey) {
+              const anchor = $getNodeByKey(anchorKey);
+              anchor?.selectEnd();
+            }
+            //$setSelection(selection);
+          }
         });
       }
     }

@@ -165,6 +165,36 @@ export function $getPreviousListItem(listItem: ListItemNode): ListItemNode | nul
   return getLastDescendantListItem(previousSibling);
 }
 
+export function getNextListItem(listItem: ListItemNode, skipChildren: boolean): ListItemNode | null {
+  let nextSibling = listItem.getNextSibling() as ListItemNode;
+  if (nextSibling) {
+    const child = nextSibling.getChildAtIndex(0);
+    if ($isListNode(child)) {
+      if (!skipChildren) {
+        return child.getChildAtIndex(0) as ListItemNode;
+      } else {
+        nextSibling = nextSibling.getNextSibling() as ListItemNode;
+      }
+    }
+  }
+  if (nextSibling) {  
+    return nextSibling;
+  } else {
+    // traverse up the tree until we find a sibling
+    let parentList = listItem.getParent() as ListNode;
+    let parentListItem = parentList.getParent() as ListItemNode;
+    while (parentList && parentListItem) {
+      const nextSibling = parentListItem.getNextSibling() as ListItemNode;
+      if (nextSibling) {
+        return nextSibling;
+      }
+      parentList = parentListItem.getParent() as ListNode;
+      parentListItem = parentList.getParent() as ListItemNode;
+    }
+  }
+  return null;
+}
+
 export function $addChildListItem(parent: ListItemNode, prepend: boolean, changeSelection: boolean, child?: ListItemNode) {
   
   const newListItem = child || $createListItemNode();
