@@ -13,8 +13,7 @@ import { searchPages } from "../lib/pages-helpers";
 import { Page } from "../lib/definitions";
 import { PagesContext } from "@/app/context/pages-context";
 import { isTouchDevice } from "../lib/window-helpers";
-import { set } from "date-fns";
- 
+
 const Omnibar = forwardRef(({
   openOrCreatePageByTitle
 }: { 
@@ -34,11 +33,10 @@ const Omnibar = forwardRef(({
 
   // TODO accessibility
   // TODO Escape sets focus back to last active editor
-  // TODO search by contents, not just title
 
   const showReverseChronologicalList = useCallback(() => {
     setResults(pages.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime()));
-  }, [pages]); // Include 'pages' as a dependency   
+  }, [pages]);
 
   useImperativeHandle(ref, () => ({
     focus: () => {
@@ -160,27 +158,29 @@ const Omnibar = forwardRef(({
       if (term === "" && results.length === 0) {
         showReverseChronologicalList();
       }      
-      setSelectedIndex((prevIndex) =>
-        Math.min(prevIndex + 1, results.length - 1)
-      );
+      setSelectedIndex((prevIndex) => {
+        const newIndex = Math.min(prevIndex + 1, results.length - 1);
+        setDisplayValue(results[newIndex].title);
+        return newIndex;
+      });
       if (!isTouchDevice()) {
         setShowPageContent(true);
       }
       event.preventDefault();
     } else if (event.key === "ArrowUp") {
-      setSelectedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+      setSelectedIndex((prevIndex) => {
+        const newIndex = Math.max(prevIndex - 1, 0);
+        setDisplayValue(results[newIndex].title);
+        return newIndex;
+      });
       if (!isTouchDevice()) {
         setShowPageContent(true);
       }
       event.preventDefault();
     } else if (event.key === "Enter") {
-      if (selectedIndex > -1 && results.length > 0) {
-        openOrCreatePageByTitle(results[selectedIndex].title);
-        resetSelf();
-      } else {
-        openOrCreatePageByTitle(displayValue);
-        resetSelf();
-      }
+      if (displayValue.length === 0) return;
+      openOrCreatePageByTitle(displayValue);
+      resetSelf();
       event.preventDefault();
     } else if (event.key === "Backspace" || event.key === "Delete") {
       skipTermResolutionRef.current = true;
