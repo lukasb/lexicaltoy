@@ -13,7 +13,7 @@ const openai = new OpenAI({
   apiKey: process.env['OPENAI_API_KEY']
 });
 
-const modelName = "gpt-4-turbo-preview";
+const modelName = "gpt-4o";
 
 const shortGPTChatResponseSystemPrompt = `You will be given a user prompt. Your response should be one or two sentences.`;
 
