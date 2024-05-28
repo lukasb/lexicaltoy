@@ -35,6 +35,7 @@ const Omnibar = forwardRef(({
   // TODO Escape sets focus back to last active editor
 
   const showReverseChronologicalList = useCallback(() => {
+    console.log("pages length", pages.length);
     setResults(pages.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime()));
   }, [pages]);
 
@@ -98,6 +99,7 @@ const Omnibar = forwardRef(({
         );
   
         if (inputRef.current && exactMatchIndex !== -1) {
+          console.log("setSelected with exact match");
           const startPos = term.length;
           const endPos = displayValue.length;
           inputRef.current.setSelectionRange(startPos, endPos);
@@ -106,6 +108,7 @@ const Omnibar = forwardRef(({
             setShowPageContent(true);
           }
         } else {
+          console.log("setSelected -1");
           setSelectedIndex(-1);
         }
       }
@@ -135,7 +138,7 @@ const Omnibar = forwardRef(({
       ulRef.current?.children[selectedIndex]?.scrollIntoView({ block: 'nearest' });
     }
   }, [selectedIndex]);
-
+ 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     if (newValue === "") skipTermResolutionRef.current = false;
@@ -156,11 +159,15 @@ const Omnibar = forwardRef(({
     if (event.key === "ArrowDown") {
       // if the search box is empty, show a reverse chronological list of all pages
       if (term === "" && results.length === 0) {
+        console.log("showing reverse chronological list");
         showReverseChronologicalList();
       }      
       setSelectedIndex((prevIndex) => {
-        const newIndex = Math.min(prevIndex + 1, results.length - 1);
-        setDisplayValue(results[newIndex].title);
+        const newIndex = Math.max(Math.min(prevIndex + 1, results.length - 1), 0);
+        console.log(prevIndex, newIndex, results.length);
+        if (newIndex < results.length) {
+          setDisplayValue(results[newIndex].title);
+        }
         return newIndex;
       });
       if (!isTouchDevice()) {
