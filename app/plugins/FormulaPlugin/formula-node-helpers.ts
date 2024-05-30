@@ -278,7 +278,7 @@ export function createFormulaOutputNodes(
   if (anchorKey && focusKey) {
     const newSelection = $createRangeSelection();
     newSelection.anchor = $createPoint(anchorKey, anchorOffset, 'text');
-    newSelection.focus = $createPoint(focusKey, focusOffset, 'text'),
+    newSelection.focus = $createPoint(focusKey, focusOffset, 'text');
     $setSelection(newSelection);
   }
 }
