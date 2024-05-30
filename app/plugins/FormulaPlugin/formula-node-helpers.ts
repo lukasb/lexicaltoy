@@ -50,7 +50,7 @@ export function haveExistingFormulaEditorNode(): boolean {
   return __formulaEditorNodeKey !== "";
 }
 
-export function replaceExistingFormulaEditorNode() {
+export function $replaceExistingFormulaEditorNode() {
   const formulaEditorNode = $getNodeByKey(__formulaEditorNodeKey);
   if (formulaEditorNode instanceof FormulaEditorNode) {
     $replaceWithFormulaDisplayNode(formulaEditorNode);
