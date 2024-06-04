@@ -21,11 +21,12 @@ export function AutoFocusPlugin({defaultSelection}: Props): null {
         () => {
           const activeElement = document.activeElement;
           const rootElement = editor.getRootElement() as HTMLDivElement;
-          if (
-            rootElement !== null &&
-            (activeElement === null || !rootElement.contains(activeElement))
-          ) {
-            rootElement.focus({preventScroll: true});
+          if (rootElement !== null) {
+            if (activeElement === null || !rootElement.contains(activeElement))
+            {
+              rootElement.focus({preventScroll: false});
+            }
+            rootElement.scrollIntoView({block: 'end', behavior: 'auto'});
           }
         },
         {defaultSelection},
