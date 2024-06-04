@@ -34,8 +34,9 @@ import {
   $createFormattableTextNode,
   FormattableTextNode
 } from "@/app/nodes/FormattableTextNode";
-import { $convertFromMarkdownString, TRANSFORMERS } from "@lexical/markdown";
+import { TRANSFORMERS } from "@lexical/markdown";
 import { ChildSharedNodeReference } from ".";
+import { $myConvertFromMarkdownString } from "@/app/lib/markdown/markdown-import";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -50,7 +51,7 @@ export function haveExistingFormulaEditorNode(): boolean {
   return __formulaEditorNodeKey !== "";
 }
 
-export function replaceExistingFormulaEditorNode() {
+export function $replaceExistingFormulaEditorNode() {
   const formulaEditorNode = $getNodeByKey(__formulaEditorNodeKey);
   if (formulaEditorNode instanceof FormulaEditorNode) {
     $replaceWithFormulaDisplayNode(formulaEditorNode);
@@ -184,10 +185,6 @@ export function createFormulaOutputNodes(
   const listItemRegex = /^(\s*)-\s*(.+)$/;
   const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
 
-  let anchorKey = undefined;
-  let focusKey = undefined;
-  let anchorOffset = 0;
-  let focusOffset = 0;
   // prevent this editor from stealing focus
   // we make it editable again in an update listener in PageListenerPlugin
   if (
@@ -195,14 +192,6 @@ export function createFormulaOutputNodes(
     editor.getRootElement() !== document.activeElement
   ) {
     editor.setEditable(false);
-  } else {
-    const selection = $getSelection();          
-    if ($isRangeSelection(selection)) {
-      anchorKey = selection.anchor.key;
-      focusKey = selection.focus.key;
-      anchorOffset = selection.anchor.offset;
-      focusOffset = selection.focus.offset;
-    }
   }
 
   // TODO maybe warn the user that any existing children will be deleted?
@@ -226,7 +215,7 @@ export function createFormulaOutputNodes(
 
     if (currentPageListItem) {
       const listItemNode = new ListItemNode();
-      $convertFromMarkdownString(match[2], TRANSFORMERS, listItemNode);
+      $myConvertFromMarkdownString(match[2], TRANSFORMERS, listItemNode, false);
       $addChildListItem(currentPageListItem, false, false, listItemNode);
 
       setLocalSharedNodeMap((prevMap) => {
@@ -245,7 +234,7 @@ export function createFormulaOutputNodes(
         const childListItem = new ListItemNode();
         const childMatch = lines[i].match(listItemRegex);
         if (childMatch) {
-          $convertFromMarkdownString(childMatch[2], TRANSFORMERS, childListItem);
+          $myConvertFromMarkdownString(childMatch[2], TRANSFORMERS, childListItem, false);
           if (childMatch[1].length > indent) {
             parents.push(lastPeer);
             indent = childMatch[1].length;
@@ -273,12 +262,5 @@ export function createFormulaOutputNodes(
       });
  
     }
-  }
-
-  if (anchorKey && focusKey) {
-    const newSelection = $createRangeSelection();
-    newSelection.anchor = $createPoint(anchorKey, anchorOffset, 'text');
-    newSelection.focus = $createPoint(focusKey, focusOffset, 'text'),
-    $setSelection(newSelection);
   }
 }
