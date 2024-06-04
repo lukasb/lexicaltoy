@@ -15,8 +15,6 @@ import {
   $getSelection,
   $setSelection,
   $isRangeSelection,
-  $getNodeByKey,
-  RangeSelection,
   $createPoint,
   $createRangeSelection
 } from "lexical";
@@ -27,6 +25,7 @@ import {
   ListNode
 } from "@lexical/list";
 import { $isFormulaDisplayNode } from "../nodes/FormulaNode";
+import { $myConvertFromMarkdownString } from "../lib/markdown/markdown-import";
 
 const listItemRegex = /^(\s*)-\s*(.+)$/;
 
@@ -119,8 +118,7 @@ export function PageListenerPlugin({
             editor.getRootElement() !== document.activeElement
           ) {
             editor.setEditable(false); // prevent focus stealing
-            // TODO maybe use $myConvertFromMarkdownString - $convertFromMarkdownString will always try to move the selection
-            $convertFromMarkdownString(page.value, TRANSFORMERS);
+            $myConvertFromMarkdownString(page.value, false);
           } else {
             const selection = $getSelection();
             let anchorKey = undefined;
@@ -138,7 +136,7 @@ export function PageListenerPlugin({
             if (anchorKey && focusKey) {
               const newSelection = $createRangeSelection();
               newSelection.anchor = $createPoint(anchorKey, anchorOffset, 'text');
-              newSelection.focus = $createPoint(focusKey, focusOffset, 'text'),
+              newSelection.focus = $createPoint(focusKey, focusOffset, 'text');
               $setSelection(newSelection);
             }
           }

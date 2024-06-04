@@ -210,7 +210,7 @@ export function createFormulaOutputNodes(
 
     if (currentPageListItem) {
       const listItemNode = new ListItemNode();
-      $myConvertFromMarkdownString(match[2], TRANSFORMERS, listItemNode, false);
+      $myConvertFromMarkdownString(match[2], false, listItemNode);
       $addChildListItem(currentPageListItem, false, false, listItemNode);
 
       setLocalSharedNodeMap((prevMap) => {
@@ -229,7 +229,7 @@ export function createFormulaOutputNodes(
         const childListItem = new ListItemNode();
         const childMatch = lines[i].match(listItemRegex);
         if (childMatch) {
-          $myConvertFromMarkdownString(childMatch[2], TRANSFORMERS, childListItem, false);
+          $myConvertFromMarkdownString(childMatch[2], false, childListItem);
           if (childMatch[1].length > indent) {
             parents.push(lastPeer);
             indent = childMatch[1].length;

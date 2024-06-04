@@ -164,7 +164,8 @@ const listReplace = (listType: ListType): ElementTransformer['replace'] => {
       parentNode.replace(list);
     }
     listItem.append(...children);
-    listItem.select(0, 0);
+    // TODO commenting this out might have unintended consequences, but it did solve a focus stealing bug - Lukas
+    //listItem.select(0, 0);
     const indent = getIndent(match[1]);
     if (indent) {
       listItem.setIndent(indent);
@@ -898,9 +899,9 @@ function createTextFormatTransformersIndex(
 
 export function $myConvertFromMarkdownString(
   markdown: string,
-  transformers: Array<Transformer> = TRANSFORMERS,
-  node?: ElementNode,
   shouldMoveSelection = true,
+  node?: ElementNode,
+  transformers: Array<Transformer> = TRANSFORMERS,
   shouldPreserveNewLines = false,
 ): void {
   const importMarkdown = createMarkdownImport(

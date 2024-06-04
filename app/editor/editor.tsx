@@ -1,7 +1,7 @@
 "use client";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useContext, useCallback } from "react";
 import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -14,7 +14,6 @@ import { ListNode, ListItemNode } from "@lexical/list";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { 
   UNORDERED_LIST,
-  $convertFromMarkdownString,
   $convertToMarkdownString,
   TRANSFORMERS
 } from "@lexical/markdown";
@@ -50,6 +49,7 @@ import { PromisesProvider } from "../context/formula-request-context";
 import { stripSharedNodesFromMarkdown } from "@/app/lib/formula/formula-markdown-converters";
 import { PageListenerPlugin } from "../plugins/PageListenerPlugin";
 import { FormattableTextNode } from "../nodes/FormattableTextNode";
+import { $myConvertFromMarkdownString } from "../lib/markdown/markdown-import";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -69,9 +69,8 @@ function Editor({
   openOrCreatePageByTitle: (title: string) => void;
 }) {
 
-  // TODO maybe use $myConvertFromMarkdownString - $convertFromMarkdownString will always try to move the selection
   const initialConfig = {
-    editorState: () => $convertFromMarkdownString(page.value, TRANSFORMERS),
+    editorState: () => $myConvertFromMarkdownString(page.value, false),
     namespace: "orangetask",
     theme,
     nodes: [

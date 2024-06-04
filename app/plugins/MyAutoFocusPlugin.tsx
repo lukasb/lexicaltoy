@@ -16,13 +16,7 @@ type Props = {
 export function AutoFocusPlugin({defaultSelection}: Props): null {
   const [editor] = useLexicalComposerContext();
 
-  // TODO we're using a timeout here, because otherwise when we have 2 columns
-  // the focus was always set to the last page in the right column. however
-  // we should probably do this by rendering the autofocus plugin at the end of the right column
-  // and passing it a ref to the top left page
-
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
       editor.focus(
         () => {
           const activeElement = document.activeElement;
@@ -36,10 +30,6 @@ export function AutoFocusPlugin({defaultSelection}: Props): null {
         },
         {defaultSelection},
       );
-    }, 50);
-  
-    // Clean up the timeout when the component unmounts or when the dependencies change
-    return () => clearTimeout(timeoutId);
   }, [defaultSelection, editor]);
 
   return null;
