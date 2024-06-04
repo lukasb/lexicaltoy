@@ -162,24 +162,28 @@ const Omnibar = forwardRef(({
         console.log("showing reverse chronological list");
         showReverseChronologicalList();
       }      
-      setSelectedIndex((prevIndex) => {
+      /*setSelectedIndex((prevIndex) => {
         const newIndex = Math.max(Math.min(prevIndex + 1, results.length - 1), 0);
         console.log(prevIndex, newIndex, results.length);
         if (newIndex < results.length) {
           setDisplayValue(results[newIndex].title);
         }
         return newIndex;
-      });
+      });*/
+      setSelectedIndex((prevIndex) =>
+        Math.min(prevIndex + 1, results.length - 1)
+      );
       if (!isTouchDevice()) {
         setShowPageContent(true);
       }
       event.preventDefault();
     } else if (event.key === "ArrowUp") {
-      setSelectedIndex((prevIndex) => {
+      /*setSelectedIndex((prevIndex) => {
         const newIndex = Math.max(prevIndex - 1, 0);
         setDisplayValue(results[newIndex].title);
         return newIndex;
-      });
+      });*/
+      setSelectedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
       if (!isTouchDevice()) {
         setShowPageContent(true);
       }
