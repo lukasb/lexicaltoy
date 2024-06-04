@@ -26,7 +26,10 @@ export function AutoFocusPlugin({defaultSelection}: Props): null {
             {
               rootElement.focus({preventScroll: false});
             }
-            rootElement.scrollIntoView({block: 'end', behavior: 'auto'});
+            // very long pages don't scroll to the end without this delay ;_;
+            setTimeout(() => {
+              rootElement.scrollIntoView({block: 'end', behavior: 'auto', inline: 'nearest'});
+            }, 25);
           }
         },
         {defaultSelection},

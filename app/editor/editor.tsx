@@ -141,7 +141,6 @@ function Editor({
   return (
     <PromisesProvider>
       <LexicalComposer initialConfig={initialConfig}>
-        {requestFocus && <AutoFocusPlugin/>}
         <RichTextPlugin
           contentEditable={
             <div ref={onRef} className="relative">
@@ -217,6 +216,7 @@ function Editor({
           </>
         )}
         {showDebugInfo && <TreeViewPlugin />}
+        {requestFocus && <AutoFocusPlugin/>}
       </LexicalComposer>
     </PromisesProvider>
   );
