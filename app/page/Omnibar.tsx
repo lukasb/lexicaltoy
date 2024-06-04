@@ -185,9 +185,13 @@ const Omnibar = forwardRef(({
       }
       event.preventDefault();
     } else if (event.key === "Enter") {
-      if (displayValue.length === 0) return;
-      openOrCreatePageByTitle(displayValue);
-      resetSelf();
+      if (selectedIndex > -1 && results.length > 0) {
+        openOrCreatePageByTitle(results[selectedIndex].title);
+        resetSelf();
+      } else {
+        openOrCreatePageByTitle(displayValue);
+        resetSelf();
+      }
       event.preventDefault();
     } else if (event.key === "Backspace" || event.key === "Delete") {
       skipTermResolutionRef.current = true;
