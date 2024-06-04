@@ -20,8 +20,7 @@ import {
   COMMAND_PRIORITY_CRITICAL,
   REMOVE_TEXT_COMMAND,
   OUTDENT_CONTENT_COMMAND,
-  INSERT_PARAGRAPH_COMMAND,
-  $isTextNode
+  INSERT_PARAGRAPH_COMMAND
 } from "lexical";
 import {
   ListItemNode,
@@ -44,7 +43,7 @@ import {
   $replaceWithFormulaDisplayNode,
   createFormulaOutputNodes,
   haveExistingFormulaEditorNode,
-  $replaceExistingFormulaEditorNode,
+  replaceExistingFormulaEditorNode,
   $replaceDisplayNodeWithEditor,
   $replaceTextNodeWithEditor,
   $replaceEditorWithTextNode,
@@ -158,7 +157,7 @@ export function registerFormulaCommandHandlers(
               haveExistingFormulaEditorNode() &&
               node.getKey() !== getFormulaEditorNodeKey()
             ) {
-              $replaceExistingFormulaEditorNode();
+              replaceExistingFormulaEditorNode();
             }
             if ($isFormulaDisplayNode(node)) {
               $replaceDisplayNodeWithEditor(node);
@@ -185,19 +184,7 @@ export function registerFormulaCommandHandlers(
             haveExistingFormulaEditorNode() &&
             activeNode.getKey() !== getFormulaEditorNodeKey()
           ) {
-            // we're about to get rid of the node that has (had) the selection
-            // before the selection change handler has completed, so we have to
-            // fix the selection here
-            let anchorOffset = undefined;
-            if ($isTextNode(activeNode)) {
-              anchorOffset = selection.anchor.offset;
-            }
-            $replaceExistingFormulaEditorNode();
-            if (anchorOffset) {
-              activeNode.select(anchorOffset);
-            } else {
-              activeNode.selectEnd();
-            }
+            replaceExistingFormulaEditorNode();
           }
 
           const listItemNode = $getActiveListItemFromSelection(selection);

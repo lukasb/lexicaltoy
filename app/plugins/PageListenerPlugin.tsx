@@ -68,7 +68,6 @@ function $updateListItems(root: RootNode, markdownLines: string[]) {
         }
         //console.log('updating list item - old', element.getTextContent());
         //console.log("updating list item - new", newMarkdown);
-        // TODO maybe use $myConvertFromMarkdownString - $convertFromMarkdownString will always try to move the selection
         $convertFromMarkdownString(newMarkdown, TRANSFORMERS, element as ListItemNode);
       }
     } else if (markdownLines[i] !== "") {
@@ -119,7 +118,6 @@ export function PageListenerPlugin({
             editor.getRootElement() !== document.activeElement
           ) {
             editor.setEditable(false); // prevent focus stealing
-            // TODO maybe use $myConvertFromMarkdownString - $convertFromMarkdownString will always try to move the selection
             $convertFromMarkdownString(page.value, TRANSFORMERS);
           } else {
             const selection = $getSelection();

@@ -69,7 +69,6 @@ function Editor({
   openOrCreatePageByTitle: (title: string) => void;
 }) {
 
-  // TODO maybe use $myConvertFromMarkdownString - $convertFromMarkdownString will always try to move the selection
   const initialConfig = {
     editorState: () => $convertFromMarkdownString(page.value, TRANSFORMERS),
     namespace: "orangetask",
