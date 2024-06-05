@@ -68,18 +68,21 @@ function getJournalPageByDate(currentPages: Page[], date: Date) {
 
 export const getLastWeekJournalPages = (currentPages: Page[]): Page[] => {
   const today = new Date();
-  const lastWeekJournalPages: Page[] = [];
+  const lastTwoWeeksJournalPages: Page[] = [];
   
-  for (let i = 0; i <= 6; i++) {
+  for (let i = 0; i < 14; i++) {
     const date = new Date();
     date.setDate(today.getDate() - i);
     const journalPage = getJournalPageByDate(currentPages, date);
     if (journalPage) {
-      lastWeekJournalPages.push(journalPage);
+      lastTwoWeeksJournalPages.push(journalPage);
+    }
+    if (lastTwoWeeksJournalPages.length >= 7) {
+      break;
     }
   }
   
-  return lastWeekJournalPages;
+  return lastTwoWeeksJournalPages;
 }
 
 export async function getLastTwoWeeksJournalPages(currentPages: Page[]): Promise<Page[]> {
