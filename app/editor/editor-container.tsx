@@ -35,7 +35,7 @@ function EditorContainer({
       <div className="relative border-solid border-4 border-indigo-300 rounded-lg m-0 p-7 w-full max-w-7xl">
         <div className="m-0 p-0 group">
           <button
-            className="absolute top-0 left-0 ml-3 mt-1 opacity-0 group-hover:opacity-100 text-lg text-indigo-600"
+            className="absolute top-0 left-0 ml-3 mt-1 md:opacity-0 md:group-hover:opacity-100 text-lg text-indigo-600"
             onClick={() => closePage(page.id)}
           >
             x
