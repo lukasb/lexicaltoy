@@ -11,7 +11,7 @@ import { PagesContext } from '@/app/context/pages-context';
 import { DEFAULT_JOURNAL_CONTENTS } from "@/app/lib/journal-helpers";
 import { fetchPages } from "@/app/lib/db";
 import { getJournalTitle } from '@/app/lib/journal-helpers';
-import { handleNewJournalPage, handleDeleteStaleJournalPages, getTodayJournalPage } from "@/app/lib/journal-helpers";
+import { handleNewJournalPage, handleDeleteStaleJournalPages, getLastWeekJournalPages } from "@/app/lib/journal-helpers";
 import FlexibleEditorLayout from "./FlexibleEditorContainer";
 import PagesManager from "./PagesManager";
 import { SharedNodeProvider } from "../context/shared-node-context";
@@ -22,11 +22,11 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const emptyPageMarkdownString = '- ';
 
   const initialPageId = findMostRecentlyEditedPage(currentPages)?.id;
-  const todayJournalPageId = getTodayJournalPage(currentPages)?.id;
+  const lastWeekJournalPageIds = getLastWeekJournalPages(currentPages).map(page => page.id);
   const [openPageIds, setOpenPageIds] = useState<string[]>(() => {
     const initialIds: string[] = [];
-    if (initialPageId && initialPageId !== todayJournalPageId) initialIds.push(initialPageId);
-    if (todayJournalPageId) initialIds.push(todayJournalPageId);
+    if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) initialIds.push(initialPageId);
+    initialIds.push(...lastWeekJournalPageIds);
     return initialIds;
   });
 
