@@ -19,7 +19,7 @@ const config: Config = {
       },
       colors: {
         bgBase: 'rgb(var(--background-rgb))',
-        fgBase: 'rgb(var(--foreground-rgb))'
+        fgBase: 'rgb(var(--foreground-rgb))',
       }
     },
   },
