@@ -32,22 +32,29 @@ function EditorContainer({
   // TODO maybe render a headless editor on the server to enable server-side rendering?
   return (
     <div className="flex flex-col items-start mb-4">
-      <div className="relative border-solid border-4 border-indigo-300 rounded-lg m-0 p-7 w-full max-w-7xl">
-        <div className="sticky top-0 m-0 p-0 group bg-bgBase/85 z-30">
+      <div className="relative border-solid border-4 border-indigo-300 rounded-lg m-0 pt-2 pr-7 pb-7 pl-0 w-full max-w-7xl">
+        <div className="sticky top-0 m-0 p-0 bg-bgBase/85 z-30 grid grid-rows-[20px_1fr] grid-cols-[28px_1fr] group">
           <button
-            className="absolute top-0 left-0 ml-3 mt-1 md:opacity-0 md:group-hover:opacity-100 text-lg text-indigo-600"
+            className="col-start-1 row-start-1 col-end-2 row-end-2 text-lg text-indigo-600 md:opacity-0 md:group-hover:opacity-100"
             onClick={() => closePage(page.id)}
           >
             x
           </button>
-          <div className="flex flex-row justify-between">
+
+          <div className="col-start-2 row-start-2 col-end-3 row-end-3 flex flex-row justify-between">
             <EditablePageTitle
               initialTitle={page.title}
               pageId={page.id}
               isJournal={page.isJournal}
               updatePageTitleLocal={updatePageTitleLocal}
             />
-            <div className={`flex ${touchDevice ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+            <div
+              className={`flex ${
+                touchDevice
+                  ? "opacity-100"
+                  : "opacity-0 group-hover:opacity-100"
+              }`}
+            >
               {!page.isJournal && (
                 <Button
                   className="mx-1"
@@ -63,6 +70,7 @@ function EditorContainer({
           </div>
         </div>
         <NoSSRWrapper>
+          <div className="pl-7">
           <Editor
             page={page}
             showDebugInfo={showDebug}
@@ -70,6 +78,7 @@ function EditorContainer({
             openOrCreatePageByTitle={openOrCreatePageByTitle}
             requestFocus={requestFocus}
           />
+          </div>
         </NoSSRWrapper>
       </div>
     </div>
