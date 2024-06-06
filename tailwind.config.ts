@@ -18,8 +18,8 @@ const config: Config = {
         'spacing': 'margin, padding',
       },
       colors: {
-        bgBase: 'rgb(var(--background-rgb))',
-        fgBase: 'rgb(var(--foreground-rgb))',
+        bgBase: 'rgb(var(--background-rgb) / <alpha-value>)',
+        fgBase: 'rgb(var(--foreground-rgb) / <alpha-value>)',
       }
     },
   },
