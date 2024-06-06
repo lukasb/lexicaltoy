@@ -16,6 +16,10 @@ const config: Config = {
       transitionProperty: {
         'height': 'height',
         'spacing': 'margin, padding',
+      },
+      colors: {
+        bgBase: 'rgb(var(--background-rgb))',
+        fgBase: 'rgb(var(--foreground-rgb))'
       }
     },
   },
