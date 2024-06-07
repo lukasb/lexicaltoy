@@ -25,14 +25,13 @@ export function getJournalTitle(date: Date) {
   return dateString.replace(new RegExp(` ${day},`), ` ${day}${ordinalSuffix},`);
 }
 
-export const handleNewJournalPage = async (title: string, userId: string, date: Date, setCurrentPages: Function, openPage: Function) => {
+export const handleNewJournalPage = async (title: string, userId: string, date: Date): Promise<Page | undefined> => {
   const result = await insertJournalPage(title, DEFAULT_JOURNAL_CONTENTS, userId, date);
   if (typeof result === "string") {
     console.error("expected page, got string", result);
     return;
   } else if (isPage(result)) {
-    setCurrentPages((prevPages: Page[]) => [result, ...prevPages]);
-    openPage(result);
+    return result;
   }
 }
 
@@ -55,7 +54,7 @@ export const handleDeleteStaleJournalPages = async (today: Date, defaultValue: s
   }
 }
 
-function getJournalPageByDate(currentPages: Page[], date: Date) {
+export function getJournalPageByDate(currentPages: Page[], date: Date) {
   const dateStr = getJournalTitle(date);
   const journalPage = currentPages.find((page) => {
     if (!page.isJournal) {
@@ -66,6 +65,8 @@ function getJournalPageByDate(currentPages: Page[], date: Date) {
   return journalPage;
 }
 
+// get last seven days of journal pages
+// if we have some days without pages, go back up to two weeks
 export const getLastWeekJournalPages = (currentPages: Page[]): Page[] => {
   const today = new Date();
   const lastTwoWeeksJournalPages: Page[] = [];
@@ -85,6 +86,8 @@ export const getLastWeekJournalPages = (currentPages: Page[]): Page[] => {
   return lastTwoWeeksJournalPages;
 }
 
+// get the last two weeks of journal pages
+// we only check based on date here, not on number of pages returned
 export async function getLastTwoWeeksJournalPages(currentPages: Page[]): Promise<Page[]> {
   const today = new Date();
   const twoWeeksAgo = subWeeks(today, 2);

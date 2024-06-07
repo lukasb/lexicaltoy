@@ -3,15 +3,19 @@
 import { Page, isPage, PageStatus } from "@/app/lib/definitions";
 import Omnibar from "./Omnibar";
 import { findMostRecentlyEditedPage } from "@/app/lib/pages-helpers";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { insertPage, deletePage } from "@/app/lib/actions";
-import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { PagesContext } from '@/app/context/pages-context';
-import { DEFAULT_JOURNAL_CONTENTS } from "@/app/lib/journal-helpers";
+import { 
+  DEFAULT_JOURNAL_CONTENTS,
+  handleNewJournalPage,
+  handleDeleteStaleJournalPages,
+  getLastWeekJournalPages,
+  getJournalPageByDate,
+  getJournalTitle
+ } from "@/app/lib/journal-helpers";
 import { fetchPages } from "@/app/lib/db";
-import { getJournalTitle } from '@/app/lib/journal-helpers';
-import { handleNewJournalPage, handleDeleteStaleJournalPages, getLastWeekJournalPages } from "@/app/lib/journal-helpers";
 import FlexibleEditorLayout from "./FlexibleEditorContainer";
 import PagesManager from "./PagesManager";
 import { SharedNodeProvider } from "../context/shared-node-context";
@@ -33,23 +37,34 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
   const setupDoneRef = useRef(false);
 
-  const executeJournalLogic = useCallback(() => {
+  const fetchAndSetPages = useCallback(async () => {
+    const pages = await fetchPages(userId);
+    console.log("setting pages after a fetch");
+    setCurrentPages(pages);
+    return pages;
+  }, [userId, setCurrentPages]);
+
+  const executeJournalLogic = useCallback(async () => {
     const today = new Date();
     const todayJournalTitle = getJournalTitle(today);
     if (!currentPages.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
-      handleNewJournalPage(todayJournalTitle, userId, today, setCurrentPages, openPage);
+      const journalPage = await handleNewJournalPage(todayJournalTitle, userId, today);
+      if (isPage(journalPage)) {
+        setCurrentPages((prevPages: Page[]) => [journalPage, ...prevPages]);
+        openPage(journalPage);
+      } else {
+        // journal page was created elsewhere, reload so we get it
+        const freshPages = await fetchAndSetPages();
+        const todayJournalPage = getJournalPageByDate(freshPages, today);
+        if (todayJournalPage) openPage(todayJournalPage);
+      }
     }
     handleDeleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, currentPages, setCurrentPages);
-  }, [userId, currentPages]);
+  }, [userId, currentPages, fetchAndSetPages]);
 
   useEffect(() => {
-    const fetchAndSetPages = async () => {
-      const pages = await fetchPages(userId);
-      console.log("setting pages after a fetch");
-      setCurrentPages(pages);
-    };
     fetchAndSetPages();
-  }, [userId]);
+  }, [userId, fetchAndSetPages]);
 
   useEffect(() => {
     if (!setupDoneRef.current) {
