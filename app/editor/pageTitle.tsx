@@ -58,7 +58,7 @@ const EditablePageTitle = ({
     <div className="flex flex-col items-start justify-center">
       <div
         ref={titleRef}
-        className="text-2xl font-bold mb-4 px-0 py-2 focus:outline-none"
+        className="text-2xl font-bold px-0 py-2 focus:outline-none"
         contentEditable={!isJournal}
         suppressContentEditableWarning={true}
         onBlur={isJournal? undefined: handleTitleChange} // Update state when user leaves the editable area
