@@ -139,6 +139,7 @@ export function registerFormulaCommandHandlers(
           if (selectionListItemNode) {
             const editorListItemNode = node.getParent();
             if (
+              editorListItemNode && 
               selectionListItemNode.getKey() !== editorListItemNode.getKey()
             ) {
               $replaceWithFormulaDisplayNode(node);

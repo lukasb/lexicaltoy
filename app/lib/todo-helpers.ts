@@ -3,6 +3,8 @@ import {
   $getSelection,
   $isElementNode,
   $isRangeSelection,
+  $isTextNode,
+  LexicalNode
 } from "lexical";
 import { ListItemNode } from "@lexical/list"
 import {
@@ -32,7 +34,7 @@ export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus, 
   
   const selection = $getSelection();
   let start = 0;
-  let selectedNode = node;
+  let selectedNode: LexicalNode = node;
   if (
     selection && 
     $isRangeSelection(selection) &&
@@ -48,7 +50,8 @@ export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus, 
   if (
     selection && 
     $isRangeSelection(selection) &&
-    selection.isCollapsed()
+    selection.isCollapsed() &&
+    ($isTextNode(selectedNode) || $isElementNode(selectedNode))
   ) {
     selectedNode.select(start, start);
   }
