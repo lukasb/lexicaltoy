@@ -110,8 +110,8 @@ export function $canIndent(selection: BaseSelection | null): boolean {
  }
 
  export function $isNestedListItem(listItem: ListItemNode): boolean {
-  const grandparent = listItem.getParent().getParent();
-  return grandparent && $isListItemNode(grandparent);
+  const grandparent = listItem.getParent()?.getParent();
+  return $isListItemNode(grandparent);
  }
 
  export function $hasChildListItems(listItem: ListItemNode): boolean {
@@ -221,14 +221,14 @@ function isOnlyChild(listItem: ListItemNode): boolean {
   if (
     $isNestedListItem(listItem) &&
     listItem.getIndexWithinParent() === 0 &&
-    listItem.getParent().getChildrenSize() === 1
+    listItem.getParent()?.getChildrenSize() === 1
   ) {
     return true;
   }
   if (
     $isNestedListItem(listItem) &&
     listItem.getIndexWithinParent() === 0 &&
-    listItem.getParent().getChildrenSize() === 2
+    listItem.getParent()?.getChildrenSize() === 2
   ) {
     const nextSibling = listItem.getNextSibling() as ListItemNode;
     if (nextSibling &&
@@ -272,7 +272,8 @@ export function $deleteListItem(listItem: ListItemNode, fixSelection: boolean) {
   if (isOnlyChild(listItem)) {
     // if we're an only child and we don't delete our grandparent list item, removal
     // leaves an empty listitem
-    removeListItemAndChildren(listItem.getParent().getParent());
+    const grandparent = listItem.getParent()?.getParent();
+    if (grandparent && $isListItemNode(grandparent)) removeListItemAndChildren(grandparent);
   } else {
     let previousListItem: ListItemNode | null = null;
     if (fixSelection) {
