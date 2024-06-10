@@ -15,24 +15,6 @@ const openai = new OpenAI({
 
 const modelName = "gpt-4-turbo-preview";
 
-const shortGPTChatResponseSystemPrompt = `You will be given a user prompt. Your response should be one or two sentences.`;
-
-export async function getShortGPTChatResponse(prompt: string): Promise<string | null> {
-
-  console.log("getShortGPTChatResponse", prompt);
-  const chatCompletion = await openai.chat.completions.create({
-      messages: [
-        { role: 'system', content: shortGPTChatResponseSystemPrompt },
-        { role: 'user', content: prompt }
-      ],
-      model: modelName,
-    });
-  
-  console.log("chatCompletion", chatCompletion.choices[0].message.content);
-  return chatCompletion.choices[0].message.content;
-
-}
-
 const formulaDefinitionSystemPrompt = `You will be given a user prompt. Your task is to define a prompt template that will matches the user's intent.`;
 
 export async function getFormulaDefinition(

@@ -4,9 +4,9 @@ import {
   FormulaOutputType
 } from './formula-definitions';
 import { 
-  getShortGPTChatResponse,
   getFormulaDefinition
 } from '../ai-actions';
+import { getShortGPTChatResponse } from '@/app/lib/ai';
 import { Page } from '@/app/lib/definitions';
 import { getPageMarkdown } from '@/app/lib/pages-helpers';
 import { stripBrackets } from '@/app/lib/transform-helpers';
