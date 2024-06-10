@@ -3,15 +3,14 @@ import {
   FormulaDefinition,
   getPromptDefiner
 } from '@/app/lib/formula/formula-definitions';
-
 import { toTool, parseArguments } from 'openai-zod-functions';
 import OpenAI from 'openai';
+import { MODEL_NAME } from '@/app/lib/ai-config';
 
 const openai = new OpenAI({
   apiKey: process.env['OPENAI_API_KEY']
 });
 
-const modelName = "gpt-4-turbo-preview";
 const formulaDefinitionSystemPrompt = `You will be given a user prompt. Your task is to define a prompt template that matches the user's intent.`;
 
 type ApiResponse = {
@@ -38,7 +37,7 @@ export default async function handler(
       console.log("toolList", toolList);
 
       const completion = await openai.chat.completions.create({
-        model: modelName,
+        model: MODEL_NAME,
         messages: [
           { role: "system", content: formulaDefinitionSystemPrompt },
           { role: "user", content: prompt }

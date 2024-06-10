@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import OpenAI from 'openai';
+import { MODEL_NAME } from '@/app/lib/ai-config';
 
 type ApiResponse = {
   response?: string;
@@ -9,8 +10,6 @@ type ApiResponse = {
 const openai = new OpenAI({
   apiKey: process.env['OPENAI_API_KEY']
 });
-
-const modelName = "gpt-4-turbo-preview";
 
 const shortGPTChatResponseSystemPrompt = `You will be given a user prompt. Give a concise response.`;
 
@@ -33,7 +32,7 @@ export default async function handler(
           { role: "system", content: shortGPTChatResponseSystemPrompt },
           { role: "user", content: prompt },
         ],
-        model: modelName,
+        model: MODEL_NAME,
       });
 
       console.log(

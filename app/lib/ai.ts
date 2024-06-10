@@ -2,7 +2,6 @@ import {
   FormulaDefinition
 } from '@/app/lib/formula/formula-definitions';
 
-
 export async function getShortGPTChatResponse(prompt: string): Promise<string | null> {
   console.log("getShortGPTChatResponse", prompt);
 
