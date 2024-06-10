@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useContext, useCallback } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
-import { updatePageTitle } from '../lib/actions';
+import { updatePageTitle } from '../lib/db';
 import { PagesContext } from '@/app/context/pages-context';
 
 const EditablePageTitle = ({ 

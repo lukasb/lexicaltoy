@@ -1,4 +1,4 @@
-import { fetchPages } from "../lib/db";
+import { fetchPages } from "../lib/dbFetch";
 import { Button } from "../ui/button";
 import { auth } from "@/auth";
 import EditingArea from "./EditingArea";

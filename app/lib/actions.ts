@@ -29,21 +29,6 @@ export async function updatePageContentsWithHistory(id: string, value: string, o
   return -1;
 }
 
-export async function updatePageTitle(id: string, title: string, oldRevisionNumber: number): Promise<number> {
-  try {
-    const result = await sql`
-        UPDATE pages
-        SET title = ${title}, revision_number = ${oldRevisionNumber+1}
-        WHERE id = ${id}
-        RETURNING revision_number
-      `;
-      return result.rows[0].revision_number;
-  } catch (error) {
-      console.log("Database Error: Failed to Update Page Title.", error)
-  }
-  return -1;
-}
-
 export async function insertPage(title: string, value: string, userId: string) {
   try {
     const result = await sql`

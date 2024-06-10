@@ -15,7 +15,7 @@ import {
   getJournalPageByDate,
   getJournalTitle
  } from "@/app/lib/journal-helpers";
-import { fetchPages } from "@/app/lib/db";
+import { fetchPages } from "@/app/lib/dbFetch";
 import FlexibleEditorLayout from "./FlexibleEditorContainer";
 import PagesManager from "./PagesManager";
 import { SharedNodeProvider } from "../context/shared-node-context";

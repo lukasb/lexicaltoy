@@ -1,48 +1,29 @@
-"use server";
+export async function updatePageTitle(id: string, title: string, oldRevisionNumber: number): Promise<number> {
+  // Define the endpoint URL (use the full URL if calling from a different domain in production)
+  const endpoint = '/api/db/updatePageTitle';
 
-import { sql } from "@vercel/postgres";
-import { unstable_noStore as noStore } from "next/cache";
-import { PageStatus } from "./definitions";
+  try {
+      const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id, title, oldRevisionNumber }),
+      });
 
-export async function fetchPages(userId: string, fetchDeleted?: boolean) {
-  noStore();
-  
-  if (fetchDeleted) {
-    const result = await sql`
-      SELECT * FROM pages
-      WHERE userId = ${userId}
-    `;
-    const pages = result.rows.map((row) => ({
-      id: row.id,
-      title: row.title,
-      value: row.value,
-      userId: row.userId,
-      lastModified: row.last_modified,
-      revisionNumber: row.revision_number,
-      isJournal: row.is_journal,
-      deleted: row.deleted,
-      status: PageStatus.Quiescent
-    }));
+      if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    return pages;
+      const result = await response.json();
+      if (result.revisionNumber !== undefined) {
+          return result.revisionNumber;
+      } else {
+          console.error('Failed to update page title:', result.error);
+          return -1; // Return -1 to indicate failure as per the original function
+      }
+  } catch (error) {
+      console.error('Error fetching from API:', error);
+      return -1; // Return -1 to indicate failure
   }
-
-  const result = await sql`
-      SELECT * FROM pages
-      WHERE userId = ${userId}
-      AND deleted = false
-    `;
-  const pages = result.rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    value: row.value,
-    userId: row.userId,
-    lastModified: row.last_modified,
-    revisionNumber: row.revision_number,
-    isJournal: row.is_journal,
-    deleted: row.deleted,
-    status: PageStatus.Quiescent
-  }));
-
-  return pages;
 }
