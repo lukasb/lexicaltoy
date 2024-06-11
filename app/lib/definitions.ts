@@ -27,7 +27,7 @@ export type User = {
     deleted: boolean;
     status: PageStatus;
   };
-/*
+
   export function isPage(obj: any): obj is Page {
     return (
       obj &&
@@ -35,40 +35,10 @@ export type User = {
       typeof obj.title === 'string' &&
       typeof obj.value === 'string' &&
       typeof obj.userId === 'string' &&
-      obj.lastModified instanceof Date
+      obj.lastModified instanceof Date &&
+      typeof obj.revisionNumber === 'number' &&
+      typeof obj.isJournal === 'boolean' &&
+      typeof obj.deleted === 'boolean' &&
+      Object.values(PageStatus).includes(obj.status)
     );
-  }
-*/
-  export function isPage(obj: any): obj is Page {
-    if (!obj) {
-      console.log('obj is null');
-      return false;
-    }
-    
-    if (typeof obj.id !== 'string') {
-      console.log('id is not a string');
-      return false;
-    }
-
-    if (typeof obj.title !== 'string') {
-      console.log('title is not a string');
-      return false;
-    }
-
-    if (typeof obj.value !== 'string') {
-      console.log('value is not a string');
-      return false;
-    }
-
-    if (typeof obj.userId !== 'string') {
-      console.log('userId is not a string');
-      return false;
-    }
-
-    if (!(obj.lastModified instanceof Date)) {
-      console.log('lastModified is not a Date');
-      return false;
-    }
-    
-    return true;
   }
