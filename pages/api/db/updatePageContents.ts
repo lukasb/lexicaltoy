@@ -1,0 +1,42 @@
+// pages/api/updatePage.ts
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { sql } from "@vercel/postgres";
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<{revisionNumber?: number, error?: string}>
+) {
+  if (req.method === 'POST') {
+    const { id, value, oldRevisionNumber } = req.body;
+
+    // Validate the input
+    if (!id || value === undefined || oldRevisionNumber === undefined) {
+      return res.status(400).json({ error: 'Missing required parameters' });
+    }
+
+    try {
+      // Insert the current page data into the history table directly from the pages table
+      await sql`
+        INSERT INTO pages_history (id, title, value, userId, last_modified)
+        SELECT id, title, value, userId, last_modified
+        FROM pages
+        WHERE id = ${id}
+      `;
+
+      // Then, update the page with the new value
+      const result = await sql`
+        UPDATE pages
+        SET value = ${value}, revision_number = ${oldRevisionNumber + 1}
+        WHERE id = ${id}
+        RETURNING revision_number
+      `;
+      return res.status(200).json({ revisionNumber: result.rows[0].revision_number });
+    } catch (error) {
+      console.error("Database Error: Failed to Update Page Contents.", error);
+      res.status(500).json({ error: 'Database Error: Failed to Update Page Contents' });
+    }
+  } else {
+    res.setHeader('Allow', ['POST']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+}
