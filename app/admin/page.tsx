@@ -1,10 +1,10 @@
 "use client";
 
 import { Button } from "../ui/button";
-import { fetchPages } from '@/app/lib/db';
+import { fetchPages } from '@/app/lib/dbFetch';
 import { useState } from 'react';
 import { getPageMarkdown } from "../lib/pages-helpers";
-import { updatePageContentsWithHistory } from "../lib/actions";
+import { updatePageContentsWithHistory } from "@/app/lib/db";
 
 export default function AdminPage() {
   const [userId, setUserId] = useState('');

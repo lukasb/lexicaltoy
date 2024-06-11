@@ -68,3 +68,34 @@ export async function insertPage(title: string, value: string, userId: string): 
       }
     }
 }
+
+export async function updatePageContentsWithHistory(id: string, value: string, oldRevisionNumber: number): Promise<number> {
+  const endpoint = '/api/db/updatePageContents'; // Adjust the endpoint as needed
+
+  try {
+      const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id, value, oldRevisionNumber }),
+      });
+
+      if (!response.ok) {
+          // Convert non-2xx HTTP responses into throws to handle them in the catch block
+          throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (result.revisionNumber !== undefined) {
+          return result.revisionNumber;
+      } else {
+          // If the server response does not include a revision number, throw an error
+          throw new Error('Failed to update page contents: ' + (result.error || 'Unknown error occurred'));
+      }
+  } catch (error) {
+      console.error('Error fetching from API:', error);
+      // Return a specific error code or throw an exception depending on your error handling strategy
+      throw error; // Here, we choose to propagate the exception further up
+  }
+}

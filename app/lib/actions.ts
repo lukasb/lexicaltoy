@@ -5,30 +5,6 @@ import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { Page, PageStatus } from "./definitions"
 
-export async function updatePageContentsWithHistory(id: string, value: string, oldRevisionNumber: number): Promise<number> {
-  try {
-    // Insert the current page data into the history table directly from the pages table
-    await sql`
-        INSERT INTO pages_history (id, title, value, userId, last_modified)
-        SELECT id, title, value, userId, last_modified
-        FROM pages
-        WHERE id = ${id}
-    `;
-  
-    // Then, update the page with the new value
-    const result = await sql`
-        UPDATE pages
-        SET value = ${value}, revision_number = ${oldRevisionNumber+1}
-        WHERE id = ${id}
-        RETURNING revision_number
-    `;
-    return result.rows[0].revision_number;
-  } catch (error) {
-    console.log("Database Error: Failed to Update Page Contents.", error);
-  }
-  return -1;
-}
-
 export async function insertJournalPage(title: string, value: string, userId: string, journalDate: Date) {
   try {
     const result = await sql`

@@ -1,6 +1,6 @@
 import { useContext, useEffect } from 'react';
 import { PagesContext } from '@/app/context/pages-context';
-import { updatePageContentsWithHistory } from "../lib/actions";
+import { updatePageContentsWithHistory } from "@/app/lib/db";
 import { Page, PageStatus } from "@/app/lib/definitions";
 import { 
   useSharedNodeContext,
