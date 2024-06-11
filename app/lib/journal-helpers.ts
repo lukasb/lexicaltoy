@@ -1,6 +1,6 @@
 import { parse, isBefore, startOfDay, subWeeks } from 'date-fns';
 import { Page, isPage } from "@/app/lib/definitions";
-import { deleteStaleJournalPages } from "@/app/lib/actions";
+import { deleteStaleJournalPages } from "@/app/lib/db";
 import { insertJournalPage } from '@/app/lib/db';
 
 export const DEFAULT_JOURNAL_CONTENTS = '- ';

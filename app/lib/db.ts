@@ -141,3 +141,36 @@ export async function insertJournalPage(title: string, value: string, userId: st
       }
   }
 }
+
+export async function deleteStaleJournalPages(ids: string[], defaultValue: string): Promise<string[]> {
+  const endpoint = '/api/db/deleteStaleJournalPages'; // Ensure the endpoint matches your setup
+
+  try {
+      const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ids, defaultValue }),
+      });
+
+      if (!response.ok) {
+          // Convert non-2xx HTTP responses into throws to handle them in the catch block
+          throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (result.error) {
+          console.error('Error deleting pages:', result.error);
+          throw new Error(result.error);
+      }
+      return result.deletedIds; // Assuming the API returns an object with a deletedIds array
+  } catch (error) {
+      console.error('Error fetching from API:', error);
+      if (error instanceof Error) {
+          throw error; // Propagate the error for further handling, or you could return an empty array to signify failure
+      } else {
+          throw new Error('An unknown error occurred');
+      }
+  }
+}
