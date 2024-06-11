@@ -4,7 +4,8 @@ import { Page, isPage, PageStatus } from "@/app/lib/definitions";
 import Omnibar from "./Omnibar";
 import { findMostRecentlyEditedPage } from "@/app/lib/pages-helpers";
 import { useState, useCallback, useEffect, useRef } from "react";
-import { insertPage, deletePage } from "@/app/lib/actions";
+import { insertPage } from "../lib/db";
+import { deletePage } from "@/app/lib/actions";
 import { Button } from "../ui/button";
 import { PagesContext } from '@/app/context/pages-context';
 import { 
@@ -127,8 +128,11 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
       console.error("expected page, got string", result);
       return;
     } else if (isPage(result)) {
+      console.log("got a page");
       setCurrentPages((prevPages) => [result, ...prevPages]);
       openPage(result);
+    } else {
+      console.error("expected page, got something else", result);
     }
   };
 
