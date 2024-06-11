@@ -1,7 +1,7 @@
 import { parse, isBefore, startOfDay, subWeeks } from 'date-fns';
 import { Page, isPage } from "@/app/lib/definitions";
 import { deleteStaleJournalPages } from "@/app/lib/actions";
-import { insertJournalPage } from '@/app/lib/actions';
+import { insertJournalPage } from '@/app/lib/db';
 
 export const DEFAULT_JOURNAL_CONTENTS = '- ';
 
@@ -28,7 +28,9 @@ export function getJournalTitle(date: Date) {
 export const handleNewJournalPage = async (title: string, userId: string, date: Date): Promise<Page | undefined> => {
   const result = await insertJournalPage(title, DEFAULT_JOURNAL_CONTENTS, userId, date);
   if (typeof result === "string") {
-    console.error("expected page, got string", result);
+    if (result !== "409") {
+      console.error("expected page, got string", result);
+    }
     return;
   } else if (isPage(result)) {
     return result;

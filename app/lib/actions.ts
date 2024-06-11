@@ -5,32 +5,6 @@ import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { Page, PageStatus } from "./definitions"
 
-export async function insertJournalPage(title: string, value: string, userId: string, journalDate: Date) {
-  try {
-    const result = await sql`
-        INSERT INTO pages (title, value, userId, is_journal)
-        VALUES (${title}, ${value}, ${userId}, true)
-        RETURNING id, title, value, userId, last_modified, revision_number, is_journal, deleted
-      `;
-    const page: Page = {
-      id: result.rows[0].id,
-      title: result.rows[0].title,
-      value: result.rows[0].value,
-      userId: result.rows[0].userid,
-      lastModified: result.rows[0].last_modified,
-      revisionNumber: result.rows[0].revision_number,
-      isJournal: result.rows[0].is_journal,
-      deleted: result.rows[0].deleted,
-      status: PageStatus.Quiescent
-    };
-    return page;
-  } catch (error) {
-    return {
-      message: "Database Error: Failed to Insert Page.",
-    };
-  }
-}
-
 // this runs on the server, and sometimes next (or node?) will run it with
 // stale data or even a stale definition of the function
 // renaming this function, rebooting the server, and renaming the function again fixed it

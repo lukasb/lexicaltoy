@@ -99,3 +99,45 @@ export async function updatePageContentsWithHistory(id: string, value: string, o
       throw error; // Here, we choose to propagate the exception further up
   }
 }
+
+export async function insertJournalPage(title: string, value: string, userId: string, journalDate: Date): Promise<Page | string> {
+  const endpoint = '/api/db/insertJournalPage'; // Adjust the endpoint as needed
+
+  try {
+      const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+              title,
+              value,
+              userId,
+              journalDate: journalDate.toISOString() // Ensuring date is in a proper format for JSON
+          }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.page) {
+          return result.page as Page;
+        } else {
+          return result.error || "Unknown error occurred"; // Returning error as a string
+        }
+      }
+
+      if (response.status === 409) {
+          return '409'; // TODO yeah yeah there's a better way
+      }
+
+      throw new Error(`HTTP error! status: ${response.status}`);
+      
+  } catch (error) {
+      console.error('Error fetching from API:', error);
+      if (error instanceof Error) {
+          return error.message; // Return the error message if it is an instance of Error
+      } else {
+          return 'An unknown error occurred'; // Return a generic error message otherwise
+      }
+  }
+}

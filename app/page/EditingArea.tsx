@@ -40,7 +40,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
   const fetchAndSetPages = useCallback(async () => {
     const pages = await fetchPages(userId);
-    console.log("setting pages after a fetch");
     setCurrentPages(pages);
     return pages;
   }, [userId, setCurrentPages]);
