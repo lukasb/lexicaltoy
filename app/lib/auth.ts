@@ -61,16 +61,14 @@ export const authConfig = {
     async jwt({token, user}) {
       if (user) {
         token.id = user.id;
-      } else {
-        console.log("no user in jwt callback");
       }
       return token;
     },
     async session({session, token, user}) {
       if (typeof token.id === 'string') {
+        // this works, but I don't understand why, because the code path 
+        // in the jwt callback that sets token.id is not taken
         session.id = token.id as string; 
-      } else {
-        console.log("token.id is not a string", token.id);
       }
       return session;
     }
