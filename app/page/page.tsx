@@ -1,16 +1,18 @@
 import { fetchPages } from "../lib/dbFetch";
 import EditingArea from "./EditingArea";
 import { isDevelopmentEnvironment } from "../lib/environment";
-import { getSession } from "next-auth/react";
 import { SignoutButton } from "./SignoutButton";
+import { getSessionServer } from "../lib/auth";
 
 export const maxDuration = 60;
 
 export default async function Home() {
-  const session = await getSession();
+  const session = await getSessionServer();
   if (!session || !session.id) {
     if (session) {
-      console.log("Problem with authetication", session);
+      console.log("Problem with session", session);
+    } else {
+      console.log("No session");
     }
     return (
       <div className="flex justify-center items-center">
