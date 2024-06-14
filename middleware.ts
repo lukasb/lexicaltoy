@@ -4,9 +4,7 @@ export default withAuth({
   secret: process.env.AUTH_SECRET,
   callbacks: {
     async authorized(params): Promise<boolean> {
-      console.log('authorized', params.req.url, params.token);
       if (params.req.nextUrl.pathname.startsWith('/login')) {
-         console.log("going to login page");
          return true;
       }
       return !!params.token;

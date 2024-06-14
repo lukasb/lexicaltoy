@@ -67,7 +67,6 @@ export const authConfig = {
       return token;
     },
     async session({session, token, user}) {
-      console.log("session callback", session, token, user);
       if (typeof token.id === 'string') {
         session.id = token.id as string; 
       } else {
