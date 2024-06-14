@@ -1,13 +1,10 @@
-import { signOut } from "next-auth/react";
-import { Button } from "../ui/button";
+import { SignoutButton } from "../page/SignoutButton";
 
 export default async function Logout() {
   return (
     <div className="flex justify-center items-center">
       <div className="relative w-full">
-        <Button onClick={() => signOut()}>
-          <div>Sign Out</div>
-        </Button>
+        <SignoutButton />
       </div>
     </div>
   );
