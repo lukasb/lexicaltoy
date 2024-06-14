@@ -1,41 +1,30 @@
-import type { NextAuthConfig } from 'next-auth';
-import { DefaultSession } from 'next-auth';
-import { User as NextUser } from 'next-auth';
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string
-    } & DefaultSession["user"]
-  }
-}
 
-export const authConfig = {
+
+/*
+export default withAuth = (
   pages: {
-    signIn: '/login',
+    signIn: '/auth/signin',
   },
   session: {
     strategy: "jwt",
   },
   callbacks: {
-    authorized({ auth, request: { nextUrl } }: { auth: any, request: { nextUrl: any } }) {
+    authorized({ token, request: { nextUrl } }: { token: any, request: { nextUrl: NextUrl } }): boolean | Response {
       const isLoggedIn = !!auth?.user;
       const isRequestingEditorPage = nextUrl.pathname.startsWith('/page');
       const isRequestingLogout = nextUrl.pathname.startsWith('/logout');
       const isRequestingAdmin = nextUrl.pathname.startsWith('/admin');
       const isRequestingApi = nextUrl.pathname.startsWith('/api');
-      if (isRequestingEditorPage) {
-        if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login page
-      } else if (isRequestingApi) {
-        if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login page
+      
+      if (isRequestingEditorPage || isRequestingApi) {
+        return isLoggedIn; // Allows access if logged in, otherwise false
       } else if (isLoggedIn) {
         if (!isRequestingLogout && !isRequestingAdmin) {
-          return Response.redirect(new URL('/page', nextUrl));
+          return Response.redirect(new URL('/page', nextUrl.origin)); // Redirects to a specific page
         }
       }
-      return true;
+      return true; // Default to allowing access
     },
     jwt({ token, user }) {
       if (user) token.user = user;
@@ -58,4 +47,5 @@ export const authConfig = {
     },
   },
   providers: [], // Add providers with an empty array for now
-} satisfies NextAuthConfig;
+);
+*/

@@ -1,36 +1,26 @@
 import { fetchPages } from "../lib/dbFetch";
-import { Button } from "../ui/button";
-import { auth } from "@/auth";
 import EditingArea from "./EditingArea";
-import { signOut } from "@/auth";
 import { isDevelopmentEnvironment } from "../lib/environment";
+import { getSession } from "next-auth/react";
+import { SignoutButton } from "./SignoutButton";
 
 export const maxDuration = 60;
 
 export default async function Home() {
-  const session = await auth();
-  if (!session || !session.user || !session.user.id) {
+  const session = await getSession();
+  if (!session || !session.id) {
     if (session) {
       console.log("Problem with authetication", session);
     }
     return (
       <div className="flex justify-center items-center">
-        <h1>Problem with authetication</h1>
-        <form
-          action={async () => {
-            "use server";
-            await signOut();
-          }}
-        >
-          <Button className="m-4">
-            <div>Sign Out</div>
-          </Button>
-        </form>
+        <h1>Problem with authentication</h1>
+        <SignoutButton />
       </div>
     );
   }
 
-  const pages = await fetchPages(session.user.id);
+  const pages = await fetchPages(session.id);
 
   return (
     <div className="flex justify-center items-center">
@@ -40,17 +30,8 @@ export default async function Home() {
             dev
           </div>
         )}
-        <EditingArea pages={pages} userId={session.user.id} />
-        <form
-          action={async () => {
-            "use server";
-            await signOut();
-          }}
-        >
-          <Button className="m-4">
-            <div>Sign Out</div>
-          </Button>
-        </form>
+        <EditingArea pages={pages} userId={session.id} />
+        <SignoutButton />
       </div>
     </div>
   );

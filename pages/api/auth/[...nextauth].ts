@@ -1,6 +1,5 @@
 import NextAuth from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
-import { authConfig } from './auth.config';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import { z } from 'zod';
 import { sql } from '@vercel/postgres';
 import type { User } from '@/app/lib/definitions';
@@ -16,10 +15,17 @@ async function getUser(email: string): Promise<User | undefined> {
   }
 }
  
-export const { auth, signIn, signOut } = NextAuth({
-  ...authConfig,
+// maybe upgrade next-auth to v5 once it's out of beta
+// downgraded to v4 due to https://github.com/nextauthjs/next-auth/discussions/9385
+
+export default NextAuth({
   providers: [
-    Credentials({
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
       async authorize(credentials) {
         const parsedCredentials = z
           .object({ email: z.string().email(), password: z.string().min(6) })
@@ -37,4 +43,31 @@ export const { auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  secret: process.env.AUTH_SECRET,
+  session: {
+    strategy: 'jwt'
+  },
+  jwt: {
+    secret: process.env.AUTH_SECRET,
+  },
+  pages: {
+    signIn: '/login/',  
+    signOut: '/logout/',
+  },
+  callbacks: {
+    async jwt({token, user}) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({session, token, user}) {
+      if (typeof token.id === 'string') {
+        session.id = token.id as string; 
+      } else {
+        console.log("token.id is not a string", token.id);
+      }
+      return session;
+    }
+  }
 });

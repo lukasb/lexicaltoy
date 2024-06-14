@@ -1,5 +1,5 @@
 'use client';
- 
+
 import {
   AtSymbolIcon,
   KeyIcon,
@@ -7,14 +7,45 @@ import {
 } from '@heroicons/react/24/outline';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from '@/app/ui/button';
-import { useFormState, useFormStatus } from 'react-dom';
-import { authenticate } from '@/app/lib/auth';
- 
+import { signIn } from 'next-auth/react';
+import { useState } from 'react';
+
 export default function LoginForm() {
-  const [errorMessage, dispatch] = useFormState(authenticate, undefined);
- 
+
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formStatus, setFormStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
+
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFormStatus('pending');
+    const email = (event.currentTarget.elements.namedItem('email') as HTMLInputElement).value;
+    const password = (event.currentTarget.elements.namedItem('password') as HTMLInputElement).value;
+
+    console.log("about to try to sign in with", email, password);
+    const result = await signIn("credentials", {
+      email: email,
+      password: password,
+      callbackUrl: "/page"
+    });
+
+    if (result && result.error) {
+      console.log("error signing in", result.error);
+      setErrorMessage(result.error);
+    } else {
+      console.log("successfully signed in", result);
+    }
+  };
+
+  function LoginButton() {
+    return (
+      <Button className="mt-4 w-full" aria-disabled={formStatus==="pending"}>
+        Log in <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
+      </Button>
+    );
+  }
+
   return (
-    <form action={dispatch} className="space-y-3">
+    <form onSubmit={handleLogin} className="space-y-3">
       <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
         <div className="w-full">
           <div>
@@ -72,15 +103,5 @@ export default function LoginForm() {
         </div>
       </div>
     </form>
-  );
-}
- 
-function LoginButton() {
-  const { pending } = useFormStatus();
- 
-  return (
-    <Button className="mt-4 w-full" aria-disabled={pending}>
-      Log in <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
-    </Button>
   );
 }
