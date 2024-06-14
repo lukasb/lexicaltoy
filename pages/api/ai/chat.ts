@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import OpenAI from 'openai';
 import { MODEL_NAME } from '@/app/lib/ai-config';
+import { getSessionServer } from '@/app/lib/getAuth';
 
 type ApiResponse = {
   response?: string;
@@ -17,6 +18,12 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ApiResponse>
 ) {
+
+  const session = await getSessionServer(req, res);
+  if (!session || !session.id) {
+    return res.status(401).json({ error: 'Not Authorized' });
+  }
+
   if (req.method === "POST") {
     const { prompt } = req.body;
     if (!prompt) {

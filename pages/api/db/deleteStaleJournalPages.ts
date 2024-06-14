@@ -1,10 +1,19 @@
+"use server";
+
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { sql } from "@vercel/postgres";
+import { getSessionServer } from '@/app/lib/getAuth';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<{ deletedIds: string[], error?: string }>
 ) {
+
+  const session = await getSessionServer(req, res);
+  if (!session || !session.id) {
+    return res.status(401).json({ deletedIds: [], error: 'Not Authorized' });
+  }
+
   if (req.method === 'POST') {
     const { ids, defaultValue } = req.body;
 

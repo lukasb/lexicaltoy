@@ -2,7 +2,7 @@ import { fetchPages } from "../lib/dbFetch";
 import EditingArea from "./EditingArea";
 import { isDevelopmentEnvironment } from "../lib/environment";
 import { SignoutButton } from "./SignoutButton";
-import { getSessionServer } from "../lib/auth";
+import { getSessionServer } from "../lib/getAuth";
 
 export const maxDuration = 60;
 

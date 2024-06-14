@@ -1,7 +1,10 @@
+"use server";
+
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { sql } from "@vercel/postgres";
 import { Page } from '@/app/lib/definitions';
 import { PageStatus } from '@/app/lib/definitions';
+import { getSessionServer } from '@/app/lib/getAuth';
 
 type ApiResponse = {
   page?: Page;
@@ -12,6 +15,12 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ApiResponse>
 ) {
+
+  const session = await getSessionServer(req, res);
+  if (!session || !session.id) {
+    return res.status(401).json({ error: 'Not Authorized' });
+  }
+
   if (req.method === 'POST') {
     const { title, value, userId } = req.body;
     

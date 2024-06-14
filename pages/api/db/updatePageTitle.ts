@@ -1,6 +1,7 @@
 // pages/api/updatePageTitle.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { sql } from "@vercel/postgres";
+import { getSessionServer } from '@/app/lib/getAuth';
 
 type ApiResponse = {
   revisionNumber?: number;
@@ -11,6 +12,12 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ApiResponse>
 ) {
+
+  const session = await getSessionServer(req, res);
+  if (!session || !session.id) {
+    return res.status(401).json({ error: 'Not Authorized' });
+  }
+
   if (req.method === 'POST') {
     const { id, title, oldRevisionNumber } = req.body;
 
