@@ -3,9 +3,9 @@ import EditingArea from "./EditingArea";
 import { isDevelopmentEnvironment } from "@/lib/environment";
 import { SignoutButton } from "./SignoutButton";
 import { getSessionServer } from "@/lib/getAuth";
-import type { ReactElement } from 'react';
-import Layout from '@/components/layout';
-import type { NextPageWithLayout } from '@/pages/_app';
+import type { ReactElement } from 'react'
+import Layout from '@/components/layout'
+import type { NextPageWithLayout } from '@/pages/_app'
 
 export const maxDuration = 60;
 
