@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import OpenAI from 'openai';
-import { MODEL_NAME } from '@/app/lib/ai-config';
-import { getSessionServer } from '@/app/lib/getAuth';
+import { MODEL_NAME } from '@/lib/ai-config';
+import { getSessionServer } from '@/lib/getAuth';
 
 type ApiResponse = {
   response?: string;

@@ -2,11 +2,11 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import {
   FormulaDefinition,
   getPromptDefiner
-} from '@/app/lib/formula/formula-definitions';
+} from '@/lib/formula/formula-definitions';
 import { toTool, parseArguments } from 'openai-zod-functions';
 import OpenAI from 'openai';
-import { MODEL_NAME } from '@/app/lib/ai-config';
-import { getSessionServer } from '@/app/lib/getAuth';
+import { MODEL_NAME } from '@/lib/ai-config';
+import { getSessionServer } from '@/lib/getAuth';
 
 const openai = new OpenAI({
   apiKey: process.env['OPENAI_API_KEY']

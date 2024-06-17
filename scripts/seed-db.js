@@ -12,7 +12,7 @@ const { db } = require('@vercel/postgres');
 const {
   users,
   pages,
-} = require('../app/lib/placeholder-data.js');
+} = require('@/lib/placeholder-data.js');
 
 async function main() {
   const client = await db.connect();
