@@ -1,6 +1,6 @@
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { z } from 'zod';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { sql } from '@vercel/postgres';
 import type { User } from '@/lib/definitions';
 import { AuthOptions } from 'next-auth';
