@@ -227,7 +227,11 @@ export async function fetchPagesRemote(userId: string, fetchDeleted?: boolean): 
   
         const result = await response.json();
         if (result.pages) {
-            const pages = JSON.parse(JSON.stringify(result.pages));
+            let pages = JSON.parse(JSON.stringify(result.pages));
+            pages = result.pages.map((page: Page) => ({
+                ...page,
+                lastModified: new Date(page.lastModified) // Convert lastModified to Date object
+            }));
             return pages;
         } else {
             return result.error || 'Unknown error occurred'; // Returning error as a string
