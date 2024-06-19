@@ -8,7 +8,7 @@ import {
   getSharedNodeKeyElements
 } from '../../_app/context/shared-node-context';
 import { useDebouncedCallback } from "use-debounce";
-import { useFormulaResultService } from './FormulaResultService';
+import { useFormulaResultService } from '../../lib/formula/FormulaResultService';
 import { isDevelopmentEnvironment } from "@/lib/environment";
 
 // TODO maybe use Redux so we don't have an O(n) operation here every time

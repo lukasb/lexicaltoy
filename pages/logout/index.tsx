@@ -1,4 +1,4 @@
-import { SignoutButton } from "../../pages/page/SignoutButton";
+import { SignoutButton } from "../../components/SignoutButton";
 import type { ReactElement } from 'react'
 import Layout from '@/components/layout'
 import type { NextPageWithLayout } from '@/pages/_app'

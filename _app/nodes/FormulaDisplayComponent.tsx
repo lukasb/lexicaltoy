@@ -8,7 +8,7 @@ import {
 import { usePromises } from '../context/formula-request-context';
 import { FormulaOutputType, NodeMarkdown } from '@/lib/formula/formula-definitions';
 import { useSharedNodeContext, createSharedNodeKey } from '../context/shared-node-context';
-import { useFormulaResultService } from '../../pages/page/FormulaResultService';
+import { useFormulaResultService } from '../../lib/formula/FormulaResultService';
 
 export default function FormulaDisplayComponent(
   { formula: initialFormula,

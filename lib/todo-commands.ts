@@ -1,5 +1,5 @@
 import { LexicalCommand, createCommand } from "lexical";
-import { TodoStatus } from "../nodes/TodoNode";
+import { TodoStatus } from "@/_app/nodes/TodoNode";
 
 export const INSERT_TODO_COMMAND: LexicalCommand<void> = createCommand('INSERT_TODO_COMMAND');
 export const INSERT_DOING_TODO_COMMAND: LexicalCommand <void> = createCommand('INSERT_DOING_TODO_COMMAND');
