@@ -10,8 +10,6 @@ import { FormulaOutputType, NodeMarkdown } from '@/lib/formula/formula-definitio
 import { useSharedNodeContext, createSharedNodeKey } from '../context/shared-node-context';
 import { useFormulaResultService } from '../../pages/page/FormulaResultService';
 
-import './FormulaDisplayComponent.css';
-
 export default function FormulaDisplayComponent(
   { formula: initialFormula,
     output: initialOutput,

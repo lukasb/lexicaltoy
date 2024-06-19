@@ -207,3 +207,33 @@ export async function deletePage(id: string, oldRevisionNumber: number): Promise
       }
   }
 }
+
+export async function fetchPagesRemote(userId: string, fetchDeleted?: boolean): Promise<Page[] | null> {
+    const endpoint = '/api/db/fetchPages'; // Adjust the endpoint as necessary
+  
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId, fetchDeleted }),
+        });
+  
+        if (!response.ok) {
+            // Convert non-2xx HTTP responses into throws to handle them in the catch block
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+  
+        const result = await response.json();
+        if (result.pages) {
+            const pages = JSON.parse(JSON.stringify(result.pages));
+            return pages;
+        } else {
+            return result.error || 'Unknown error occurred'; // Returning error as a string
+        }
+    } catch (error) {
+        console.error('Error fetching from API:', error);
+        return null;
+    }
+  }

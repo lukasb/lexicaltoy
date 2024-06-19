@@ -1,6 +1,3 @@
-"use server";
-
-// pages/api/db/insertJournalPage.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { sql } from "@vercel/postgres";
 import { Page, PageStatus } from "@/lib/definitions";

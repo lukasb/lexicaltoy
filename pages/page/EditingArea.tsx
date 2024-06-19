@@ -16,13 +16,14 @@ import {
   getJournalPageByDate,
   getJournalTitle
  } from "@/lib/journal-helpers";
-import { fetchPages } from "@/lib/dbFetch";
+import { fetchPagesRemote } from "@/lib/db";
 import FlexibleEditorLayout from "./FlexibleEditorContainer";
 import PagesManager from "./PagesManager";
 import { SharedNodeProvider } from "../../_app/context/shared-node-context";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
+  const [isClient, setIsClient] = useState(false)
   const [currentPages, setCurrentPages] = useState<Page[]>(pages);
   const emptyPageMarkdownString = '- ';
 
@@ -38,8 +39,13 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
   const setupDoneRef = useRef(false);
 
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   const fetchAndSetPages = useCallback(async () => {
-    const pages = await fetchPages(userId);
+    const pages = await fetchPagesRemote(userId);
+    if (!pages) return []; // TODO something better here
     setCurrentPages(pages);
     return pages;
   }, [userId, setCurrentPages]);

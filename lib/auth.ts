@@ -59,6 +59,10 @@ export const authConfig = {
       return token;
     },
     async session({session, token, user}) {
+      if (session.user) {
+        session.user.image = session.user.image ?? null;
+        session.user.name = session.user.name ?? null;
+      }
       if (typeof token.id === 'string') {
         // this works, but I don't understand why, because the code path 
         // in the jwt callback that sets token.id is not taken

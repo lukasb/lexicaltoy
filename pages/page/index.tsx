@@ -6,26 +6,59 @@ import { getSessionServer } from "@/lib/getAuth";
 import type { ReactElement } from 'react'
 import Layout from '@/components/layout'
 import type { NextPageWithLayout } from '@/pages/_app'
+import type { InferGetServerSidePropsType, GetServerSideProps } from 'next';
+import { Session } from 'next-auth';
+import { Page as AppPage } from '@/lib/definitions';
 
 export const maxDuration = 60;
 
-const Page: NextPageWithLayout = async () => {
-  const session = await getSessionServer();
-  if (!session || !session.id) {
-    if (session) {
-      console.log("Problem with session", session);
-    } else {
-      console.log("No session");
-    }
-    return (
-      <div className="flex justify-center items-center">
-        <h1>Problem with authentication</h1>
-        <SignoutButton />
-      </div>
-    );
-  }
+interface PageProps {
+  session: Session | null;
+  pages: AppPage[] | null;
+}
 
-  const pages = await fetchPages(session.id);
+export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, res}) => {
+  const session = await getSessionServer(req, res);
+  if (!session || !session.id) {
+    return {
+      props: {
+        session: null,
+        pages: null
+      }
+    }
+  }
+  
+  let pages = await fetchPages(session.id);
+  if (pages) pages = JSON.parse(JSON.stringify(pages));
+  
+  return {
+    props: {
+      session,
+      pages
+    }
+  }
+});
+
+const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideProps>> = ({session, pages}) => {
+  if (!session || !session.id || !pages) {
+    if (!session || !session.id) {
+      console.log("Problem with session", session);
+      return (
+        <div className="flex justify-center items-center">
+          <h1>Problem with authentication</h1>
+          <SignoutButton />
+        </div>
+      );
+    } else if (!pages) {
+      console.log("No pages");
+      return (
+        <div className="flex justify-center items-center">
+          <h1>No pages</h1>
+          <SignoutButton />
+        </div>
+      );
+    }
+  }
 
   return (
     <div className="flex justify-center items-center">

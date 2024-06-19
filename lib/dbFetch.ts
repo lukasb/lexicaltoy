@@ -34,7 +34,7 @@ export async function fetchPages(userId: string, fetchDeleted?: boolean) {
     id: row.id,
     title: row.title,
     value: row.value,
-    userId: row.userId,
+    userId: row.userid,
     lastModified: row.last_modified,
     revisionNumber: row.revision_number,
     isJournal: row.is_journal,
