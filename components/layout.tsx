@@ -10,11 +10,11 @@ export default function Layout({
 }>) {
   return (
     <>
-    <Head>
-      <title>🍊✅</title>
-      <meta name="description" content="orangetask 0.1.0" />
-    </Head>
+      <Head>
+        <title>🍊✅</title>
+        <meta name="description" content="orangetask 0.1.0" />
+      </Head>
       <main className={inter.className}>{children}</main>
-      </>
+    </>
   );
 }
