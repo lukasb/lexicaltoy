@@ -1,12 +1,7 @@
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Head from "next/head";
 
 const inter = Inter({ subsets: ["latin"] });
-
-/*export const metadata: Metadata = {
-  title: "🍊✅",
-  description: "orangetask 0.1.0",
-};*/
 
 export default function Layout({
   children,
@@ -14,6 +9,12 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   return (
-      <main>{children}</main>
+    <>
+    <Head>
+      <title>🍊✅</title>
+      <meta name="description" content="orangetask 0.1.0" />
+    </Head>
+      <main className={inter.className}>{children}</main>
+      </>
   );
 }
