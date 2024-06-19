@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "../../_app/ui/button";
 import { signOut } from "next-auth/react";
 

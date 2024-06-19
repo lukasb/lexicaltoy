@@ -8,14 +8,12 @@ const inter = Inter({ subsets: ["latin"] });
   description: "orangetask 0.1.0",
 };*/
 
-export default function RootLayout({
+export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
-    </html>
+      <main>{children}</main>
   );
 }

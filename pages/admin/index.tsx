@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "../../_app/ui/button";
 import { fetchPages } from '@/lib/dbFetch';
 import { useState } from 'react';
