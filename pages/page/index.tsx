@@ -1,5 +1,5 @@
 import { fetchPages } from "@/lib/dbFetch";
-import EditingArea from "./EditingArea";
+import EditingArea from "../../components/EditingArea";
 import { isDevelopmentEnvironment } from "@/lib/environment";
 import { SignoutButton } from "../../components/SignoutButton";
 import { getSessionServer } from "@/lib/getAuth";
