@@ -200,6 +200,8 @@ const Omnibar = forwardRef(({
       resetSelf();
     } else if (event.metaKey && event.key === "k") {
       event.preventDefault();
+      // scroll to the top of the page
+      window.scrollTo({ top: 0, behavior: "instant" });
       showReverseChronologicalList();
     }
   };
