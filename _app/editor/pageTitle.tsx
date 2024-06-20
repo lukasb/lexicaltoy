@@ -14,7 +14,7 @@ const EditablePageTitle = ({
   pageId: string, 
   initialTitle: string,
   isJournal: boolean,
-  updatePageTitleLocal: (id: string, newTitle: string, newRevisionNumber: number) => void;
+  updatePageTitleLocal: (id: string, newTitle: string, newRevisionNumber: number, newLastModified: Date) => void;
 }) => {
   const titleRef = useRef<HTMLDivElement>(null); // Reference to the editable div
   const pages = useContext(PagesContext);
@@ -28,12 +28,12 @@ const EditablePageTitle = ({
     const page = getPage(pageId);
     if (!page) return;
     try {
-      const newRevisionNumber = await updatePageTitle(pageId, newTitle, page.revisionNumber);
-      if (newRevisionNumber === -1) {
+      const { revisionNumber, lastModified, error } = await updatePageTitle(pageId, newTitle, page.revisionNumber);
+      if (!revisionNumber || !lastModified) {
         alert("Failed to update title because you edited an old version, please relead for the latest version.");
         return;
       }
-      updatePageTitleLocal(pageId, newTitle, newRevisionNumber);
+      updatePageTitleLocal(pageId, newTitle, revisionNumber, lastModified);
     } catch (error) {
       alert("Failed to update title");
     }

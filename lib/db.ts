@@ -1,6 +1,12 @@
 import { Page, toPageStatus } from '@/lib/definitions';
 
-export async function updatePageTitle(id: string, title: string, oldRevisionNumber: number): Promise<number> {
+export interface PageUpdateResponse {
+    revisionNumber?: number;
+    lastModified?: Date;
+    error?: string;
+}
+
+export async function updatePageTitle(id: string, title: string, oldRevisionNumber: number): Promise<PageUpdateResponse> {
   // Define the endpoint URL (use the full URL if calling from a different domain in production)
   const endpoint = '/api/db/updatePageTitle';
 
@@ -19,14 +25,20 @@ export async function updatePageTitle(id: string, title: string, oldRevisionNumb
 
       const result = await response.json();
       if (result.revisionNumber !== undefined) {
-          return result.revisionNumber;
+        return {
+            revisionNumber: result.revisionNumber,
+            lastModified: new Date(result.lastModified)
+          };
       } else {
-          console.error('Failed to update page title:', result.error);
-          return -1; // Return -1 to indicate failure as per the original function
+          return {
+            error: result.error || 'Unknown error occurred'
+          }; // Return -1 to indicate failure as per the original function
       }
   } catch (error) {
       console.error('Error fetching from API:', error);
-      return -1; // Return -1 to indicate failure
+      return { 
+        error: error instanceof Error ? error.message : 'An unknown error occurred'
+      };
   }
 }
 
@@ -67,11 +79,6 @@ export async function insertPage(title: string, value: string, userId: string): 
           return `Error fetching from API: ${String(error)}`;
       }
     }
-}
-
-export interface PageUpdateResponse {
-    revisionNumber: number;
-    lastModified: Date;
 }
 
 export async function updatePageContentsWithHistory(id: string, value: string, oldRevisionNumber: number): Promise<PageUpdateResponse> {

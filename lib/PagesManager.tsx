@@ -24,7 +24,7 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
         try {
           const { revisionNumber, lastModified } = await updatePageContentsWithHistory(page.id, page.value, page.revisionNumber);
           if (isDevelopmentEnvironment) console.timeEnd("savePage");
-          if (revisionNumber === -1) {
+          if (revisionNumber === -1 || !revisionNumber || !lastModified) {
             alert(`Failed to save page ${page.title} because you edited an old version, please relead for the latest version.`);
             return;
           }

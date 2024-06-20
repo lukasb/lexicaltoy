@@ -18,7 +18,7 @@ function FlexibleEditorLayout ({
   openPageIds: string[];
   currentPages: Page[];
   updatePageContentsLocal: (id: string, newValue: string, revisionNumber: number) => void;
-  updatePageTitleLocal: (id: string, newTitle: string, revisionNumber: number) => void;
+  updatePageTitleLocal: (id: string, newTitle: string, revisionNumber: number, lastModified: Date) => void;
   closePage: (id: string) => void;
   openOrCreatePageByTitle: (title: string) => void;
   deletePage: (id: string) => void;

@@ -172,7 +172,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
           <FlexibleEditorLayout
             openPageIds={openPageIds}
             currentPages={currentPages}
-            updatePageTitleLocal={(id, newTitle, newRevisionNumber) => {
+            updatePageTitleLocal={(id, newTitle, newRevisionNumber, newLastModified) => {
                 setCurrentPages((prevPages) =>
                       prevPages.map((page) =>
                         page.id === id
@@ -180,6 +180,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                               ...page,
                               title: newTitle,
                               revisionNumber: newRevisionNumber,
+                              lastModified: newLastModified
                             }
                           : page
                       )

@@ -5,6 +5,7 @@ import { getSessionServer } from '@/lib/getAuth';
 
 type ApiResponse = {
   revisionNumber?: number;
+  lastModified?: Date;
   error?: string;
 }
 
@@ -31,10 +32,11 @@ export default async function handler(
         UPDATE pages
         SET title = ${title}, revision_number = ${oldRevisionNumber + 1}
         WHERE id = ${id}
-        RETURNING revision_number
+        RETURNING revision_number, last_modified
       `;
       const revisionNumber = result.rows[0].revision_number;
-      return res.status(200).json({ revisionNumber });
+      const lastModified = result.rows[0].last_modified;
+      return res.status(200).json({ revisionNumber, lastModified });
     } catch (error) {
       console.error("Database Error: Failed to Update Page Title.", error);
       res.status(500).json({ error: 'Database Error: Failed to Update Page Title' });
