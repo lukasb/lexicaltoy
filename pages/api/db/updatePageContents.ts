@@ -5,7 +5,7 @@ import { getSessionServer } from '@/lib/getAuth';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<{revisionNumber?: number, error?: string}>
+  res: NextApiResponse<{revisionNumber?: number, lastModified?: Date, error?: string}>
 ) {
 
   const session = await getSessionServer(req, res);
@@ -35,9 +35,9 @@ export default async function handler(
         UPDATE pages
         SET value = ${value}, revision_number = ${oldRevisionNumber + 1}
         WHERE id = ${id}
-        RETURNING revision_number
+        RETURNING revision_number, last_modified
       `;
-      return res.status(200).json({ revisionNumber: result.rows[0].revision_number });
+      return res.status(200).json({ revisionNumber: result.rows[0].revision_number, lastModified: result.rows[0].last_modified });
     } catch (error) {
       console.error("Database Error: Failed to Update Page Contents.", error);
       res.status(500).json({ error: 'Database Error: Failed to Update Page Contents' });

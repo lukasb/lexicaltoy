@@ -69,7 +69,12 @@ export async function insertPage(title: string, value: string, userId: string): 
     }
 }
 
-export async function updatePageContentsWithHistory(id: string, value: string, oldRevisionNumber: number): Promise<number> {
+export interface PageUpdateResponse {
+    revisionNumber: number;
+    lastModified: Date;
+}
+
+export async function updatePageContentsWithHistory(id: string, value: string, oldRevisionNumber: number): Promise<PageUpdateResponse> {
   const endpoint = '/api/db/updatePageContents'; // Adjust the endpoint as needed
 
   try {
@@ -88,7 +93,10 @@ export async function updatePageContentsWithHistory(id: string, value: string, o
 
       const result = await response.json();
       if (result.revisionNumber !== undefined) {
-          return result.revisionNumber;
+          return {
+            revisionNumber: result.revisionNumber,
+            lastModified: new Date(result.lastModified)
+          };
       } else {
           // If the server response does not include a revision number, throw an error
           throw new Error('Failed to update page contents: ' + (result.error || 'Unknown error occurred'));

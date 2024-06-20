@@ -22,16 +22,16 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
       if (page.status === PageStatus.PendingWrite) {
         if (isDevelopmentEnvironment) console.time("savePage");
         try {
-          const newRevisionNumber = await updatePageContentsWithHistory(page.id, page.value, page.revisionNumber);
+          const { revisionNumber, lastModified } = await updatePageContentsWithHistory(page.id, page.value, page.revisionNumber);
           if (isDevelopmentEnvironment) console.timeEnd("savePage");
-          if (newRevisionNumber === -1) {
+          if (revisionNumber === -1) {
             alert(`Failed to save page ${page.title} because you edited an old version, please relead for the latest version.`);
             return;
           }
           // Update the pages context with the new revision number
           setPages((prevPages) =>
             prevPages.map((p) =>
-              p.id === page.id ? { ...p, status: PageStatus.Quiescent, revisionNumber: newRevisionNumber } : p
+              p.id === page.id ? { ...p, status: PageStatus.Quiescent, revisionNumber: revisionNumber, lastModified: lastModified } : p
             )
           );
         } catch (error) {
