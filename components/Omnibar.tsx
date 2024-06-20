@@ -212,7 +212,6 @@ const Omnibar = forwardRef(({
   };
 
   const handleMouseEnter = (index: number) => {
-    setSelectedIndex(index);
     if (!isTouchDevice()) {
       setShowPageContent(true);
     }
@@ -267,7 +266,6 @@ const Omnibar = forwardRef(({
                     ? "selected-item bg-gray-200 dark:bg-gray-700"
                     : ""
                 } dark:text-white`}
-                onMouseEnter={() => setSelectedIndex(results.length)}
                 onClick={() => openOrCreatePageByTitle(term)}
                 data-testid="create-page-option"
               >
