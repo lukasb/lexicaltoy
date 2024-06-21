@@ -14,6 +14,15 @@
   }
 }
 
+html, body {
+  overflow-x: hidden;
+  @apply w-full;
+}
+
+#root {
+  @apply w-full;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
