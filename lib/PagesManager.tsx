@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { PagesContext } from '@/_app/context/pages-context';
 import { updatePageContentsWithHistory } from "@/lib/db";
 import { Page, PageStatus } from "@/lib/definitions";
@@ -7,43 +7,71 @@ import {
   SharedNodeKeyElements,
   getSharedNodeKeyElements
 } from '../_app/context/shared-node-context';
-import { useDebouncedCallback } from "use-debounce";
 import { useFormulaResultService } from './formula/FormulaResultService';
 import { isDevelopmentEnvironment } from "@/lib/environment";
+import { useCallback } from "react";
 
 // TODO maybe use Redux so we don't have an O(n) operation here every time
 function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAction<Page[]>> }) {
   const pages = useContext(PagesContext);
   const { sharedNodeMap, setSharedNodeMap } = useSharedNodeContext();
   const { getFormulaResults, updatePagesResults } = useFormulaResultService();
+  
+  // Create a ref to store the save queue
+  const saveQueue = useRef<Map<string, { page: Page, timestamp: number }>>(new Map());
+  const isSaving = useRef<Set<string>>(new Set());
 
-  const savePagesToDatabase = useDebouncedCallback(async () => {
-    for (const page of pages) {
-      if (page.status === PageStatus.PendingWrite) {
-        if (isDevelopmentEnvironment) console.time("savePage");
-        try {
-          const { revisionNumber, lastModified } = await updatePageContentsWithHistory(page.id, page.value, page.revisionNumber);
-          if (isDevelopmentEnvironment) console.timeEnd("savePage");
-          if (revisionNumber === -1 || !revisionNumber || !lastModified) {
-            alert(`Failed to save page ${page.title} because you edited an old version, please relead for the latest version.`);
-            return;
-          }
-          // Update the pages context with the new revision number
+  const savePagesToDatabase = useCallback(async () => {
+    for (const [pageId, { page, timestamp }] of saveQueue.current.entries()) {
+      if (isSaving.current.has(pageId)) continue;
+
+      isSaving.current.add(pageId);
+      if (isDevelopmentEnvironment) console.time(`savePage_${pageId}`);
+
+      try {
+        const { revisionNumber, lastModified } = await updatePageContentsWithHistory(page.id, page.value, page.revisionNumber);
+        if (isDevelopmentEnvironment) console.timeEnd(`savePage_${pageId}`);
+
+        if (revisionNumber === -1 || !revisionNumber || !lastModified) {
+          alert(`Failed to save page ${page.title} because you edited an old version, please reload for the latest version.`);
+        } else {
           setPages((prevPages) =>
             prevPages.map((p) =>
               p.id === page.id ? { ...p, status: PageStatus.Quiescent, revisionNumber: revisionNumber, lastModified: lastModified } : p
             )
           );
-        } catch (error) {
-          alert("Failed to save page");
         }
+      } catch (error) {
+        alert(`Failed to save page ${page.title}`);
+      } finally {
+        isSaving.current.delete(pageId);
+        saveQueue.current.delete(pageId);
       }
     }
-  }, 500);
+  }, [setPages]);
 
   useEffect(() => {
-    savePagesToDatabase();
-  }, [pages, setPages, savePagesToDatabase]);
+    const interval = setInterval(() => {
+      if (saveQueue.current.size > 0) {
+        savePagesToDatabase();
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [savePagesToDatabase]);
+
+  useEffect(() => {
+    pages.forEach(page => {
+      if (page.status === PageStatus.PendingWrite) {
+        const currentTimestamp = Date.now();
+        const existingSave = saveQueue.current.get(page.id);
+
+        if (!existingSave || existingSave.timestamp < currentTimestamp) {
+          saveQueue.current.set(page.id, { page, timestamp: currentTimestamp });
+        }
+      }
+    });
+  }, [pages]);
 
   // TODO maybe use Redux or some kind of message bus so we don't have an O(n) operation here every time
   // TODO make this async
