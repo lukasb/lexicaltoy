@@ -12,6 +12,10 @@ const openai = new OpenAI({
   apiKey: process.env['OPENAI_API_KEY']
 });
 
+export const config = {
+  maxDuration: 60,
+};
+
 const formulaDefinitionSystemPrompt = `You will be given a user prompt. Your task is to define a prompt template that matches the user's intent.`;
 
 type ApiResponse = {
