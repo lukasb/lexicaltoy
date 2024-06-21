@@ -3,6 +3,8 @@ import OpenAI from 'openai';
 import { MODEL_NAME } from '@/lib/ai-config';
 import { getSessionServer } from '@/lib/getAuth';
 
+export const maxDuration = 60;
+
 type ApiResponse = {
   response?: string;
   error?: string;
