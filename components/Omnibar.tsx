@@ -13,6 +13,7 @@ import { searchPages } from "@/lib/pages-helpers";
 import { Page } from "@/lib/definitions";
 import { PagesContext } from "@/_app/context/pages-context";
 import { isTouchDevice } from "@/lib/window-helpers";
+import { getTodayJournalTitle } from "@/lib/journal-helpers";
 
 const Omnibar = forwardRef(({
   openOrCreatePageByTitle
@@ -30,6 +31,7 @@ const Omnibar = forwardRef(({
   const ulRef = useRef<HTMLUListElement>(null);
   const skipTermResolutionRef = useRef(false);
   const pages = useContext(PagesContext);
+  const [todayJournalTitle, setTodayJournalTitle] = useState(getTodayJournalTitle());
 
   // TODO accessibility
   // TODO Escape sets focus back to last active editor
@@ -223,6 +225,17 @@ const Omnibar = forwardRef(({
     }
   };
 
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      const newTodayJournalTitle = getTodayJournalTitle();
+      if (newTodayJournalTitle !== todayJournalTitle) {
+        setTodayJournalTitle(newTodayJournalTitle);
+      }
+    }, 30000); // 30 seconds
+  
+    return () => clearInterval(intervalId);
+  }, [todayJournalTitle]);
+
   return (
     <div className="relative my-4 max-w-7xl">
       <input
@@ -253,7 +266,11 @@ const Omnibar = forwardRef(({
                 onClick={() => handleSearchResultsClick(result)}
                 data-testid="search-result"
               >
-                {result.title}
+                {result.title === todayJournalTitle ? (
+                  <strong>{result.title}</strong>
+                ) : (
+                  result.title
+                )}
                 {result.isJournal && (
                   <span className="text-gray-400 ml-2">journal</span>
                 )}
@@ -274,13 +291,16 @@ const Omnibar = forwardRef(({
             )}
           </ul>
         )}
-        {showPageContent && !showCreatePageOption && selectedIndex >= 0 && selectedIndex < results.length && (
-          <div className="w-full max-w-5xl bg-white shadow-md mt-2 p-4 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-            <div className="whitespace-pre-wrap break-words">
-              {results[selectedIndex].value}
+        {showPageContent &&
+          !showCreatePageOption &&
+          selectedIndex >= 0 &&
+          selectedIndex < results.length && (
+            <div className="w-full max-w-5xl bg-white shadow-md mt-2 p-4 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+              <div className="whitespace-pre-wrap break-words">
+                {results[selectedIndex].value}
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );

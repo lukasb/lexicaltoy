@@ -5,6 +5,10 @@ import { insertJournalPage } from '@/lib/db';
 
 export const DEFAULT_JOURNAL_CONTENTS = '- ';
 
+export function getTodayJournalTitle() {
+  return getJournalTitle(new Date());
+}
+
 export function getJournalTitle(date: Date) {
   function getOrdinalSuffix(day: number): string {
     if (day > 3 && day < 21) return 'th';
