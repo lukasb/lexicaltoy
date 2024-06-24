@@ -15,12 +15,16 @@
 }
 
 html, body {
-  overflow-x: hidden;
   @apply w-full;
+}
+
+body {
+  overflow-y: auto;
 }
 
 #root {
   @apply w-full;
+  overflow-x: hidden;
 }
 
 body {
