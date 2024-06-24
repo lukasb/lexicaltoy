@@ -902,7 +902,7 @@ export function $myConvertFromMarkdownString(
   shouldMoveSelection = true,
   node?: ElementNode,
   transformers: Array<Transformer> = TRANSFORMERS,
-  shouldPreserveNewLines = false,
+  shouldPreserveNewLines = true,
 ): void {
   const importMarkdown = createMarkdownImport(
     transformers,
