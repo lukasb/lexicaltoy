@@ -267,7 +267,7 @@ const Omnibar = forwardRef(({
                 data-testid="search-result"
               >
                 {result.title === todayJournalTitle ? (
-                  <strong>{result.title}</strong>
+                  <span className="font-medium">{result.title}</span>
                 ) : (
                   result.title
                 )}
