@@ -18,7 +18,9 @@ type FloatingMenuState = {
 
 // show if selection is on a list item
 export function shouldShowFloatingIndentButtons(selection: BaseSelection) {
-  return (selection && $isListItemActive(selection)) || false;
+  const shouldShow = selection && $isListItemActive(selection);
+  console.log("show floating indent buttons", shouldShow);
+  return shouldShow;
 }
 
 export async function computeFloatingIndentButtonsPosition(

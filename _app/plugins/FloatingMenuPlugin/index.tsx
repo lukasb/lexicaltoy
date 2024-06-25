@@ -32,24 +32,14 @@ export function FloatingMenuPlugin({
   const [visibleMenu, setVisibleMenu] = useState<FloatingMenuConfig | null>(null);
   const [editor] = useLexicalComposerContext();
 
-  const updateMenuAsync = useCallback(
-    async (
-      selection: BaseSelection,
-      menu: FloatingMenuConfig | null
-    ) => {
-      if (!selection || !menu?.computePositionAsync) return setCoords(undefined);
-      const coords = menu
-        ? await menu.computePositionAsync(editor, selection, ref)
-        : undefined;
-      setCoords(coords);
-      setVisibleMenu(menu);
-    },
-    [editor]
-  );
-
-  const updateMenu = useCallback((selection: BaseSelection, menu: FloatingMenuConfig | null) => {
-    if (!selection || !menu?.computePosition) return setCoords(undefined);
-    const coords = menu ? menu.computePosition(editor, selection, ref) : undefined;
+  const updateMenu = useCallback( async (selection: BaseSelection, menu: FloatingMenuConfig | null) => {
+    if (!selection || (!menu?.computePosition && !menu?.computePositionAsync)) return setCoords(undefined);
+    let coords;
+    if (menu.computePosition) {
+      coords = menu ? menu.computePosition(editor, selection, ref) : undefined;
+    } else if (menu.computePositionAsync) {
+      coords = menu ? await menu.computePositionAsync(editor, selection, ref) : undefined;
+    }
     setCoords(coords);
     setVisibleMenu(menu);
   }, [editor, ref, setCoords, setVisibleMenu]);
@@ -73,23 +63,22 @@ export function FloatingMenuPlugin({
     for (const config of menuConfig) {
       if (config.shouldShow(selection)) {
         if (!newVisibleMenu || config.priority > newVisibleMenu.priority) {
+          console.log("showing menu");
           newVisibleMenu = config;
+        } else {
+          console.log("Menu with lower priority is visible");
         }
       }
     }
 
     if (newVisibleMenu) {
-      if (newVisibleMenu.computePositionAsync) {
-        updateMenuAsync(selection, newVisibleMenu);
-      } else if (newVisibleMenu.computePosition) {
-        updateMenu(selection, newVisibleMenu);
-      }
+      updateMenu(selection, newVisibleMenu);
     } else {
       setCoords(undefined); // Hide if no matching menu
       setVisibleMenu(null);
     }
 
-  }, [editor, updateMenuAsync, menuConfig, updateMenu]);
+  }, [editor, menuConfig, updateMenu]);
 
   useEffect(() => {
     const unregisterListener = editor.registerUpdateListener(
