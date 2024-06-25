@@ -8,7 +8,6 @@ import {
 import { $getActiveListItemFromSelection, $isListItemActive } from "@/lib/list-utils";
 import { ListItemNode } from "@lexical/list";
 import { FloatingMenuCoords, FloatingMenuProps } from "./index";
-import { computePosition } from '@floating-ui/dom';
 import { $getRoot } from "lexical";
 
 type FloatingMenuState = {
