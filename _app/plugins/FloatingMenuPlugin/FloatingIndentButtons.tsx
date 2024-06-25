@@ -34,10 +34,15 @@ export async function computeFloatingIndentButtonsPosition(
     listItem.getKey()
   ) as HTMLLIElement;
 
-  // Use async/await to wait for the promise to resolve.
   try {
     const pos = await computePosition(listItemDOM, ref.current, { placement: "bottom-end" });
-    const coords = { x: pos.x, y: pos.y + 10 };
+
+    const listItemRect = listItemDOM.getBoundingClientRect();
+    const menuRect = ref.current.getBoundingClientRect();
+    const maxX = listItemRect.right - menuRect.width;
+    const clampedX = Math.min(pos.x, maxX);
+    const coords = { x: clampedX, y: pos.y + 10 };
+
     return coords;
   } catch (error) {
     return undefined;
