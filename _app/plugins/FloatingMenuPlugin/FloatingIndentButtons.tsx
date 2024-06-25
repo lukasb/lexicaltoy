@@ -20,7 +20,6 @@ type FloatingMenuState = {
 // show if selection is on a list item
 export function shouldShowFloatingIndentButtons(selection: BaseSelection) {
   const shouldShow = selection && $isListItemActive(selection);
-  console.log("show floating indent buttons", shouldShow);
   return shouldShow;
 }
 
@@ -39,20 +38,6 @@ export async function computeFloatingIndentButtonsPosition(
 
   try {
     const listItemRect = listItemDOM.getBoundingClientRect();
-    
-    /*
-    if (!ref || !ref.current) return { x: -9999, y: -9999};
-
-    const pos = await computePosition(listItemDOM, ref.current, { placement: "bottom-end" });
-
-    const listItemRect = listItemDOM.getBoundingClientRect();
-    const menuRect = ref.current.getBoundingClientRect();
-    const maxX = listItemRect.right - menuRect.width;
-    const clampedX = Math.min(pos.x, maxX);
-    const coords = { x: clampedX, y: pos.y + 10 };
-
-    console.log("computed coords", coords);
-    */
     const editorState = editor.getEditorState();
     let startX = 0;
     let startY = 0;
@@ -62,8 +47,6 @@ export async function computeFloatingIndentButtonsPosition(
       startX = dom?.getBoundingClientRect().left || 0;
       startY = dom?.getBoundingClientRect().top || 0;
     });
-
-    console.log("alternative coords", listItemRect.right - 96 - startX, listItemRect.bottom + 10 - startY);
 
     const x = listItemRect.right - 96 - startX;
     const y = listItemRect.bottom + 10 - startY;

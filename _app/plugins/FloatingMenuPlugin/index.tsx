@@ -40,7 +40,6 @@ export function FloatingMenuPlugin({
     } else if (menu.computePositionAsync) {
       coords = menu ? await menu.computePositionAsync(editor, selection, ref) : undefined;
     }
-    console.log("setting coords and visible menu", coords, menu);
     setCoords(coords);
     setVisibleMenu(menu);
   }, [editor, ref, setCoords, setVisibleMenu]);
