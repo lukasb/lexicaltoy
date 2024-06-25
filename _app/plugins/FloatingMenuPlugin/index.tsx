@@ -40,6 +40,7 @@ export function FloatingMenuPlugin({
     } else if (menu.computePositionAsync) {
       coords = menu ? await menu.computePositionAsync(editor, selection, ref) : undefined;
     }
+    console.log("setting coords and visible menu", coords, menu);
     setCoords(coords);
     setVisibleMenu(menu);
   }, [editor, ref, setCoords, setVisibleMenu]);
@@ -63,10 +64,7 @@ export function FloatingMenuPlugin({
     for (const config of menuConfig) {
       if (config.shouldShow(selection)) {
         if (!newVisibleMenu || config.priority > newVisibleMenu.priority) {
-          console.log("showing menu");
           newVisibleMenu = config;
-        } else {
-          console.log("Menu with lower priority is visible");
         }
       }
     }
@@ -74,7 +72,7 @@ export function FloatingMenuPlugin({
     if (newVisibleMenu) {
       updateMenu(selection, newVisibleMenu);
     } else {
-      setCoords(undefined); // Hide if no matching menu
+      setCoords(undefined);
       setVisibleMenu(null);
     }
 

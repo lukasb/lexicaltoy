@@ -9,6 +9,7 @@ import { $getActiveListItemFromSelection, $isListItemActive } from "@/lib/list-u
 import { ListItemNode } from "@lexical/list";
 import { FloatingMenuCoords, FloatingMenuProps } from "./index";
 import { computePosition } from '@floating-ui/dom';
+import { $getRoot } from "lexical";
 
 type FloatingMenuState = {
   canIndent: boolean;
@@ -30,13 +31,18 @@ export async function computeFloatingIndentButtonsPosition(
 ): Promise<FloatingMenuCoords> {
 
   const listItem = $getActiveListItemFromSelection(selection);
-  if (!listItem || !ref || !ref.current) return undefined;
+  if (!listItem) return undefined;
 
   const listItemDOM = editor.getElementByKey(
     listItem.getKey()
   ) as HTMLLIElement;
 
   try {
+    const listItemRect = listItemDOM.getBoundingClientRect();
+    
+    /*
+    if (!ref || !ref.current) return { x: -9999, y: -9999};
+
     const pos = await computePosition(listItemDOM, ref.current, { placement: "bottom-end" });
 
     const listItemRect = listItemDOM.getBoundingClientRect();
@@ -45,7 +51,25 @@ export async function computeFloatingIndentButtonsPosition(
     const clampedX = Math.min(pos.x, maxX);
     const coords = { x: clampedX, y: pos.y + 10 };
 
-    return coords;
+    console.log("computed coords", coords);
+    */
+    const editorState = editor.getEditorState();
+    let startX = 0;
+    let startY = 0;
+    editorState.read(() => {
+      const node = $getRoot();
+      const dom = editor.getElementByKey(node.__key);
+      startX = dom?.getBoundingClientRect().left || 0;
+      startY = dom?.getBoundingClientRect().top || 0;
+    });
+
+    console.log("alternative coords", listItemRect.right - 96 - startX, listItemRect.bottom + 10 - startY);
+
+    const x = listItemRect.right - 96 - startX;
+    const y = listItemRect.bottom + 10 - startY;
+
+    return { x, y };
+
   } catch (error) {
     return undefined;
   }
@@ -95,7 +119,7 @@ const FloatingIndentButtons = forwardRef<HTMLDivElement, FloatingMenuProps>(({ e
       >
         <button
           aria-label="Outdent"
-          className="px-3 py-1 mr-2 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none"
+          className="w-9 h-8 px-3 py-1 mr-2 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none"
           disabled={!state.canOutdent}
           onClick={() => {
             const listItem = state.listItem;
@@ -107,7 +131,7 @@ const FloatingIndentButtons = forwardRef<HTMLDivElement, FloatingMenuProps>(({ e
         </button>
         <button
           aria-label="Indent"
-          className="px-3 py-1 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none"
+          className="w-9 h-8 px-3 py-1 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none"
           disabled={!state.canIndent}
           onClick={() => {
             const listItem = state.listItem;
