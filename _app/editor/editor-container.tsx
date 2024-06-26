@@ -9,6 +9,7 @@ import NoSSRWrapper from "./NoSSRWrapper";
 import { MoreVertical } from "lucide-react";
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { togglePagePin } from "@/lib/pages-helpers";
+import Image from 'next/image';
 
 function EditorContainer({
   page,
@@ -52,7 +53,18 @@ function EditorContainer({
               isJournal={page.isJournal}
               updatePageTitleLocal={updatePageTitleLocal}
             />
-            <div className="flex">
+            <div className="flex items-center">
+              {page.pinned && (
+                <Image
+                  src="/images/icons/pinicon.png"
+                  alt="Pinned"
+                  width={16}
+                  height={16}
+                  className={`mr-2 ${
+                    touchDevice ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                  }`}
+                />
+              )}
               <DropdownMenu.Root onOpenChange={setIsMenuOpen}>
                 <DropdownMenu.Trigger asChild>
                   <button
