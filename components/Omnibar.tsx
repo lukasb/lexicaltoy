@@ -237,7 +237,7 @@ const Omnibar = forwardRef(({
   }, [todayJournalTitle]);
 
   return (
-    <div className="relative my-4 max-w-7xl">
+    <div className="relative my-4 max-w-7xl w-full">
       <input
         ref={inputRef}
         type="text"
@@ -251,7 +251,7 @@ const Omnibar = forwardRef(({
         {(results.length > 0 || showCreatePageOption) && (
           <ul
             ref={ulRef}
-            className="w-full max-w-5xl bg-white shadow-md max-h-[300px] md:max-h-[300px] lg:max-h-[300px] overflow-auto rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            className="w-full bg-white shadow-md max-h-[300px] md:max-h-[300px] lg:max-h-[300px] overflow-auto rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
           >
             {results.map((result, index) => (
               <li
@@ -267,19 +267,19 @@ const Omnibar = forwardRef(({
                 data-testid="search-result"
               >
                 <div className="flex items-center">
-                <div className="flex-shrink-0 whitespace-nowrap overflow-hidden text-ellipsis mr-2">
-                {result.title === todayJournalTitle ? (
-                  <span className="font-medium">{result.title}</span>
-                ) : (
-                  result.title
-                )}
-                {result.isJournal && (
-                  <span className="inline-flex items-center justify-center w-5 h-5 ml-2 bg-indigo-300 text-white text-xs font-bold rounded">
-                  J
-                </span>
-                )}
-                </div>
-                <span className="text-gray-400 ml-2 truncate">{result.value}</span>
+                  <div className="flex-shrink-0 whitespace-nowrap overflow-hidden text-ellipsis mr-2">
+                    {result.title === todayJournalTitle ? (
+                      <span className="font-medium">{result.title}</span>
+                    ) : (
+                      result.title
+                    )}
+                    {result.isJournal && (
+                      <span className="inline-flex items-center justify-center w-5 h-5 ml-2 bg-indigo-300 text-white text-xs font-bold rounded">
+                        J
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-gray-400 truncate flex-grow">{result.value}</span>
                 </div>
               </li>
             ))}
@@ -302,7 +302,7 @@ const Omnibar = forwardRef(({
           !showCreatePageOption &&
           selectedIndex >= 0 &&
           selectedIndex < results.length && (
-            <div className="w-full max-w-5xl bg-white shadow-md mt-2 p-4 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+            <div className="w-full bg-white shadow-md mt-2 p-4 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
               <div className="whitespace-pre-wrap break-words">
                 {results[selectedIndex].value}
               </div>
