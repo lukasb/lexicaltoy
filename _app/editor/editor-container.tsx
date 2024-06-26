@@ -70,7 +70,7 @@ function EditorContainer({
             <div className="flex items-center">
               <button
                 onClick={handlePinToggle}
-                className={`p-1 rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+                className={`p-1 rounded hover:bg-gray-700 focus:outline-none focus:ring-0 focus:ring-gray-500 ${
                   !localIsPinned && !touchDevice
                     ? "opacity-0 group-hover:opacity-100"
                     : ""
