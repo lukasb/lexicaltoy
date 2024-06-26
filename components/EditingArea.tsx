@@ -21,13 +21,19 @@ import FlexibleEditorLayout from "./FlexibleEditorContainer";
 import PagesManager from "../lib/PagesManager";
 import { SharedNodeProvider } from "../_app/context/shared-node-context";
 import { ActiveEditorProvider } from "@/_app/context/active-editor-context";
-import { deserializePagePins } from "@/lib/pages-helpers";
+import { deserializePagePins, getPinnedPageIds } from "@/lib/pages-helpers";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
   const [isClient, setIsClient] = useState(false)
   const [currentPages, setCurrentPages] = useState<Page[]>(pages);
   const emptyPageMarkdownString = '- ';
+
+  const [pinnedPageIds, setPinnedPageIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    setPinnedPageIds(getPinnedPageIds());
+  }, []);
 
   const initialPageId = findMostRecentlyEditedPage(currentPages)?.id;
   const lastWeekJournalPageIds = getLastWeekJournalPages(currentPages).map(page => page.id);
@@ -37,6 +43,10 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     initialIds.push(...lastWeekJournalPageIds);
     return initialIds;
   });
+
+  useEffect(() => {
+    setOpenPageIds(prevIds => [...new Set([...prevIds, ...pinnedPageIds])]);
+  }, [pinnedPageIds]);
 
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
   const setupDoneRef = useRef(false);

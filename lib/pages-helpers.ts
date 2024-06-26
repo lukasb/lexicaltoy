@@ -127,3 +127,8 @@ export function togglePagePin(page: Page): Page {
   serializePagePin(page);
   return page;
 }
+
+export function getPinnedPageIds(): string[] {
+  const pinnedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  return Object.keys(pinnedState).filter(id => pinnedState[id]);
+}
