@@ -91,6 +91,7 @@ export function FloatingMenuPlugin({
         FOCUS_COMMAND,
         () => {
           setActiveEditorKey(editor._key);
+          $handleEditorUpdate();
           return false;  
         },
         COMMAND_PRIORITY_NORMAL
