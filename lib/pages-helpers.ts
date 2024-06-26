@@ -95,3 +95,40 @@ export async function getPageMarkdown(page: Page): Promise<string> {
     return "";
   } 
 }
+
+const STORAGE_KEY = "pinnedPages";
+
+export function serializePagePins(pages: Page[]): void {
+  const pinnedState = pages.reduce((acc, page) => {
+    acc[page.id] = page.pinned;
+    return acc;
+  }, {} as Record<string, boolean>);
+  
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(pinnedState));
+}
+
+export function deserializePagePins(pages: Page[]): Page[] {
+  const pinnedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  
+  return pages.map(page => ({
+    ...page,
+    pinned: pinnedState[page.id] || false
+  }));
+}
+
+export function serializePagePin(page: Page): void {
+  const pinnedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  pinnedState[page.id] = page.pinned;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(pinnedState));
+}
+
+export function togglePagePin(page: Page): Page {
+  page.pinned = !page.pinned;
+  serializePagePin(page);
+  return page;
+}
+
+export function getPinnedPageIds(): string[] {
+  const pinnedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  return Object.keys(pinnedState).filter(id => pinnedState[id]);
+}

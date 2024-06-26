@@ -2,13 +2,14 @@
 
 import Editor from "./editor";
 import EditablePageTitle from "./pageTitle";
-import { Button } from "../ui/button";
 import { useState, useEffect } from "react";
 import { Page } from "@/lib/definitions";
 import { isTouchDevice } from "@/lib/window-helpers";
 import NoSSRWrapper from "./NoSSRWrapper";
 import { MoreVertical } from "lucide-react";
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { togglePagePin } from "@/lib/pages-helpers";
+import { Pin } from 'lucide-react';
 
 function EditorContainer({
   page,
@@ -18,6 +19,7 @@ function EditorContainer({
   closePage,
   openOrCreatePageByTitle,
   deletePage,
+  onPagePinToggle,
 }: {
   page: Page;
   requestFocus: boolean;
@@ -26,6 +28,7 @@ function EditorContainer({
   closePage: (id: string) => void;
   openOrCreatePageByTitle: (title: string) => void;
   deletePage: (id: string, oldRevisionNumber: number) => void;
+  onPagePinToggle: (updatedPage: Page) => void;
 }) {
   const [showDebug, setShowDebug] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -52,35 +55,59 @@ function EditorContainer({
               isJournal={page.isJournal}
               updatePageTitleLocal={updatePageTitleLocal}
             />
-            <div className="flex">
+            <div className="flex items-center">
+              <button
+                onClick={() => {
+                  const updatedPage = togglePagePin(page);
+                  onPagePinToggle(updatedPage);
+                }}
+                className={`p-1 rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+                  !page.pinned && !touchDevice
+                    ? "opacity-0 group-hover:opacity-100"
+                    : ""
+                }`}
+              >
+                <Pin
+                  className="h-5 w-5 text-gray-300"
+                  fill={page.pinned ? "currentColor" : "none"}
+                />
+              </button>
               <DropdownMenu.Root onOpenChange={setIsMenuOpen}>
                 <DropdownMenu.Trigger asChild>
                   <button
-                    className={`p-1 rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+                    className={`p-1 rounded focus:outline-none focus:ring-2 focus:ring-gray-500 ${
                       touchDevice || isMenuOpen
                         ? "opacity-100"
                         : "opacity-0 group-hover:opacity-100"
+                    } ${
+                      isMenuOpen
+                        ? "bg-gray-300 hover:bg-gray-400"
+                        : "hover:bg-gray-700"
                     }`}
                   >
-                    <MoreVertical className="h-5 w-5 text-gray-300" />
+                    <MoreVertical
+                      className={`h-5 w-5 ${
+                        isMenuOpen ? "text-gray-800" : "text-gray-300"
+                      }`}
+                    />
                   </button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content
-                    className="min-w-[200px] bg-gray-800 rounded-md py-2 px-1 shadow-md"
+                    className="min-w-[200px] bg-gray-800 rounded-md overflow-hidden shadow-md z-40"
                     align="end"
                     sideOffset={5}
                   >
                     {!page.isJournal && (
                       <DropdownMenu.Item
-                        className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"
+                        className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
                         onClick={() => deletePage(page.id, page.revisionNumber)}
                       >
                         Delete
                       </DropdownMenu.Item>
                     )}
                     <DropdownMenu.Item
-                      className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"
+                      className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
                       onClick={() => setShowDebug(!showDebug)}
                     >
                       {showDebug ? "Hide Debug" : "Show Debug"}
