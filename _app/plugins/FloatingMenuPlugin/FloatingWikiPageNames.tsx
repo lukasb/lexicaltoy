@@ -257,7 +257,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
     return (
       <div
         ref={ref}
-        className="absolute z-10 bg-white shadow-md rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+        className="absolute bg-white shadow-md rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white z-40"
         aria-hidden={!shouldShow}
         style={{
           position: "absolute",

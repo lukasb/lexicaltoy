@@ -113,7 +113,7 @@ const FloatingIndentButtons = forwardRef<HTMLDivElement, FloatingMenuProps>(({ e
     return (
       <div
         ref={ref}
-        className="flex items-start px-2 py-1 rounded"
+        className="flex items-start px-2 py-1 rounded z-40"
         aria-hidden={!shouldShow}
         style={{
           position: "absolute",

@@ -379,7 +379,7 @@ const FloatingSlashCommands = forwardRef<HTMLDivElement, FloatingMenuProps>(
     return (
       <div
         ref={ref}
-        className="absolute z-10 bg-white shadow-md rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+        className="absolute z-40 bg-white shadow-md rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
         aria-hidden={!shouldShow}
         style={{
           position: "absolute",
