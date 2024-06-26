@@ -75,13 +75,21 @@ function EditorContainer({
               <DropdownMenu.Root onOpenChange={setIsMenuOpen}>
                 <DropdownMenu.Trigger asChild>
                   <button
-                    className={`p-1 rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+                    className={`p-1 rounded focus:outline-none focus:ring-2 focus:ring-gray-500 ${
                       touchDevice || isMenuOpen
                         ? "opacity-100"
                         : "opacity-0 group-hover:opacity-100"
+                    } ${
+                      isMenuOpen
+                        ? "bg-gray-300 hover:bg-gray-400"
+                        : "hover:bg-gray-700"
                     }`}
                   >
-                    <MoreVertical className="h-5 w-5 text-gray-300" />
+                    <MoreVertical
+                      className={`h-5 w-5 ${
+                        isMenuOpen ? "text-gray-800" : "text-gray-300"
+                      }`}
+                    />
                   </button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
