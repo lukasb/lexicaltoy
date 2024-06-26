@@ -73,7 +73,6 @@ function FlexibleEditorLayout ({
 
   function renderEditorContainer(pageId: string, requestFocus: boolean) {
     const page = currentPages.find(p => p.id === pageId);
-    console.log("is this page pinned", pinnedPageIds.includes(pageId));
     if (!page) return null;
     return (
       <EditorContainer
