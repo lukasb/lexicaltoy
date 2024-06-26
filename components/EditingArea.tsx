@@ -21,7 +21,7 @@ import FlexibleEditorLayout from "./FlexibleEditorContainer";
 import PagesManager from "../lib/PagesManager";
 import { SharedNodeProvider } from "../_app/context/shared-node-context";
 import { ActiveEditorProvider } from "@/_app/context/active-editor-context";
-import { deserializePagePins, getPinnedPageIds } from "@/lib/pages-helpers";
+import { getPinnedPageIds, togglePagePin } from "@/lib/pages-helpers";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -32,7 +32,8 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const [pinnedPageIds, setPinnedPageIds] = useState<string[]>([]);
 
   useEffect(() => {
-    setPinnedPageIds(getPinnedPageIds());
+    const pnnedPageIds = getPinnedPageIds();
+    setPinnedPageIds(pnnedPageIds);
   }, []);
 
   const initialPageId = findMostRecentlyEditedPage(currentPages)?.id;
@@ -45,6 +46,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   });
 
   useEffect(() => {
+    console.log("updating open pages", pinnedPageIds);
     setOpenPageIds(prevIds => [...new Set([...prevIds, ...pinnedPageIds])]);
   }, [pinnedPageIds]);
 
@@ -58,9 +60,8 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const fetchAndSetPages = useCallback(async () => {
     const pages = await fetchPagesRemote(userId);
     if (!pages) return []; // TODO something better here
-    const pagesWithPins = deserializePagePins(pages);
-    setCurrentPages(pagesWithPins);
-    return pagesWithPins;
+    setCurrentPages(pages);
+    return pages;
   }, [userId, setCurrentPages]);
 
   const executeJournalLogic = useCallback(async () => {
@@ -166,6 +167,12 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     setOpenPageIds((prevPageIds) => prevPageIds.filter((pId) => pId !== id));
   }
 
+  const handlePagePinToggle = (pageId: string) => {
+    console.log("toggling pin for", pageId);
+    const newPinnedPageIds = togglePagePin(pageId, pinnedPageIds);
+    setPinnedPageIds(newPinnedPageIds);
+  };
+
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <PagesContext.Provider value={currentPages}>
@@ -219,6 +226,8 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                   }}
                   openOrCreatePageByTitle={openOrCreatePageByTitle}
                   deletePage={handleDeletePage}
+                  pinnedPageIds={pinnedPageIds}
+                  onPagePinToggle={handlePagePinToggle}
             />
           )}
           </SharedNodeProvider>

@@ -26,7 +26,6 @@ export type User = {
     isJournal: boolean;
     deleted: boolean;
     status: PageStatus;
-    pinned: boolean;
   };
 
   export function isPage(obj: any): obj is Page {

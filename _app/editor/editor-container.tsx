@@ -8,7 +8,6 @@ import { isTouchDevice } from "@/lib/window-helpers";
 import NoSSRWrapper from "./NoSSRWrapper";
 import { MoreVertical } from "lucide-react";
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { togglePagePin } from "@/lib/pages-helpers";
 import { Pin } from 'lucide-react';
 
 function EditorContainer({
@@ -19,6 +18,7 @@ function EditorContainer({
   closePage,
   openOrCreatePageByTitle,
   deletePage,
+  isPinned,
   onPagePinToggle,
 }: {
   page: Page;
@@ -28,12 +28,24 @@ function EditorContainer({
   closePage: (id: string) => void;
   openOrCreatePageByTitle: (title: string) => void;
   deletePage: (id: string, oldRevisionNumber: number) => void;
-  onPagePinToggle: (updatedPage: Page) => void;
+  isPinned: boolean;
+  onPagePinToggle: (pageId: string) => void;
 }) {
   const [showDebug, setShowDebug] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
+  const [localIsPinned, setLocalIsPinned] = useState(isPinned);
   const touchDevice = isTouchDevice();
+
+  useEffect(() => {
+    setLocalIsPinned(isPinned);
+  }, [isPinned]);
+
+  const handlePinToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setLocalIsPinned(!localIsPinned);
+    onPagePinToggle(page.id);
+  };
 
   // TODO maybe render a headless editor on the server to enable server-side rendering?
   return (
@@ -57,19 +69,16 @@ function EditorContainer({
             />
             <div className="flex items-center">
               <button
-                onClick={() => {
-                  const updatedPage = togglePagePin(page);
-                  onPagePinToggle(updatedPage);
-                }}
-                className={`p-1 rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 ${
-                  !page.pinned && !touchDevice
+                onClick={handlePinToggle}
+                className={`p-1 rounded hover:bg-gray-700 focus:outline-none focus:ring-0 focus:ring-gray-500 ${
+                  !localIsPinned && !touchDevice
                     ? "opacity-0 group-hover:opacity-100"
                     : ""
                 }`}
               >
                 <Pin
-                  className="h-5 w-5 text-gray-300"
-                  fill={page.pinned ? "currentColor" : "none"}
+                  className={`h-5 w-5 text-gray-300`}
+                  fill={localIsPinned ? "currentColor" : "none"}
                 />
               </button>
               <DropdownMenu.Root onOpenChange={setIsMenuOpen}>
