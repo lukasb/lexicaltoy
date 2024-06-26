@@ -1,5 +1,5 @@
-import { forwardRef, useEffect, useState } from "react";
-import { $getSelection, $isRangeSelection, BaseSelection, LexicalEditor } from "lexical";
+import { forwardRef, useEffect, useState, useCallback } from "react";
+import { $getSelection, $isRangeSelection, BaseSelection, COMMAND_PRIORITY_NORMAL, LexicalEditor, SELECTION_CHANGE_COMMAND } from "lexical";
 import { $canIndent, $canOutdent } from "@/lib/list-utils";
 import {
   INDENT_LISTITEM_COMMAND,
@@ -68,12 +68,15 @@ const FloatingIndentButtons = forwardRef<HTMLDivElement, FloatingMenuProps>(({ e
     });
 
     useEffect(() => {
-      const unregisterListener = editor.registerUpdateListener(
-        ({ editorState }) => {
-          editorState.read(() => {
+      const unregisterListener = editor.registerCommand(
+        SELECTION_CHANGE_COMMAND,
+        () => {
+          editor.getEditorState().read(() => {
             const selection = $getSelection();
             if (!$isRangeSelection(selection)) return;
             const listItem = $getActiveListItemFromSelection(selection);
+
+            console.log("selection", selection, listItem);
 
             setState({
               canIndent: $canIndent(selection),
@@ -81,10 +84,37 @@ const FloatingIndentButtons = forwardRef<HTMLDivElement, FloatingMenuProps>(({ e
               listItem,
             });
           });
-        }
+          return false;
+        },
+        COMMAND_PRIORITY_NORMAL
       );
       return unregisterListener;
     }, [editor]);
+
+    const handleOutdent = useCallback(() => {
+      editor.getEditorState().read(() => {
+        const selection = $getSelection();
+        if (!$isRangeSelection(selection)) return;
+        const listItem = $getActiveListItemFromSelection(selection);
+        if (listItem === null) {
+          console.log("no list item");
+          return;
+        }
+        console.log("dispatching outdent command");
+        editor.dispatchCommand(OUTDENT_LISTITEM_COMMAND, {listItem});
+      });
+    }, [editor]);
+
+    const handleIndent = useCallback(() => {
+      editor.getEditorState().read(() => {
+        const selection = $getSelection();
+        if (!$isRangeSelection(selection)) return;
+        const listItem = $getActiveListItemFromSelection(selection);
+        if (listItem === null) return;
+        editor.dispatchCommand(INDENT_LISTITEM_COMMAND, {listItem});
+      });
+    }, [editor]);
+
 
     return (
       <div
@@ -102,24 +132,16 @@ const FloatingIndentButtons = forwardRef<HTMLDivElement, FloatingMenuProps>(({ e
         <button
           aria-label="Outdent"
           className="w-9 h-8 px-3 py-1 mr-2 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none"
-          disabled={!state.canOutdent}
-          onClick={() => {
-            const listItem = state.listItem;
-            if (listItem === null) return;
-            editor.dispatchCommand(OUTDENT_LISTITEM_COMMAND, {listItem});
-          }}
+          //disabled={!state.canOutdent}
+          onClick={handleOutdent}
         >
           {"<"}
         </button>
         <button
           aria-label="Indent"
           className="w-9 h-8 px-3 py-1 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none"
-          disabled={!state.canIndent}
-          onClick={() => {
-            const listItem = state.listItem;
-            if (listItem === null) return;
-            editor.dispatchCommand(INDENT_LISTITEM_COMMAND, {listItem});
-          }}
+          //disabled={!state.canIndent}
+          onClick={handleIndent}
         >
           {">"}
         </button>

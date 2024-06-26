@@ -1,7 +1,7 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { useRef, useState, useCallback, useEffect, useContext } from "react";
 import { createPortal } from "react-dom";
-import { $getSelection, LexicalEditor } from 'lexical';
+import { $getSelection, BLUR_COMMAND, COMMAND_PRIORITY_NORMAL, FOCUS_COMMAND, LexicalEditor } from 'lexical';
 import { BaseSelection } from "lexical";
 import { mergeRegister } from '@lexical/utils';
 import { useActiveEditorContext } from "@/_app/context/active-editor-context";
@@ -81,12 +81,29 @@ export function FloatingMenuPlugin({
   }, [editor, menuConfig, updateMenu]);
 
   useEffect(() => {
-    return mergeRegister(editor.registerUpdateListener(
-      ({ editorState }) => {
-        editorState.read(() => $handleEditorUpdate());
-      }
-    ));
-  }, [editor, $handleEditorUpdate]);
+    return mergeRegister(
+      editor.registerUpdateListener(
+        ({ editorState }) => {
+          editorState.read(() => $handleEditorUpdate());
+        }
+      ),
+      editor.registerCommand(
+        FOCUS_COMMAND,
+        () => {
+          setActiveEditorKey(editor._key);
+          return false;  
+        },
+        COMMAND_PRIORITY_NORMAL
+      )
+    );
+  }, [editor, $handleEditorUpdate, setActiveEditorKey, activeEditorKey]);
+
+  useEffect(() => {
+    if (activeEditorKey !== editor._key) {
+      setCoords(undefined);
+      setVisibleMenu(null);
+    }
+  }, [activeEditorKey, editor._key, setCoords, setVisibleMenu]);
 
   return createPortal(
     visibleMenu ? (
