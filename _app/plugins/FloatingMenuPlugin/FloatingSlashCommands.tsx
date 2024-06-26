@@ -389,7 +389,7 @@ const FloatingSlashCommands = forwardRef<HTMLDivElement, FloatingMenuProps>(
           opacity: shouldShow ? 1 : 0,
         }}
       >
-        <ul className="max-h-[100px] md:max-h-[400px] overflow-auto">
+        <ul className="max-h-[200px] md:max-h-[400px] overflow-auto">
           {commands.map((command, index) => (
             <li
               key={index}

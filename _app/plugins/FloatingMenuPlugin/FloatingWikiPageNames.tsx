@@ -267,7 +267,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
           opacity: shouldShow ? 1 : 0,
         }}
       >
-        <ul className="max-h-[100px] md:max-h-[400px] overflow-auto">
+        <ul className="max-h-[200px] md:max-h-[400px] overflow-auto">
           {results.map((result, index) => (
             <li
               key={index}
