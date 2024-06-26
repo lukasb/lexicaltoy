@@ -1,8 +1,10 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useContext } from "react";
 import { createPortal } from "react-dom";
 import { $getSelection, LexicalEditor } from 'lexical';
 import { BaseSelection } from "lexical";
+import { mergeRegister } from '@lexical/utils';
+import { useActiveEditorContext } from "@/_app/context/active-editor-context";
 
 export type FloatingMenuCoords = { x: number; y: number } | undefined;
 
@@ -31,6 +33,7 @@ export function FloatingMenuPlugin({
   const [coords, setCoords] = useState<FloatingMenuCoords>(undefined);
   const [visibleMenu, setVisibleMenu] = useState<FloatingMenuConfig | null>(null);
   const [editor] = useLexicalComposerContext();
+  const {activeEditorKey, setActiveEditorKey} = useActiveEditorContext();
 
   const updateMenu = useCallback( async (selection: BaseSelection, menu: FloatingMenuConfig | null) => {
     if (!selection || (!menu?.computePosition && !menu?.computePositionAsync)) return setCoords(undefined);
@@ -78,12 +81,11 @@ export function FloatingMenuPlugin({
   }, [editor, menuConfig, updateMenu]);
 
   useEffect(() => {
-    const unregisterListener = editor.registerUpdateListener(
+    return mergeRegister(editor.registerUpdateListener(
       ({ editorState }) => {
         editorState.read(() => $handleEditorUpdate());
       }
-    );
-    return unregisterListener;
+    ));
   }, [editor, $handleEditorUpdate]);
 
   return createPortal(
