@@ -96,39 +96,32 @@ export async function getPageMarkdown(page: Page): Promise<string> {
   } 
 }
 
-const STORAGE_KEY = "pinnedPages";
+const STORAGE_KEY = "pinnedPageIds";
 
-export function serializePagePins(pages: Page[]): void {
-  const pinnedState = pages.reduce((acc, page) => {
-    acc[page.id] = page.pinned;
-    return acc;
-  }, {} as Record<string, boolean>);
-  
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(pinnedState));
+export function serializePagePins(pageIds: string[]): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(pageIds));
+  }
 }
 
-export function deserializePagePins(pages: Page[]): Page[] {
-  const pinnedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-  
-  return pages.map(page => ({
-    ...page,
-    pinned: pinnedState[page.id] || false
-  }));
+export function deserializePagePins(): string[] {
+  if (typeof window !== 'undefined') {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  }
+  return [];
 }
 
-export function serializePagePin(page: Page): void {
-  const pinnedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-  pinnedState[page.id] = page.pinned;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(pinnedState));
-}
-
-export function togglePagePin(page: Page): Page {
-  page.pinned = !page.pinned;
-  serializePagePin(page);
-  return page;
+export function togglePagePin(pageId: string, pinnedPageIds: string[]): string[] {
+  const index = pinnedPageIds.indexOf(pageId);
+  if (index > -1) {
+    pinnedPageIds.splice(index, 1);
+  } else {
+    pinnedPageIds.push(pageId);
+  }
+  serializePagePins(pinnedPageIds);
+  return pinnedPageIds;
 }
 
 export function getPinnedPageIds(): string[] {
-  const pinnedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-  return Object.keys(pinnedState).filter(id => pinnedState[id]);
+  return deserializePagePins();
 }

@@ -14,6 +14,8 @@ function FlexibleEditorLayout ({
   closePage,
   openOrCreatePageByTitle,
   deletePage,
+  pinnedPageIds,
+  onPagePinToggle,
 }: {
   openPageIds: string[];
   currentPages: Page[];
@@ -22,30 +24,27 @@ function FlexibleEditorLayout ({
   closePage: (id: string) => void;
   openOrCreatePageByTitle: (title: string) => void;
   deletePage: (id: string) => void;
+  pinnedPageIds: string[];
+  onPagePinToggle: (pageId: string) => void;
 }) {
 
   const [isSmallWidthViewport, setIsSmallWidthViewport] = useState<boolean>(false);
 
   useBreakpoint(1537, isSmallWidthViewport, setIsSmallWidthViewport);
 
-  const handlePagePinToggle = (updatedPage: Page) => {
-    const updatedPages = currentPages.map(p => p.id === updatedPage.id ? updatedPage : p);
-    const newSortedPageIds = sortPages(sortedPageIds);
-    setSortedPageIds(newSortedPageIds);
-  };
-
   const sortPages = useCallback((pageIds: string[]): string[] => {
     const pages = pageIds.map(id => currentPages.find(p => p.id === id)).filter(p => p !== undefined) as Page[];
     const firstPage = pages[0];
-    const pinnedPages = pages.filter(p => p.pinned && p.id !== firstPage.id);
-    const unpinnedPages = pages.filter(p => !p.pinned && p.id !== firstPage.id);
+    const pinnedPages = pages.filter(p => pinnedPageIds.includes(p.id) && p.id !== firstPage.id);
+    const unpinnedPages = pages.filter(p => !pinnedPageIds.includes(p.id) && p.id !== firstPage.id);
 
+    console.log("pinned page ids in flexible editor layout", pinnedPageIds);
     return [
       firstPage.id,
       ...pinnedPages.map(p => p.id),
       ...unpinnedPages.map(p => p.id)
     ];
-  }, [currentPages]);
+  }, [currentPages, pinnedPageIds]);
 
   const [sortedPageIds, setSortedPageIds] = useState<string[]>(() => sortPages(openPageIds));
 
@@ -74,6 +73,7 @@ function FlexibleEditorLayout ({
 
   function renderEditorContainer(pageId: string, requestFocus: boolean) {
     const page = currentPages.find(p => p.id === pageId);
+    console.log("is this page pinned", pinnedPageIds.includes(pageId));
     if (!page) return null;
     return (
       <EditorContainer
@@ -85,7 +85,8 @@ function FlexibleEditorLayout ({
         closePage={closePage}
         openOrCreatePageByTitle={openOrCreatePageByTitle}
         deletePage={deletePage}
-        onPagePinToggle={handlePagePinToggle}
+        onPagePinToggle={onPagePinToggle}
+        isPinned={pinnedPageIds.includes(page.id)}
       />
     );
   }
