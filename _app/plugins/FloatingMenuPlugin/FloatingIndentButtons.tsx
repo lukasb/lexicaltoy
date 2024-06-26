@@ -76,8 +76,6 @@ const FloatingIndentButtons = forwardRef<HTMLDivElement, FloatingMenuProps>(({ e
             if (!$isRangeSelection(selection)) return;
             const listItem = $getActiveListItemFromSelection(selection);
 
-            console.log("selection", selection, listItem);
-
             setState({
               canIndent: $canIndent(selection),
               canOutdent: $canOutdent(selection),
@@ -96,11 +94,7 @@ const FloatingIndentButtons = forwardRef<HTMLDivElement, FloatingMenuProps>(({ e
         const selection = $getSelection();
         if (!$isRangeSelection(selection)) return;
         const listItem = $getActiveListItemFromSelection(selection);
-        if (listItem === null) {
-          console.log("no list item");
-          return;
-        }
-        console.log("dispatching outdent command");
+        if (listItem === null) return;
         editor.dispatchCommand(OUTDENT_LISTITEM_COMMAND, {listItem});
       });
     }, [editor]);
