@@ -30,7 +30,7 @@ function FlexibleEditorLayout ({
   useBreakpoint(1537, isSmallWidthViewport, setIsSmallWidthViewport);
 
   const sortPages = (pageIds: string[]): string[] => {
-    const pages = currentPages.filter(p => pageIds.includes(p.id));
+    const pages = pageIds.map(id => currentPages.find(p => p.id === id)).filter(p => p !== undefined) as Page[];
     const firstPage = pages[0];
     const pinnedPages = pages.filter(p => p.pinned && p.id !== firstPage.id);
     const unpinnedPages = pages.filter(p => !p.pinned && p.id !== firstPage.id);
