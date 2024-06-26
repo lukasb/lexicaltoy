@@ -2,13 +2,13 @@
 
 import Editor from "./editor";
 import EditablePageTitle from "./pageTitle";
-import { Button } from "../ui/button";
 import { useState, useEffect } from "react";
 import { Page } from "@/lib/definitions";
 import { isTouchDevice } from "@/lib/window-helpers";
 import NoSSRWrapper from "./NoSSRWrapper";
 import { MoreVertical } from "lucide-react";
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { togglePagePin } from "@/lib/pages-helpers";
 
 function EditorContainer({
   page,
@@ -71,6 +71,12 @@ function EditorContainer({
                     align="end"
                     sideOffset={5}
                   >
+                    <DropdownMenu.Item
+                        className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"
+                        onClick={() => togglePagePin(page)}
+                      >
+                        {page.pinned ? "Unpin" : "Pin"}
+                      </DropdownMenu.Item>
                     {!page.isJournal && (
                       <DropdownMenu.Item
                         className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"

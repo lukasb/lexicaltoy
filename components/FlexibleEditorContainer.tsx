@@ -29,20 +29,35 @@ function FlexibleEditorLayout ({
 
   useBreakpoint(1537, isSmallWidthViewport, setIsSmallWidthViewport);
 
+  const sortPages = (pageIds: string[]): string[] => {
+    const pages = currentPages.filter(p => pageIds.includes(p.id));
+    const firstPage = pages[0];
+    const pinnedPages = pages.filter(p => p.pinned && p.id !== firstPage.id);
+    const unpinnedPages = pages.filter(p => !p.pinned && p.id !== firstPage.id);
+
+    return [
+      firstPage.id,
+      ...pinnedPages.map(p => p.id),
+      ...unpinnedPages.map(p => p.id)
+    ];
+  };
+
+  const sortedPageIds = sortPages(openPageIds);
+
   if (isSmallWidthViewport) {
     return (
       <div className="grid grid-cols-1 gap-4">
-        {openPageIds.map((pageId, index) => renderEditorContainer(pageId, index === 0))}
+        {sortedPageIds.map((pageId, index) => renderEditorContainer(pageId, index === 0))}
       </div>
     );
   } else {
     return (
       <div className="flex gap-4 w-full">
         <div className="column flex flex-col w-1/2">
-          {openPageIds.filter((_, index) => index % 2 === 0).map((pageId, index) => renderEditorContainer(pageId, index === 0))}
+          {sortedPageIds.filter((_, index) => index % 2 === 0).map((pageId, index) => renderEditorContainer(pageId, index === 0))}
         </div>
         <div className="column flex flex-col w-1/2">
-          {openPageIds.filter((_, index) => index % 2 !== 0).map((pageId) => renderEditorContainer(pageId, false))}
+          {sortedPageIds.filter((_, index) => index % 2 !== 0).map((pageId) => renderEditorContainer(pageId, false))}
         </div>
       </div>
     );

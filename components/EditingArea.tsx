@@ -21,6 +21,7 @@ import FlexibleEditorLayout from "./FlexibleEditorContainer";
 import PagesManager from "../lib/PagesManager";
 import { SharedNodeProvider } from "../_app/context/shared-node-context";
 import { ActiveEditorProvider } from "@/_app/context/active-editor-context";
+import { deserializePagePins } from "@/lib/pages-helpers";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -47,8 +48,9 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const fetchAndSetPages = useCallback(async () => {
     const pages = await fetchPagesRemote(userId);
     if (!pages) return []; // TODO something better here
-    setCurrentPages(pages);
-    return pages;
+    const pagesWithPins = deserializePagePins(pages);
+    setCurrentPages(pagesWithPins);
+    return pagesWithPins;
   }, [userId, setCurrentPages]);
 
   const executeJournalLogic = useCallback(async () => {
