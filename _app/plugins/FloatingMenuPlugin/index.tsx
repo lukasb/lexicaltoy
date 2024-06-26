@@ -1,8 +1,9 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { $getSelection, LexicalEditor } from 'lexical';
+import { $getSelection, COMMAND_PRIORITY_NORMAL, LexicalEditor, BLUR_COMMAND } from 'lexical';
 import { BaseSelection } from "lexical";
+import { mergeRegister } from '@lexical/utils';
 
 export type FloatingMenuCoords = { x: number; y: number } | undefined;
 
@@ -78,12 +79,20 @@ export function FloatingMenuPlugin({
   }, [editor, menuConfig, updateMenu]);
 
   useEffect(() => {
-    const unregisterListener = editor.registerUpdateListener(
-      ({ editorState }) => {
-        editorState.read(() => $handleEditorUpdate());
-      }
+    return mergeRegister(
+      editor.registerUpdateListener(
+        ({ editorState }) => {
+          editorState.read(() => $handleEditorUpdate());
+      }),
+      editor.registerCommand(
+        BLUR_COMMAND, 
+        () => {
+          $handleEditorUpdate();
+          return false;
+        },
+        COMMAND_PRIORITY_NORMAL
+      )
     );
-    return unregisterListener;
   }, [editor, $handleEditorUpdate]);
 
   return createPortal(
