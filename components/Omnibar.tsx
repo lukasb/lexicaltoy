@@ -267,7 +267,7 @@ const Omnibar = forwardRef(({
                 data-testid="search-result"
               >
                 <div className="flex items-center">
-                  <div className="flex-shrink-0 whitespace-nowrap overflow-hidden text-ellipsis mr-2">
+                  <div className="flex-shrink-0 whitespace-nowrap overflow-hidden text-ellipsis mr-2 flex items-center">
                     {result.title === todayJournalTitle ? (
                       <span className="font-medium">{result.title}</span>
                     ) : (
