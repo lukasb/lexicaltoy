@@ -28,6 +28,7 @@ function EditorContainer({
   deletePage: (id: string, oldRevisionNumber: number) => void;
 }) {
   const [showDebug, setShowDebug] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const touchDevice = isTouchDevice();
 
@@ -51,42 +52,42 @@ function EditorContainer({
               isJournal={page.isJournal}
               updatePageTitleLocal={updatePageTitleLocal}
             />
-            <div
-              className={`flex ${
-                touchDevice
-                  ? "opacity-100"
-                  : "opacity-0 group-hover:opacity-100"
-              }`}
-            >
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <button className="p-1 rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                  <MoreVertical className="h-5 w-5 text-gray-300" />
-                </button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content
-                  className="min-w-[200px] bg-gray-800 rounded-md py-2 px-1 shadow-md"
-                  align="end"
-                  sideOffset={5}
-                >
-                  {!page.isJournal && (
+            <div className="flex">
+              <DropdownMenu.Root onOpenChange={setIsMenuOpen}>
+                <DropdownMenu.Trigger asChild>
+                  <button
+                    className={`p-1 rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+                      touchDevice || isMenuOpen
+                        ? "opacity-100"
+                        : "opacity-0 group-hover:opacity-100"
+                    }`}
+                  >
+                    <MoreVertical className="h-5 w-5 text-gray-300" />
+                  </button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content
+                    className="min-w-[200px] bg-gray-800 rounded-md py-2 px-1 shadow-md"
+                    align="end"
+                    sideOffset={5}
+                  >
+                    {!page.isJournal && (
+                      <DropdownMenu.Item
+                        className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"
+                        onClick={() => deletePage(page.id, page.revisionNumber)}
+                      >
+                        Delete
+                      </DropdownMenu.Item>
+                    )}
                     <DropdownMenu.Item
                       className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"
-                      onClick={() => deletePage(page.id, page.revisionNumber)}
+                      onClick={() => setShowDebug(!showDebug)}
                     >
-                      Delete
+                      {showDebug ? "Hide Debug" : "Show Debug"}
                     </DropdownMenu.Item>
-                  )}
-                  <DropdownMenu.Item
-                    className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"
-                    onClick={() => setShowDebug(!showDebug)}
-                  >
-                    {showDebug ? "Hide Debug" : "Show Debug"}
-                  </DropdownMenu.Item>
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
             </div>
           </div>
         </div>
