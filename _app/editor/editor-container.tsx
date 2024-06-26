@@ -7,6 +7,8 @@ import { useState, useEffect } from "react";
 import { Page } from "@/lib/definitions";
 import { isTouchDevice } from "@/lib/window-helpers";
 import NoSSRWrapper from "./NoSSRWrapper";
+import { MoreVertical } from "lucide-react";
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 function EditorContainer({
   page,
@@ -56,29 +58,47 @@ function EditorContainer({
                   : "opacity-0 group-hover:opacity-100"
               }`}
             >
-              {!page.isJournal && (
-                <Button
-                  className="mx-1"
-                  onClick={() => deletePage(page.id, page.revisionNumber)}
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button className="p-1 rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                  <MoreVertical className="h-5 w-5 text-gray-300" />
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  className="min-w-[200px] bg-gray-800 rounded-md py-2 px-1 shadow-md"
+                  align="end"
+                  sideOffset={5}
                 >
-                  Del
-                </Button>
-              )}
-              <Button onClick={() => setShowDebug(!showDebug)}>
-                {showDebug ? "-d🐞" : "+d🐞"}
-              </Button>
+                  {!page.isJournal && (
+                    <DropdownMenu.Item
+                      className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"
+                      onClick={() => deletePage(page.id, page.revisionNumber)}
+                    >
+                      Delete
+                    </DropdownMenu.Item>
+                  )}
+                  <DropdownMenu.Item
+                    className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"
+                    onClick={() => setShowDebug(!showDebug)}
+                  >
+                    {showDebug ? "Hide Debug" : "Show Debug"}
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
             </div>
           </div>
         </div>
         <NoSSRWrapper>
           <div className="pl-7 mt-4">
-          <Editor
-            page={page}
-            showDebugInfo={showDebug}
-            updatePageContentsLocal={updatePageContentsLocal}
-            openOrCreatePageByTitle={openOrCreatePageByTitle}
-            requestFocus={requestFocus}
-          />
+            <Editor
+              page={page}
+              showDebugInfo={showDebug}
+              updatePageContentsLocal={updatePageContentsLocal}
+              openOrCreatePageByTitle={openOrCreatePageByTitle}
+              requestFocus={requestFocus}
+            />
           </div>
         </NoSSRWrapper>
       </div>
