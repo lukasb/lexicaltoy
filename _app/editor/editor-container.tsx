@@ -9,7 +9,7 @@ import NoSSRWrapper from "./NoSSRWrapper";
 import { MoreVertical } from "lucide-react";
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { togglePagePin } from "@/lib/pages-helpers";
-import Image from "next/image";
+import { Pin } from 'lucide-react';
 
 function EditorContainer({
   page,
@@ -56,15 +56,22 @@ function EditorContainer({
               updatePageTitleLocal={updatePageTitleLocal}
             />
             <div className="flex items-center">
-              {page.pinned && (
-                <Image
-                  src="/images/icons/pinicon.png"
-                  alt="Pinned"
-                  width={16}
-                  height={16}
-                  className={`mr-2`}
+              <button
+                onClick={() => {
+                  const updatedPage = togglePagePin(page);
+                  onPagePinToggle(updatedPage);
+                }}
+                className={`p-1 rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 ${
+                  !page.pinned && !touchDevice
+                    ? "opacity-0 group-hover:opacity-100"
+                    : ""
+                }`}
+              >
+                <Pin
+                  className="h-5 w-5 text-gray-300"
+                  fill={page.pinned ? "currentColor" : "none"}
                 />
-              )}
+              </button>
               <DropdownMenu.Root onOpenChange={setIsMenuOpen}>
                 <DropdownMenu.Trigger asChild>
                   <button
@@ -83,15 +90,6 @@ function EditorContainer({
                     align="end"
                     sideOffset={5}
                   >
-                    <DropdownMenu.Item
-                        className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"
-                        onClick={() => {
-                          const updatedPage = togglePagePin(page);
-                          onPagePinToggle(updatedPage);
-                        }}
-                      >
-                        {page.pinned ? "Unpin" : "Pin"}
-                      </DropdownMenu.Item>
                     {!page.isJournal && (
                       <DropdownMenu.Item
                         className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"
