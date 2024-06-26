@@ -272,7 +272,9 @@ const Omnibar = forwardRef(({
                   result.title
                 )}
                 {result.isJournal && (
-                  <span className="text-gray-400 ml-2">journal</span>
+                  <span className="inline-flex items-center justify-center w-5 h-5 ml-2 bg-indigo-300 text-white text-xs font-bold rounded">
+                  J
+                </span>
                 )}
               </li>
             ))}
