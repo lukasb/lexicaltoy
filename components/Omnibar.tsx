@@ -266,6 +266,8 @@ const Omnibar = forwardRef(({
                 onClick={() => handleSearchResultsClick(result)}
                 data-testid="search-result"
               >
+                <div className="flex items-center">
+                <div className="flex-shrink-0 whitespace-nowrap overflow-hidden text-ellipsis mr-2">
                 {result.title === todayJournalTitle ? (
                   <span className="font-medium">{result.title}</span>
                 ) : (
@@ -276,6 +278,9 @@ const Omnibar = forwardRef(({
                   J
                 </span>
                 )}
+                </div>
+                <span className="text-gray-400 ml-2 truncate">{result.value}</span>
+                </div>
               </li>
             ))}
             {showCreatePageOption && (
