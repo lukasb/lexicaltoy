@@ -86,20 +86,20 @@ function EditorContainer({
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content
-                    className="min-w-[200px] bg-gray-800 rounded-md py-2 px-1 shadow-md"
+                    className="min-w-[200px] bg-gray-800 rounded-md overflow-hidden shadow-md z-40"
                     align="end"
                     sideOffset={5}
                   >
                     {!page.isJournal && (
                       <DropdownMenu.Item
-                        className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"
+                        className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
                         onClick={() => deletePage(page.id, page.revisionNumber)}
                       >
                         Delete
                       </DropdownMenu.Item>
                     )}
                     <DropdownMenu.Item
-                      className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"
+                      className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
                       onClick={() => setShowDebug(!showDebug)}
                     >
                       {showDebug ? "Hide Debug" : "Show Debug"}
