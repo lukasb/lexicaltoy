@@ -9,7 +9,7 @@ import NoSSRWrapper from "./NoSSRWrapper";
 import { MoreVertical } from "lucide-react";
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { togglePagePin } from "@/lib/pages-helpers";
-import Image from 'next/image';
+import Image from "next/image";
 
 function EditorContainer({
   page,
@@ -60,9 +60,7 @@ function EditorContainer({
                   alt="Pinned"
                   width={16}
                   height={16}
-                  className={`mr-2 ${
-                    touchDevice ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                  }`}
+                  className={`mr-2`}
                 />
               )}
               <DropdownMenu.Root onOpenChange={setIsMenuOpen}>
