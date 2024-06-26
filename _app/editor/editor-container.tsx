@@ -19,6 +19,7 @@ function EditorContainer({
   closePage,
   openOrCreatePageByTitle,
   deletePage,
+  onPagePinToggle,
 }: {
   page: Page;
   requestFocus: boolean;
@@ -27,6 +28,7 @@ function EditorContainer({
   closePage: (id: string) => void;
   openOrCreatePageByTitle: (title: string) => void;
   deletePage: (id: string, oldRevisionNumber: number) => void;
+  onPagePinToggle: (updatedPage: Page) => void;
 }) {
   const [showDebug, setShowDebug] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -83,7 +85,10 @@ function EditorContainer({
                   >
                     <DropdownMenu.Item
                         className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700 rounded"
-                        onClick={() => togglePagePin(page)}
+                        onClick={() => {
+                          const updatedPage = togglePagePin(page);
+                          onPagePinToggle(updatedPage);
+                        }}
                       >
                         {page.pinned ? "Unpin" : "Pin"}
                       </DropdownMenu.Item>

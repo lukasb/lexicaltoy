@@ -1,7 +1,7 @@
 "use client";
 
-import React from 'react';
-import { useState } from 'react';
+import React, { useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useBreakpoint } from '@/lib/window-helpers';
 import EditorContainer from '@/_app/editor/editor-container';
 import { Page } from '@/lib/definitions';
@@ -24,12 +24,17 @@ function FlexibleEditorLayout ({
   deletePage: (id: string) => void;
 }) {
 
-  const [isSmallWidthViewport, setIsSmallWidthViewport] =
-  useState<boolean>(false);
+  const [isSmallWidthViewport, setIsSmallWidthViewport] = useState<boolean>(false);
 
   useBreakpoint(1537, isSmallWidthViewport, setIsSmallWidthViewport);
 
-  const sortPages = (pageIds: string[]): string[] => {
+  const handlePagePinToggle = (updatedPage: Page) => {
+    const updatedPages = currentPages.map(p => p.id === updatedPage.id ? updatedPage : p);
+    const newSortedPageIds = sortPages(sortedPageIds);
+    setSortedPageIds(newSortedPageIds);
+  };
+
+  const sortPages = useCallback((pageIds: string[]): string[] => {
     const pages = pageIds.map(id => currentPages.find(p => p.id === id)).filter(p => p !== undefined) as Page[];
     const firstPage = pages[0];
     const pinnedPages = pages.filter(p => p.pinned && p.id !== firstPage.id);
@@ -40,9 +45,13 @@ function FlexibleEditorLayout ({
       ...pinnedPages.map(p => p.id),
       ...unpinnedPages.map(p => p.id)
     ];
-  };
+  }, [currentPages]);
 
-  const sortedPageIds = sortPages(openPageIds);
+  const [sortedPageIds, setSortedPageIds] = useState<string[]>(() => sortPages(openPageIds));
+
+  useEffect(() => {
+    setSortedPageIds(sortPages(openPageIds));
+  }, [openPageIds, currentPages, sortPages]);
 
   if (isSmallWidthViewport) {
     return (
@@ -76,6 +85,7 @@ function FlexibleEditorLayout ({
         closePage={closePage}
         openOrCreatePageByTitle={openOrCreatePageByTitle}
         deletePage={deletePage}
+        onPagePinToggle={handlePagePinToggle}
       />
     );
   }

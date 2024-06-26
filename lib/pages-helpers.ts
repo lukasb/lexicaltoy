@@ -122,7 +122,8 @@ export function serializePagePin(page: Page): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(pinnedState));
 }
 
-export function togglePagePin(page: Page): void {
+export function togglePagePin(page: Page): Page {
   page.pinned = !page.pinned;
   serializePagePin(page);
+  return page;
 }
