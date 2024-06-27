@@ -2,7 +2,7 @@
 
 import Editor from "./editor";
 import EditablePageTitle from "./pageTitle";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Page } from "@/lib/definitions";
 import { isTouchDevice } from "@/lib/window-helpers";
 import NoSSRWrapper from "./NoSSRWrapper";
@@ -34,11 +34,37 @@ function EditorContainer({
   const [showDebug, setShowDebug] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [localIsPinned, setLocalIsPinned] = useState(isPinned);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const titleRef = useRef<HTMLDivElement>(null);
   const touchDevice = isTouchDevice();
 
   useEffect(() => {
     setLocalIsPinned(isPinned);
   }, [isPinned]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      // Check if the viewport height has significantly decreased
+      if (window.innerHeight < window.outerHeight * 0.75) {
+        setIsKeyboardVisible(true);
+      } else {
+        setIsKeyboardVisible(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isKeyboardVisible && titleRef.current) {
+      titleRef.current.style.position = 'absolute';
+      titleRef.current.style.top = `${window.scrollY}px`;
+    } else if (titleRef.current) {
+      titleRef.current.style.position = 'sticky';
+      titleRef.current.style.top = '0';
+    }
+  }, [isKeyboardVisible]);
 
   const handlePinToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -58,7 +84,12 @@ function EditorContainer({
           ✖
         </button>
         <div className="h-5"></div>
-        <div className="sticky top-0 m-0 p-0 bg-bgBase/85 z-30 grid grid-rows-1 grid-cols-[21px_1fr] md:grid-cols-[28px_1fr] group items-center">
+        <div 
+          ref={titleRef}
+          className={`m-0 p-0 bg-bgBase/85 z-30 grid grid-rows-1 grid-cols-[21px_1fr] md:grid-cols-[28px_1fr] group items-center ${
+            isKeyboardVisible ? 'absolute' : 'sticky top-0'
+          }`}
+        >
           <div className="col-start-2 row-start-1 flex justify-between items-center">
             <EditablePageTitle
               initialTitle={page.title}
