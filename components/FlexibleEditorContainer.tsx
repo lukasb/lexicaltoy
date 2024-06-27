@@ -29,6 +29,7 @@ function FlexibleEditorLayout ({
 }) {
 
   const [isSmallWidthViewport, setIsSmallWidthViewport] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useBreakpoint(1537, isSmallWidthViewport, setIsSmallWidthViewport);
 
@@ -49,7 +50,12 @@ function FlexibleEditorLayout ({
 
   useEffect(() => {
     setSortedPageIds(sortPages(openPageIds));
+    setIsLoading(false);
   }, [openPageIds, currentPages, sortPages]);
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Or any loading indicator you prefer
+  }
 
   if (isSmallWidthViewport) {
     return (
