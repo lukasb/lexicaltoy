@@ -2,7 +2,7 @@
 
 import Editor from "./editor";
 import EditablePageTitle from "./pageTitle";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Page } from "@/lib/definitions";
 import { isTouchDevice } from "@/lib/window-helpers";
 import NoSSRWrapper from "./NoSSRWrapper";
@@ -34,53 +34,11 @@ function EditorContainer({
   const [showDebug, setShowDebug] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [localIsPinned, setLocalIsPinned] = useState(isPinned);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const titleRef = useRef<HTMLDivElement>(null);
   const touchDevice = isTouchDevice();
 
   useEffect(() => {
     setLocalIsPinned(isPinned);
   }, [isPinned]);
-
-  useEffect(() => {
-    const handleViewportChange = () => {
-      if (window.visualViewport) {
-        const viewportHeight = window.visualViewport.height;
-        const windowHeight = window.innerHeight;
-
-        // If the viewport height is significantly smaller than the window height,
-        // we assume the keyboard is visible
-        if (viewportHeight < windowHeight * 0.75) {
-          setIsKeyboardVisible(true);
-        } else {
-          setIsKeyboardVisible(false);
-        }
-      }
-    };
-
-    // Initial check
-    handleViewportChange();
-
-    // Add event listeners
-    window.visualViewport?.addEventListener('resize', handleViewportChange);
-    window.visualViewport?.addEventListener('scroll', handleViewportChange);
-
-    return () => {
-      // Remove event listeners on cleanup
-      window.visualViewport?.removeEventListener('resize', handleViewportChange);
-      window.visualViewport?.removeEventListener('scroll', handleViewportChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isKeyboardVisible && titleRef.current) {
-      titleRef.current.style.position = 'absolute';
-      titleRef.current.style.top = `${window.visualViewport?.pageTop || window.scrollY}px`;
-    } else if (titleRef.current) {
-      titleRef.current.style.position = 'sticky';
-      titleRef.current.style.top = '0';
-    }
-  }, [isKeyboardVisible]);
 
   const handlePinToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -100,12 +58,7 @@ function EditorContainer({
           ✖
         </button>
         <div className="h-5"></div>
-        <div 
-          ref={titleRef}
-          className={`m-0 p-0 bg-bgBase/85 z-30 grid grid-rows-1 grid-cols-[21px_1fr] md:grid-cols-[28px_1fr] group items-center ${
-            isKeyboardVisible ? 'absolute' : 'sticky top-0'
-          }`}
-        >
+        <div className="sticky top-0 m-0 p-0 bg-bgBase/85 z-30 grid grid-rows-1 grid-cols-[21px_1fr] md:grid-cols-[28px_1fr] group items-center">
           <div className="col-start-2 row-start-1 flex justify-between items-center">
             <EditablePageTitle
               initialTitle={page.title}
@@ -149,7 +102,7 @@ function EditorContainer({
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content
-                    className="min-w-[250px] bg-gray-800 rounded-md overflow-hidden shadow-md z-40"
+                    className="min-w-[200px] bg-gray-800 rounded-md overflow-hidden shadow-md z-40"
                     align="end"
                     sideOffset={5}
                   >
@@ -181,7 +134,7 @@ function EditorContainer({
               updatePageContentsLocal={updatePageContentsLocal}
               openOrCreatePageByTitle={openOrCreatePageByTitle}
               requestFocus={requestFocus}
-              closePage={closePage}
+              closePage={closePage}  // Added this line
             />
           </div>
         </NoSSRWrapper>
