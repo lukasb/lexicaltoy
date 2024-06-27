@@ -54,10 +54,10 @@ function EditorContainer({
         <div className="h-5"></div>
         <div className="sticky top-0 m-0 p-0 bg-bgBase/85 z-30 grid grid-rows-1 grid-cols-[28px_1fr] group items-center">
           <button
-            className="col-start-1 row-start-1 text-lg text-indigo-600 md:opacity-0 md:group-hover:opacity-100 self-start"
+            className="col-start-1 row-start-1 text-base text-indigo-600 md:opacity-0 md:group-hover:opacity-100 self-start p-0.5 rounded hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
             onClick={() => closePage(page.id)}
           >
-            x
+            ✖
           </button>
 
           <div className="col-start-2 row-start-1 flex justify-between items-center">
@@ -146,3 +146,5 @@ function EditorContainer({
 
 */
 export default EditorContainer;
+
+
