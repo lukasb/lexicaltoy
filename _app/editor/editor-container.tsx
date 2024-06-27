@@ -43,23 +43,39 @@ function EditorContainer({
   }, [isPinned]);
 
   useEffect(() => {
-    const handleResize = () => {
-      // Check if the viewport height has significantly decreased
-      if (window.innerHeight < window.outerHeight * 0.75) {
-        setIsKeyboardVisible(true);
-      } else {
-        setIsKeyboardVisible(false);
+    const handleViewportChange = () => {
+      if (window.visualViewport) {
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+
+        // If the viewport height is significantly smaller than the window height,
+        // we assume the keyboard is visible
+        if (viewportHeight < windowHeight * 0.75) {
+          setIsKeyboardVisible(true);
+        } else {
+          setIsKeyboardVisible(false);
+        }
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    // Initial check
+    handleViewportChange();
+
+    // Add event listeners
+    window.visualViewport?.addEventListener('resize', handleViewportChange);
+    window.visualViewport?.addEventListener('scroll', handleViewportChange);
+
+    return () => {
+      // Remove event listeners on cleanup
+      window.visualViewport?.removeEventListener('resize', handleViewportChange);
+      window.visualViewport?.removeEventListener('scroll', handleViewportChange);
+    };
   }, []);
 
   useEffect(() => {
     if (isKeyboardVisible && titleRef.current) {
       titleRef.current.style.position = 'absolute';
-      titleRef.current.style.top = `${window.scrollY}px`;
+      titleRef.current.style.top = `${window.visualViewport?.pageTop || window.scrollY}px`;
     } else if (titleRef.current) {
       titleRef.current.style.position = 'sticky';
       titleRef.current.style.top = '0';
@@ -133,7 +149,7 @@ function EditorContainer({
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content
-                    className="min-w-[200px] bg-gray-800 rounded-md overflow-hidden shadow-md z-40"
+                    className="min-w-[250px] bg-gray-800 rounded-md overflow-hidden shadow-md z-40"
                     align="end"
                     sideOffset={5}
                   >
@@ -165,7 +181,7 @@ function EditorContainer({
               updatePageContentsLocal={updatePageContentsLocal}
               openOrCreatePageByTitle={openOrCreatePageByTitle}
               requestFocus={requestFocus}
-              closePage={closePage}  // Added this line
+              closePage={closePage}
             />
           </div>
         </NoSSRWrapper>
