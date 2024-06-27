@@ -55,19 +55,23 @@ function onError(error: Error) {
   console.error("Editor error:", error);
 }
 
+type EditorProps = {
+  page: Page;
+  showDebugInfo: boolean;
+  requestFocus: boolean;
+  updatePageContentsLocal: (id: string, newValue: string, revisionNumber: number) => void;
+  openOrCreatePageByTitle: (title: string) => void;
+  closePage: (id: string) => void;
+};
+
 function Editor({
   page,
   showDebugInfo,
   requestFocus,
   updatePageContentsLocal,
   openOrCreatePageByTitle,
-}: {
-  page: Page;
-  showDebugInfo: boolean;
-  requestFocus: boolean;
-  updatePageContentsLocal: (id: string, newValue: string, revisionNumber: number) => void;
-  openOrCreatePageByTitle: (title: string) => void;
-}) {
+  closePage,
+}: EditorProps) {
 
   const initialConfig = {
     editorState: () => $myConvertFromMarkdownString(page.value, false),
@@ -155,7 +159,7 @@ function Editor({
         <OnChangePlugin onChange={onChange} ignoreSelectionChange={true} />
         <PageListenerPlugin pageId={page.id} />
         <MarkdownShortcutPlugin transformers={[UNORDERED_LIST]} />
-        <KeyboardShortcutsPlugin />
+        <KeyboardShortcutsPlugin closePage={() => closePage(page.id)} />
         <ListCommandsPlugin />
         <HistoryPlugin />
         <AutoLinkPlugin />

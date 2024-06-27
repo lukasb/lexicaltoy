@@ -49,7 +49,20 @@ function isFirst(node: ElementNode): boolean {
   return isFirst(parent);
 }
 
-export function registerKeyboardShortcuts(editor: LexicalEditor) {
+type KeyboardShortcutsPluginProps = {
+  closePage: () => void;
+};
+
+export function KeyboardShortcutsPlugin({ closePage }: KeyboardShortcutsPluginProps): null {
+  const [editor] = useLexicalComposerContext();
+  useEffect(() => {
+    return registerKeyboardShortcuts(editor, closePage);
+  }, [editor, closePage]);
+
+  return null;
+}
+
+export function registerKeyboardShortcuts(editor: LexicalEditor, closePage: () => void) {
   return mergeRegister(
     editor.registerCommand<KeyboardEvent>(
       KEY_TAB_COMMAND,
@@ -75,7 +88,7 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
     editor.registerCommand<KeyboardEvent>(
       KEY_BACKSPACE_COMMAND,
       (event) => {
-        if (!event.ctrlKey) return false;
+        if (!event.ctrlKey || event.metaKey) return false;
         const selection = $getSelection();
         const listItem = $getActiveListItemFromSelection(selection);
         const fixSelection = true;
@@ -105,6 +118,11 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
           );
           return true;
         }
+        if (event.metaKey && !event.ctrlKey && event.key == "u") {
+          event.preventDefault();
+          closePage();
+          return true;
+        }
         return false;
       },
       COMMAND_PRIORITY_NORMAL
@@ -125,15 +143,6 @@ export function registerKeyboardShortcuts(editor: LexicalEditor) {
         return false;
       },
       COMMAND_PRIORITY_NORMAL
-    )
+    ),
   );
-}
-
-export function KeyboardShortcutsPlugin(): null {
-  const [editor] = useLexicalComposerContext();
-  useEffect(() => {
-    return registerKeyboardShortcuts(editor);
-  });
-
-  return null;
 }

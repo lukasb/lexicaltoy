@@ -38,7 +38,6 @@ function FlexibleEditorLayout ({
     const pinnedPages = pages.filter(p => pinnedPageIds.includes(p.id) && p.id !== firstPage.id);
     const unpinnedPages = pages.filter(p => !pinnedPageIds.includes(p.id) && p.id !== firstPage.id);
 
-    console.log("pinned page ids in flexible editor layout", pinnedPageIds);
     return [
       firstPage.id,
       ...pinnedPages.map(p => p.id),

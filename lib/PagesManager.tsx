@@ -109,7 +109,6 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
       for (const [pageName, updatedPage] of pagesToUpdate.entries()) {
         const page = pages.find((p) => p.title === pageName);
         if (page) {
-          console.log("Updating page", page.title);
           setPages((prevPages) =>
             prevPages.map((p) =>
               p.id === page.id ? { ...p, value: updatedPage, status: PageStatus.EditFromSharedNodes } : p
@@ -121,7 +120,6 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
     for (const page of pages) {
       if (!pagesToUpdate.has(page.title)) {
         if (page.status === PageStatus.UserEdit || page.status === PageStatus.EditFromSharedNodes) {
-          console.log("Setting page to pending write", page.title);
           setPages((prevPages) =>
             prevPages.map((p) =>
               p.id === page.id ? { ...p, status: PageStatus.PendingWrite } : p

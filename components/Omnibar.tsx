@@ -195,7 +195,9 @@ const Omnibar = forwardRef(({
         resetSelf();
       }
       event.preventDefault();
-    } else if (event.key === "Backspace" || event.key === "Delete") {
+    } else if (
+      (event.key === "Backspace" && !event.metaKey) || 
+      event.key === "Delete") {
       skipTermResolutionRef.current = true;
       setSelectedIndex(-1);
     } else if (event.key === "Escape") {

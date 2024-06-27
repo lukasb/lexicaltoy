@@ -134,6 +134,7 @@ function EditorContainer({
               updatePageContentsLocal={updatePageContentsLocal}
               openOrCreatePageByTitle={openOrCreatePageByTitle}
               requestFocus={requestFocus}
+              closePage={closePage}  // Added this line
             />
           </div>
         </NoSSRWrapper>
@@ -145,5 +146,3 @@ function EditorContainer({
 
 */
 export default EditorContainer;
-
-
