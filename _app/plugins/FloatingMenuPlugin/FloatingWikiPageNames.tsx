@@ -76,8 +76,12 @@ export function computeFloatingWikiPageNamesPosition(
   const position = computeFloatingWikiPageNamesPositionInternal(editor);
   if (!position) return { x: 0, y: 0 };
   const {cursorLeft, cursorTop, rootX, rootY} = position;
+  let newX = cursorLeft - rootX;
+  if (newX + 250 > window.innerWidth) {
+    newX = window.innerWidth - 250;
+  }
   return {
-    x: cursorLeft - rootX,
+    x: newX,
     y: cursorTop - rootY + editorLineHeight
   };
 }
@@ -265,6 +269,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
           left: position.left ? position.left: coords?.x,
           visibility: shouldShow ? "visible" : "hidden",
           opacity: shouldShow ? 1 : 0,
+          minWidth: "250px"
         }}
       >
         <ul className="max-h-[200px] md:max-h-[400px] overflow-auto">
