@@ -51,15 +51,14 @@ function EditorContainer({
   return (
     <div className="flex flex-col items-start mb-4">
       <div className="relative border-solid border-4 border-indigo-300 rounded-lg m-0 pt-2 pr-7 pb-7 pl-0 w-full max-w-7xl">
+        <button
+          className="absolute top-2 left-2 text-base text-indigo-600 p-0.5 px-1 rounded md:opacity-0 md:hover:opacity-100 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 z-40"
+          onClick={() => closePage(page.id)}
+        >
+          ✖
+        </button>
         <div className="h-5"></div>
         <div className="sticky top-0 m-0 p-0 bg-bgBase/85 z-30 grid grid-rows-1 grid-cols-[28px_1fr] group items-center">
-          <button
-            className="col-start-1 row-start-1 text-base text-indigo-600 md:opacity-0 md:group-hover:opacity-100 self-start p-0.5 rounded hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
-            onClick={() => closePage(page.id)}
-          >
-            ✖
-          </button>
-
           <div className="col-start-2 row-start-1 flex justify-between items-center">
             <EditablePageTitle
               initialTitle={page.title}
