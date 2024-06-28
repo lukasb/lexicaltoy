@@ -4,7 +4,6 @@ import { createPortal } from "react-dom";
 import { $getSelection, BLUR_COMMAND, COMMAND_PRIORITY_NORMAL, FOCUS_COMMAND, LexicalEditor } from 'lexical';
 import { BaseSelection } from "lexical";
 import { mergeRegister } from '@lexical/utils';
-import { useActiveEditorContext } from "@/_app/context/active-editor-context";
 
 export type FloatingMenuCoords = { x: number; y: number } | undefined;
 
@@ -33,7 +32,6 @@ export function FloatingMenuPlugin({
   const [coords, setCoords] = useState<FloatingMenuCoords>(undefined);
   const [visibleMenu, setVisibleMenu] = useState<FloatingMenuConfig | null>(null);
   const [editor] = useLexicalComposerContext();
-  const {activeEditorKey, setActiveEditorKey} = useActiveEditorContext();
 
   const updateMenu = useCallback( async (selection: BaseSelection, menu: FloatingMenuConfig | null) => {
     if (!selection || (!menu?.computePosition && !menu?.computePositionAsync)) return setCoords(undefined);
@@ -90,21 +88,24 @@ export function FloatingMenuPlugin({
       editor.registerCommand(
         FOCUS_COMMAND,
         () => {
-          setActiveEditorKey(editor._key);
           $handleEditorUpdate();
           return false;  
         },
         COMMAND_PRIORITY_NORMAL
+      ),
+      editor.registerCommand(
+        BLUR_COMMAND,
+        (event) => {
+          if (event.relatedTarget instanceof HTMLElement && !event.relatedTarget.classList.contains("floatingui")) {
+            setCoords(undefined);
+            setVisibleMenu(null);
+          }
+          return false;
+        },
+        COMMAND_PRIORITY_NORMAL
       )
     );
-  }, [editor, $handleEditorUpdate, setActiveEditorKey, activeEditorKey]);
-
-  useEffect(() => {
-    if (activeEditorKey !== editor._key) {
-      setCoords(undefined);
-      setVisibleMenu(null);
-    }
-  }, [activeEditorKey, editor._key, setCoords, setVisibleMenu]);
+  }, [editor, $handleEditorUpdate]);
 
   return createPortal(
     visibleMenu ? (

@@ -20,7 +20,6 @@ import { fetchPagesRemote } from "@/lib/db";
 import FlexibleEditorLayout from "./FlexibleEditorContainer";
 import PagesManager from "../lib/PagesManager";
 import { SharedNodeProvider } from "../_app/context/shared-node-context";
-import { ActiveEditorProvider } from "@/_app/context/active-editor-context";
 import { getPinnedPageIds, togglePagePin } from "@/lib/pages-helpers";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
@@ -176,7 +175,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <PagesContext.Provider value={currentPages}>
-        <ActiveEditorProvider>
         <SharedNodeProvider>
         <PagesManager setPages={setCurrentPages} />
         <Omnibar
@@ -231,7 +229,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
             />
           )}
           </SharedNodeProvider>
-        </ActiveEditorProvider>
       </PagesContext.Provider>
     </div>
   )  
