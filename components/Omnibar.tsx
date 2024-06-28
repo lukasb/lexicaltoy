@@ -200,7 +200,9 @@ const Omnibar = forwardRef(({
       event.key === "Delete") {
       skipTermResolutionRef.current = true;
       setSelectedIndex(-1);
-    } else if (event.key === "Escape" || event.code === "Escape") {
+    } else if (event.key === "Escape") {
+      // tried also checking event.code === "Escape" to recognize
+      // remapped keys but no dice, at least on iPad
       resetSelf();
     } else if (event.metaKey && event.key === "k") {
       event.preventDefault();
