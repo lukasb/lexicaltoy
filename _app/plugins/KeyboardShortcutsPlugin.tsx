@@ -30,7 +30,7 @@ import {
   PREPEND_NEW_CHILD_COMMAND,
 } from "@/lib/list-commands";
 import { ListItemNode } from "@lexical/list";
-import { $isAutoLinkNode, AutoLinkNode } from '@lexical/link';
+import { $isAutoLinkNode, AutoLinkNode, LinkNode } from '@lexical/link';
 import { $getNearestNodeOfType } from '@lexical/utils';
 
 function isLast(node: ElementNode): boolean {
@@ -134,6 +134,20 @@ export function registerKeyboardShortcuts(editor: LexicalEditor, closePage: () =
       (event) => {
         const selection = $getSelection();
         if (!$isRangeSelection(selection) || !selection.isCollapsed()) return false;
+
+        if (event.metaKey) {
+
+          const node = selection.getNodes()[0];
+          let linkNode = $getNearestNodeOfType(node, AutoLinkNode);
+          if (!linkNode) linkNode = $getNearestNodeOfType(node, LinkNode);
+
+          if (linkNode) {
+            event.preventDefault();
+            window.open(linkNode.getURL(), '_blank');
+            return true;
+          }
+        }
+
         const listItem = $getActiveListItemFromSelection(selection);
         if (!listItem) return false;
         // if we're hitting enter at the end of a node that has children, prepend a new child node

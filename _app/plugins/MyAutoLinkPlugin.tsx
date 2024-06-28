@@ -24,12 +24,12 @@ import {
   $isNodeSelection,
   $isRangeSelection,
   $isTextNode,
+  COMMAND_PRIORITY_HIGH,
   COMMAND_PRIORITY_NORMAL,
   KEY_ENTER_COMMAND,
 } from 'lexical';
 import {useEffect} from 'react';
 import { FormattableTextNode, $createFormattableTextNode } from '../nodes/FormattableTextNode';
-import { $getNearestNodeOfType } from '@lexical/utils';
 
 function invariant(
   cond?: boolean,
@@ -471,25 +471,7 @@ function useAutoLink(
 
           handleBadNeighbors(textNode, matchers, onChangeWrapped);
         }
-      }),
-      editor.registerCommand<KeyboardEvent>(
-        KEY_ENTER_COMMAND,
-        (event) => {
-          if (event.metaKey) {
-            const selection = $getSelection();
-            if (!$isRangeSelection(selection) || !selection.isCollapsed()) return false;
-            const node = selection.getNodes()[0];
-            const linkNode = $getNearestNodeOfType(node, AutoLinkNode);
-            if (linkNode) {
-              event.preventDefault();
-              window.open(linkNode.getURL(), '_blank');
-              return true;
-            }
-          }
-          return false;
-        },
-        COMMAND_PRIORITY_NORMAL
-      ),
+      })
     );
   }, [editor, matchers, onChange]);
 }
