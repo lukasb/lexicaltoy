@@ -200,7 +200,7 @@ const Omnibar = forwardRef(({
       event.key === "Delete") {
       skipTermResolutionRef.current = true;
       setSelectedIndex(-1);
-    } else if (event.key === "Escape") {
+    } else if (event.key === "Escape" || event.code === "Escape") {
       resetSelf();
     } else if (event.metaKey && event.key === "k") {
       event.preventDefault();
