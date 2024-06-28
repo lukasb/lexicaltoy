@@ -54,8 +54,8 @@ function EditorContainer({
 
   // TODO maybe render a headless editor on the server to enable server-side rendering?
   return (
-    <div className="flex flex-col items-start mb-4">
-      <div className="relative border-solid border-4 border-indigo-300 rounded-lg m-0 pt-2 pr-2.5 md:pr-7 pb-7 pl-0 w-full max-w-7xl">
+    <div className="flex flex-col items-start md:mb-4">
+      <div className="relative border-solid shadow-md md:shadow-none md:border-4 md:border-indigo-300 md:rounded-lg m-0 pt-2 pr-2.5 md:pr-7 pb-7 pl-0 w-full max-w-7xl">
         {!isMobile && (
           <button
             className="absolute top-2 left-2 text-base text-indigo-600 py-0 px-1 rounded md:opacity-0 md:hover:opacity-100 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 z-40"
