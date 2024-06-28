@@ -30,6 +30,8 @@ import {
   PREPEND_NEW_CHILD_COMMAND,
 } from "@/lib/list-commands";
 import { ListItemNode } from "@lexical/list";
+import { $isAutoLinkNode, AutoLinkNode } from '@lexical/link';
+import { $getNearestNodeOfType } from '@lexical/utils';
 
 function isLast(node: ElementNode): boolean {
   if (node.getNextSibling()) return false;
