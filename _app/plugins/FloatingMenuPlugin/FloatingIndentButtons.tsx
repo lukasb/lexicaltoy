@@ -125,7 +125,7 @@ const FloatingIndentButtons = forwardRef<HTMLDivElement, FloatingMenuProps>(({ e
       >
         <button
           aria-label="Outdent"
-          className="w-9 h-8 px-3 py-1 mr-2 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none floatingui"
+          className="w-9 h-8 px-3 py-1 mr-2 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none"
           //disabled={!state.canOutdent}
           onClick={handleOutdent}
         >
@@ -133,7 +133,7 @@ const FloatingIndentButtons = forwardRef<HTMLDivElement, FloatingMenuProps>(({ e
         </button>
         <button
           aria-label="Indent"
-          className="w-9 h-8 px-3 py-1 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none floatingui"
+          className="w-9 h-8 px-3 py-1 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none"
           //disabled={!state.canIndent}
           onClick={handleIndent}
         >

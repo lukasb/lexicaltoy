@@ -399,7 +399,7 @@ const FloatingSlashCommands = forwardRef<HTMLDivElement, FloatingMenuProps>(
             <li
               key={index}
               ref={itemRefs.current[index]}
-              className={`px-4 py-2 cursor-pointer floatingui hover:bg-gray-200 dark:hover:bg-gray-700 ${
+              className={`px-4 py-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
                 selectedIndex === index
                   ? "selected-item bg-gray-200 dark:bg-gray-700"
                   : ""
