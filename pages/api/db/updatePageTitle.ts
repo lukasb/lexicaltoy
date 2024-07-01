@@ -28,6 +28,14 @@ export default async function handler(
     }
 
     try {
+
+      await sql`
+        INSERT INTO pages_history (id, title, value, userId, last_modified, revision_number)
+        SELECT id, title, value, userId, last_modified, revision_number
+        FROM pages
+        WHERE id = ${id}
+      `;
+
       const result = await sql`
         UPDATE pages
         SET title = ${title}, revision_number = ${oldRevisionNumber + 1}

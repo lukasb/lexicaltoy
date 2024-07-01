@@ -24,8 +24,8 @@ export default async function handler(
     try {
       // Insert the current page data into the history table directly from the pages table
       await sql`
-        INSERT INTO pages_history (id, title, value, userId, last_modified)
-        SELECT id, title, value, userId, last_modified
+        INSERT INTO pages_history (id, title, value, userId, last_modified, revision_number)
+        SELECT id, title, value, userId, last_modified, revision_number
         FROM pages
         WHERE id = ${id}
       `;
