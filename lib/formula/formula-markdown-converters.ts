@@ -9,24 +9,18 @@
   * We (will eventually) escape any curly braces in the formula and output to avoid conflicts with our custom markdown.
   */
 
-const FORMULA_REGEX = /^=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
-const FORMULA_LIST_ITEM_REGEX = /^(\s*)-\s?=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
+//const FORMULA_REGEX = /^=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
+//const FORMULA_LIST_ITEM_REGEX = /^(\s*)-\s?=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
 
-function escapeContentForMarkdown(str: string) {
-  return str.replace(/{/g, '\\{').replace(/}/g, '\\}');
-}
+const FORMULA_REGEX = /^=(.+?)(?:\s*\|\|\|result:\n((?:(?!^\S).*\n?)+)\|\|\|)?$/;
+const FORMULA_LIST_ITEM_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:\n([\s\S]*?)\|\|\|)?$/gm;
 
 // formula as stored by the nodes has the = sign at the front, maybe should change that
-// TODO escape curly brackets in case they appear in formula or result, means changing parser below too
 export function getFormulaMarkdown(formula: string, output?: string): string {
-  /*
-  let markdown = `=${escapeContentForMarkdown(formula)}`;
-  if (output) {
-    markdown += ` {result: ${escapeContentForMarkdown(output)}}`;
-  }*/
+  console.log("getFormulaMarkdown", formula, output);
   let markdown = `=${formula}`;
   if (output) {
-    markdown += ` {result: ${output}}`;
+    markdown += ` |||result:\n ${output}\n|||`;
   }
   return markdown;
 }
@@ -39,10 +33,8 @@ export interface ParseResult {
 // TODO handle escaped curly brackets
 export function parseFormulaMarkdown(markdownString: string): ParseResult {
   const match = markdownString.match(FORMULA_REGEX);
-
+  console.log("parseFormulaMarkdown", markdownString, match);
   if (match) {
-    //const formula = match[1].replace(/\\{/g, '{').replace(/\\}/g, '}');
-    //const result = match[2] ? match[2].replace(/\\{/g, '{').replace(/\\}/g, '}') : null;
     const formula = match[1];
     const result = match[2];
     return { formula, result };
@@ -54,30 +46,72 @@ export function parseFormulaMarkdown(markdownString: string): ParseResult {
 export function stripSharedNodesFromMarkdown(markdown: string): string {
   const lines = markdown.split('\n');
   const processedLines: string[] = [];
+  let inFormula = false;
+  let formulaLines: string[] = [];
+  let formulaIndent = '';
 
-  // if a formula has a find() function that returns shared nodes, we want to strip the child nodes so they don't get serialized
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const match = line.match(FORMULA_LIST_ITEM_REGEX);
-    if (match && match[2].startsWith('find(') && match[3] === '@@childnodes') {
-      const currentIndent = match[1].length;
-      const resultStrIndex = line.indexOf(' {result:');
-      processedLines.push(line.slice(0, resultStrIndex));
 
-      // Skip child list items
-      while (i + 1 < lines.length) {
-        const nextLine = lines[i + 1];
-        const nextMatch = nextLine.match(/^(\s*)-/);
-
-        if (nextMatch && nextMatch[1].length > currentIndent) {
-          i++; // Skip the child list item
-        } else {
-          break;
-        }
+    if (!inFormula) {
+      const formulaStart = line.match(/^(\s*)- =/);
+      if (formulaStart) {
+        inFormula = true;
+        formulaIndent = formulaStart[1];
+        formulaLines = [line];
+      } else {
+        processedLines.push(line);
       }
     } else {
-      processedLines.push(line);
+      formulaLines.push(line);
+      if (line.trim() === '|||' || !line.trim()) {
+        inFormula = false;
+        const fullFormula = formulaLines.join('\n');
+        const matches = Array.from(fullFormula.matchAll(FORMULA_LIST_ITEM_REGEX));
+
+        if (matches.length > 0) {
+          console.log("***********************");
+          console.log("fullFormula", fullFormula);
+          console.log("match", matches);
+          const [, indent, question, result] = matches[0];
+          console.log("indent", indent);
+          console.log("question", question);
+          console.log("result", result);
+          if (question.startsWith('find(')) {
+            if (result && result.trim() === '@@childnodes') {
+              processedLines.push(`${indent}- =${question} |||result:\n${indent} @@childnodes\n${indent}|||`);
+            } else if (result) {
+              processedLines.push(fullFormula);
+            } else {
+              processedLines.push(`${indent}- =${question}`);
+            }
+
+            // Skip child list items
+            while (i + 1 < lines.length) {
+              const nextLine = lines[i + 1];
+              const nextMatch = nextLine.match(/^(\s*)-/);
+              
+              if (nextMatch && nextMatch[1].length > formulaIndent.length) {
+                i++; // Skip the child list item
+              } else {
+                break;
+              }
+            }
+          } else {
+            processedLines.push(fullFormula);
+          }
+        } else {
+          // If it doesn't match our formula pattern, just add the lines as is
+          processedLines.push(...formulaLines);
+        }
+        formulaLines = [];
+      }
     }
+  }
+
+  // Handle case where the last formula is not properly closed
+  if (formulaLines.length > 0) {
+    processedLines.push(...formulaLines);
   }
 
   return processedLines.join('\n');

@@ -259,7 +259,7 @@ export const QUOTE: ElementTransformer = {
   },
   type: 'element',
 };
-
+/*
 export const CODE: ElementTransformer = {
   dependencies: [CodeNode],
   export: (node: LexicalNode) => {
@@ -281,7 +281,7 @@ export const CODE: ElementTransformer = {
   }),
   type: 'element',
 };
-
+*/
 export const UNORDERED_LIST: ElementTransformer = {
   dependencies: [ListNode, ListItemNode],
   export: (node, exportChildren) => {
@@ -410,11 +410,11 @@ export const LINK: TextMatchTransformer = {
 
 
 const ELEMENT_TRANSFORMERS: Array<ElementTransformer> = [
-  HEADING,
-  QUOTE,
-  CODE,
+//  HEADING,
+//  QUOTE,
+//  CODE,
   UNORDERED_LIST,
-  ORDERED_LIST,
+//  ORDERED_LIST,
 ];
 
 const TEXT_FORMAT_TRANSFORMERS: Array<TextFormatTransformer> = [
@@ -433,7 +433,7 @@ const TEXT_MATCH_TRANSFORMERS: Array<TextMatchTransformer> = [LINK];
 
 const TRANSFORMERS: Array<Transformer> = [
   ...ELEMENT_TRANSFORMERS,
-  ...TEXT_FORMAT_TRANSFORMERS,
+ // ...TEXT_FORMAT_TRANSFORMERS,
   ...TEXT_MATCH_TRANSFORMERS,
 ];
 
@@ -570,12 +570,12 @@ export function createMarkdownImport(
       // is ignored for further processing
       // TODO:
       // Abstract it to be dynamic as other transformers (add multiline match option)
-      const [codeBlockNode, shiftedIndex] = $importCodeBlock(lines, i, root);
+      //const [codeBlockNode, shiftedIndex] = $importCodeBlock(lines, i, root);
 
-      if (codeBlockNode != null) {
-        i = shiftedIndex;
-        continue;
-      }
+      //if (codeBlockNode != null) {
+      //  i = shiftedIndex;
+      //  continue;
+      //}
 
       $importBlocks(
         lineText,
@@ -666,7 +666,7 @@ function $importBlocks(
     }
   }
 }
-
+/*
 function $importCodeBlock(
   lines: Array<string>,
   startLineIndex: number,
@@ -695,7 +695,7 @@ function $importCodeBlock(
 
   return [null, startLineIndex];
 }
-
+*/
 // Processing text content and replaces text format tags.
 // It takes outermost tag match and its content, creates text node with
 // format based on tag and then recursively executed over node's content
