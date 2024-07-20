@@ -113,12 +113,19 @@ body {
   content: ''; /* Required for a pseudo-element */
   position: absolute; /* Position relative to the list item */
   left: 0rem; /* Adjust if necessary */
-  top: 0.45rem;
+  top: 0.4rem;
   width: .5rem; /* Size of the disc */
   height: .5rem; /* Size of the disc */
-  background-color: gray; /* Color of the disc */
+  background-color: rgb(180 180 180); /* Color of the disc */
   border-radius: 50%; /* Makes it circular */
 }
+
+@media (prefers-color-scheme: dark) {
+  .PlaygroundEditorTheme__listItem::before {
+    background-color: rgb(100 100 100); /* Color of the disc */
+  }
+}
+
 .PlaygroundEditorTheme__nestedListItem {
   list-style-type: none;
   margin-left: .75rem;
