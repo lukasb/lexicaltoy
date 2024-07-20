@@ -140,10 +140,10 @@ export default function FormulaDisplayComponent(
 
   return (
     <div 
-      className="inline items-baseline border border-dashed border-red-600"
+      className="inline items-baseline bg-bgFormula"
       onClick={() => replaceSelfWithEditorNode()}
     >
-      <span>{formula}: </span>
+      <span className="font-semibold">{formula}: </span>
       {!output.startsWith("@@") && <span>{output}</span>}
     </div>
   );

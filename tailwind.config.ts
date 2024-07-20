@@ -20,6 +20,7 @@ const config: Config = {
       colors: {
         bgBase: 'rgb(var(--background-rgb) / <alpha-value>)',
         fgBase: 'rgb(var(--foreground-rgb) / <alpha-value>)',
+        bgFormula: 'rgb(var(--background-formula-rgb) / <alpha-value>)',
       }
     },
   },

@@ -5,12 +5,14 @@
 :root {
   --foreground-rgb: 50 50 50;
   --background-rgb: 255 253 252;
+  --background-formula-rgb: 240 238 237;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 245 245 245;
     --background-rgb: 30 30 30;
+    --background-formula-rgb: 35 35 35;
   }
 }
 
