@@ -31,7 +31,6 @@ export interface ParseResult {
 
 export function parseFormulaMarkdown(markdownString: string): ParseResult {
   const matches = Array.from(markdownString.matchAll(FORMULA_REGEX));
-  console.log("parseFormulaMarkdown", markdownString, matches);
   if (matches.length > 0) {
     const formula = matches[0][1].trim();
     const result = matches[0][2] ? matches[0][2].trim() : null;

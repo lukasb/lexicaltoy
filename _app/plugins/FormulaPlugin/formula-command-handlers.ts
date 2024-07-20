@@ -133,7 +133,6 @@ export function registerFormulaCommandHandlers(
             !$isRangeSelection(selection) ||
             !selection.isCollapsed()
           ) {
-            console.log("replaceWithFormulaDisplayNode no cursor", textContents);
             $replaceWithFormulaDisplayNode(node);
           }
           const selectionListItemNode =
@@ -144,7 +143,6 @@ export function registerFormulaCommandHandlers(
               editorListItemNode && 
               selectionListItemNode.getKey() !== editorListItemNode.getKey()
             ) {
-              console.log("replaceWithFormulaDisplayNode cursor in list item", textContents);
               $replaceWithFormulaDisplayNode(node);
             }
           }
