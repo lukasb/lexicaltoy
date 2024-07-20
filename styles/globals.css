@@ -96,7 +96,7 @@ body {
 }
 .PlaygroundEditorTheme__ul {
   padding: 0;
-  margin: 0 .25rem;
+  margin: 0;
   list-style-position: inside;
   list-style-type: none; /* Remove default list style */
 }
