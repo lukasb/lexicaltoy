@@ -81,6 +81,7 @@ export default function FormulaDisplayComponent(
     } else if (output === "@@childnodes") {
       const sharedNodes: NodeMarkdown[] = [];
 
+      console.log("output is @@childnodes");
       // TODO this might be triggered by a change to our own nodes, in which case we don't need to do anything
       // we don't know that here though
       // when we move to Redux, maybe the action should include a node key so we can check

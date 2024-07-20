@@ -49,6 +49,7 @@ export function haveExistingFormulaEditorNode(): boolean {
 export function $replaceExistingFormulaEditorNode() {
   const formulaEditorNode = $getNodeByKey(__formulaEditorNodeKey);
   if (formulaEditorNode instanceof FormulaEditorNode) {
+    console.log("replaceExistingFormulaEditorNode");
     $replaceWithFormulaDisplayNode(formulaEditorNode);
   }
   __formulaEditorNodeKey = "";
@@ -150,6 +151,7 @@ export function $deleteFormulaDisplayNodeChildren(node: FormulaDisplayNode) {
 
 export function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   const textContents = node.getTextContent();
+  console.log("replaceWithFormulaDisplayNode", textContents);
   const { formula: formulaText, result: resultString } = parseFormulaMarkdown(textContents);
   if (!formulaText) return;
   let formulaDisplayNode = null;

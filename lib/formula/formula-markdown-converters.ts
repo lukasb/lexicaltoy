@@ -12,12 +12,11 @@
 //const FORMULA_REGEX = /^=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
 //const FORMULA_LIST_ITEM_REGEX = /^(\s*)-\s?=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
 
-const FORMULA_REGEX = /^=(.+?)(?:\s*\|\|\|result:\n((?:(?!^\S).*\n?)+)\|\|\|)?$/;
+const FORMULA_REGEX = /^=(.+?)(?:\s*\|\|\|result:\n([\s\S]*?)\|\|\|)?$/gs;
 const FORMULA_LIST_ITEM_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:\n([\s\S]*?)\|\|\|)?$/gm;
 
 // formula as stored by the nodes has the = sign at the front, maybe should change that
 export function getFormulaMarkdown(formula: string, output?: string): string {
-  console.log("getFormulaMarkdown", formula, output);
   let markdown = `=${formula}`;
   if (output) {
     markdown += ` |||result:\n ${output}\n|||`;
@@ -30,13 +29,12 @@ export interface ParseResult {
   result: string | null;
 }
 
-// TODO handle escaped curly brackets
 export function parseFormulaMarkdown(markdownString: string): ParseResult {
-  const match = markdownString.match(FORMULA_REGEX);
-  console.log("parseFormulaMarkdown", markdownString, match);
-  if (match) {
-    const formula = match[1];
-    const result = match[2];
+  const matches = Array.from(markdownString.matchAll(FORMULA_REGEX));
+  console.log("parseFormulaMarkdown", markdownString, matches);
+  if (matches.length > 0) {
+    const formula = matches[0][1].trim();
+    const result = matches[0][2] ? matches[0][2].trim() : null;
     return { formula, result };
   } else {
     return { formula: null, result: null };
@@ -70,17 +68,9 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
         const matches = Array.from(fullFormula.matchAll(FORMULA_LIST_ITEM_REGEX));
 
         if (matches.length > 0) {
-          console.log("***********************");
-          console.log("fullFormula", fullFormula);
-          console.log("match", matches);
           const [, indent, question, result] = matches[0];
-          console.log("indent", indent);
-          console.log("question", question);
-          console.log("result", result);
           if (question.startsWith('find(')) {
-            if (result && result.trim() === '@@childnodes') {
-              processedLines.push(`${indent}- =${question} |||result:\n${indent} @@childnodes\n${indent}|||`);
-            } else if (result) {
+            if (result && result.trim() != '@@childnodes') {
               processedLines.push(fullFormula);
             } else {
               processedLines.push(`${indent}- =${question}`);

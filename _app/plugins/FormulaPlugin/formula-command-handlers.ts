@@ -97,14 +97,15 @@ export function registerFormulaCommandHandlers(
   ) {
     return mergeRegister(
       editor.registerNodeTransform(FormattableTextNode, (node) => {
+        const parentNode = node.getParent();
         if (
-          !(node.getParent() instanceof ListItemNode) ||
+          !(parentNode instanceof ListItemNode) ||
           node.getIndexWithinParent() !== 0 ||
           node instanceof FormulaEditorNode
         ) {
           return;
         }
-        const textContents = node.getTextContent();
+        const textContents = parentNode.getTextContent();
         const { formula: formulaText, result: resultString } =
           parseFormulaMarkdown(textContents);
         if (formulaText && resultString) {
@@ -132,6 +133,7 @@ export function registerFormulaCommandHandlers(
             !$isRangeSelection(selection) ||
             !selection.isCollapsed()
           ) {
+            console.log("replaceWithFormulaDisplayNode no cursor", textContents);
             $replaceWithFormulaDisplayNode(node);
           }
           const selectionListItemNode =
@@ -142,6 +144,7 @@ export function registerFormulaCommandHandlers(
               editorListItemNode && 
               selectionListItemNode.getKey() !== editorListItemNode.getKey()
             ) {
+              console.log("replaceWithFormulaDisplayNode cursor in list item", textContents);
               $replaceWithFormulaDisplayNode(node);
             }
           }
