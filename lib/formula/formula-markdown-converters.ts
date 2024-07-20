@@ -19,6 +19,8 @@ const FORMULA_LIST_ITEM_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:\n([\s\S]*?)\|
 export function getFormulaMarkdown(formula: string, output?: string): string {
   let markdown = `=${formula}`;
   if (output) {
+    // turn consecutive newlines into a single newline
+    output = output.replace(/\n+/g, '\n');
     markdown += ` |||result:\n ${output}\n|||`;
   }
   return markdown;

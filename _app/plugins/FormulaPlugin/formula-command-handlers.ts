@@ -113,7 +113,12 @@ export function registerFormulaCommandHandlers(
             formulaText,
             resultString
           );
-          node.replace(formulaDisplayNode);
+          parentNode.splice(
+            0,
+            parentNode.getChildrenSize(),
+            [formulaDisplayNode]
+          );
+          //node.replace(formulaDisplayNode);
         } else if (textContents.startsWith("=")) {
           $replaceTextNodeWithEditor(node);
         }
