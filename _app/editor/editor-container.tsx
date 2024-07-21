@@ -142,7 +142,7 @@ function EditorContainer({
           </div>
         </div>
         <NoSSRWrapper>
-          <div className="pl-[29px] mt-4">
+          <div className="pl-[22px] md:pl-[29px] mt-4">
             <Editor
               page={page}
               showDebugInfo={showDebug}
