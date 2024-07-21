@@ -113,7 +113,7 @@ body {
   content: ''; /* Required for a pseudo-element */
   position: absolute; /* Position relative to the list item */
   left: 0rem; /* Adjust if necessary */
-  top: 0.4rem;
+  top: 0.49rem;
   width: .4rem; /* Size of the disc */
   height: .4rem; /* Size of the disc */
   background-color: rgb(180 180 180); /* Color of the disc */
