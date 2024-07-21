@@ -172,7 +172,6 @@ function Editor({
         />
         {floatingAnchorElem && !isSmallWidthViewport && (
           <>
-            <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
             <FloatingMenuPlugin
               anchorElem={floatingAnchorElem}
               menuConfig={[
