@@ -23,26 +23,32 @@ export function searchPageTitles(pages: Page[], term: string): Page[] {
   return [...startsWithTerm, ...includesTerm];
 }
 
-export async function searchPages(pages: Page[], term: string): Promise<Page[]> {
-  const normalizedTerm = term.toLowerCase();
-  const titleStartsWith: Page[] = [];
-  const titleIncludes: Page[] = [];
-  const contentIncludes: Page[] = [];
+export async function searchPages(pages: Page[], searchTerm: string): Promise<Page[]> {
+  const searchTerms = searchTerm.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+  
+  if (searchTerms.length === 0) return [];
+
+  const allInTitle: Page[] = [];
+  const someInTitleAllInContent: Page[] = [];
+  const allInContent: Page[] = [];
 
   pages.forEach(page => {
     const normalizedTitle = page.title.toLowerCase();
-    const normalizedValue = page.value.toLowerCase();
+    const normalizedContent = page.value.toLowerCase();
 
-    if (normalizedTitle.startsWith(normalizedTerm)) {
-      titleStartsWith.push(page);
-    } else if (normalizedTitle.includes(normalizedTerm)) {
-      titleIncludes.push(page);
-    } else if (normalizedValue.includes(normalizedTerm)) {
-      contentIncludes.push(page);
+    const termsInTitle = searchTerms.filter(term => normalizedTitle.includes(term));
+    const termsInContent = searchTerms.filter(term => normalizedContent.includes(term));
+
+    if (termsInTitle.length === searchTerms.length) {
+      allInTitle.push(page);
+    } else if (termsInTitle.length > 0 && (termsInTitle.length + termsInContent.length) === searchTerms.length) {
+      someInTitleAllInContent.push(page);
+    } else if (termsInContent.length === searchTerms.length) {
+      allInContent.push(page);
     }
   });
 
-  return [...titleStartsWith, ...titleIncludes, ...contentIncludes];
+  return [...allInTitle, ...someInTitleAllInContent, ...allInContent];
 }
 
 export function findMostRecentlyEditedPage(pages: Page[]): Page | null {
