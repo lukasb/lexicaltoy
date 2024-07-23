@@ -2,11 +2,13 @@
   * This file contains functions to convert formulas to and from markdown.
   * Formulas are represented in markdown as follows:
   * 
-  * =formula {result: output}
+  * =formula |||result:
+  * output
+  * |||
   * 
   * The formula is required and the output is optional.
   * 
-  * We (will eventually) escape any curly braces in the formula and output to avoid conflicts with our custom markdown.
+  * We (will eventually) escape any pipe symbols in the formula and output to avoid conflicts with our custom markdown.
   */
 
 //const FORMULA_REGEX = /^=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
