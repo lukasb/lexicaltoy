@@ -1,17 +1,16 @@
 import { 
   FormulaOutput,
-  isFormulaDefinitionWithPage,
   FormulaOutputType
 } from './formula-definitions';
 import { 
   getShortGPTChatResponse,
-  getFormulaDefinition
  } from '@/lib/ai';
 import { Page } from '@/lib/definitions';
 import { getPageMarkdown } from '@/lib/pages-helpers';
 import { stripBrackets } from '@/lib/transform-helpers';
 import { getLastTwoWeeksJournalPages } from '@/lib/journal-helpers';
 import { regexCallbacks } from './regex-callbacks';
+import { WIKILINK_REGEX, extractWikilinks } from '@/lib/text-utils';
 
 const todoInstructions = `
 Below you'll see the contents of one or more pages. Pages may include to-do list items that look like this:
@@ -27,9 +26,32 @@ Items marked with DONE are complete, all other items are incomplete.
 User content:
 `;
 
-async function getPagesContext(pageSpec: string, pages: Page[]): Promise<string | null> {
+async function getPagesContext(pageSpecs: string[], pages: Page[]): Promise<string | null> {
+  const uniquePages = new Set<Page>();
 
-  const pageTitle = stripBrackets(pageSpec);
+  async function addPages(pageSpec: string) {
+    const pageTitle = stripBrackets(pageSpec);
+
+    if (pageTitle.endsWith("/")) {
+      if (pageTitle === "journals/") {
+        const journalPages = await getLastTwoWeeksJournalPages(pages);
+        journalPages.forEach(page => uniquePages.add(page));
+      } else {
+        pages
+          .filter(p => p.title.startsWith(pageTitle.slice(0, -1)))
+          .forEach(page => uniquePages.add(page));
+      }
+    } else {
+      const page = pages.find(p => p.title === pageSpec);
+      if (page) uniquePages.add(page);
+    }
+  }
+
+  for (const pageSpec of pageSpecs) {
+    await addPages(pageSpec);
+  }
+
+  if (uniquePages.size === 0) return null;
 
   async function generateContextStr(pagesToProcess: Page[]): Promise<string> {
     let contextStr = "\n" + todoInstructions;
@@ -44,20 +66,7 @@ async function getPagesContext(pageSpec: string, pages: Page[]): Promise<string 
     return contextStr;
   }
 
-  if (pageTitle.endsWith("/")) {
-    let selectedPages: Page[] = [];
-    if (pageTitle === "journals/") {
-      selectedPages = await getLastTwoWeeksJournalPages(pages);
-    } else {
-      selectedPages = pages.filter((p) =>
-        p.title.startsWith(pageTitle.slice(0, -1))
-      );
-    }
-    return selectedPages.length === 0 ? null : await generateContextStr(selectedPages);
-  } else {
-    const page = pages.find((p) => p.title === pageSpec);
-    return page ? await generateContextStr([page]) : null;
-  }
+  return generateContextStr(Array.from(uniquePages));
 }
 
 export async function getFormulaOutput(formula: string, pages: Page[]): Promise<FormulaOutput | null> {
@@ -70,21 +79,11 @@ export async function getFormulaOutput(formula: string, pages: Page[]): Promise<
     }
   }
 
-  // If no match is found, proceed with the original code
-  const formulaDefinition = await getFormulaDefinition(formula);
-  if (!formulaDefinition) {
-    console.log("no formula definition");
-    return null;
-  }
-
-  let prompt = formulaDefinition.prompt;
-  if (isFormulaDefinitionWithPage(formulaDefinition) && formulaDefinition.inputPage) {
-    const pagesContext = await getPagesContext(formulaDefinition.inputPage, pages);
-    if (pagesContext) {
-      prompt = prompt + pagesContext;
-    } else {
-      console.log("no pages context");
-    }
+  let prompt = formula;
+  if (WIKILINK_REGEX.exec(formula) !== null) {
+    const referencedPages = extractWikilinks(formula);
+    const pagesContext = await getPagesContext(referencedPages, pages);
+    prompt = prompt + pagesContext;
   }
 
   const gptResponse = await getShortGPTChatResponse(prompt);
