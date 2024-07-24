@@ -111,18 +111,14 @@ function $getGPTPair(listItem: ListItemNode): DialogueElement | undefined {
 }
 
 export function slurpDialogueContext(displayNodeKey: string, editor: LexicalEditor): DialogueElement[] {
-  console.log("slurping");
   let context: DialogueElement[] = [];
   editor.getEditorState().read(() => {
     const listItem = $getNodeByKey(displayNodeKey)?.getParent();
-    console.log("listItem", listItem);
     let prevListItem = listItem?.getPreviousSibling();
-    console.log("prevlistItem", prevListItem);
     while (
       prevListItem && 
       $isListItemNode(prevListItem)
     ) {
-      console.log("trying to get context from", prevListItem.getTextContent());
       const dialogue = $getGPTPair(prevListItem);
       if (dialogue) {
         context.push(dialogue);
