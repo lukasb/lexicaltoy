@@ -13,8 +13,14 @@ function processResult(result: string): string {
     .trim();
 }
 
-export async function getShortGPTChatResponse(prompt: string): Promise<string | null> {
-  console.log("getShortGPTChatResponse", prompt);
+export type DialogueElement = {
+  userQuestion: string;
+  systemAnswer: string;
+}
+
+export async function getShortGPTChatResponse(prompt: string, dialogueContext: DialogueElement[]): Promise<string | null> {
+  console.log("getShortGPTChatResponse prompt", prompt);
+  console.log("getShortGPTChatResponse context", dialogueContext);
 
   try {
     const response = await fetch('/api/ai/chat', {
@@ -22,7 +28,7 @@ export async function getShortGPTChatResponse(prompt: string): Promise<string | 
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, dialogueContext }),
     });
 
     if (!response.ok) {

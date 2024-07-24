@@ -29,20 +29,27 @@ export default async function handler(
   }
 
   if (req.method === "POST") {
-    const { prompt } = req.body;
+    const { prompt, dialogueContext } = req.body;
     if (!prompt) {
       return res.status(400).json({ error: "No prompt provided" });
     }
 
     console.log("Received prompt:", prompt);
+    console.log("Received context", dialogueContext);
+
+    const messages: OpenAI.ChatCompletionMessageParam[] = [{ role: "system", content: shortGPTChatResponseSystemPrompt }];
+
+    for (const element of dialogueContext) {
+      messages.push({ role: 'user', content: element.userQuestion });
+      messages.push({ role: 'assistant', content: element.systemAnswer });
+    }
+
+    messages.push({ role: "user", content: prompt});
 
     try {
 
       const chatCompletion = await openai.chat.completions.create({
-        messages: [
-          { role: "system", content: shortGPTChatResponseSystemPrompt },
-          { role: "user", content: prompt },
-        ],
+        messages: messages,
         model: MODEL_NAME,
       });
 

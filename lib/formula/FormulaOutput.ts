@@ -3,6 +3,7 @@ import {
   FormulaOutputType
 } from './formula-definitions';
 import { 
+  DialogueElement,
   getShortGPTChatResponse,
  } from '@/lib/ai';
 import { Page } from '@/lib/definitions';
@@ -11,6 +12,10 @@ import { stripBrackets } from '@/lib/transform-helpers';
 import { getLastTwoWeeksJournalPages } from '@/lib/journal-helpers';
 import { regexCallbacks } from './regex-callbacks';
 import { WIKILINK_REGEX, extractWikilinks } from '@/lib/text-utils';
+import { LexicalEditor, $getNodeByKey } from 'lexical';
+import { ListItemNode } from '@lexical/list';
+import { $isFormulaDisplayNode } from '@/_app/nodes/FormulaNode';
+import { $isListItemNode } from '@lexical/list';
 
 const todoInstructions = `
 Below you'll see the contents of one or more pages. Pages may include to-do list items that look like this:
@@ -69,7 +74,7 @@ async function getPagesContext(pageSpecs: string[], pages: Page[]): Promise<stri
   return generateContextStr(Array.from(uniquePages));
 }
 
-export async function getFormulaOutput(formula: string, pages: Page[]): Promise<FormulaOutput | null> {
+export async function getFormulaOutput(formula: string, pages: Page[], dialogueContext?: DialogueElement[]): Promise<FormulaOutput | null> {
 
   // Check if the formula matches any of the regex patterns
   for (const [regex, callback] of regexCallbacks) {
@@ -86,8 +91,46 @@ export async function getFormulaOutput(formula: string, pages: Page[]): Promise<
     prompt = prompt + pagesContext;
   }
 
-  const gptResponse = await getShortGPTChatResponse(prompt);
+  if (!dialogueContext) return null;
+  const gptResponse = await getShortGPTChatResponse(prompt, dialogueContext);
   if (!gptResponse) return null;
 
   return { output: gptResponse, type: FormulaOutputType.Text };
+}
+
+function $getGPTPair(listItem: ListItemNode): DialogueElement | undefined {
+  const child = listItem.getFirstChild();
+  if (
+    child && 
+    $isFormulaDisplayNode(child) &&
+    child.getFormulaDisplayNodeType() === "gptFormula"
+  ) {
+      return { userQuestion: child.getFormula(), systemAnswer: child.getOutput() };
+    }
+  return undefined;
+}
+
+export function slurpDialogueContext(displayNodeKey: string, editor: LexicalEditor): DialogueElement[] {
+  console.log("slurping");
+  let context: DialogueElement[] = [];
+  editor.getEditorState().read(() => {
+    const listItem = $getNodeByKey(displayNodeKey)?.getParent();
+    console.log("listItem", listItem);
+    let prevListItem = listItem?.getPreviousSibling();
+    console.log("prevlistItem", prevListItem);
+    while (
+      prevListItem && 
+      $isListItemNode(prevListItem)
+    ) {
+      console.log("trying to get context from", prevListItem.getTextContent());
+      const dialogue = $getGPTPair(prevListItem);
+      if (dialogue) {
+        context.push(dialogue);
+      } else {
+        break;
+      }
+      prevListItem = prevListItem.getPreviousSibling();
+    }
+  })
+  return context;
 }

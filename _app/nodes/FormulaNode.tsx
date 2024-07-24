@@ -71,6 +71,8 @@ export type SerializedFormulaDisplayNode = Spread<
   SerializedLexicalNode
 >;
 
+export type FormulaDisplayNodeType = "nodeFormula" | "gptFormula";
+
 export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   
   __formula: string;
@@ -155,6 +157,14 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   getTextContent(): string {
     const text = getFormulaMarkdown(this.getFormula(), this.getOutput());
     return text;
+  }
+
+  getFormulaDisplayNodeType(): FormulaDisplayNodeType {
+    if (this.getOutput() === "@@childnodes") {
+      return "nodeFormula";
+    } else {
+      return "gptFormula";
+    }
   }
 }
 

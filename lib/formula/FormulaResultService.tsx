@@ -10,6 +10,7 @@ import {
 import { getFormulaOutput } from '@/lib/formula/FormulaOutput';
 import { PagesContext } from '@/_app/context/pages-context';
 import { NodeMarkdown, FormulaOutput, FormulaOutputType } from '@/lib/formula/formula-definitions';
+import { DialogueElement } from '../ai';
 
 export const useFormulaResultService = () => {
   const { sharedNodeMap, setSharedNodeMap } = useSharedNodeContext();
@@ -36,10 +37,10 @@ export const useFormulaResultService = () => {
     return updatedMap;
   }
 
-  const getFormulaResults = async (query: string): Promise<FormulaOutput | null> => {
+  const getFormulaResults = async (query: string, dialogueContext?: DialogueElement[]): Promise<FormulaOutput | null> => {
 
     // Perform the query and fetch the results
-    const output = await getFormulaOutput(query, pages);
+    const output = await getFormulaOutput(query, pages, dialogueContext);
 
     if (!output) return null;
 

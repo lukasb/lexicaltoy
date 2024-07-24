@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useContext, use } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { 
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
@@ -9,6 +9,7 @@ import { usePromises } from '../context/formula-request-context';
 import { FormulaOutputType, NodeMarkdown } from '@/lib/formula/formula-definitions';
 import { useSharedNodeContext, createSharedNodeKey } from '../context/shared-node-context';
 import { useFormulaResultService } from '../../lib/formula/FormulaResultService';
+import { slurpDialogueContext } from '@/lib/formula/FormulaOutput';
 
 export default function FormulaDisplayComponent(
   { formula: initialFormula,
@@ -31,7 +32,8 @@ export default function FormulaDisplayComponent(
 
   const getFormulaOutput = useCallback(async (prompt: string) => {
     if (!hasPromise(nodeKey)) {
-      const promise = getFormulaResults(prompt)
+      const dialogueContext = slurpDialogueContext(nodeKey, editor);
+      const promise = getFormulaResults(prompt, dialogueContext)
         .then(response => {
           if (response) {
             if (response.type === FormulaOutputType.Text) {
