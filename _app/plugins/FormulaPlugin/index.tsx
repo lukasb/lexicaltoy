@@ -4,7 +4,7 @@ import {
   FormulaEditorNode,
   FormulaDisplayNode,
 } from "@/_app/nodes/FormulaNode";
-import { NodeMarkdown } from "@/lib/formula/formula-definitions";
+import { BaseNodeMarkdown } from "@/lib/formula/formula-definitions";
 import { useSharedNodeContext } from "../../context/shared-node-context";
 import { registerFormulaCommandHandlers } from "./formula-command-handlers";
 import { registerFormulaMutationListeners } from "./formula-mutation-listeners";
@@ -17,7 +17,7 @@ export type ChildSharedNodeReference = {
 export function FormulaPlugin(): null {
 
   const [editor] = useLexicalComposerContext();
-  const [localSharedNodeMap, setLocalSharedNodeMap] = useState(new Map<string, NodeMarkdown>());
+  const [localSharedNodeMap, setLocalSharedNodeMap] = useState(new Map<string, BaseNodeMarkdown>());
   const [localChildNodeMap, setLocalChildNodeMap] = useState(new Map<string, ChildSharedNodeReference>());
   const { sharedNodeMap: globalSharedNodeMap, setSharedNodeMap, updateNodeMarkdown } = useSharedNodeContext();
   const updatingNodeKey = useRef<string | null>(null);

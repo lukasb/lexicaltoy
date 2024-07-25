@@ -8,7 +8,7 @@ import {
   ListItemNode,
 } from "@lexical/list";
 import { mergeRegister } from "@lexical/utils";
-import { NodeMarkdown } from "@/lib/formula/formula-definitions";
+import { BaseNodeMarkdown } from "@/lib/formula/formula-definitions";
 import { $convertToMarkdownString, TRANSFORMERS } from "@lexical/markdown";
 import {
   $getFormulaNodeFromSharedNode,
@@ -24,9 +24,9 @@ import { ChildSharedNodeReference } from ".";
 
 export function registerFormulaMutationListeners(
   editor: LexicalEditor,
-  localSharedNodeMap: Map<string, NodeMarkdown>,
+  localSharedNodeMap: Map<string, BaseNodeMarkdown>,
   childSharedNodeMap: Map<string, ChildSharedNodeReference>,
-  updateNodeMarkdownGlobal: (updatedNodeMarkdown: NodeMarkdown, needsSyncToPage: boolean) => void,
+  updateNodeMarkdownGlobal: (updatedNodeMarkdown: BaseNodeMarkdown, needsSyncToPage: boolean) => void,
   setUpdatingNodeKey: (updatingNodeKey: string | null) => void,
   ) {
 

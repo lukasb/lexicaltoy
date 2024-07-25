@@ -9,14 +9,14 @@ import {
 } from '@/_app/context/shared-node-context';
 import { getFormulaOutput } from '@/lib/formula/FormulaOutput';
 import { PagesContext } from '@/_app/context/pages-context';
-import { NodeMarkdown, FormulaOutput, FormulaOutputType } from '@/lib/formula/formula-definitions';
+import { BaseNodeMarkdown, FormulaOutput, FormulaOutputType } from '@/lib/formula/formula-definitions';
 import { DialogueElement } from '../ai';
 
 export const useFormulaResultService = () => {
   const { sharedNodeMap, setSharedNodeMap } = useSharedNodeContext();
   const pages = useContext(PagesContext);
 
-  const mergeResults = (resultNodes: NodeMarkdown[], query: string, nodeMap: Map<string, QueryNode>, updatedNeedsSyncToPage: boolean): Map<string, QueryNode> => {
+  const mergeResults = (resultNodes: BaseNodeMarkdown[], query: string, nodeMap: Map<string, QueryNode>, updatedNeedsSyncToPage: boolean): Map<string, QueryNode> => {
     const updatedMap = new Map(nodeMap);
     resultNodes.forEach((result) => {
       const key = createSharedNodeKey(result.pageName, result.lineNumberStart, result.lineNumberEnd);
@@ -45,7 +45,7 @@ export const useFormulaResultService = () => {
     if (!output) return null;
 
     if (output.type === FormulaOutputType.NodeMarkdown) {
-      const resultNodes = output.output as NodeMarkdown[];
+      const resultNodes = output.output as BaseNodeMarkdown[];
 
       // TODO maybe only update the map if things have actually changed
 
@@ -86,7 +86,7 @@ export const useFormulaResultService = () => {
       .then((outputMap) => {
         outputMap.forEach(( formulaOutput, formula ) => {
           if (formulaOutput && formulaOutput.type === FormulaOutputType.NodeMarkdown) {
-            const resultNodes = formulaOutput.output as NodeMarkdown[];
+            const resultNodes = formulaOutput.output as BaseNodeMarkdown[];
             updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
           }
         });

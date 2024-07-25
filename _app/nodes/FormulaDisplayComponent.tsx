@@ -6,7 +6,7 @@ import {
   CREATE_FORMULA_NODES
 } from '@/lib/formula-commands';
 import { usePromises } from '../context/formula-request-context';
-import { FormulaOutputType, NodeMarkdown } from '@/lib/formula/formula-definitions';
+import { FormulaOutputType, BaseNodeMarkdown } from '@/lib/formula/formula-definitions';
 import { useSharedNodeContext, createSharedNodeKey } from '../context/shared-node-context';
 import { useFormulaResultService } from '../../lib/formula/FormulaResultService';
 import { slurpDialogueContext } from '@/lib/formula/FormulaOutput';
@@ -47,7 +47,7 @@ export default function FormulaDisplayComponent(
               // TODO store the nodeMarkdowns locally so we can check when updates happen
               // TODO what if there are no results?
               const markdownMap = new Map<string, string>();
-              (response.output as NodeMarkdown[]).forEach(node => {
+              (response.output as BaseNodeMarkdown[]).forEach(node => {
                 markdownMap.set(
                   createSharedNodeKey(node.pageName, node.lineNumberStart, node.lineNumberEnd),
                   node.nodeMarkdown);
@@ -55,7 +55,7 @@ export default function FormulaDisplayComponent(
               setPageLineMarkdownMap(markdownMap);
               editor.dispatchCommand(CREATE_FORMULA_NODES, {
                 displayNodeKey: nodeKey,
-                nodesMarkdown: response.output as NodeMarkdown[],
+                nodesMarkdown: response.output as BaseNodeMarkdown[],
               });
               editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
                 displayNodeKey: nodeKey,
@@ -81,7 +81,7 @@ export default function FormulaDisplayComponent(
       setOutput("(getting response...)");
       getFormulaOutput(formula);
     } else if (output === "@@childnodes") {
-      const sharedNodes: NodeMarkdown[] = [];
+      const sharedNodes: BaseNodeMarkdown[] = [];
 
       // TODO this might be triggered by a change to our own nodes, in which case we don't need to do anything
       // we don't know that here though

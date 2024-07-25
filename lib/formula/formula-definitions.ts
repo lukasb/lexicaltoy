@@ -10,19 +10,19 @@ export enum FormulaOutputType {
   NodeMarkdown = 'nodeMarkdown',
 }
 
-export const NodeMarkdownSchema = z.object({
+export const BaseNodeMarkdownSchema = z.object({
   nodeMarkdown: z.string(),
   pageName: z.string(),
   lineNumberStart: z.number(),
   lineNumberEnd: z.number(),
 });
 
-export type NodeMarkdown = z.infer<typeof NodeMarkdownSchema>;
+export type BaseNodeMarkdown = z.infer<typeof BaseNodeMarkdownSchema>;
 
 const FormulaOutputSchema = z.object({
   output: z.union([
     z.string(),
-    z.array(NodeMarkdownSchema),
+    z.array(BaseNodeMarkdownSchema),
   ]),
   type: z.nativeEnum(FormulaOutputType)
 });
@@ -41,6 +41,6 @@ export function createNodeMarkdown(
   lineNumberStart: number,
   lineNumberEnd: number,
   nodeMarkdown: string
-): NodeMarkdown {
+): BaseNodeMarkdown {
   return { pageName, lineNumberStart, lineNumberEnd, nodeMarkdown };
 }

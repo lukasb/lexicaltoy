@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { NodeMarkdown, NodeMarkdownSchema } from '@/lib/formula/formula-definitions';
+import { BaseNodeMarkdown, BaseNodeMarkdownSchema } from '@/lib/formula/formula-definitions';
 import { z } from 'zod';
 
 const QueryNodeSchema = z.object({
-  output: NodeMarkdownSchema,
+  output: BaseNodeMarkdownSchema,
   queries: z.array(z.string()),
   needsSyncToPage: z.boolean().default(false)
 });
@@ -15,7 +15,7 @@ type SharedNodeMap = Map<string, QueryNode>;
 type SharedNodeContextType = {
   sharedNodeMap: SharedNodeMap;
   setSharedNodeMap: React.Dispatch<React.SetStateAction<SharedNodeMap>>;
-  updateNodeMarkdown: (updatedNodeMarkdown: NodeMarkdown, needsSyncToPage: boolean) => void;
+  updateNodeMarkdown: (updatedNodeMarkdown: BaseNodeMarkdown, needsSyncToPage: boolean) => void;
 };
 
 const SharedNodeContext = createContext<SharedNodeContextType>({
@@ -48,7 +48,7 @@ type Props = {
 export const SharedNodeProvider: React.FC<Props> = ({ children }) => {
   const [sharedNodeMap, setSharedNodeMap] = useState<SharedNodeMap>(new Map());
 
-  const updateSharedNode = useCallback((updatedNodeMarkdown: NodeMarkdown, updatedNeedsSyncToPage: boolean) => {
+  const updateSharedNode = useCallback((updatedNodeMarkdown: BaseNodeMarkdown, updatedNeedsSyncToPage: boolean) => {
     const key = createSharedNodeKey(
       updatedNodeMarkdown.pageName, updatedNodeMarkdown.lineNumberStart, updatedNodeMarkdown.lineNumberEnd);
     if (sharedNodeMap.get(key)?.output === updatedNodeMarkdown) return;

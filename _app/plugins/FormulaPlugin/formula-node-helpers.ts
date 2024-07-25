@@ -23,7 +23,7 @@ import {
   $deleteChildrenFromListItem,
 } from "@/lib/list-utils";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
-import { NodeMarkdown } from "@/lib/formula/formula-definitions";
+import { BaseNodeMarkdown } from "@/lib/formula/formula-definitions";
 import { $isWikilinkNode, WikilinkNode } from "@/_app/nodes/WikilinkNode";
 import { 
   $createFormattableTextNode,
@@ -161,15 +161,15 @@ export function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   node.replace(formulaDisplayNode);
 }
 
-function sortNodeMarkdownByPageName(nodes: NodeMarkdown[]): NodeMarkdown[] {
+function sortNodeMarkdownByPageName(nodes: BaseNodeMarkdown[]): BaseNodeMarkdown[] {
   return nodes.slice().sort((a, b) => a.pageName.localeCompare(b.pageName));
 }
 
 export function createFormulaOutputNodes(
   editor: LexicalEditor,
   displayNode: FormulaDisplayNode,
-  nodesMarkdown: NodeMarkdown[],
-  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeMarkdown>>>,
+  nodesMarkdown: BaseNodeMarkdown[],
+  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, BaseNodeMarkdown>>>,
   setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>>
 ) {
 
