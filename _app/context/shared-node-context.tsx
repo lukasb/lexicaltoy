@@ -33,6 +33,7 @@ export function createSharedNodeKey(node: NodeElementMarkdown): string {
   return `${node.baseNode.pageName}-${node.baseNode.lineNumberStart}-${endLine}`;
 }
 
+// line numbers are 1-based
 export type SharedNodeKeyElements = {
   pageName: string;
   lineNumberStart: number;

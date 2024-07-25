@@ -285,3 +285,30 @@ export function $deleteListItem(listItem: ListItemNode, fixSelection: boolean) {
     }
   }
 }
+
+// given a multiline string of Markdown, return an array of strings where each string is a (potentially multiline) node
+export function splitMarkdownByNodes(markdown: string): string[] {
+  const lines = markdown.split("\n");
+  const nodes: string[] = [];
+  let currentNode: string[] = [];
+
+  for (const line of lines) {
+    if (line.trim() === "" || /^\s*-/.test(line)) {
+      if (currentNode.length > 0) {
+        nodes.push(currentNode.join("\n"));
+        currentNode = [];
+      }
+      if (line.trim() !== "") {
+        currentNode.push(line);
+      }
+    } else {
+      currentNode.push(line);
+    }
+  }
+
+  if (currentNode.length > 0) {
+    nodes.push(currentNode.join("\n"));
+  }
+
+  return nodes;
+}

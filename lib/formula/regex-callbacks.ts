@@ -24,7 +24,6 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
       }
 
       const output: FormulaOutput["output"] = [];
-      const findFormulaRegex = /^\s*- =find\((.+)\)$/;
       const findFormulaStartRegex = /^\s*- =find\(/;
       const indentationRegex = /^(\s*)-/;
 
