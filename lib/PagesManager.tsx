@@ -10,6 +10,7 @@ import {
 import { useFormulaResultService } from './formula/FormulaResultService';
 import { isDevelopmentEnvironment } from "@/lib/environment";
 import { useCallback } from "react";
+import { getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
 
 // TODO maybe use Redux so we don't have an O(n) operation here every time
 function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAction<Page[]>> }) {
@@ -88,8 +89,9 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
       const page = pages.find((p) => p.title === keyElements.pageName);
       if (page) {
         const lines = page.value.split("\n");
-        if (lines.slice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd).join("\n") !== value.output.nodeMarkdown) {
-          lines.splice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd - keyElements.lineNumberStart + 1, ...value.output.nodeMarkdown.split("\n"));
+        const currentMarkdown = getNodeElementFullMarkdown(value.output);
+        if (lines.slice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd).join("\n") !== currentMarkdown) {
+          lines.splice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd - keyElements.lineNumberStart + 1, ...currentMarkdown.split("\n"));
         }
         if (page.status !== PageStatus.UserEdit && value.needsSyncToPage) {
           pagesToUpdate.set(keyElements.pageName, lines.join("\n"));

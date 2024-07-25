@@ -2,9 +2,67 @@ import { Page } from "../definitions";
 import { 
   FormulaOutput,
   FormulaOutputType,
-  createBaseNodeMarkdown
+  createBaseNodeMarkdown,
+  NodeElementMarkdown
 } from "./formula-definitions";
-import { splitMarkdownByNodes } from "../list-utils";
+
+const findFormulaStartRegex = /^\s*- =find\(/;
+
+function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMarkdown[] {
+  const lines = markdown.split("\n");
+  const rootNode: NodeElementMarkdown = {
+    baseNode: createBaseNodeMarkdown(pageName, 1, lines.length, ""),
+    children: []
+  };
+  const stack: NodeElementMarkdown[] = [rootNode];
+  let currentIndentation = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmedLine = line.trimStart();
+    const indentation = line.length - trimmedLine.length;
+
+    if (trimmedLine === "" || trimmedLine.startsWith("-")) {
+      if (trimmedLine !== "") {
+        while (indentation < currentIndentation && stack.length > 1) {
+          stack.pop();
+          currentIndentation -= 2;
+        }
+
+        const newNode: NodeElementMarkdown = {
+          baseNode: createBaseNodeMarkdown(pageName, i + 1, i + 1, trimmedLine),
+          children: []
+        };
+
+        stack[stack.length - 1].children.push(newNode);
+
+        if (indentation > currentIndentation) {
+          stack.push(newNode);
+          currentIndentation = indentation;
+        }
+      }
+    } else {
+      const currentNode = stack[stack.length - 1];
+      currentNode.baseNode.nodeMarkdown += (currentNode.baseNode.nodeMarkdown ? "\n" : "") + line;
+      currentNode.baseNode.lineNumberEnd = i + 1;
+    }
+  }
+
+  return rootNode.children;
+}
+
+// for now, if we hit a find() node, just remove it, any children, and any
+// subsequent siblings from the search results
+function removeFindNodes(node: NodeElementMarkdown): void {
+  for (let i = 0; i < node.children.length; i++) {
+    const child = node.children[i];
+    if (findFormulaStartRegex.test(child.baseNode.nodeMarkdown)) {
+      node.children.splice(i);
+      return;
+    }
+    removeFindNodes(child);
+  }
+}
 
 export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Page[]) => Promise<FormulaOutput>]> = [
   [
@@ -24,13 +82,12 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
       }
 
       const output: FormulaOutput["output"] = [];
-      const findFormulaStartRegex = /^\s*- =find\(/;
       const indentationRegex = /^(\s*)-/;
 
       for (const page of pages) {
-        const pageMarkdown = page.value;
         let unmatchedSubstrings = [...substrings];
 
+        // search terms can appear in the title or the content of the page
         unmatchedSubstrings = unmatchedSubstrings.filter(substring => {
           const substrOrClauses = orClauses[substring];
           for (const substrOrClause of substrOrClauses) {
@@ -41,13 +98,14 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
           return true;
         });
 
-        let nodesMarkdown = splitMarkdownByNodes(page.value);
+        let nodesMarkdown = splitMarkdownByNodes(page.value, page.title);
         let currentNodeNum = 0;
         while (currentNodeNum < nodesMarkdown.length) {
+          const currentNodeMarkdown = nodesMarkdown[currentNodeNum].baseNode.nodeMarkdown; 
           const matchesAll = unmatchedSubstrings.every(substring => {
             const substrOrClauses = orClauses[substring];
             for (const substrOrClause of substrOrClauses) {
-              if (nodesMarkdown[currentNodeNum].includes(substrOrClause)) {
+              if (currentNodeMarkdown.includes(substrOrClause)) {
                 return true;
               } 
             }
@@ -55,36 +113,12 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
           });
           if (matchesAll) {
             // for now, we avoid circular references by excluding any lines with find() formulas
-            if (!findFormulaStartRegex.test(nodesMarkdown[currentNodeNum])) {
-              const indentationNum = indentationRegex.exec(nodesMarkdown[currentNodeNum])?.[1].length ?? -1;
-              let numChildren = 0;
-              if (indentationNum > -1) {
-                // if the match is a bullet point, pull in any child nodes
-                // if we hit a child node with a find(), just stop
-                // TODO figure out something better to do here
-                while (currentNodeNum + numChildren + 1 < nodesMarkdown.length) { 
-                  const potentialChild = nodesMarkdown[currentNodeNum + numChildren + 1];
-                  const childIndentNum = indentationRegex.exec(potentialChild)?.[1].length ?? -1;
-                  if (childIndentNum > indentationNum && !findFormulaStartRegex.test(nodesMarkdown[currentNodeNum+numChildren])) {
-                    numChildren++;
-                    continue;
-                  } else {
-                    break;
-                  }
-                }
-              }
-              let outputLinesString = nodesMarkdown[currentNodeNum];
-              if (numChildren > 0) {
-                for (let j = 1; j <= numChildren; j++) {
-                  outputLinesString += "\n" + nodesMarkdown[currentNodeNum+j];
-                }
-              }
-              output.push(
-                createBaseNodeMarkdown(page.title, i+1, i+numLines, outputLinesString)
-              );
-              currentNodeNum += numChildren + 1;
+            if (!findFormulaStartRegex.test(currentNodeMarkdown)) {
+              removeFindNodes(nodesMarkdown[currentNodeNum]);
+              output.push(nodesMarkdown[currentNodeNum]);
             }
           }
+          currentNodeNum++;
         }
       }
 
