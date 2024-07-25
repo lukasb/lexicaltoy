@@ -39,7 +39,7 @@ import {
   CREATE_FORMULA_NODES
 } from "@/lib/formula-commands";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
-import { BaseNodeMarkdown } from "@/lib/formula/formula-definitions";
+import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
 import {
   $replaceWithFormulaDisplayNode,
   createFormulaOutputNodes,
@@ -92,7 +92,7 @@ export function registerFormulaCommandHandlers(
   editor: LexicalEditor,
   updatingNodeKey: MutableRefObject<string | null>,
   setUpdatingNodeKey: (updatingNodeKey: string | null) => void,
-  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, BaseNodeMarkdown>>>,
+  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeElementMarkdown>>>,
   setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>>
   ) {
     return mergeRegister(

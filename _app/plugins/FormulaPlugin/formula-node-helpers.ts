@@ -23,13 +23,12 @@ import {
   $deleteChildrenFromListItem,
 } from "@/lib/list-utils";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
-import { BaseNodeMarkdown } from "@/lib/formula/formula-definitions";
+import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
 import { $isWikilinkNode, WikilinkNode } from "@/_app/nodes/WikilinkNode";
 import { 
   $createFormattableTextNode,
   FormattableTextNode
 } from "@/_app/nodes/FormattableTextNode";
-import { TRANSFORMERS } from "@lexical/markdown";
 import { ChildSharedNodeReference } from ".";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
 
@@ -161,23 +160,55 @@ export function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   node.replace(formulaDisplayNode);
 }
 
-function sortNodeMarkdownByPageName(nodes: BaseNodeMarkdown[]): BaseNodeMarkdown[] {
-  return nodes.slice().sort((a, b) => a.pageName.localeCompare(b.pageName));
+function sortNodeMarkdownByPageName(nodes: NodeElementMarkdown[]): NodeElementMarkdown[] {
+  return nodes.slice().sort((a, b) => a.baseNode.pageName.localeCompare(b.baseNode.pageName));
+}
+
+// currently we only suppor showing results that are list items
+const listItemRegex = /^(\s*)-\s*(.+)$/;
+
+function addChildrenRecursively(
+  parentListItem: ListItemNode,
+  children: NodeElementMarkdown[]
+): Array<{ key: string; baseNodeMarkdown: BaseNodeMarkdown }> {
+  let addedNodes: Array<{ key: string; baseNodeMarkdown: BaseNodeMarkdown }> =
+    [];
+
+  children.forEach((child) => {
+    const childListItem = new ListItemNode();
+    const childMatch = child.baseNode.nodeMarkdown.match(listItemRegex);
+    if (childMatch) {
+      $myConvertFromMarkdownString(childMatch[2], false, childListItem);
+      $addChildListItem(parentListItem, false, false, childListItem);
+
+      addedNodes.push({
+        key: childListItem.getKey(),
+        baseNodeMarkdown: child.baseNode,
+      });
+
+      // Recursively add grandchildren
+      if (child.children && child.children.length > 0) {
+        addedNodes = addedNodes.concat(
+          addChildrenRecursively(childListItem, child.children)
+        );
+      }
+    }
+  });
+
+  return addedNodes;
 }
 
 export function createFormulaOutputNodes(
   editor: LexicalEditor,
   displayNode: FormulaDisplayNode,
-  nodesMarkdown: BaseNodeMarkdown[],
-  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, BaseNodeMarkdown>>>,
+  nodesMarkdown: NodeElementMarkdown[],
+  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeElementMarkdown>>>,
   setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>>
 ) {
 
   const parentListItem = getListItemParentNode(displayNode);
   if (!parentListItem) return;
 
-  // currently we only suppor showing results that are list items
-  const listItemRegex = /^(\s*)-\s*(.+)$/;
   const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
 
   // prevent this editor from stealing focus
@@ -196,12 +227,11 @@ export function createFormulaOutputNodes(
   let currentPageListItem: ListItemNode | null = null;
 
   for (const node of sortedNodes) {
-    const lines = node.nodeMarkdown.split("\n");
-    const match = lines[0].match(listItemRegex);
+    const match = node.baseNode.nodeMarkdown.match(listItemRegex);
     if (!match) continue;
 
-    if (node.pageName !== currentPageName) {
-      currentPageName = node.pageName;
+    if (node.baseNode.pageName !== currentPageName) {
+      currentPageName = node.baseNode.pageName;
       const pageNameListItem = new ListItemNode();
       pageNameListItem.append($createFormattableTextNode("[[" + currentPageName + "]]"));
       $addChildListItem(parentListItem, false, false, pageNameListItem);
@@ -219,40 +249,17 @@ export function createFormulaOutputNodes(
         return updatedMap;
       });
 
-      // if the list item has children/grandchildren etc, add them
-      // number of spaces before the dash determines the indent level (not 1:1 mapping)
-      let indent = match[1].length;
-      let lastPeer = listItemNode;
-      let parents = [];
-      let leaves = [listItemNode];
-      for (let i = 1; i < lines.length; i++) {
-        const childListItem = new ListItemNode();
-        const childMatch = lines[i].match(listItemRegex);
-        if (childMatch) {
-          $myConvertFromMarkdownString(childMatch[2], false, childListItem);
-          if (childMatch[1].length > indent) {
-            parents.push(lastPeer);
-            indent = childMatch[1].length;
-          } else if (childMatch[1].length < indent) {
-            parents.pop();
-            indent = childMatch[1].length;
-          }
-          const parent = parents[parents.length - 1];
-          $addChildListItem(parent, false, false, childListItem);
-          lastPeer = childListItem;
-          leaves.push(childListItem);
-        }
-      }
-
+      const addedChildNodes = addChildrenRecursively(listItemNode, node.children);
+      
       // make sure we can map any children/grandchildren back to the global shared node map
       setLocalChildNodeMap((prevMap) => {
         const updatedMap = new Map(prevMap);
-        for (let i = 0; i < leaves.length; i++) {
-          updatedMap.set(leaves[i].getKey(), {
+        addedChildNodes.forEach(childNode => {
+          updatedMap.set(childNode.key, {
             parentLexicalNodeKey: listItemNode.getKey(),
-            childLineNumWithinParent: i
+            baseNodeMarkdown: childNode.baseNodeMarkdown
           });
-        }
+        });
         return updatedMap;
       });
  

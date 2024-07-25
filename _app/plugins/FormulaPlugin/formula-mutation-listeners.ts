@@ -8,7 +8,7 @@ import {
   ListItemNode,
 } from "@lexical/list";
 import { mergeRegister } from "@lexical/utils";
-import { BaseNodeMarkdown } from "@/lib/formula/formula-definitions";
+import { NodeElementMarkdown, updateDescendant } from "@/lib/formula/formula-definitions";
 import { $convertToMarkdownString, TRANSFORMERS } from "@lexical/markdown";
 import {
   $getFormulaNodeFromSharedNode,
@@ -24,9 +24,9 @@ import { ChildSharedNodeReference } from ".";
 
 export function registerFormulaMutationListeners(
   editor: LexicalEditor,
-  localSharedNodeMap: Map<string, BaseNodeMarkdown>,
+  localSharedNodeMap: Map<string, NodeElementMarkdown>,
   childSharedNodeMap: Map<string, ChildSharedNodeReference>,
-  updateNodeMarkdownGlobal: (updatedNodeMarkdown: BaseNodeMarkdown, needsSyncToPage: boolean) => void,
+  updateNodeMarkdownGlobal: (updatedNodeMarkdown: NodeElementMarkdown, needsSyncToPage: boolean) => void,
   setUpdatingNodeKey: (updatingNodeKey: string | null) => void,
   ) {
 
@@ -53,9 +53,8 @@ export function registerFormulaMutationListeners(
               if (!childNodeReference) continue;
               const parentNodeMarkdown = localSharedNodeMap.get(childNodeReference?.parentLexicalNodeKey);
               if (!parentNodeMarkdown) continue;
-              const childNodeMarkdown = 
-                parentNodeMarkdown.nodeMarkdown.split("\n")[childNodeReference.childLineNumWithinParent];
               
+              const childNodeMarkdown = childNodeReference.baseNodeMarkdown.nodeMarkdown;
               const listItemPrefixRegex = /^(\s*- )/;
               const match = childNodeMarkdown.match(listItemPrefixRegex);
               let listItemPrefix = match ? match[1] : "- ";
@@ -72,24 +71,24 @@ export function registerFormulaMutationListeners(
                 childNodeMarkdown
               ) {
 
-                  const markdownLines = parentNodeMarkdown.nodeMarkdown.split("\n");
-                  markdownLines[childNodeReference.childLineNumWithinParent] = updatedChildNodeMarkdown;
-                  const updatedNodeMarkdown = markdownLines.join("\n");
+                  const newParent = updateDescendant(
+                    parentNodeMarkdown,
+                    childNodeReference.baseNodeMarkdown,
+                    updatedChildNodeMarkdown
+                  );                  
 
                   const formulaDisplayNode =
                     $getFormulaNodeFromSharedNode(listItem);
                   const displayNodeKey = formulaDisplayNode?.getKey() ?? null;
                   setUpdatingNodeKey(displayNodeKey);
 
-                  localSharedNodeMap.set(childNodeReference?.parentLexicalNodeKey, {
-                    pageName: parentNodeMarkdown.pageName,
-                    lineNumberStart: parentNodeMarkdown.lineNumberStart,
-                    lineNumberEnd: parentNodeMarkdown.lineNumberEnd,
-                    nodeMarkdown: updatedNodeMarkdown,
-                  });
+                  localSharedNodeMap.set(
+                    childNodeReference?.parentLexicalNodeKey,
+                    newParent
+                  );
 
                   updateNodeMarkdownGlobal(
-                    { ...parentNodeMarkdown, nodeMarkdown: updatedNodeMarkdown },
+                    newParent,
                     true // set needsSyncToPage to true
                   );
               }

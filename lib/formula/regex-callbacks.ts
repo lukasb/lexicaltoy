@@ -2,7 +2,7 @@ import { Page } from "../definitions";
 import { 
   FormulaOutput,
   FormulaOutputType,
-  createNodeMarkdown
+  createBaseNodeMarkdown
 } from "./formula-definitions";
 
 export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Page[]) => Promise<FormulaOutput>]> = [
@@ -80,7 +80,7 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
                 }
               }
               output.push(
-                createNodeMarkdown(page.title, i+1, i+numLines, outputLinesString)
+                createBaseNodeMarkdown(page.title, i+1, i+numLines, outputLinesString)
               );
               if (numLines > 1) {
                 i += numLines - 1;
