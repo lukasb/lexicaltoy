@@ -4,6 +4,7 @@ import {
   FormulaOutputType,
   createBaseNodeMarkdown
 } from "./formula-definitions";
+import { splitMarkdownByNodes } from "../list-utils";
 
 export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Page[]) => Promise<FormulaOutput>]> = [
   [
@@ -28,7 +29,7 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
       const indentationRegex = /^(\s*)-/;
 
       for (const page of pages) {
-        const lines = page.value.split("\n");
+        const pageMarkdown = page.value;
         let unmatchedSubstrings = [...substrings];
 
         unmatchedSubstrings = unmatchedSubstrings.filter(substring => {
@@ -41,50 +42,48 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
           return true;
         });
 
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
+        let nodesMarkdown = splitMarkdownByNodes(page.value);
+        let currentNodeNum = 0;
+        while (currentNodeNum < nodesMarkdown.length) {
           const matchesAll = unmatchedSubstrings.every(substring => {
             const substrOrClauses = orClauses[substring];
             for (const substrOrClause of substrOrClauses) {
-              if (line.includes(substrOrClause)) {
+              if (nodesMarkdown[currentNodeNum].includes(substrOrClause)) {
                 return true;
-              }
+              } 
             }
             return false;
           });
           if (matchesAll) {
             // for now, we avoid circular references by excluding any lines with find() formulas
-            if (!findFormulaStartRegex.test(line)) {
-              let numLines = 1;
-              const indentationNum = indentationRegex.exec(line)?.[1].length ?? -1;
+            if (!findFormulaStartRegex.test(nodesMarkdown[currentNodeNum])) {
+              const indentationNum = indentationRegex.exec(nodesMarkdown[currentNodeNum])?.[1].length ?? -1;
+              let numChildren = 0;
               if (indentationNum > -1) {
                 // if the match is a bullet point, pull in any child nodes
                 // if we hit a child node with a find(), just stop
                 // TODO figure out something better to do here
-                while (
-                  i+numLines < lines.length && 
-                  !findFormulaStartRegex.test(lines[i+numLines])) {
-                    const childIndentNum = indentationRegex.exec(lines[i+numLines])?.[1].length ?? -1;
-                    if (childIndentNum > indentationNum) {
-                      numLines++;
-                      continue;
-                    } else {
-                      break;
-                    }
+                while (currentNodeNum + numChildren + 1 < nodesMarkdown.length) { 
+                  const potentialChild = nodesMarkdown[currentNodeNum + numChildren + 1];
+                  const childIndentNum = indentationRegex.exec(potentialChild)?.[1].length ?? -1;
+                  if (childIndentNum > indentationNum && !findFormulaStartRegex.test(nodesMarkdown[currentNodeNum+numChildren])) {
+                    numChildren++;
+                    continue;
+                  } else {
+                    break;
+                  }
                 }
               }
-              let outputLinesString = line;
-              if (numLines > 1) {
-                for (let j = 1; j < numLines; j++) {
-                  outputLinesString += "\n" + lines[i+j];
+              let outputLinesString = nodesMarkdown[currentNodeNum];
+              if (numChildren > 0) {
+                for (let j = 1; j <= numChildren; j++) {
+                  outputLinesString += "\n" + nodesMarkdown[currentNodeNum+j];
                 }
               }
               output.push(
                 createBaseNodeMarkdown(page.title, i+1, i+numLines, outputLinesString)
               );
-              if (numLines > 1) {
-                i += numLines - 1;
-              }
+              currentNodeNum += numChildren + 1;
             }
           }
         }
