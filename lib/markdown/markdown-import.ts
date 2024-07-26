@@ -621,7 +621,7 @@ function $importBlocks(
 
   for (const {regExp, replace} of elementTransformers) {
     const match = lineText.match(regExp);
-
+    
     if (match) {
       textNode.setTextContent(lineText.slice(match[0].length));
       replace(elementNode, [textNode], match, true);

@@ -42,7 +42,7 @@ function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMa
         }
       }
     } else {
-      const currentNode = stack[stack.length - 1];
+      const currentNode = stack[stack.length - 1].children[stack[stack.length - 1].children.length - 1] || stack[stack.length - 1];
       currentNode.baseNode.nodeMarkdown += (currentNode.baseNode.nodeMarkdown ? "\n" : "") + line;
       currentNode.baseNode.lineNumberEnd = i + 1;
     }
@@ -115,6 +115,7 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
             // for now, we avoid circular references by excluding any lines with find() formulas
             if (!findFormulaStartRegex.test(currentNodeMarkdown)) {
               removeFindNodes(nodesMarkdown[currentNodeNum]);
+              console.log("pushing onto output", nodesMarkdown[currentNodeNum]);
               output.push(nodesMarkdown[currentNodeNum]);
             }
           }

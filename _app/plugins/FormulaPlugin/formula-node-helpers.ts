@@ -165,7 +165,7 @@ function sortNodeMarkdownByPageName(nodes: NodeElementMarkdown[]): NodeElementMa
 }
 
 // currently we only suppor showing results that are list items
-const listItemRegex = /^(\s*)-\s*(.+)$/;
+const listItemRegex = /^(\s*)-\s*(.+(?:\n(?!\s*-).*)*)/;
 
 function addChildrenRecursively(
   parentListItem: ListItemNode,
@@ -210,7 +210,7 @@ export function createFormulaOutputNodes(
   if (!parentListItem) return;
 
   const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
-
+  
   // prevent this editor from stealing focus
   // we make it editable again in an update listener in PageListenerPlugin
   if (
