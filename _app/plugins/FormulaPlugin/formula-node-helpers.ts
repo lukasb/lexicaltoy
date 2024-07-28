@@ -248,15 +248,16 @@ export function createFormulaOutputNodes(
         pageNameListItem.append(
           $createFormattableTextNode("[[" + currentPageName + "]]")
         );
-        $addChildListItem(parentListItem, false, false, pageNameListItem);
-        currentPageListItem = pageNameListItem;
-        currentPageList = $getOrAddListForChildren(currentPageListItem);
+        //$addChildListItem(parentListItem, false, false, pageNameListItem);
+        //currentPageListItem = pageNameListItem;
+        //currentPageList = $getOrAddListForChildren(currentPageListItem);
       }
 
-      if (currentPageList && currentPageListItem) {
+      currentPageListItem = new ListItemNode();
+      if (currentPageListItem) {
         const pNode = new ParagraphNode();
-        console.log("about to import markdown");
-        $myConvertFromMarkdownString(match[2], false, pNode);
+        console.log("about to import markdown", match[2]);
+        $myConvertFromMarkdownString(match[2], false, dummyRoot);
         const listNode = dummyRoot.getFirstChild() as ListNode;
         if (!listNode) continue;
         const listItemNode = listNode.getFirstChild() as ListItemNode;
