@@ -172,6 +172,7 @@ const listItemRegex = /^(\s*)(-\s*.+(?:\n(?!\s*-).*)*)/;
 function importListItemNode(nodeMarkdown: string, parentListItem: ListItemNode): ListItemNode {
   const listItemNode = $createListItemNode();
   $addChildListItem(parentListItem, false, false, listItemNode);
+  console.log("li", listItemNode.getKey(), listItemNode.getParent()?.getKey());
   $myConvertFromMarkdownString(nodeMarkdown, false, listItemNode);
   return listItemNode;
 }

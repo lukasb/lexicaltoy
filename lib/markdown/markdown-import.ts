@@ -161,6 +161,7 @@ const listReplace = (listType: ListType): ElementTransformer['replace'] => {
         listType === 'number' ? Number(match[2]) : undefined,
       );
       list.append(listItem);
+      console.log("hmm", parentNode.getKey(), parentNode.getParent()?.getKey());
       parentNode.replace(list);
     }
     listItem.append(...children);
@@ -618,7 +619,7 @@ function $importBlocks(
   const elementNode = $createParagraphNode();
   elementNode.append(textNode);
   rootNode.append(elementNode);
-
+  console.log("enode", elementNode.getKey(), elementNode.getParent()?.getKey(), rootNode.getKey());
   for (const {regExp, replace} of elementTransformers) {
     const match = lineText.match(regExp);
     
