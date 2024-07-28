@@ -10,12 +10,14 @@ import {
   LexicalNode,
   $getNodeByKey,
   $isTextNode,
+  ParagraphNode,
 } from "lexical";
 import {
   ListItemNode,
   $isListItemNode,
   ListNode,
-  $isListNode
+  $isListNode,
+  $createListItemNode
 } from "@lexical/list";
 import { 
   getListItemParentNode,
@@ -167,6 +169,13 @@ function sortNodeMarkdownByPageName(nodes: NodeElementMarkdown[]): NodeElementMa
 // currently we only suppor showing results that are list items
 const listItemRegex = /^(\s*)(-\s*.+(?:\n(?!\s*-).*)*)/;
 
+function importListItemNode(nodeMarkdown: string, parentListItem: ListItemNode): ListItemNode {
+  const listItemNode = $createListItemNode();
+  $myConvertFromMarkdownString(nodeMarkdown, false, listItemNode);
+  $addChildListItem(parentListItem, false, false, listItemNode);
+  return listItemNode;
+}
+
 function addChildrenRecursively(
   parentListItem: ListItemNode,
   children: NodeElementMarkdown[]
@@ -175,12 +184,10 @@ function addChildrenRecursively(
     [];
 
   children.forEach((child) => {
-    const childListItem = new ListItemNode();
     const childMatch = child.baseNode.nodeMarkdown.match(listItemRegex);
     if (childMatch) {
-      $myConvertFromMarkdownString(childMatch[2], false, childListItem);
-      $addChildListItem(parentListItem, false, false, childListItem);
-
+      const childListItem = importListItemNode(childMatch[2], parentListItem);
+      
       addedNodes.push({
         key: childListItem.getKey(),
         baseNodeMarkdown: child.baseNode,
@@ -239,9 +246,7 @@ export function createFormulaOutputNodes(
     }
 
     if (currentPageListItem) {
-      const listItemNode = new ListItemNode();
-      $myConvertFromMarkdownString(match[2], false, listItemNode);
-      $addChildListItem(currentPageListItem, false, false, listItemNode);
+      const listItemNode = importListItemNode(match[2], currentPageListItem);
 
       setLocalSharedNodeMap((prevMap) => {
         const updatedMap = new Map(prevMap);
