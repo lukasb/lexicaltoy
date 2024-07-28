@@ -165,7 +165,7 @@ function sortNodeMarkdownByPageName(nodes: NodeElementMarkdown[]): NodeElementMa
 }
 
 // currently we only suppor showing results that are list items
-const listItemRegex = /^(\s*)-\s*(.+(?:\n(?!\s*-).*)*)/;
+const listItemRegex = /^(\s*)(-\s*.+(?:\n(?!\s*-).*)*)/;
 
 function addChildrenRecursively(
   parentListItem: ListItemNode,
