@@ -115,7 +115,6 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
             // for now, we avoid circular references by excluding any lines with find() formulas
             if (!findFormulaStartRegex.test(currentNodeMarkdown)) {
               removeFindNodes(nodesMarkdown[currentNodeNum]);
-              console.log("pushing onto output", nodesMarkdown[currentNodeNum]);
               output.push(nodesMarkdown[currentNodeNum]);
             }
           }

@@ -1,14 +1,9 @@
 import { Page } from './definitions';
-import { createHeadlessEditor } from '@lexical/headless';
 import { 
   $convertToMarkdownString, 
   TRANSFORMERS
 } from '@lexical/markdown';
-import { ListNode, ListItemNode } from "@lexical/list";
-import { LinkNode, AutoLinkNode } from "@lexical/link";
-import { WikilinkNode, WikilinkInternalNode } from "@/_app/nodes/WikilinkNode";
-import { TodoCheckboxStatusNode } from "@/_app/nodes/TodoNode";
-import { FormulaEditorNode, FormulaDisplayNode } from "@/_app/nodes/FormulaNode";
+import { myCreateHeadlessEditor } from './editor-utils';
 
 export function searchPageTitles(pages: Page[], term: string): Page[] {
   const normalizedTerm = term.toLowerCase();
@@ -65,20 +60,7 @@ export function findMostRecentlyEditedPage(pages: Page[]): Page | null {
 
 function getPageMarkdownInternal(page: Page): Promise<string> {
   return new Promise((resolve, reject) => {
-    const editor = createHeadlessEditor({
-      nodes: [
-        LinkNode,
-        ListNode,
-        ListItemNode,
-        AutoLinkNode,
-        WikilinkNode,
-        WikilinkInternalNode,
-        TodoCheckboxStatusNode,
-        FormulaEditorNode,
-        FormulaDisplayNode,
-      ],
-      onError: console.error,
-    });
+    const editor = myCreateHeadlessEditor();
     editor.setEditorState(editor.parseEditorState(page.value));
     try {
       editor.update(() => {

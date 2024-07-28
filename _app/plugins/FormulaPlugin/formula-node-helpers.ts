@@ -10,17 +10,22 @@ import {
   LexicalNode,
   $getNodeByKey,
   $isTextNode,
+  RootNode,
+  ParagraphNode,
 } from "lexical";
 import {
   ListItemNode,
   $isListItemNode,
   ListNode,
-  $isListNode
+  $isListNode,
+  $createListItemNode
 } from "@lexical/list";
 import { 
   getListItemParentNode,
   $addChildListItem,
   $deleteChildrenFromListItem,
+  $getListContainingChildren,
+  $getOrAddListForChildren,
 } from "@/lib/list-utils";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
 import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
@@ -31,6 +36,8 @@ import {
 } from "@/_app/nodes/FormattableTextNode";
 import { ChildSharedNodeReference } from ".";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
+import { myCreateHeadlessEditor } from "@/lib/editor-utils";
+import { $getRoot } from "lexical";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -164,8 +171,8 @@ function sortNodeMarkdownByPageName(nodes: NodeElementMarkdown[]): NodeElementMa
   return nodes.slice().sort((a, b) => a.baseNode.pageName.localeCompare(b.baseNode.pageName));
 }
 
-// currently we only suppor showing results that are list items
-const listItemRegex = /^(\s*)-\s*(.+(?:\n(?!\s*-).*)*)/;
+// currently we only support showing results that are list items
+const listItemRegex = /^(\s*)(-\s*.+(?:\n(?!\s*-).*)*)/;
 
 function addChildrenRecursively(
   parentListItem: ListItemNode,
@@ -225,44 +232,64 @@ export function createFormulaOutputNodes(
 
   let currentPageName = "";
   let currentPageListItem: ListItemNode | null = null;
+  let currentPageList: ListNode | null = null;
 
-  for (const node of sortedNodes) {
-    const match = node.baseNode.nodeMarkdown.match(listItemRegex);
-    if (!match) continue;
+  const headlessEditor = myCreateHeadlessEditor();
 
-    if (node.baseNode.pageName !== currentPageName) {
-      currentPageName = node.baseNode.pageName;
-      const pageNameListItem = new ListItemNode();
-      pageNameListItem.append($createFormattableTextNode("[[" + currentPageName + "]]"));
-      $addChildListItem(parentListItem, false, false, pageNameListItem);
-      currentPageListItem = pageNameListItem;
-    }
+  headlessEditor.update(() => {
+    const dummyRoot = $getRoot();
+    for (const node of sortedNodes) {
+      const match = node.baseNode.nodeMarkdown.match(listItemRegex);
+      if (!match) continue;
 
-    if (currentPageListItem) {
-      const listItemNode = new ListItemNode();
-      $myConvertFromMarkdownString(match[2], false, listItemNode);
-      $addChildListItem(currentPageListItem, false, false, listItemNode);
+      if (node.baseNode.pageName !== currentPageName) {
+        currentPageName = node.baseNode.pageName;
+        const pageNameListItem = new ListItemNode();
+        pageNameListItem.append(
+          $createFormattableTextNode("[[" + currentPageName + "]]")
+        );
+        $addChildListItem(parentListItem, false, false, pageNameListItem);
+        currentPageListItem = pageNameListItem;
+        currentPageList = $getOrAddListForChildren(currentPageListItem);
+      }
 
-      setLocalSharedNodeMap((prevMap) => {
-        const updatedMap = new Map(prevMap);
-        updatedMap.set(listItemNode.getKey(), node);
-        return updatedMap;
-      });
+      if (currentPageList && currentPageListItem) {
+        const pNode = new ParagraphNode();
+        console.log("about to import markdown");
+        $myConvertFromMarkdownString(match[2], false, pNode);
+        const listNode = dummyRoot.getFirstChild() as ListNode;
+        if (!listNode) continue;
+        const listItemNode = listNode.getFirstChild() as ListItemNode;
 
-      const addedChildNodes = addChildrenRecursively(listItemNode, node.children);
-      
-      // make sure we can map any children/grandchildren back to the global shared node map
-      setLocalChildNodeMap((prevMap) => {
-        const updatedMap = new Map(prevMap);
-        addedChildNodes.forEach(childNode => {
-          updatedMap.set(childNode.key, {
-            parentLexicalNodeKey: listItemNode.getKey(),
-            baseNodeMarkdown: childNode.baseNodeMarkdown
+        if (listItemNode) {
+          console.log("LINode", listItemNode.getTextContent());
+          listItemNode.remove();
+          $addChildListItem(currentPageListItem, false, false, listItemNode);
+
+          setLocalSharedNodeMap((prevMap) => {
+            const updatedMap = new Map(prevMap);
+            updatedMap.set(listItemNode.getKey(), node);
+            return updatedMap;
           });
-        });
-        return updatedMap;
-      });
- 
+
+          const addedChildNodes = addChildrenRecursively(
+            listItemNode,
+            node.children
+          );
+
+          // make sure we can map any children/grandchildren back to the global shared node map
+          setLocalChildNodeMap((prevMap) => {
+            const updatedMap = new Map(prevMap);
+            addedChildNodes.forEach((childNode) => {
+              updatedMap.set(childNode.key, {
+                parentLexicalNodeKey: listItemNode.getKey(),
+                baseNodeMarkdown: childNode.baseNodeMarkdown,
+              });
+            });
+            return updatedMap;
+          });
+        }
+      }
     }
-  }
+  });
 }
