@@ -16,17 +16,20 @@ function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMa
   };
   const stack: NodeElementMarkdown[] = [rootNode];
   let currentIndentation = 0;
+  let isProcessingListItems = false;
+  const indentStack = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmedLine = line.trimStart();
+    const isListItem = trimmedLine.startsWith("-");
     const indentation = line.length - trimmedLine.length;
 
-    if (trimmedLine === "" || trimmedLine.startsWith("-")) {
+    if (trimmedLine === "" || isListItem) {
       if (trimmedLine !== "") {
         while (indentation < currentIndentation && stack.length > 1) {
           stack.pop();
-          currentIndentation -= 2;
+          currentIndentation -= indentStack.pop() || 2;
         }
 
         const newNode: NodeElementMarkdown = {
@@ -36,10 +39,14 @@ function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMa
 
         stack[stack.length - 1].children.push(newNode);
 
-        if (indentation > currentIndentation) {
+        if (indentation > currentIndentation || (!isProcessingListItems && isListItem)) {
+          indentStack.push(indentation - currentIndentation);
           stack.push(newNode);
           currentIndentation = indentation;
+          isProcessingListItems = true;
         }
+      } else {
+        isProcessingListItems = false;
       }
     } else {
       const currentNode = stack[stack.length - 1].children[stack[stack.length - 1].children.length - 1] || stack[stack.length - 1];
@@ -115,6 +122,8 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
             // for now, we avoid circular references by excluding any lines with find() formulas
             if (!findFormulaStartRegex.test(currentNodeMarkdown)) {
               removeFindNodes(nodesMarkdown[currentNodeNum]);
+              console.log("got a match", nodesMarkdown);
+              console.log("page value was", page.value);
               output.push(nodesMarkdown[currentNodeNum]);
             }
           }
