@@ -203,7 +203,6 @@ function _buildSerializedTree(
   let addedNodes: SerializedListItemWithMarkdown[] = [];
 
   children.forEach((child) => {
-    console.log("trying with", child);
     const root = $getRoot();
     const childMatch = child.baseNode.nodeMarkdown.match(listItemRegex);
     if (childMatch) {
@@ -213,7 +212,6 @@ function _buildSerializedTree(
         const listItemNode = listNode.getFirstChild() as ListItemNode;
         if (listItemNode) {
           let serializedLIs: SerializedListItemNode[] = [];
-          console.log("appending to json", listItemNode.getTextContent());
           $appendNodesToJSON(headlessEditor, listItemNode, serializedLIs);
           // Recursively add grandchildren
           let nodeChildren: SerializedListItemWithMarkdown[] = [];
@@ -244,7 +242,6 @@ function addChildrenRecursively(
 
   const childrenList = $getOrAddListForChildren(parentListItem);
   children.forEach((child) => {
-    console.log("appending ndes", child.baseNodeMarkdown.nodeMarkdown);
     $appendNodes(childrenList, [child.serializedNode]);
     const childListItem = childrenList.getLastChild() as ListItemNode;
     addedNodes.push({
@@ -336,7 +333,6 @@ export function createFormulaOutputNodes(
             return updatedMap;
           });
 
-          console.log("calling with", node.children);
           const addedChildNodes = addChildren(
             headlessEditor,
             listItemNode,
