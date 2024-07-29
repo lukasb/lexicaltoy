@@ -1,7 +1,7 @@
 function processResult(result: string): string {
   // Strip Markdown elements that could interfere with document structure
   result = result.replace(/^#+\s/gm, '');  // Remove headings
-  result = result.replace(/^[-*+]\s/gm, '');  // Remove bullet points
+  result = result.replace(/^(\s*)[-*+]\s/gm, '$1‣ ');  // Replace bullets with emoji, preserving leading whitespace
   
   // Replace two or more consecutive newlines with a single newline
   result = result.replace(/\n{2,}/g, '\n');
