@@ -203,7 +203,8 @@ const Omnibar = forwardRef(({
     } else if (event.key === "Escape") {
       // tried also checking event.code === "Escape" to recognize
       // remapped keys but no dice, at least on iPad
-      resetSelf();
+      // disable this until we can get rid of conflict with floating menus that use esc to dismiss
+      //resetSelf();
     } else if (event.metaKey && event.key === "k") {
       event.preventDefault();
       // scroll to the top of the page
