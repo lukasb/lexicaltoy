@@ -97,7 +97,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey && event.key === "k") || event.key === "Escape") {
+      if (event.metaKey && event.key === "k") {
         event.preventDefault();
         omnibarRef.current?.focus();
       }
