@@ -17,7 +17,7 @@ function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMa
   const stack: NodeElementMarkdown[] = [rootNode];
   let currentIndentation = 0;
   let isProcessingListItems = false;
-  const indentStack = [];
+  const indentStack: number[] = [];
   let lastNode;
 
   for (let i = 0; i < lines.length; i++) {
