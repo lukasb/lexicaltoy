@@ -1,7 +1,7 @@
 "use client";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useContext, useCallback } from "react";
 import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -97,16 +97,14 @@ function Editor({
   };
 
   const pages = useContext(PagesContext);
+  const [floatingAnchorElem, setFloatingAnchorElem] = useState<HTMLDivElement | null>(null);
+  const [isSmallWidthViewport, setIsSmallWidthViewport] = useState<boolean>(false);
+  const pendingChangeRef = useRef<string | null>(null);
+  const localVersionRef = useRef<number>(page.revisionNumber);
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
   }, [pages]);
-
-  const [floatingAnchorElem, setFloatingAnchorElem] =
-    useState<HTMLDivElement | null>(null);
-
-  const [isSmallWidthViewport, setIsSmallWidthViewport] =
-    useState<boolean>(false);
 
   useBreakpoint(768, isSmallWidthViewport, setIsSmallWidthViewport);
 
@@ -116,20 +114,21 @@ function Editor({
     }
   };
 
-  let localVersion = page.revisionNumber;
-
-  // TODO this assumes the page content won't be changed elsewhere in the same PagesContext
-  const storePage = useDebouncedCallback(async (outline) => {
+  const saveChange = useCallback((newContent: string) => {
     const currentPage = getPage(page.id);
-    if (!currentPage || localVersion > currentPage.revisionNumber) {
-      console.log("Local version is newer than current page version, not saving.");
-      return;
+    if (currentPage) {
+      if (localVersionRef.current > currentPage.revisionNumber) {
+        console.log("Local version is newer than current page version, not saving.");
+        return;
+      }
+      updatePageContentsLocal(page.id, newContent, currentPage.revisionNumber);
+      localVersionRef.current = currentPage.revisionNumber + 1;
     }
-    updatePageContentsLocal(page.id, outline, currentPage.revisionNumber);
-    localVersion = currentPage.revisionNumber + 1;
-  }, 500);
+  }, [page.id, getPage, updatePageContentsLocal]);
 
-  function onChange(editorState: EditorState) {
+  const debouncedSave = useDebouncedCallback(saveChange, 500);
+
+  const onChange = useCallback((editorState: EditorState) => {
     if (!editorState) return;
     editorState.read(() => {
       const editorStateMarkdown = $convertToMarkdownString(TRANSFORMERS);
@@ -137,10 +136,27 @@ function Editor({
       const trimmedPageContents = pageContentsWithoutSharedNodes.replace(/\s$/, '');
       const trimmedPageValue = page.value.replace(/\s$/, '');
       if (trimmedPageContents !== trimmedPageValue) {
-        storePage(pageContentsWithoutSharedNodes);
+        pendingChangeRef.current = pageContentsWithoutSharedNodes;
+        debouncedSave(pageContentsWithoutSharedNodes);
       }
     });
-  }
+  }, [page.value, debouncedSave]);
+
+  const onBeforeUnload = useCallback(() => {
+    if (pendingChangeRef.current) {
+      saveChange(pendingChangeRef.current);
+    }
+  }, [saveChange]);
+
+  React.useEffect(() => {
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      if (pendingChangeRef.current) {
+        saveChange(pendingChangeRef.current);
+      }
+    };
+  }, [onBeforeUnload, saveChange]);
 
   return (
     <PromisesProvider>
