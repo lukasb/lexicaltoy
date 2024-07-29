@@ -25,6 +25,7 @@ export enum TodoStatus {
   TODO = 'TODO',
   DOING = 'DOING',
   DONE = 'DONE',
+  WAITING = 'WAITING'
 }
 
 export class TodoCheckboxStatusNode extends DecoratorNode<JSX.Element> {

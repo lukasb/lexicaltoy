@@ -20,6 +20,7 @@ import {
   INSERT_DOING_TODO_COMMAND,
   INSERT_NOW_TODO_COMMAND,
   INSERT_LATER_TODO_COMMAND,
+  INSERT_WAITING_TODO_COMMAND,
   REMOVE_TODO_COMMAND,
   SET_TODO_DONE_VALUE_COMMAND,
   SET_TODO_STATUS_COMMAND
@@ -95,6 +96,14 @@ function registerTodoHandlers(editor: LexicalEditor) {
       INSERT_LATER_TODO_COMMAND,
       () => {
         todoAddOrChangeCommand(TodoStatus.LATER, false);
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    ),
+    editor.registerCommand(
+      INSERT_WAITING_TODO_COMMAND,
+      () => {
+        todoAddOrChangeCommand(TodoStatus.WAITING, false);
         return true;
       },
       COMMAND_PRIORITY_EDITOR

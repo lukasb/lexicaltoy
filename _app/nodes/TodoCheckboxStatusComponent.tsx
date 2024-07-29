@@ -54,8 +54,11 @@ export default function TodoCheckboxStatusComponent(
         newStatus = TodoStatus.LATER;
         break;
       case "LATER":
+        newStatus = TodoStatus.WAITING;
+        break;
+      case "WAITING":
         newStatus = TodoStatus.NOW;
-        break;  
+        break;
       default:
         break;
     }

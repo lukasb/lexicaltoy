@@ -27,6 +27,7 @@ import { TodoCheckboxStatusNode, TodoStatus } from "@/_app/nodes/TodoNode";
 import { 
   INSERT_DOING_TODO_COMMAND,
   INSERT_LATER_TODO_COMMAND,
+  INSERT_WAITING_TODO_COMMAND,
   INSERT_NOW_TODO_COMMAND,
   INSERT_TODO_COMMAND,
   REMOVE_TODO_COMMAND
@@ -74,6 +75,24 @@ const canRemoveTodo = (selection: BaseSelection) => {
 
 const slashCommands = [
   {
+    shortName: "NOW",
+    description: "Create a new todo set to NOW",
+    command: INSERT_NOW_TODO_COMMAND,
+    shouldShow: canCreateOrChangeTodo(TodoStatus.NOW)
+  },
+  {
+    shortName: "LATER",
+    description: "Create a new todo set to LATER",
+    command: INSERT_LATER_TODO_COMMAND,
+    shouldShow: canCreateOrChangeTodo(TodoStatus.LATER)
+  },
+  {
+    shortName: "WAITING",
+    description: "Create a new todo set to WAITING",
+    command: INSERT_WAITING_TODO_COMMAND,
+    shouldShow: canCreateOrChangeTodo(TodoStatus.WAITING)
+  },
+  {
     shortName: "TODO",
     description: "Create a new todo",
     command: INSERT_TODO_COMMAND,
@@ -84,18 +103,6 @@ const slashCommands = [
     description: "Create a new todo set to DOING",
     command: INSERT_DOING_TODO_COMMAND,
     shouldShow: canCreateOrChangeTodo(TodoStatus.DOING)
-  },
-  {
-    shortName: "LATER",
-    description: "Create a new todo set to LATER",
-    command: INSERT_LATER_TODO_COMMAND,
-    shouldShow: canCreateOrChangeTodo(TodoStatus.LATER)
-  },
-  {
-    shortName: "NOW",
-    description: "Create a new todo set to NOW",
-    command: INSERT_NOW_TODO_COMMAND,
-    shouldShow: canCreateOrChangeTodo(TodoStatus.NOW)
   },
   {
     shortName: "Remove",
