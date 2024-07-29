@@ -18,6 +18,7 @@ function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMa
   let currentIndentation = 0;
   let isProcessingListItems = false;
   const indentStack = [];
+  let lastNode;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -37,18 +38,20 @@ function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMa
           children: []
         };
 
-        stack[stack.length - 1].children.push(newNode);
-
         if (indentation > currentIndentation || (!isProcessingListItems && isListItem)) {
           indentStack.push(indentation - currentIndentation);
-          stack.push(newNode);
+          if (lastNode) stack.push(lastNode);
           currentIndentation = indentation;
           isProcessingListItems = true;
         }
+
+        stack[stack.length - 1].children.push(newNode);
+        lastNode = newNode;
       } else {
         isProcessingListItems = false;
       }
     } else {
+      // handle multiline continuations of list items
       const currentNode = stack[stack.length - 1].children[stack[stack.length - 1].children.length - 1] || stack[stack.length - 1];
       currentNode.baseNode.nodeMarkdown += (currentNode.baseNode.nodeMarkdown ? "\n" : "") + line;
       currentNode.baseNode.lineNumberEnd = i + 1;
@@ -122,8 +125,6 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
             // for now, we avoid circular references by excluding any lines with find() formulas
             if (!findFormulaStartRegex.test(currentNodeMarkdown)) {
               removeFindNodes(nodesMarkdown[currentNodeNum]);
-              console.log("got a match", nodesMarkdown);
-              console.log("page value was", page.value);
               output.push(nodesMarkdown[currentNodeNum]);
             }
           }
