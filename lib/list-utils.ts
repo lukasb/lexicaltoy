@@ -195,6 +195,16 @@ export function getNextListItem(listItem: ListItemNode, skipChildren: boolean): 
   return null;
 }
 
+export function $getOrAddListForChildren(parent: ListItemNode): ListNode {
+  let listNode = $getListContainingChildren(parent);
+  if (listNode) return listNode;
+  const listItemNode = new ListItemNode();
+  parent.insertAfter(listItemNode, false);
+  listNode = new ListNode("bullet", 0);
+  listItemNode.append(listNode);
+  return listNode;
+}
+
 export function $addChildListItem(parent: ListItemNode, prepend: boolean, changeSelection: boolean, child?: ListItemNode) {
   
   const newListItem = child || $createListItemNode();

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.1.1",
+    "@lexical/clipboard": "^0.16.0",
     "@lexical/headless": "^0.16.0",
     "@lexical/link": "^0.16.0",
     "@lexical/list": "^0.16.0",

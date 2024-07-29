@@ -10,19 +10,25 @@ import {
   LexicalNode,
   $getNodeByKey,
   $isTextNode,
+  RootNode,
   ParagraphNode,
+  $createParagraphNode,
 } from "lexical";
 import {
   ListItemNode,
   $isListItemNode,
   ListNode,
   $isListNode,
-  $createListItemNode
+  $createListItemNode,
+  SerializedListItemNode,
+  SerializedListNode
 } from "@lexical/list";
 import { 
   getListItemParentNode,
   $addChildListItem,
   $deleteChildrenFromListItem,
+  $getListContainingChildren,
+  $getOrAddListForChildren,
 } from "@/lib/list-utils";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
 import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
@@ -33,6 +39,9 @@ import {
 } from "@/_app/nodes/FormattableTextNode";
 import { ChildSharedNodeReference } from ".";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
+import { myCreateHeadlessEditor } from "@/lib/editor-utils";
+import { $getRoot } from "lexical";
+import { $appendNodes, $appendNodesToJSON } from "@/lib/json-helpers";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -166,45 +175,92 @@ function sortNodeMarkdownByPageName(nodes: NodeElementMarkdown[]): NodeElementMa
   return nodes.slice().sort((a, b) => a.baseNode.pageName.localeCompare(b.baseNode.pageName));
 }
 
-// currently we only suppor showing results that are list items
+// currently we only support showing results that are list items
 const listItemRegex = /^(\s*)(-\s*.+(?:\n(?!\s*-).*)*)/;
 
-function importListItemNode(nodeMarkdown: string, parentListItem: ListItemNode): ListItemNode {
-  const listItemNode = $createListItemNode();
-  $addChildListItem(parentListItem, false, false, listItemNode);
-  console.log("li", listItemNode.getKey(), listItemNode.getParent()?.getKey());
-  $myConvertFromMarkdownString(nodeMarkdown, false, listItemNode);
-  return listItemNode;
-}
+type SerializedListItemWithMarkdown = {
+  serializedNode: SerializedListItemNode;
+  baseNodeMarkdown: BaseNodeMarkdown;
+  children: SerializedListItemWithMarkdown[];
+};
 
-function addChildrenRecursively(
+function addChildren(
+  headlessEditor: LexicalEditor,
   parentListItem: ListItemNode,
   children: NodeElementMarkdown[]
 ): Array<{ key: string; baseNodeMarkdown: BaseNodeMarkdown }> {
-  let addedNodes: Array<{ key: string; baseNodeMarkdown: BaseNodeMarkdown }> =
-    [];
+  let serializedNodes: SerializedListItemWithMarkdown[] = [];
+  headlessEditor.update(() => {
+    serializedNodes = _buildSerializedTree(headlessEditor, children);
+  });
+  return addChildrenRecursively(parentListItem, serializedNodes);
+}
+
+function _buildSerializedTree(
+  headlessEditor: LexicalEditor,
+  children: NodeElementMarkdown[]
+): SerializedListItemWithMarkdown[] {
+  let addedNodes: SerializedListItemWithMarkdown[] = [];
 
   children.forEach((child) => {
+    const root = $getRoot();
     const childMatch = child.baseNode.nodeMarkdown.match(listItemRegex);
     if (childMatch) {
-      const childListItem = importListItemNode(childMatch[2], parentListItem);
-      
-      addedNodes.push({
-        key: childListItem.getKey(),
-        baseNodeMarkdown: child.baseNode,
-      });
-
-      // Recursively add grandchildren
-      if (child.children && child.children.length > 0) {
-        addedNodes = addedNodes.concat(
-          addChildrenRecursively(childListItem, child.children)
-        );
+      $myConvertFromMarkdownString(childMatch[2], false, root);
+      const listNode = root.getFirstChild() as ListNode;
+      if (listNode) {
+        const listItemNode = listNode.getFirstChild() as ListItemNode;
+        if (listItemNode) {
+          let serializedLIs: SerializedListItemNode[] = [];
+          $appendNodesToJSON(headlessEditor, listItemNode, serializedLIs);
+          // Recursively add grandchildren
+          let nodeChildren: SerializedListItemWithMarkdown[] = [];
+          if (child.children && child.children.length > 0) {
+            nodeChildren = _buildSerializedTree(headlessEditor, child.children);
+          }
+          addedNodes.push({
+            serializedNode: serializedLIs[0],
+            baseNodeMarkdown: child.baseNode,
+            children: nodeChildren
+          });
+        }
       }
     }
   });
 
   return addedNodes;
 }
+
+function addChildrenRecursively(
+  parentListItem: ListItemNode,
+  children: SerializedListItemWithMarkdown[]
+): Array<{ key: string; baseNodeMarkdown: BaseNodeMarkdown }> {
+  let addedNodes: Array<{ key: string; baseNodeMarkdown: BaseNodeMarkdown }> =
+    [];
+
+  if (!children.length) return [];
+
+  const childrenList = $getOrAddListForChildren(parentListItem);
+  children.forEach((child) => {
+    $appendNodes(childrenList, [child.serializedNode]);
+    const childListItem = childrenList.getLastChild() as ListItemNode;
+    addedNodes.push({
+      key: childListItem.getKey(),
+      baseNodeMarkdown: child.baseNodeMarkdown,
+    });
+
+    // Recursively add grandchildren
+    if (child.children && child.children.length > 0) {
+      addedNodes = addedNodes.concat(
+        addChildrenRecursively(childListItem, child.children)
+      );
+    }
+    
+  });
+
+  return addedNodes;
+}
+
 
 export function createFormulaOutputNodes(
   editor: LexicalEditor,
@@ -233,42 +289,68 @@ export function createFormulaOutputNodes(
 
   let currentPageName = "";
   let currentPageListItem: ListItemNode | null = null;
+  let currentPageList: ListNode | null = null;
 
-  for (const node of sortedNodes) {
-    const match = node.baseNode.nodeMarkdown.match(listItemRegex);
-    if (!match) continue;
+  const headlessEditor = myCreateHeadlessEditor();
 
-    if (node.baseNode.pageName !== currentPageName) {
-      currentPageName = node.baseNode.pageName;
-      const pageNameListItem = new ListItemNode();
-      pageNameListItem.append($createFormattableTextNode("[[" + currentPageName + "]]"));
-      $addChildListItem(parentListItem, false, false, pageNameListItem);
-      currentPageListItem = pageNameListItem;
-    }
+    for (const node of sortedNodes) {
+      const match = node.baseNode.nodeMarkdown.match(listItemRegex);
+      if (!match) continue;
 
-    if (currentPageListItem) {
-      const listItemNode = importListItemNode(match[2], currentPageListItem);
+      if (node.baseNode.pageName !== currentPageName) {
+        currentPageName = node.baseNode.pageName;
+        const pageNameListItem = new ListItemNode();
+        pageNameListItem.append(
+          $createFormattableTextNode("[[" + currentPageName + "]]")
+        );
+        $addChildListItem(parentListItem, false, false, pageNameListItem);
+        currentPageListItem = pageNameListItem;
+        currentPageList = $getOrAddListForChildren(currentPageListItem);
+      }
 
-      setLocalSharedNodeMap((prevMap) => {
-        const updatedMap = new Map(prevMap);
-        updatedMap.set(listItemNode.getKey(), node);
-        return updatedMap;
-      });
+      if (currentPageListItem && currentPageList) {
 
-      const addedChildNodes = addChildrenRecursively(listItemNode, node.children);
-      
-      // make sure we can map any children/grandchildren back to the global shared node map
-      setLocalChildNodeMap((prevMap) => {
-        const updatedMap = new Map(prevMap);
-        addedChildNodes.forEach(childNode => {
-          updatedMap.set(childNode.key, {
-            parentLexicalNodeKey: listItemNode.getKey(),
-            baseNodeMarkdown: childNode.baseNodeMarkdown
-          });
+        let serializedNode: SerializedListItemNode[] = [];
+        headlessEditor.update(() => {
+          const headlessRoot = $getRoot();
+          $myConvertFromMarkdownString(match[2], false, headlessRoot);
+          const listNode = headlessRoot.getFirstChild() as ListNode;
+          if (listNode) {
+            const listItemNode = listNode.getFirstChild() as ListItemNode;
+            if (listItemNode) {
+              $appendNodesToJSON(headlessEditor, listItemNode, serializedNode);
+            }
+          }
         });
-        return updatedMap;
-      });
- 
+
+        if (serializedNode) {
+          $appendNodes(currentPageList, serializedNode);
+          const listItemNode = currentPageList.getLastChild() as ListItemNode;
+          
+          setLocalSharedNodeMap((prevMap) => {
+            const updatedMap = new Map(prevMap);
+            updatedMap.set(listItemNode.getKey(), node);
+            return updatedMap;
+          });
+
+          const addedChildNodes = addChildren(
+            headlessEditor,
+            listItemNode,
+            node.children
+          );
+
+          // make sure we can map any children/grandchildren back to the global shared node map
+          setLocalChildNodeMap((prevMap) => {
+            const updatedMap = new Map(prevMap);
+            addedChildNodes.forEach((childNode) => {
+              updatedMap.set(childNode.key, {
+                parentLexicalNodeKey: listItemNode.getKey(),
+                baseNodeMarkdown: childNode.baseNodeMarkdown,
+              });
+            });
+            return updatedMap;
+          });
+        }
+      }
     }
-  }
 }

@@ -83,8 +83,12 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
               const nextLine = lines[i + 1];
               const nextMatch = nextLine.match(/^(\s*)-/);
               
-              if (nextMatch && nextMatch[1].length > formulaIndent.length) {
-                i++; // Skip the child list item
+              if (
+                (nextMatch && nextMatch[1].length > formulaIndent.length) // skip any list item indented further than the formula
+                || (!nextMatch && line.trim())) { // or any multiline continuation of one of those list items
+
+                  i++;
+
               } else {
                 break;
               }
