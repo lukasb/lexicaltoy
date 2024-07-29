@@ -12,13 +12,15 @@ import {
   $isTextNode,
   RootNode,
   ParagraphNode,
+  $createParagraphNode,
 } from "lexical";
 import {
   ListItemNode,
   $isListItemNode,
   ListNode,
   $isListNode,
-  $createListItemNode
+  $createListItemNode,
+  SerializedListItemNode
 } from "@lexical/list";
 import { 
   getListItemParentNode,
@@ -38,6 +40,7 @@ import { ChildSharedNodeReference } from ".";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
 import { myCreateHeadlessEditor } from "@/lib/editor-utils";
 import { $getRoot } from "lexical";
+import { $appendNodes, $appendNodesToJSON } from "@/lib/json-helpers";
 
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
@@ -236,8 +239,6 @@ export function createFormulaOutputNodes(
 
   const headlessEditor = myCreateHeadlessEditor();
 
-  headlessEditor.update(() => {
-    const dummyRoot = $getRoot();
     for (const node of sortedNodes) {
       const match = node.baseNode.nodeMarkdown.match(listItemRegex);
       if (!match) continue;
@@ -248,31 +249,40 @@ export function createFormulaOutputNodes(
         pageNameListItem.append(
           $createFormattableTextNode("[[" + currentPageName + "]]")
         );
-        //$addChildListItem(parentListItem, false, false, pageNameListItem);
-        //currentPageListItem = pageNameListItem;
-        //currentPageList = $getOrAddListForChildren(currentPageListItem);
+        $addChildListItem(parentListItem, false, false, pageNameListItem);
+        currentPageListItem = pageNameListItem;
+        currentPageList = $getOrAddListForChildren(currentPageListItem);
       }
 
-      currentPageListItem = new ListItemNode();
-      if (currentPageListItem) {
-        const pNode = new ParagraphNode();
-        console.log("about to import markdown", match[2]);
-        $myConvertFromMarkdownString(match[2], false, dummyRoot);
-        const listNode = dummyRoot.getFirstChild() as ListNode;
-        if (!listNode) continue;
-        const listItemNode = listNode.getFirstChild() as ListItemNode;
+      if (currentPageListItem && currentPageList) {
 
-        if (listItemNode) {
-          console.log("LINode", listItemNode.getTextContent());
-          listItemNode.remove();
-          $addChildListItem(currentPageListItem, false, false, listItemNode);
+        let serializedNode: SerializedListItemNode[] = [];
+        headlessEditor.update(() => {
+          const dummyRoot = $getRoot();
+          console.log("about to import markdown", match[2]);
+          $myConvertFromMarkdownString(match[2], false, dummyRoot);
+          const listNode = dummyRoot.getFirstChild() as ListNode;
+          if (listNode) {
+            const listItemNode = listNode.getFirstChild() as ListItemNode;
+            if (listItemNode) {
+              $appendNodesToJSON(headlessEditor, listItemNode, serializedNode);
+            }
+          }
+        });
 
+        if (serializedNode) {
+          $appendNodes(currentPageList, serializedNode);
+          //console.log("LINode", listItemNode.getTextContent());
+
+
+          /*
           setLocalSharedNodeMap((prevMap) => {
             const updatedMap = new Map(prevMap);
             updatedMap.set(listItemNode.getKey(), node);
             return updatedMap;
           });
 
+          
           const addedChildNodes = addChildrenRecursively(
             listItemNode,
             node.children
@@ -289,8 +299,8 @@ export function createFormulaOutputNodes(
             });
             return updatedMap;
           });
+          */
         }
       }
     }
-  });
 }

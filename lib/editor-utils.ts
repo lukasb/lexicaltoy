@@ -22,6 +22,7 @@ export function myCreateHeadlessEditor(): LexicalEditor {
       FormattableTextNode
     ],
     onError: console.error,
+    namespace: "headless"
   });
   return editor;
 }
