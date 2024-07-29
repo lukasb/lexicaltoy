@@ -142,7 +142,7 @@ export default function FormulaDisplayComponent(
 
   return (
     <div 
-      className="inline items-baseline border-l-4 border-formulaBorderColor pl-1"
+      className="inline items-baseline border-l-4 border-formulaBorderColor pl-1 -ml-1"
       onClick={() => replaceSelfWithEditorNode()}
     >
       <span className="font-semibold bg-bgFormula">{formula}: </span>
