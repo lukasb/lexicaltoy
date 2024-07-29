@@ -20,7 +20,8 @@ import {
   ListNode,
   $isListNode,
   $createListItemNode,
-  SerializedListItemNode
+  SerializedListItemNode,
+  SerializedListNode
 } from "@lexical/list";
 import { 
   getListItemParentNode,
@@ -177,36 +178,92 @@ function sortNodeMarkdownByPageName(nodes: NodeElementMarkdown[]): NodeElementMa
 // currently we only support showing results that are list items
 const listItemRegex = /^(\s*)(-\s*.+(?:\n(?!\s*-).*)*)/;
 
-function addChildrenRecursively(
+type SerializedListItemWithMarkdown = {
+  serializedNode: SerializedListItemNode;
+  baseNodeMarkdown: BaseNodeMarkdown;
+  children: SerializedListItemWithMarkdown[];
+};
+
+function addChildren(
+  headlessEditor: LexicalEditor,
   parentListItem: ListItemNode,
   children: NodeElementMarkdown[]
 ): Array<{ key: string; baseNodeMarkdown: BaseNodeMarkdown }> {
-  let addedNodes: Array<{ key: string; baseNodeMarkdown: BaseNodeMarkdown }> =
-    [];
+  let serializedNodes: SerializedListItemWithMarkdown[] = [];
+  headlessEditor.update(() => {
+    serializedNodes = _buildSerializedTree(headlessEditor, children);
+  });
+  return addChildrenRecursively(parentListItem, serializedNodes);
+}
+
+function _buildSerializedTree(
+  headlessEditor: LexicalEditor,
+  children: NodeElementMarkdown[]
+): SerializedListItemWithMarkdown[] {
+  let addedNodes: SerializedListItemWithMarkdown[] = [];
 
   children.forEach((child) => {
-    const childListItem = new ListItemNode();
+    console.log("trying with", child);
+    const root = $getRoot();
     const childMatch = child.baseNode.nodeMarkdown.match(listItemRegex);
     if (childMatch) {
-      $myConvertFromMarkdownString(childMatch[2], false, childListItem);
-      $addChildListItem(parentListItem, false, false, childListItem);
-
-      addedNodes.push({
-        key: childListItem.getKey(),
-        baseNodeMarkdown: child.baseNode,
-      });
-
-      // Recursively add grandchildren
-      if (child.children && child.children.length > 0) {
-        addedNodes = addedNodes.concat(
-          addChildrenRecursively(childListItem, child.children)
-        );
+      $myConvertFromMarkdownString(childMatch[2], false, root);
+      const listNode = root.getFirstChild() as ListNode;
+      if (listNode) {
+        const listItemNode = listNode.getFirstChild() as ListItemNode;
+        if (listItemNode) {
+          let serializedLIs: SerializedListItemNode[] = [];
+          console.log("appending to json", listItemNode.getTextContent());
+          $appendNodesToJSON(headlessEditor, listItemNode, serializedLIs);
+          // Recursively add grandchildren
+          let nodeChildren: SerializedListItemWithMarkdown[] = [];
+          if (child.children && child.children.length > 0) {
+            nodeChildren = _buildSerializedTree(headlessEditor, child.children);
+          }
+          addedNodes.push({
+            serializedNode: serializedLIs[0],
+            baseNodeMarkdown: child.baseNode,
+            children: nodeChildren
+          });
+        }
       }
     }
   });
 
   return addedNodes;
 }
+
+function addChildrenRecursively(
+  parentListItem: ListItemNode,
+  children: SerializedListItemWithMarkdown[]
+): Array<{ key: string; baseNodeMarkdown: BaseNodeMarkdown }> {
+  let addedNodes: Array<{ key: string; baseNodeMarkdown: BaseNodeMarkdown }> =
+    [];
+
+  if (!children.length) return [];
+
+  const childrenList = $getOrAddListForChildren(parentListItem);
+  children.forEach((child) => {
+    console.log("appending ndes", child.baseNodeMarkdown.nodeMarkdown);
+    $appendNodes(childrenList, [child.serializedNode]);
+    const childListItem = childrenList.getLastChild() as ListItemNode;
+    addedNodes.push({
+      key: childListItem.getKey(),
+      baseNodeMarkdown: child.baseNodeMarkdown,
+    });
+
+    // Recursively add grandchildren
+    if (child.children && child.children.length > 0) {
+      addedNodes = addedNodes.concat(
+        addChildrenRecursively(childListItem, child.children)
+      );
+    }
+    
+  });
+
+  return addedNodes;
+}
+
 
 export function createFormulaOutputNodes(
   editor: LexicalEditor,
@@ -279,8 +336,9 @@ export function createFormulaOutputNodes(
             return updatedMap;
           });
 
-          /*
-          const addedChildNodes = addChildrenRecursively(
+          console.log("calling with", node.children);
+          const addedChildNodes = addChildren(
+            headlessEditor,
             listItemNode,
             node.children
           );
@@ -296,7 +354,6 @@ export function createFormulaOutputNodes(
             });
             return updatedMap;
           });
-          */
         }
       }
     }
