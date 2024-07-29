@@ -258,10 +258,9 @@ export function createFormulaOutputNodes(
 
         let serializedNode: SerializedListItemNode[] = [];
         headlessEditor.update(() => {
-          const dummyRoot = $getRoot();
-          console.log("about to import markdown", match[2]);
-          $myConvertFromMarkdownString(match[2], false, dummyRoot);
-          const listNode = dummyRoot.getFirstChild() as ListNode;
+          const headlessRoot = $getRoot();
+          $myConvertFromMarkdownString(match[2], false, headlessRoot);
+          const listNode = headlessRoot.getFirstChild() as ListNode;
           if (listNode) {
             const listItemNode = listNode.getFirstChild() as ListItemNode;
             if (listItemNode) {
@@ -272,17 +271,15 @@ export function createFormulaOutputNodes(
 
         if (serializedNode) {
           $appendNodes(currentPageList, serializedNode);
-          //console.log("LINode", listItemNode.getTextContent());
-
-
-          /*
+          const listItemNode = currentPageList.getLastChild() as ListItemNode;
+          
           setLocalSharedNodeMap((prevMap) => {
             const updatedMap = new Map(prevMap);
             updatedMap.set(listItemNode.getKey(), node);
             return updatedMap;
           });
 
-          
+          /*
           const addedChildNodes = addChildrenRecursively(
             listItemNode,
             node.children
