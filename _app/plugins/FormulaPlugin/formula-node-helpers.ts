@@ -339,6 +339,12 @@ export function createFormulaOutputNodes(
             node.children
           );
 
+          addedChildNodes.unshift(
+            {
+              key: listItemNode.getKey(),
+              baseNodeMarkdown: node.baseNode
+            });
+      
           // make sure we can map any children/grandchildren back to the global shared node map
           setLocalChildNodeMap((prevMap) => {
             const updatedMap = new Map(prevMap);
