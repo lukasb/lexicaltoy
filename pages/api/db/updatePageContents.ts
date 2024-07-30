@@ -39,8 +39,8 @@ export default async function handler(
       `;
       return res.status(200).json({ revisionNumber: result.rows[0].revision_number, lastModified: result.rows[0].last_modified });
     } catch (error) {
-      console.error("Database Error: Failed to Update Page Contents.", error, id, oldRevisionNumber);
-      res.status(500).json({ error: 'Database Error: Failed to Update Page Contents' });
+      console.error("Database Error: Failed to Update Page Contents?", error, id, oldRevisionNumber);
+      res.status(500).json({ error: 'Database Error: Failed to Update Page Contents' + oldRevisionNumber });
     }
   } else {
     res.setHeader('Allow', ['POST']);
