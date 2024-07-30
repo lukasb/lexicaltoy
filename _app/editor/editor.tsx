@@ -123,6 +123,7 @@ function Editor({
       }
       updatePageContentsLocal(page.id, newContent, currentPage.revisionNumber);
       localVersionRef.current = currentPage.revisionNumber + 1;
+      pendingChangeRef.current = null;
     }
   }, [page.id, getPage, updatePageContentsLocal]);
 
@@ -138,6 +139,8 @@ function Editor({
       if (trimmedPageContents !== trimmedPageValue) {
         pendingChangeRef.current = pageContentsWithoutSharedNodes;
         debouncedSave(pageContentsWithoutSharedNodes);
+      } else {
+        pendingChangeRef.current = null; // Clear pending change if content matches current page value
       }
     });
   }, [page.value, debouncedSave]);
@@ -159,7 +162,7 @@ function Editor({
     };
   }, [onBeforeUnload, saveChange]);
   */
- 
+
   return (
     <PromisesProvider>
       <LexicalComposer initialConfig={initialConfig}>
