@@ -43,7 +43,7 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
           );
         }
       } catch (error) {
-        alert(`Failed to save page ${page.title}`);
+        alert(`Failed to save page ${page.title} - ${error}`);
       } finally {
         isSaving.current.delete(pageId);
         saveQueue.current.delete(pageId);
