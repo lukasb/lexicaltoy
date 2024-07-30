@@ -130,6 +130,7 @@ export function registerFormulaMutationListeners(
                 $getFormulaNodeFromSharedNode(listItemNode) === null
               ) {
                 localSharedNodeMap.delete(listItemKey);
+                childSharedNodeMap.delete(listItemKey);
               }
             }
           }
