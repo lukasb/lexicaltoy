@@ -35,14 +35,15 @@ export function registerFormulaMutationListeners(
 
         editor.getEditorState().read(() => {
           for (const [key, type] of mutations) {
+            
             const node = $getNodeByKey(key);
             if (!node) continue;
 
             const listItem = $getContainingListItemNode(node);
             if (!listItem) continue;
-
+            
             if (localSharedNodeMap.has(listItem.getKey()) || childSharedNodeMap.has(listItem.getKey())) {
-
+              
               const listItemKey = listItem.getKey();
 
               // right now we only support list item results
@@ -86,6 +87,11 @@ export function registerFormulaMutationListeners(
                     childNodeReference?.parentLexicalNodeKey,
                     newParent
                   );
+
+                  childSharedNodeMap.set(listItemKey, {
+                    parentLexicalNodeKey: childNodeReference.parentLexicalNodeKey,
+                    baseNodeMarkdown: newParent.baseNode
+                  });
 
                   updateNodeMarkdownGlobal(
                     newParent,
