@@ -95,7 +95,7 @@ export async function updatePageContentsWithHistory(id: string, value: string, o
 
       if (!response.ok) {
           // Convert non-2xx HTTP responses into throws to handle them in the catch block
-          throw new Error(`HTTP error! Status: ${response.status}`);
+          throw new Error(`HTTP error! Status: ${response.status} revnum:${oldRevisionNumber}`);
       }
 
       const result = await response.json();
