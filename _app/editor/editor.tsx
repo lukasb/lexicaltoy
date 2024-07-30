@@ -145,7 +145,6 @@ function Editor({
     });
   }, [page.value, debouncedSave]);
 
-  /*
   const onBeforeUnload = useCallback(() => {
     if (pendingChangeRef.current) {
       saveChange(pendingChangeRef.current);
@@ -161,7 +160,6 @@ function Editor({
       }
     };
   }, [onBeforeUnload, saveChange]);
-  */
 
   return (
     <PromisesProvider>
