@@ -138,7 +138,7 @@ export function registerKeyboardShortcuts(editor: LexicalEditor, closePage: () =
         if (event.metaKey) {
 
           const node = selection.getNodes()[0];
-          let linkNode = $getNearestNodeOfType(node, AutoLinkNode);
+          let linkNode: AutoLinkNode | LinkNode | null = $getNearestNodeOfType(node, AutoLinkNode);
           if (!linkNode) linkNode = $getNearestNodeOfType(node, LinkNode);
 
           if (linkNode) {
