@@ -106,7 +106,7 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
         orClauses[substring] = orClause;
       }
 
-      const output: FormulaOutput["output"] = [];
+      const output: NodeElementMarkdown[] = [];
 
       for (const page of pages) {
         let unmatchedSubstrings = [...substrings];
@@ -122,32 +122,42 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
           return true;
         });
 
-        let nodesMarkdown = splitMarkdownByNodes(page.value, page.title);
-        let currentNodeNum = 0;
-        while (currentNodeNum < nodesMarkdown.length) {
-          const currentNodeMarkdown = nodesMarkdown[currentNodeNum].baseNode.nodeMarkdown; 
-          const matchesAll = unmatchedSubstrings.every(substring => {
-            const substrOrClauses = orClauses[substring];
-            for (const substrOrClause of substrOrClauses) {
-              if (currentNodeMarkdown.includes(substrOrClause)) {
-                return true;
-              } 
-            }
-            return false;
-          });
-          if (matchesAll) {
-            // for now, we avoid circular references by excluding any lines with find() formulas
-            if (!findFormulaStartRegex.test(currentNodeMarkdown)) {
-              removeFindNodes(nodesMarkdown[currentNodeNum]);
-              output.push(nodesMarkdown[currentNodeNum]);
+        function processNodes(nodesMarkdown: NodeElementMarkdown[], unmatchedSubstrings: string[], orClauses: { [key: string]: string[] }): NodeElementMarkdown[] {
+        
+          const output: NodeElementMarkdown[] = [];
+          for (let node of nodesMarkdown) {
+            const currentNodeMarkdown = node.baseNode.nodeMarkdown;
+            const matchesAll = unmatchedSubstrings.every(substring => {
+              const substrOrClauses = orClauses[substring];
+              return substrOrClauses.some(substrOrClause => 
+                currentNodeMarkdown.includes(substrOrClause)
+              );
+            });
+        
+            if (matchesAll) {
+              // Avoid circular references by excluding lines with find() formulas
+              if (!findFormulaStartRegex.test(currentNodeMarkdown)) {
+                removeFindNodes(node);
+                output.push(node);
+              }
+            } else {
+              // no need to process these, they will be included as part of their parent
+              // this is an intentional choice - but we could decide the other way, that every
+              // match should appear at the top level
+              if (node.children && node.children.length > 0) {
+                output.push(...processNodes(node.children, unmatchedSubstrings, orClauses));
+              }
             }
           }
-          currentNodeNum++;
+        
+          return output;
         }
+        
+        const nodesMarkdown = splitMarkdownByNodes(page.value, page.title);
+        output.push(...processNodes(nodesMarkdown, unmatchedSubstrings, orClauses));
       }
-
       return {
-        output,
+        output: output,
         type: FormulaOutputType.NodeMarkdown,
       };
     },
