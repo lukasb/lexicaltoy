@@ -18,7 +18,7 @@ function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMa
   let currentIndentation = 0;
   let isProcessingListItems = false;
   const indentStack: number[] = [];
-  let lastNode;
+  let lastListItem;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -40,21 +40,36 @@ function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMa
 
         if (indentation > currentIndentation || (!isProcessingListItems && isListItem)) {
           indentStack.push(indentation - currentIndentation);
-          if (lastNode) stack.push(lastNode);
+          if (lastListItem) stack.push(lastListItem);
           currentIndentation = indentation;
           isProcessingListItems = true;
         }
-
+        
         stack[stack.length - 1].children.push(newNode);
-        lastNode = newNode;
+        lastListItem = newNode;
       } else {
-        isProcessingListItems = false;
+        if (isProcessingListItems) {
+          isProcessingListItems = false;
+          while (stack.length > 1) {
+            stack.pop();
+            currentIndentation -= indentStack.pop() || 2;
+          }
+          lastListItem = null;
+        }
       }
     } else {
-      // handle multiline continuations of list items
-      const currentNode = stack[stack.length - 1].children[stack[stack.length - 1].children.length - 1] || stack[stack.length - 1];
-      currentNode.baseNode.nodeMarkdown += (currentNode.baseNode.nodeMarkdown ? "\n" : "") + line;
-      currentNode.baseNode.lineNumberEnd = i + 1;
+      if (isProcessingListItems) {
+        // handle multiline continuations of list items
+        const currentNode = stack[stack.length - 1].children[stack[stack.length - 1].children.length - 1] || stack[stack.length - 1];
+        currentNode.baseNode.nodeMarkdown += (currentNode.baseNode.nodeMarkdown ? "\n" : "") + line;
+        currentNode.baseNode.lineNumberEnd = i + 1;
+      } else {
+        const newNode: NodeElementMarkdown = {
+          baseNode: createBaseNodeMarkdown(pageName, i + 1, i + 1, trimmedLine),
+          children: []
+        };
+        stack[stack.length - 1].children.push(newNode);
+      }
     }
   }
 
@@ -92,7 +107,6 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
       }
 
       const output: FormulaOutput["output"] = [];
-      const indentationRegex = /^(\s*)-/;
 
       for (const page of pages) {
         let unmatchedSubstrings = [...substrings];
