@@ -8,7 +8,7 @@ import {
 
 const findFormulaStartRegex = /^\s*- =find\(/;
 
-function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMarkdown[] {
+export function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMarkdown[] {
   const lines = markdown.split("\n");
   const rootNode: NodeElementMarkdown = {
     baseNode: createBaseNodeMarkdown(pageName, 1, lines.length, ""),
