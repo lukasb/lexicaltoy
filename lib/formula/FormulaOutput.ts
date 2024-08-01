@@ -121,7 +121,7 @@ export function slurpDialogueContext(displayNodeKey: string, editor: LexicalEdit
     ) {
       const dialogue = $getGPTPair(prevListItem);
       if (dialogue) {
-        context.push(dialogue);
+        context.unshift(dialogue);
       } else {
         break;
       }
