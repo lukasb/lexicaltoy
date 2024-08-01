@@ -1,4 +1,9 @@
-import { splitMarkdownByNodes } from "./regex-callbacks";
+import { 
+  splitMarkdownByNodes,
+  removeFindNodes,
+  findFormulaStartRegex
+} from "./regex-callbacks";
+import { NodeElementMarkdown } from "./formula-definitions";
 
 // Helper function to create a BaseNodeMarkdown for comparison
 function createBaseNodeMarkdown(pageName: string, lineNumberStart: number, lineNumberEnd: number, nodeMarkdown: string) {
@@ -155,5 +160,111 @@ continues here
 `;
     const result = splitMarkdownByNodes(markdown, 'TestPage');
     expect(result).toEqual([]);
+  });
+});
+
+describe('removeFindNodes', () => {
+  test('removes find node and its siblings', () => {
+    const root: NodeElementMarkdown = {
+      baseNode: createBaseNodeMarkdown('TestPage', 1, 1, 'root'),
+      children: [
+        { baseNode: createBaseNodeMarkdown('TestPage', 2, 2, 'child 1'), children: [] },
+        { baseNode: createBaseNodeMarkdown('TestPage', 3, 3, '- =find(something)'), children: [] },
+        { baseNode: createBaseNodeMarkdown('TestPage', 4, 4, 'child 3'), children: [] },
+      ]
+    };
+    removeFindNodes(root);
+    expect(root.children).toHaveLength(1);
+    expect(root.children[0].baseNode.nodeMarkdown).toBe('child 1');
+  });
+
+  test('removes find node in nested structure', () => {
+    const root: NodeElementMarkdown = {
+      baseNode: createBaseNodeMarkdown('TestPage', 1, 1, 'root'),
+      children: [
+        {
+          baseNode: createBaseNodeMarkdown('TestPage', 2, 2, 'parent'),
+          children: [
+            { baseNode: createBaseNodeMarkdown('TestPage', 3, 3, 'child 1'), children: [] },
+            { baseNode: createBaseNodeMarkdown('TestPage', 4, 4, '- =find(something)'), children: [] },
+            { baseNode: createBaseNodeMarkdown('TestPage', 5, 5, 'child 3'), children: [] },
+          ]
+        },
+      ]
+    };
+    removeFindNodes(root);
+    expect(root.children[0].children).toHaveLength(1);
+    expect(root.children[0].children[0].baseNode.nodeMarkdown).toBe('child 1');
+  });
+
+  test('does not remove nodes if no find node is present', () => {
+    const root: NodeElementMarkdown = {
+      baseNode: createBaseNodeMarkdown('TestPage', 1, 1, 'root'),
+      children: [
+        { baseNode: createBaseNodeMarkdown('TestPage', 2, 2, 'child 1'), children: [] },
+        { baseNode: createBaseNodeMarkdown('TestPage', 3, 3, 'child 2'), children: [] },
+        { baseNode: createBaseNodeMarkdown('TestPage', 4, 4, 'child 3'), children: [] },
+      ]
+    };
+    removeFindNodes(root);
+    expect(root.children).toHaveLength(3);
+  });
+
+  test('handles empty node', () => {
+    const root: NodeElementMarkdown = {
+      baseNode: createBaseNodeMarkdown('TestPage', 1, 1, 'root'),
+      children: []
+    };
+    removeFindNodes(root);
+    expect(root.children).toHaveLength(0);
+  });
+
+  test('removes find node at different levels', () => {
+    const root: NodeElementMarkdown = {
+      baseNode: createBaseNodeMarkdown('TestPage', 1, 1, 'root'),
+      children: [
+        {
+          baseNode: createBaseNodeMarkdown('TestPage', 2, 2, 'level 1'),
+          children: [
+            { baseNode: createBaseNodeMarkdown('TestPage', 3, 3, 'level 2-1'), children: [] },
+            {
+              baseNode: createBaseNodeMarkdown('TestPage', 4, 4, 'level 2-2'),
+              children: [
+                { baseNode: createBaseNodeMarkdown('TestPage', 5, 5, '- =find(something)'), children: [] },
+                { baseNode: createBaseNodeMarkdown('TestPage', 6, 6, 'level 3-2'), children: [] },
+              ]
+            },
+            { baseNode: createBaseNodeMarkdown('TestPage', 7, 7, 'level 2-3'), children: [] },
+          ]
+        },
+      ]
+    };
+    removeFindNodes(root);
+    expect(root.children[0].children[1].children).toHaveLength(0);
+    expect(root.children[0].children).toHaveLength(3);
+  });
+
+  test('preserves baseNode properties', () => {
+    const root: NodeElementMarkdown = {
+      baseNode: createBaseNodeMarkdown('MainPage', 1, 5, 'root'),
+      children: [
+        { 
+          baseNode: createBaseNodeMarkdown('MainPage', 2, 2, '- =find(something)'),
+          children: [] 
+        },
+        { 
+          baseNode: createBaseNodeMarkdown('MainPage', 3, 4, 'child'),
+          children: [] 
+        },
+      ]
+    };
+    removeFindNodes(root);
+    expect(root.children).toHaveLength(0);
+    expect(root.baseNode).toEqual({
+      nodeMarkdown: 'root',
+      pageName: 'MainPage',
+      lineNumberStart: 1,
+      lineNumberEnd: 5
+    });
   });
 });
