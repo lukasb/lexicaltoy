@@ -1,6 +1,7 @@
 import { 
   getFormulaMarkdown,
-  parseFormulaMarkdown
+  parseFormulaMarkdown,
+  stripSharedNodesFromMarkdown
 } from "./formula-markdown-converters";
 
 describe('getFormulaMarkdown', () => {
@@ -86,5 +87,131 @@ describe('parseFormulaMarkdown', () => {
       formula: 'IF(AND(A1>10, B1<5), SUM(C1:C5), AVERAGE(D1:D10))', 
       result: null 
     });
+  });
+});
+
+describe('stripSharedNodesFromMarkdown', () => {
+  test('strips shared nodes from find formula', () => {
+    const markdown = `
+- =find(something)
+  |||result:
+  @@childnodes
+  |||
+  - Child node 1
+  - Child node 2
+- Next item
+`;
+    const expected = `
+- =find(something)
+- Next item
+`;
+    expect(stripSharedNodesFromMarkdown(markdown)).toBe(expected);
+  });
+
+  test('keeps non-find formulas intact', () => {
+    const markdown = `
+- =calculate(1 + 1)
+  |||result:
+  2
+  |||
+- Next item
+`;
+    expect(stripSharedNodesFromMarkdown(markdown)).toBe(markdown);
+  });
+
+  test('handles multiple formulas', () => {
+    const markdown = `
+- =find(something)
+  |||result:
+  @@childnodes
+  |||
+  - Child node 1
+  - Child node 2
+- =calculate(2 + 2)
+  |||result:
+  4
+  |||
+- =find(another thing)
+  |||result:
+  @@childnodes
+  |||
+  - Child node 3
+  - Child node 4
+- Final item
+`;
+    const expected = `
+- =find(something)
+- =calculate(2 + 2)
+  |||result:
+  4
+  |||
+- =find(another thing)
+- Final item
+`;
+    expect(stripSharedNodesFromMarkdown(markdown)).toBe(expected);
+  });
+
+  test('handles nested list items', () => {
+    const markdown = `
+- =find(something)
+  |||result:
+  @@childnodes
+  |||
+  - Child node 1
+    - Nested child 1
+    - Nested child 2
+  - Child node 2
+    - Nested child 3
+- Next item
+`;
+    const expected = `
+- =find(something)
+- Next item
+`;
+    expect(stripSharedNodesFromMarkdown(markdown)).toBe(expected);
+  });
+
+  test('preserves indentation', () => {
+    const markdown = `
+  - =find(something)
+    |||result:
+    @@childnodes
+    |||
+    - Child node 1
+    - Child node 2
+  - Next item
+`;
+    const expected = `
+  - =find(something)
+  - Next item
+`;
+    expect(stripSharedNodesFromMarkdown(markdown)).toBe(expected);
+  });
+
+  test('handles empty input', () => {
+    expect(stripSharedNodesFromMarkdown('')).toBe('');
+  });
+
+  test('handles input with no formulas', () => {
+    const markdown = `
+- Item 1
+- Item 2
+  - Subitem 2.1
+- Item 3
+`;
+    expect(stripSharedNodesFromMarkdown(markdown)).toBe(markdown);
+  });
+
+  test('handles formulas with multiline results', () => {
+    const markdown = `
+- =calculate(complex stuff)
+  |||result:
+  Line 1 of result
+  Line 2 of result
+  Line 3 of result
+  |||
+- Next item
+`;
+    expect(stripSharedNodesFromMarkdown(markdown)).toBe(markdown);
   });
 });
