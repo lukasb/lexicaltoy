@@ -9,8 +9,8 @@ import {
   INDENT_LISTITEM_COMMAND,
   OUTDENT_LISTITEM_COMMAND,
   PREPEND_NEW_CHILD_COMMAND
-} from '../lib/list-commands';
-import { $getListContainingChildren } from "../lib/list-utils";
+} from '@/lib/list-commands';
+import { $getListContainingChildren } from "@/lib/list-utils";
 
 async function testEditorCommand({
   editor,

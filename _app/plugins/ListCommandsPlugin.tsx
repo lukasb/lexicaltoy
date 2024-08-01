@@ -1,6 +1,6 @@
 import type { LexicalEditor, ElementNode } from "lexical";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $setSelection, COMMAND_PRIORITY_EDITOR } from "lexical";
+import { COMMAND_PRIORITY_EDITOR } from "lexical";
 import { useEffect } from "react";
 import { mergeRegister } from "@lexical/utils";
 import {
@@ -14,10 +14,7 @@ import {
 import {
   $canIndentListItem,
   $canOutdentListItem,
-  $getListContainingChildren,
   $getListItemContainingChildren,
-  $getPreviousListItem,
-  $isNestedListItem,
   $addChildListItem,
   $deleteListItem
 } from "@/lib/list-utils";

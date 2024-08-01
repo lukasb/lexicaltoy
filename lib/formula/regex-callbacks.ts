@@ -6,9 +6,9 @@ import {
   NodeElementMarkdown
 } from "./formula-definitions";
 
-const findFormulaStartRegex = /^\s*- =find\(/;
+export const findFormulaStartRegex = /^\s*- =find\(/;
 
-function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMarkdown[] {
+export function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMarkdown[] {
   const lines = markdown.split("\n");
   const rootNode: NodeElementMarkdown = {
     baseNode: createBaseNodeMarkdown(pageName, 1, lines.length, ""),
@@ -78,7 +78,7 @@ function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMa
 
 // for now, if we hit a find() node, just remove it, any children, and any
 // subsequent siblings from the search results
-function removeFindNodes(node: NodeElementMarkdown): void {
+export function removeFindNodes(node: NodeElementMarkdown): void {
   for (let i = 0; i < node.children.length; i++) {
     const child = node.children[i];
     if (findFormulaStartRegex.test(child.baseNode.nodeMarkdown)) {
