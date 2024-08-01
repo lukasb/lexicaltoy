@@ -1,9 +1,11 @@
 import { 
   splitMarkdownByNodes,
   removeFindNodes,
-  findFormulaStartRegex
+  regexCallbacks
 } from "./regex-callbacks";
 import { NodeElementMarkdown } from "./formula-definitions";
+import { FormulaOutput, FormulaOutputType } from "./formula-definitions";
+import { Page, PageStatus } from "../definitions";
 
 // Helper function to create a BaseNodeMarkdown for comparison
 function createBaseNodeMarkdown(pageName: string, lineNumberStart: number, lineNumberEnd: number, nodeMarkdown: string) {
@@ -266,5 +268,120 @@ describe('removeFindNodes', () => {
       lineNumberStart: 1,
       lineNumberEnd: 5
     });
+  });
+});
+
+describe('find() function in regexCallbacks', () => {
+  // Mock pages for testing
+  const mockPages: Page[] = [
+    {
+      id: '1',
+      value: '- This is content for page 1.\n- It contains some keywords.\nla la la\n- More text content with keywords here.',
+      userId: 'user1',
+      title: 'Page 1',
+      lastModified: new Date('2023-01-01'),
+      revisionNumber: 1,
+      isJournal: false,
+      deleted: false,
+      status: PageStatus.Quiescent,
+    },
+    {
+      id: '2',
+      value: '# Page 2\n- This page has different text content.\nIt also has some stuff.\n## Section 2\n- Even more content.\nAlbequerque',
+      userId: 'user1',
+      title: 'Page 2',
+      lastModified: new Date('2023-01-02'),
+      revisionNumber: 1,
+      isJournal: false,
+      deleted: false,
+      status: PageStatus.Quiescent,
+    },
+    {
+      id: '3',
+      value: 'This should not show up in any of our tests',
+      userId: 'user1',
+      title: 'Page -1',
+      lastModified: new Date('2023-01-02'),
+      revisionNumber: 1,
+      isJournal: false,
+      deleted: false,
+      status: PageStatus.Quiescent,
+    },
+  ];
+
+  async function testFindFunction(formula: string): Promise<FormulaOutput | undefined> {
+    for (const [regex, callback] of regexCallbacks) {
+      const match = formula.match(regex);
+      if (match && regex.toString() === '/^find\\((.+)\\)$/') {
+        return await callback(match, mockPages);
+      }
+    }
+    return undefined;
+  }
+
+  test('find() matches single keyword', async () => {
+    const result = await testFindFunction('find(content)');
+    expect(result?.type).toBe(FormulaOutputType.NodeMarkdown);
+    expect(result?.output).toHaveLength(4);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[2] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
+    expect((result?.output[3] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
+    expect((result?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
+    expect((result?.output[3] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
+  });
+
+  test('find() matches multiple keywords (AND logic)', async () => {
+    const result = await testFindFunction('find(content,keywords)');
+    expect(result?.type).toBe(FormulaOutputType.NodeMarkdown);
+    expect(result?.output).toHaveLength(1);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('keywords');
+  });
+
+  test('find() matches OR clauses', async () => {
+    const result = await testFindFunction('find(Page 1|Page 2,text)');
+    expect(result?.type).toBe(FormulaOutputType.NodeMarkdown);
+    expect(result?.output).toHaveLength(2);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('text');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('text');
+  });
+
+  test('find() matches in page title', async () => {
+    const result = await testFindFunction('find(Page 1,keywords)');
+    expect(result?.type).toBe(FormulaOutputType.NodeMarkdown);
+    expect(result?.output).toHaveLength(2);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('keywords');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('keywords');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+  });
+
+  test('find() returns empty array when no matches', async () => {
+    const result = await testFindFunction('find(nonexistent)');
+    expect(result?.type).toBe(FormulaOutputType.NodeMarkdown);
+    expect(result?.output).toHaveLength(0);
+  });
+
+  test('find() does not match invalid formula', async () => {
+    const result = await testFindFunction('findwrong(keyword)');
+    expect(result).toBeUndefined();
+  });
+
+  test('find() handles parentheses in search terms', async () => {
+    const result = await testFindFunction('find(content (with parentheses))');
+    expect(result?.type).toBe(FormulaOutputType.NodeMarkdown);
+    expect(result?.output).toHaveLength(0); // Assuming no match in our mock data
+  });
+
+  test('find() handles special characters in search terms', async () => {
+    const result = await testFindFunction('find(content*with%special&characters)');
+    expect(result?.type).toBe(FormulaOutputType.NodeMarkdown);
+    expect(result?.output).toHaveLength(0); // Assuming no match in our mock data
   });
 });
