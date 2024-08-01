@@ -300,7 +300,29 @@ describe('find() function in regexCallbacks', () => {
       id: '3',
       value: 'This should not show up in any of our tests',
       userId: 'user1',
-      title: 'Page -1',
+      title: 'Page 3',
+      lastModified: new Date('2023-01-02'),
+      revisionNumber: 1,
+      isJournal: false,
+      deleted: false,
+      status: PageStatus.Quiescent,
+    },
+    {
+      id: '4',
+      value: '- Carolina shuffle\n  - boogie',
+      userId: 'user1',
+      title: 'Page 4',
+      lastModified: new Date('2023-01-02'),
+      revisionNumber: 1,
+      isJournal: false,
+      deleted: false,
+      status: PageStatus.Quiescent,
+    },
+    {
+      id: '5',
+      value: '- This is whatever for page 5.\n- It contains some amazing keywords.\nThis is a multiline continuation',
+      userId: 'user1',
+      title: 'Page 5',
       lastModified: new Date('2023-01-02'),
       revisionNumber: 1,
       isJournal: false,
@@ -360,6 +382,26 @@ describe('find() function in regexCallbacks', () => {
     expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
     expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('keywords');
     expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+  });
+
+  test('find() returns nested children', async () => {
+    const result = await testFindFunction('find(shuffle)');
+    expect(result?.type).toBe(FormulaOutputType.NodeMarkdown);
+    expect(result?.output).toHaveLength(1);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('Carolina');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 4');
+    expect((result?.output[0] as NodeElementMarkdown).children).toHaveLength(1);
+    expect((result?.output[0] as NodeElementMarkdown).children[0].baseNode.nodeMarkdown).toContain('boogie');
+  });
+
+  test('find() includes multiline continuations', async () => {
+    const result = await testFindFunction('find(amazing)');
+    expect(result?.type).toBe(FormulaOutputType.NodeMarkdown);
+    expect(result?.output).toHaveLength(1);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('amazing');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('\n');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('multiline');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 5');
   });
 
   test('find() returns empty array when no matches', async () => {
