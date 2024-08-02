@@ -309,7 +309,7 @@ describe('find() function in regexCallbacks', () => {
     },
     {
       id: '4',
-      value: '- Carolina shuffle\n  - boogie',
+      value: '- Carolina shuffle\n    - boogie',
       userId: 'user1',
       title: 'Page 4',
       lastModified: new Date('2023-01-02'),
