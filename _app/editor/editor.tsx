@@ -50,6 +50,8 @@ import { stripSharedNodesFromMarkdown } from "@/lib/formula/formula-markdown-con
 import { PageListenerPlugin } from "@/_app/plugins/PageListenerPlugin";
 import { FormattableTextNode } from "@/_app/nodes/FormattableTextNode";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
+import FloatingCheckmark from "../plugins/FloatingMenuPlugin/FloatingCheckmark";
+import { shouldShowFloatingCheckmark, computeFloatingCheckmarkPosition } from "../plugins/FloatingMenuPlugin/FloatingCheckmark";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -195,6 +197,12 @@ function Editor({
               anchorElem={floatingAnchorElem}
               menuConfig={[
                 {
+                  component: FloatingCheckmark,
+                  shouldShow: shouldShowFloatingCheckmark,
+                  computePosition: computeFloatingCheckmarkPosition,
+                  priority: 15,
+                },
+                {
                   component: FloatingWikiPageNames,
                   shouldShow: shouldShowFloatingWikiPageNames,
                   computePosition: computeFloatingWikiPageNamesPosition,
@@ -220,6 +228,12 @@ function Editor({
                   shouldShow: shouldShowFloatingIndentButtons,
                   computePositionAsync: computeFloatingIndentButtonsPosition,
                   priority: 10,
+                },
+                {
+                  component: FloatingCheckmark,
+                  shouldShow: shouldShowFloatingCheckmark,
+                  computePosition: computeFloatingCheckmarkPosition,
+                  priority: 15,
                 },
                 {
                   component: FloatingWikiPageNames,

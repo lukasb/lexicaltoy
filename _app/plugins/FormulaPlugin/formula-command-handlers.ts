@@ -4,6 +4,7 @@ import {
   FormulaDisplayNode,
   $isFormulaDisplayNode,
   $createFormulaDisplayNode,
+  $isFormulaEditorNode
 } from "@/_app/nodes/FormulaNode";
 import { 
   LexicalEditor,
@@ -35,6 +36,7 @@ import {
 } from "@/lib/list-utils";
 import { 
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
+  SWAP_FORMULA_EDITOR_FOR_DISPLAY,
   STORE_FORMULA_OUTPUT,
   CREATE_FORMULA_NODES
 } from "@/lib/formula-commands";
@@ -205,6 +207,17 @@ export function registerFormulaCommandHandlers(
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
             $replaceDisplayNodeWithEditor(displayNode);
+          }
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+      editor.registerCommand(
+        SWAP_FORMULA_EDITOR_FOR_DISPLAY,
+        () => {
+          const editorNode = $getNodeByKey(getFormulaEditorNodeKey());
+          if (editorNode && $isFormulaEditorNode(editorNode)) {
+            $replaceExistingFormulaEditorNode();
           }
           return true;
         },
