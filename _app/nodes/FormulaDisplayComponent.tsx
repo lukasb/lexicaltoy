@@ -146,7 +146,7 @@ export default function FormulaDisplayComponent(
     >
       <span className="font-semibold bg-bgFormula">{formula}:
         <button className="inline-flex items-center justify-center p-1 text-xs hover:bg-gray-200 rounded" onClick={() => replaceSelfWithEditorNode()}>
-          <span role="img" aria-label="Edit" className="transform scale-x-[-1]">✏️</span>
+          <span role="img" aria-label="Edit" className="transform scale-x-[-1] filter grayscale-[70%]">✏️</span>
         </button>
       </span>
       {!output.startsWith("@@") && <span>{output}</span>}
