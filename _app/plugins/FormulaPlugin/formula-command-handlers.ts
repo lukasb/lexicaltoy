@@ -167,18 +167,6 @@ export function registerFormulaCommandHandlers(
             ) {
               $replaceExistingFormulaEditorNode();
             }
-            if ($isFormulaDisplayNode(node)) {
-              $replaceDisplayNodeWithEditor(node);
-            } else if ($isListItemNode(node)) {
-              const listItemNode = node;
-              if (
-                listItemNode?.getChildren()[0] instanceof FormulaDisplayNode
-              ) {
-                $replaceDisplayNodeWithEditor(
-                  listItemNode.getChildren()[0] as FormulaDisplayNode
-                );
-              }
-            }
             return false;
           }
 
@@ -205,16 +193,6 @@ export function registerFormulaCommandHandlers(
             } else {
               activeNode.selectEnd();
             }
-          }
-
-          const listItemNode = $getActiveListItemFromSelection(selection);
-          if (
-            listItemNode &&
-            listItemNode.getChildren()[0] instanceof FormulaDisplayNode
-          ) {
-            $replaceDisplayNodeWithEditor(
-              listItemNode.getChildren()[0] as FormulaDisplayNode
-            );
           }
 
           return false;
