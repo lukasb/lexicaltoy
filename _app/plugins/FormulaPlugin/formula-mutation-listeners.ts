@@ -16,7 +16,6 @@ import {
   $getContainingListItemNode,
   $getWikilinkNodeFromSharedNode,
   $replaceDisplayNodeWithEditor,
-  $deleteFormulaDisplayNodeChildren
 } from "./formula-node-helpers";
 import { FormulaDisplayNode } from "@/_app/nodes/FormulaNode";
 import { WikilinkNode } from "@/_app/nodes/WikilinkNode";

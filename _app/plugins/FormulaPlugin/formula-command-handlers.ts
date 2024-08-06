@@ -81,12 +81,17 @@ function getAncestorFormulaDisplayNode(listItem: ListItemNode | null): FormulaDi
 function $shouldNotDelete(): boolean {
   const selection = $getSelection();
   if (selection === null || !$isRangeSelection(selection) || selection.isCollapsed()) return false;
+  const selectionNodes = selection?.getNodes();
   const anchorLI = $getListItemContainingNode(selection.anchor.getNode());
   const focusLI = $getListItemContainingNode(selection.focus.getNode());
   if (anchorLI === focusLI) return false;
   const anchorAncestor = getAncestorFormulaDisplayNode(anchorLI);
   const focusAncestor = getAncestorFormulaDisplayNode(focusLI);
-  if (anchorAncestor || focusAncestor) return true;
+  if (
+    (anchorAncestor && !selectionNodes.includes(anchorAncestor))
+    || 
+    (focusAncestor && !selectionNodes.includes(focusAncestor))
+  ) return true;
   return false;
 }
 
