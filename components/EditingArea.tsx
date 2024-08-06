@@ -46,7 +46,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   });
 
   useEffect(() => {
-    console.log("updating open pages", pinnedPageIds);
     setOpenPageIds(prevIds => [...new Set([...prevIds, ...pinnedPageIds])]);
   }, [pinnedPageIds]);
 

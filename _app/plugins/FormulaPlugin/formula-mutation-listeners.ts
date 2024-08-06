@@ -6,6 +6,7 @@ import {
 } from "lexical";
 import {
   ListItemNode,
+  $isListItemNode
 } from "@lexical/list";
 import { mergeRegister } from "@lexical/utils";
 import { NodeElementMarkdown, updateDescendant } from "@/lib/formula/formula-definitions";
@@ -14,7 +15,8 @@ import {
   $getFormulaNodeFromSharedNode,
   $getContainingListItemNode,
   $getWikilinkNodeFromSharedNode,
-  $replaceDisplayNodeWithEditor
+  $replaceDisplayNodeWithEditor,
+  $deleteFormulaDisplayNodeChildren
 } from "./formula-node-helpers";
 import { FormulaDisplayNode } from "@/_app/nodes/FormulaNode";
 import { WikilinkNode } from "@/_app/nodes/WikilinkNode";
@@ -120,6 +122,7 @@ export function registerFormulaMutationListeners(
         // maybe make this more efficient by keeping a mapping from shared nodes to display nodes
 
         if (localSharedNodeMap.size === 0) return;
+        const listItems = new Set<ListItemNode>();
         editor.getEditorState().read(() => {
           for (const [key, type] of mutations) {
             if (type !== "destroyed") continue;
@@ -130,11 +133,35 @@ export function registerFormulaMutationListeners(
                 $getFormulaNodeFromSharedNode(listItemNode) === null
               ) {
                 localSharedNodeMap.delete(listItemKey);
+                listItems.add(listItemNode);
+                const wikilink = $getWikilinkNodeFromSharedNode(listItemNode);
+                if (wikilink) {
+                  const parentWikilink = wikilink.getParent();
+                  if (parentWikilink && $isListItemNode(parentWikilink)) {
+                    listItems.add(parentWikilink);
+                  }
+                }
+              }
+            }
+            for (const [listItemKey, nodeMarkdown] of childSharedNodeMap) {
+              const listItemNode = $getNodeByKey(listItemKey) as ListItemNode;
+              if (
+                listItemNode &&
+                $getFormulaNodeFromSharedNode(listItemNode) === null
+              ) {
                 childSharedNodeMap.delete(listItemKey);
+                listItems.add(listItemNode);
               }
             }
           }
         });
+        if (listItems.size > 0) {
+          editor.update(() => {
+            for (const listItem of listItems) {
+              listItem.remove();
+            }
+          });
+        }
       }),
       editor.registerMutationListener(WikilinkNode, (mutations) => {
 

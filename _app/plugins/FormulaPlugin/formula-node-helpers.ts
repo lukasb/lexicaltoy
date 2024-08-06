@@ -143,6 +143,7 @@ export function $getFormulaDisplayNodeFromWikilinkNode(listItemNode: ListItemNod
 }
 
 export function $getContainingListItemNode(node: LexicalNode): ListItemNode | null {
+  if (!node) return null;
   let parent = node.getParent();
   while (parent && !$isListItemNode(parent)) {
     parent = parent.getParent();
@@ -155,6 +156,8 @@ export function $deleteFormulaDisplayNodeChildren(node: FormulaDisplayNode) {
   if (parent) {
     const listItem = parent as ListItemNode;
     $deleteChildrenFromListItem(listItem);
+  } else {
+    console.error("$deleteFormulaDisplayNodeChildren: node has no parent");
   }
 }
 
