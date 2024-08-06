@@ -137,8 +137,45 @@ export const useFormulaResultService = () => {
       });
   };
 
+  // we call this when we're updating from shared nodes
+  // in this case we just want to make sure new results get added
+  // we can be sure this won't affect the selection
+
+  const addPagesResults = async (pagesToQuery: Page[]): Promise<void> => {
+    let updatedMap = new Map(sharedNodeMap);
+    const formulas = new Set<string>();
+
+    console.log("yes, hi");
+
+    for (const [key] of updatedMap.entries()) {
+      const keyElements: SharedNodeKeyElements = getSharedNodeKeyElements(key);
+      for (const query of updatedMap.get(key)?.queries ?? []) {
+        formulas.add(query);
+      }
+    }
+
+    // run all the formulas over the updated pages and add to the shared node map
+    getFormulaOutputs(formulas, pagesToQuery)
+      .then((outputMap) => {
+        outputMap.forEach((formulaOutput, formula) => {
+          if (
+            formulaOutput &&
+            formulaOutput.type === FormulaOutputType.NodeMarkdown
+          ) {
+            const resultNodes = formulaOutput.output as NodeElementMarkdown[];
+            updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
+          }
+        });
+        setSharedNodeMap(updatedMap);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  };
+
   return {
     getFormulaResults,
     updatePagesResults,
+    addPagesResults
   };
 };

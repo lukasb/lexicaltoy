@@ -3,7 +3,8 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { 
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
   STORE_FORMULA_OUTPUT,
-  CREATE_FORMULA_NODES
+  CREATE_FORMULA_NODES,
+  ADD_FORMULA_NODES
 } from '@/lib/formula-commands';
 import { usePromises } from '../context/formula-request-context';
 import { FormulaOutputType, NodeElementMarkdown, getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
@@ -82,7 +83,7 @@ export default function FormulaDisplayComponent(
       getFormulaOutput(formula);
     } else if (output === "@@childnodes") {
       const sharedNodes: NodeElementMarkdown[] = [];
-
+      
       // TODO this might be triggered by a change to our own nodes, in which case we don't need to do anything
       // we don't know that here though
       // when we move to Redux, maybe the action should include a node key so we can check
@@ -94,23 +95,28 @@ export default function FormulaDisplayComponent(
         }
       }
 
-      let shouldUpdate = false;
-      if (sharedNodes.length !== pageLineMarkdownMap.size) {
-        shouldUpdate = true;
-      } else {
-        for (const node of sharedNodes) {
-          if (
-            pageLineMarkdownMap.get(
-              createSharedNodeKey(node)
-            ) !== getNodeElementFullMarkdown(node)
-          ) {
-            shouldUpdate = true;
-            break;
-          }
+      let nodeAdded = false;
+      let nodeRemoved = false;
+      let nodeChanged = false;
+
+      if (sharedNodes.length > pageLineMarkdownMap.size) {
+        nodeAdded = true;
+      } else if (sharedNodes.length < pageLineMarkdownMap.size) {
+        nodeRemoved = true;
+      } 
+      
+      for (const node of sharedNodes) {
+        if (
+          pageLineMarkdownMap.get(
+            createSharedNodeKey(node)
+          ) !== getNodeElementFullMarkdown(node)
+        ) {
+          nodeChanged = true;
+          break;
         }
       }
 
-      if (shouldUpdate) {        
+      if (nodeRemoved || nodeChanged) {        
         const newPageLineMarkdownMap = new Map<string, string>();
         for (const node of sharedNodes) {
           newPageLineMarkdownMap.set(
@@ -123,6 +129,12 @@ export default function FormulaDisplayComponent(
         editor.dispatchCommand(CREATE_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: sharedNodes,
+        });
+      } else if (nodeAdded) {
+        const nodesToAdd: NodeElementMarkdown[] = sharedNodes.filter(node => !pageLineMarkdownMap.has(createSharedNodeKey(node)));
+        editor.dispatchCommand(ADD_FORMULA_NODES, {
+          displayNodeKey: nodeKey,
+          nodesMarkdown: nodesToAdd,
         });
       }
     }

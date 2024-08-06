@@ -16,7 +16,7 @@ import { getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
 function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAction<Page[]>> }) {
   const pages = useContext(PagesContext);
   const { sharedNodeMap, setSharedNodeMap } = useSharedNodeContext();
-  const { getFormulaResults, updatePagesResults } = useFormulaResultService();
+  const { getFormulaResults, updatePagesResults, addPagesResults } = useFormulaResultService();
   
   // Create a ref to store the save queue
   const saveQueue = useRef<Map<string, { page: Page, timestamp: number }>>(new Map());
@@ -118,6 +118,7 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
           );
         }
       }
+      addPagesResults(pages.filter((p) => pagesToUpdate.has(p.title)));
     }
     for (const page of pages) {
       if (!pagesToUpdate.has(page.title)) {
@@ -130,7 +131,7 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
         }
       }
     }
-  }, [sharedNodeMap, setSharedNodeMap, pages, setPages, updatePagesResults]);
+  }, [sharedNodeMap, setSharedNodeMap, pages, setPages, updatePagesResults, addPagesResults]);
 
   return null;
 }

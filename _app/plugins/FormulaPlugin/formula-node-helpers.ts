@@ -264,7 +264,6 @@ function addChildrenRecursively(
   return addedNodes;
 }
 
-
 export function createFormulaOutputNodes(
   editor: LexicalEditor,
   displayNode: FormulaDisplayNode,
@@ -296,70 +295,190 @@ export function createFormulaOutputNodes(
 
   const headlessEditor = myCreateHeadlessEditor();
 
-    for (const node of sortedNodes) {
-      const match = node.baseNode.nodeMarkdown.match(listItemRegex);
-      if (!match) continue;
+  for (const node of sortedNodes) {
+    const match = node.baseNode.nodeMarkdown.match(listItemRegex);
+    if (!match) continue;
 
-      if (node.baseNode.pageName !== currentPageName) {
-        currentPageName = node.baseNode.pageName;
-        const pageNameListItem = new ListItemNode();
-        pageNameListItem.append(
-          $createFormattableTextNode("[[" + currentPageName + "]]")
-        );
-        $addChildListItem(parentListItem, false, false, pageNameListItem);
-        currentPageListItem = pageNameListItem;
-        currentPageList = $getOrAddListForChildren(currentPageListItem);
-      }
+    if (node.baseNode.pageName !== currentPageName) {
+      currentPageName = node.baseNode.pageName;
+      const pageNameListItem = new ListItemNode();
+      pageNameListItem.append(
+        $createFormattableTextNode("[[" + currentPageName + "]]")
+      );
+      $addChildListItem(parentListItem, false, false, pageNameListItem);
+      currentPageListItem = pageNameListItem;
+      currentPageList = $getOrAddListForChildren(currentPageListItem);
+    }
 
-      if (currentPageListItem && currentPageList) {
+    if (currentPageListItem && currentPageList) {
 
-        let serializedNode: SerializedListItemNode[] = [];
-        headlessEditor.update(() => {
-          const headlessRoot = $getRoot();
-          $myConvertFromMarkdownString(match[2], false, headlessRoot);
-          const listNode = headlessRoot.getFirstChild() as ListNode;
-          if (listNode) {
-            const listItemNode = listNode.getFirstChild() as ListItemNode;
-            if (listItemNode) {
-              $appendNodesToJSON(headlessEditor, listItemNode, serializedNode);
-            }
+      let serializedNode: SerializedListItemNode[] = [];
+      headlessEditor.update(() => {
+        const headlessRoot = $getRoot();
+        $myConvertFromMarkdownString(match[2], false, headlessRoot);
+        const listNode = headlessRoot.getFirstChild() as ListNode;
+        if (listNode) {
+          const listItemNode = listNode.getFirstChild() as ListItemNode;
+          if (listItemNode) {
+            $appendNodesToJSON(headlessEditor, listItemNode, serializedNode);
           }
+        }
+      });
+
+      if (serializedNode) {
+        $appendNodes(currentPageList, serializedNode);
+        const listItemNode = currentPageList.getLastChild() as ListItemNode;
+        
+        setLocalSharedNodeMap((prevMap) => {
+          const updatedMap = new Map(prevMap);
+          updatedMap.set(listItemNode.getKey(), node);
+          return updatedMap;
         });
 
-        if (serializedNode) {
-          $appendNodes(currentPageList, serializedNode);
-          const listItemNode = currentPageList.getLastChild() as ListItemNode;
-          
-          setLocalSharedNodeMap((prevMap) => {
-            const updatedMap = new Map(prevMap);
-            updatedMap.set(listItemNode.getKey(), node);
-            return updatedMap;
-          });
+        const addedChildNodes = addChildren(
+          headlessEditor,
+          listItemNode,
+          node.children
+        );
 
-          const addedChildNodes = addChildren(
-            headlessEditor,
-            listItemNode,
-            node.children
-          );
-
-          addedChildNodes.unshift(
-            {
-              key: listItemNode.getKey(),
-              baseNodeMarkdown: node.baseNode
-            });
-      
-          // make sure we can map any children/grandchildren back to the global shared node map
-          setLocalChildNodeMap((prevMap) => {
-            const updatedMap = new Map(prevMap);
-            addedChildNodes.forEach((childNode) => {
-              updatedMap.set(childNode.key, {
-                parentLexicalNodeKey: listItemNode.getKey(),
-                baseNodeMarkdown: childNode.baseNodeMarkdown,
-              });
-            });
-            return updatedMap;
+        addedChildNodes.unshift(
+          {
+            key: listItemNode.getKey(),
+            baseNodeMarkdown: node.baseNode
           });
-        }
+    
+        // make sure we can map any children/grandchildren back to the global shared node map
+        setLocalChildNodeMap((prevMap) => {
+          const updatedMap = new Map(prevMap);
+          addedChildNodes.forEach((childNode) => {
+            updatedMap.set(childNode.key, {
+              parentLexicalNodeKey: listItemNode.getKey(),
+              baseNodeMarkdown: childNode.baseNodeMarkdown,
+            });
+          });
+          return updatedMap;
+        });
       }
     }
+  }
+}
+
+function findWikilinkListItemByPageName(
+  editor: LexicalEditor,
+  displayNode: FormulaDisplayNode,
+  pageName: string
+): ListItemNode | null {
+  const parentListItem = $getContainingListItemNode(displayNode);
+  if (!parentListItem) return null;
+  const wikilinkList = $getListContainingChildren(parentListItem);
+  if (!wikilinkList) return null;
+  for (const child of wikilinkList.getChildren()) {
+    if ($isListItemNode(child) && child.getTextContent() === "[[" + pageName + "]]") {
+      return child;
+    }
+  }
+  return null;
+}
+
+export function addFormulaOutputNodes(
+  editor: LexicalEditor,
+  displayNode: FormulaDisplayNode,
+  nodesMarkdown: NodeElementMarkdown[],
+  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeElementMarkdown>>>,
+  setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>>
+) {
+
+  const parentListItem = getListItemParentNode(displayNode);
+  if (!parentListItem) return;
+
+  const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
+  
+  // prevent this editor from stealing focus if it doesn't already have it
+  // we make it editable again in an update listener in PageListenerPlugin
+  if (
+    !editor.isComposing() &&
+    editor.getRootElement() !== document.activeElement
+  ) {
+    editor.setEditable(false);
+  }
+
+  let currentPageName = "";
+  let currentPageListItem: ListItemNode | null = null;
+  let currentPageList: ListNode | null = null;
+
+  // two cases to handle
+  // 1. nodes that should be added to existing wikilinks
+  // 2. nodes that need a new wikilink added
+
+  const headlessEditor = myCreateHeadlessEditor();
+
+  for (const node of sortedNodes) {
+    const match = node.baseNode.nodeMarkdown.match(listItemRegex);
+    if (!match) continue;
+
+    if (node.baseNode.pageName !== currentPageName) {
+      currentPageName = node.baseNode.pageName;
+      let pageNameListItem: ListItemNode | null = findWikilinkListItemByPageName(editor, displayNode, currentPageName);
+      if (!pageNameListItem) {
+        pageNameListItem = new ListItemNode();
+        pageNameListItem.append(
+          $createFormattableTextNode("[[" + currentPageName + "]]")
+        );  
+        $addChildListItem(parentListItem, false, false, pageNameListItem);
+      }
+      currentPageListItem = pageNameListItem;
+      currentPageList = $getOrAddListForChildren(currentPageListItem);
+    }
+
+    if (currentPageListItem && currentPageList) {
+
+      let serializedNode: SerializedListItemNode[] = [];
+      headlessEditor.update(() => {
+        const headlessRoot = $getRoot();
+        $myConvertFromMarkdownString(match[2], false, headlessRoot);
+        const listNode = headlessRoot.getFirstChild() as ListNode;
+        if (listNode) {
+          const listItemNode = listNode.getFirstChild() as ListItemNode;
+          if (listItemNode) {
+            $appendNodesToJSON(headlessEditor, listItemNode, serializedNode);
+          }
+        }
+      });
+
+      if (serializedNode) {
+        $appendNodes(currentPageList, serializedNode);
+        const listItemNode = currentPageList.getLastChild() as ListItemNode;
+        
+        setLocalSharedNodeMap((prevMap) => {
+          const updatedMap = new Map(prevMap);
+          updatedMap.set(listItemNode.getKey(), node);
+          return updatedMap;
+        });
+
+        const addedChildNodes = addChildren(
+          headlessEditor,
+          listItemNode,
+          node.children
+        );
+
+        addedChildNodes.unshift(
+          {
+            key: listItemNode.getKey(),
+            baseNodeMarkdown: node.baseNode
+          });
+    
+        // make sure we can map any children/grandchildren back to the global shared node map
+        setLocalChildNodeMap((prevMap) => {
+          const updatedMap = new Map(prevMap);
+          addedChildNodes.forEach((childNode) => {
+            updatedMap.set(childNode.key, {
+              parentLexicalNodeKey: listItemNode.getKey(),
+              baseNodeMarkdown: childNode.baseNodeMarkdown,
+            });
+          });
+          return updatedMap;
+        });
+      }
+    }
+  }
 }
