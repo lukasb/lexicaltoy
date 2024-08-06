@@ -120,7 +120,6 @@ export default function FormulaDisplayComponent(
         }
 
         setPageLineMarkdownMap(newPageLineMarkdownMap);
-
         editor.dispatchCommand(CREATE_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: sharedNodes,
