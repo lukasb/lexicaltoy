@@ -94,6 +94,7 @@ export function registerFormulaMutationListeners(
                     baseNodeMarkdown: newParent.baseNode
                   });
 
+                  console.log("updating global node markdown");
                   updateNodeMarkdownGlobal(
                     newParent,
                     true // set needsSyncToPage to true

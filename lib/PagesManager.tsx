@@ -108,17 +108,19 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
     }
     if (pagesToUpdate.size > 0) {
       // update pages that have shared nodes that have changed
-      for (const [pageName, updatedPage] of pagesToUpdate.entries()) {
-        const page = pages.find((p) => p.title === pageName);
-        if (page) {
-          setPages((prevPages) =>
-            prevPages.map((p) =>
-              p.id === page.id ? { ...p, value: updatedPage, status: PageStatus.EditFromSharedNodes } : p
-            )
-          );
+      const updatedPages = pages.map(p => {
+        const updatedPage = pagesToUpdate.get(p.title);
+        if (updatedPage) {
+          return { ...p, value: updatedPage, status: PageStatus.EditFromSharedNodes };
         }
-      }
-      addPagesResults(pages.filter((p) => pagesToUpdate.has(p.title)));
+        return p;
+      });
+    
+      setPages(updatedPages);
+    
+      // this kicks off a codepath that attempts to append newly matching nodes to existing
+      // FormulaDisplayNodes with node queries, without otherwise affecting them (i.e. not removing or changing existing nodes)
+      addPagesResults(updatedPages);
     }
     for (const page of pages) {
       if (!pagesToUpdate.has(page.title)) {
