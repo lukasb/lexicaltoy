@@ -83,14 +83,13 @@ export default function FormulaDisplayComponent(
       getFormulaOutput(formula);
     } else if (output === "@@childnodes") {
       const sharedNodes: NodeElementMarkdown[] = [];
-      console.log("shared node map update in FDN", nodeKey);
+      
       // TODO this might be triggered by a change to our own nodes, in which case we don't need to do anything
       // we don't know that here though
       // when we move to Redux, maybe the action should include a node key so we can check
 
       // TODO maybe this should be a different map so we don't have to iterate?
       for (const [key, value] of sharedNodeMap.entries()) {
-        console.log(value.queries, value.output.baseNode.nodeMarkdown, nodeKey);
         if (value.queries.includes(formula)) {
           sharedNodes.push(value.output);
         }
