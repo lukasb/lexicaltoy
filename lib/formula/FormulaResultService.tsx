@@ -144,7 +144,7 @@ export const useFormulaResultService = () => {
   const addPagesResults = async (pagesToQuery: Page[]): Promise<void> => {
     let updatedMap = new Map(sharedNodeMap);
     const formulas = new Set<string>();
-    console.log('add pages results', pagesToQuery);
+    
     for (const [key] of updatedMap.entries()) {
       const keyElements: SharedNodeKeyElements = getSharedNodeKeyElements(key);
       for (const query of updatedMap.get(key)?.queries ?? []) {

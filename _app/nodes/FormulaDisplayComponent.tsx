@@ -100,7 +100,6 @@ export default function FormulaDisplayComponent(
       let nodeChanged = false;
 
       if (sharedNodes.length > pageLineMarkdownMapRef.current.size) {
-        console.log("we have a new node", nodeKey);
         nodeAdded = true;
       } else if (sharedNodes.length < pageLineMarkdownMapRef.current.size) {
         nodeRemoved = true;
@@ -112,11 +111,6 @@ export default function FormulaDisplayComponent(
             createSharedNodeKey(node)
           ) !== getNodeElementFullMarkdown(node)
         ) {
-          if (nodeAdded) {
-             console.log("we have a new node but we also have a changed node", getNodeElementFullMarkdown(node), nodeKey);
-          } else {
-            console.log("we have a changed node", pageLineMarkdownMapRef.current.get(createSharedNodeKey(node)), getNodeElementFullMarkdown(node), nodeKey);
-          }
           nodeChanged = true;
           break;
         }
@@ -130,7 +124,6 @@ export default function FormulaDisplayComponent(
             getNodeElementFullMarkdown(node)
           );
         }
-        console.log("new page line markdown map", newPageLineMarkdownMap);
         pageLineMarkdownMapRef.current = newPageLineMarkdownMap;
         editor.dispatchCommand(CREATE_FORMULA_NODES, {
           displayNodeKey: nodeKey,
