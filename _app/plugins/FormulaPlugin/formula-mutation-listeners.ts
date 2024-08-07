@@ -72,13 +72,12 @@ export function registerFormulaMutationListeners(
                 updatedChildNodeMarkdown !==
                 childNodeMarkdown
               ) {
-                  console.log("current", childNodeReference.baseNodeMarkdown);
                   const newParent = updateDescendant(
                     parentNodeMarkdown,
                     childNodeReference.baseNodeMarkdown,
                     updatedChildNodeMarkdown
                   );                  
-                  console.log("new", newParent.baseNode);
+                 
                   const formulaDisplayNode =
                     $getFormulaNodeFromSharedNode(listItem);
                   const displayNodeKey = formulaDisplayNode?.getKey() ?? null;
@@ -185,7 +184,6 @@ export function registerFormulaMutationListeners(
           }
         });
         if (displayNodes.size > 0) {
-          console.log("replacing display nodes with editor nodes");
           editor.update(() => {
             for (const displayNode of displayNodes) {
               $replaceDisplayNodeWithEditor(displayNode);

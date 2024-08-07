@@ -85,7 +85,7 @@ export function updateDescendant(
   const oldLineCount = oldDescendant.lineNumberEnd - oldDescendant.lineNumberStart + 1;
   const newLineCount = newDescendantMarkdown.split('\n').length;
   const lineDifference = newLineCount - oldLineCount;
-  console.log("line difference", lineDifference);
+  
   function updateNode(node: NodeElementMarkdown): boolean {
     if (node.baseNode.lineNumberStart === oldDescendant.lineNumberStart) {
       node.baseNode.nodeMarkdown = newDescendantMarkdown;
