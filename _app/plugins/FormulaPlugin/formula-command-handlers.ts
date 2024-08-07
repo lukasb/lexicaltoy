@@ -251,7 +251,6 @@ export function registerFormulaCommandHandlers(
           }
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
-            console.log('creating formula nodes', displayNodeKey);
             createFormulaOutputNodes(
               editor,
               displayNode,
@@ -269,7 +268,6 @@ export function registerFormulaCommandHandlers(
         ({ displayNodeKey, nodesMarkdown }) => {
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
-            console.log('adding formula nodes', displayNodeKey);
             addFormulaOutputNodes(editor, displayNode, nodesMarkdown, setLocalSharedNodeMap, setLocalChildNodeMap);
           }
           return true;

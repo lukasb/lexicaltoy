@@ -62,14 +62,17 @@ export function getNodeElementEndLine(node: NodeElementMarkdown) {
   return node.children[node.children.length-1].baseNode.lineNumberEnd;
 }
 
-export function getNodeElementFullMarkdown(node: NodeElementMarkdown): string {
-  let markdown = node.baseNode.nodeMarkdown; 
+export function getNodeElementFullMarkdown(node: NodeElementMarkdown, depth: number = 0): string {
+  const indent = '    '.repeat(depth);
+  let markdown = indent + node.baseNode.nodeMarkdown;
+  
   if (node.children.length > 0) {
     const childrenMarkdown = node.children
-      .map(child => getNodeElementFullMarkdown(child))
+      .map(child => getNodeElementFullMarkdown(child, depth + 1))
       .join('\n');
     markdown += '\n' + childrenMarkdown;
   }
+  
   return markdown;
 }
 
@@ -82,7 +85,7 @@ export function updateDescendant(
   const oldLineCount = oldDescendant.lineNumberEnd - oldDescendant.lineNumberStart + 1;
   const newLineCount = newDescendantMarkdown.split('\n').length;
   const lineDifference = newLineCount - oldLineCount;
-
+  console.log("line difference", lineDifference);
   function updateNode(node: NodeElementMarkdown): boolean {
     if (node.baseNode.lineNumberStart === oldDescendant.lineNumberStart) {
       node.baseNode.nodeMarkdown = newDescendantMarkdown;

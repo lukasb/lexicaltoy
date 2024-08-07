@@ -72,13 +72,13 @@ export function registerFormulaMutationListeners(
                 updatedChildNodeMarkdown !==
                 childNodeMarkdown
               ) {
-
+                  console.log("current", childNodeReference.baseNodeMarkdown);
                   const newParent = updateDescendant(
                     parentNodeMarkdown,
                     childNodeReference.baseNodeMarkdown,
                     updatedChildNodeMarkdown
                   );                  
-
+                  console.log("new", newParent.baseNode);
                   const formulaDisplayNode =
                     $getFormulaNodeFromSharedNode(listItem);
                   const displayNodeKey = formulaDisplayNode?.getKey() ?? null;
@@ -91,7 +91,10 @@ export function registerFormulaMutationListeners(
 
                   childSharedNodeMap.set(listItemKey, {
                     parentLexicalNodeKey: childNodeReference.parentLexicalNodeKey,
-                    baseNodeMarkdown: newParent.baseNode
+                    baseNodeMarkdown: {
+                      ...childNodeReference.baseNodeMarkdown,
+                      nodeMarkdown: updatedChildNodeMarkdown
+                    }
                   });
 
                   updateNodeMarkdownGlobal(
