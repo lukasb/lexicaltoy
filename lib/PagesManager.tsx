@@ -133,7 +133,7 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
         }
       }
     }
-  }, [sharedNodeMap, setSharedNodeMap, pages, setPages, updatePagesResults, addPagesResults]);
+  }, [sharedNodeMap, pages, setPages, updatePagesResults, addPagesResults]);
 
   return null;
 }

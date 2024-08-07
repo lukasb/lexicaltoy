@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { 
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
@@ -29,7 +29,7 @@ export default function FormulaDisplayComponent(
   const { promisesMap, addPromise, removePromise, hasPromise } = usePromises();
   const { sharedNodeMap } = useSharedNodeContext();
   const { getFormulaResults } = useFormulaResultService();
-  const [pageLineMarkdownMap, setPageLineMarkdownMap] = useState<Map<string, string>>(new Map<string, string>());
+  const pageLineMarkdownMapRef = useRef<Map<string, string>>(new Map<string, string>());
 
   const getFormulaOutput = useCallback(async (prompt: string) => {
     if (!hasPromise(nodeKey)) {
@@ -53,7 +53,7 @@ export default function FormulaDisplayComponent(
                   createSharedNodeKey(node),
                   getNodeElementFullMarkdown(node));
               });
-              setPageLineMarkdownMap(markdownMap);
+              pageLineMarkdownMapRef.current = markdownMap;
               editor.dispatchCommand(CREATE_FORMULA_NODES, {
                 displayNodeKey: nodeKey,
                 nodesMarkdown: response.output as NodeElementMarkdown[],
@@ -99,23 +99,23 @@ export default function FormulaDisplayComponent(
       let nodeRemoved = false;
       let nodeChanged = false;
 
-      if (sharedNodes.length > pageLineMarkdownMap.size) {
+      if (sharedNodes.length > pageLineMarkdownMapRef.current.size) {
         console.log("we have a new node", nodeKey);
         nodeAdded = true;
-      } else if (sharedNodes.length < pageLineMarkdownMap.size) {
+      } else if (sharedNodes.length < pageLineMarkdownMapRef.current.size) {
         nodeRemoved = true;
       } 
       
       for (const node of sharedNodes) {
         if (
-          pageLineMarkdownMap.get(
+          pageLineMarkdownMapRef.current.get(
             createSharedNodeKey(node)
           ) !== getNodeElementFullMarkdown(node)
         ) {
           if (nodeAdded) {
              console.log("we have a new node but we also have a changed node", getNodeElementFullMarkdown(node), nodeKey);
           } else {
-            console.log("we have a changed node", getNodeElementFullMarkdown(node), nodeKey);
+            console.log("we have a changed node", pageLineMarkdownMapRef.current.get(createSharedNodeKey(node)), getNodeElementFullMarkdown(node), nodeKey);
           }
           nodeChanged = true;
           break;
@@ -130,21 +130,21 @@ export default function FormulaDisplayComponent(
             getNodeElementFullMarkdown(node)
           );
         }
-
-        setPageLineMarkdownMap(newPageLineMarkdownMap);
+        console.log("new page line markdown map", newPageLineMarkdownMap);
+        pageLineMarkdownMapRef.current = newPageLineMarkdownMap;
         editor.dispatchCommand(CREATE_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: sharedNodes,
         });
       } else if (nodeAdded) {
-        const nodesToAdd: NodeElementMarkdown[] = sharedNodes.filter(node => !pageLineMarkdownMap.has(createSharedNodeKey(node)));
+        const nodesToAdd: NodeElementMarkdown[] = sharedNodes.filter(node => !pageLineMarkdownMapRef.current.has(createSharedNodeKey(node)));
         editor.dispatchCommand(ADD_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: nodesToAdd,
         });
       }
     }
-  }, [formula, output, sharedNodeMap, editor, nodeKey, getFormulaOutput, pageLineMarkdownMap]);
+  }, [formula, output, sharedNodeMap, editor, nodeKey, getFormulaOutput]);
 
   const replaceSelfWithEditorNode = () => {
     // TODO this will create an entry in the undo history which we don't necessarily want
