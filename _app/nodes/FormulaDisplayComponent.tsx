@@ -83,7 +83,7 @@ export default function FormulaDisplayComponent(
       getFormulaOutput(formula);
     } else if (output === "@@childnodes") {
       const sharedNodes: NodeElementMarkdown[] = [];
-      
+    
       // TODO this might be triggered by a change to our own nodes, in which case we don't need to do anything
       // we don't know that here though
       // when we move to Redux, maybe the action should include a node key so we can check
@@ -92,6 +92,8 @@ export default function FormulaDisplayComponent(
       for (const [key, value] of sharedNodeMap.entries()) {
         if (value.queries.includes(formula)) {
           sharedNodes.push(value.output);
+        } else {
+          if (formula.includes('WAITING') && value.output.baseNode.nodeMarkdown.includes('WAITING')) console.log("something weird going on here");
         }
       }
 
@@ -116,7 +118,8 @@ export default function FormulaDisplayComponent(
         }
       }
 
-      if (nodeRemoved || nodeChanged) {        
+      if (nodeRemoved || nodeChanged) {
+        if (formula.includes('WAITING')) console.log("creating nodes");        
         const newPageLineMarkdownMap = new Map<string, string>();
         for (const node of sharedNodes) {
           newPageLineMarkdownMap.set(
@@ -130,11 +133,14 @@ export default function FormulaDisplayComponent(
           nodesMarkdown: sharedNodes,
         });
       } else if (nodeAdded) {
+        if (formula.includes('WAITING')) console.log("adding nodes");
         const nodesToAdd: NodeElementMarkdown[] = sharedNodes.filter(node => !pageLineMarkdownMapRef.current.has(createSharedNodeKey(node)));
         editor.dispatchCommand(ADD_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: nodesToAdd,
         });
+      } else {
+        if (formula.includes('WAITING')) console.log("no changes");
       }
     }
   }, [formula, output, sharedNodeMap, editor, nodeKey, getFormulaOutput]);

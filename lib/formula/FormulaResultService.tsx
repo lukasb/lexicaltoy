@@ -44,6 +44,7 @@ export const useFormulaResultService = () => {
           updatedMap.set(key, mergedResult);
         }
       } else {
+        console.log("merging node with novel query", query);
         const newQueryNode = {
           output: result,
           queries: [query],
