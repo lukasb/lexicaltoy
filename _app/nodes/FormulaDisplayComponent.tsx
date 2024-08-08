@@ -11,6 +11,7 @@ import { FormulaOutputType, NodeElementMarkdown, getNodeElementFullMarkdown } fr
 import { useSharedNodeContext, createSharedNodeKey } from '../context/shared-node-context';
 import { useFormulaResultService } from '../../lib/formula/FormulaResultService';
 import { slurpDialogueContext } from '@/lib/formula/FormulaOutput';
+import { registerFormula, unregisterFormula } from '../../lib/formula/FormulaResultService';
 
 export default function FormulaDisplayComponent(
   { formula: initialFormula,
@@ -30,6 +31,15 @@ export default function FormulaDisplayComponent(
   const { sharedNodeMap } = useSharedNodeContext();
   const { getFormulaResults } = useFormulaResultService();
   const pageLineMarkdownMapRef = useRef<Map<string, string>>(new Map<string, string>());
+
+  useEffect(() => {
+    console.log("registering formula", formula);
+    registerFormula(formula);
+    return () => {
+      console.log("unregistering formula", formula);
+      unregisterFormula(formula);
+    }
+  }, [formula]);
 
   const getFormulaOutput = useCallback(async (prompt: string) => {
     if (!hasPromise(nodeKey)) {
@@ -79,9 +89,11 @@ export default function FormulaDisplayComponent(
   useEffect(() => {
 
     if (output === "") {
+      console.log("getting initial output");
       setOutput("(getting response...)");
       getFormulaOutput(formula);
     } else if (output === "@@childnodes") {
+      console.log("getting updated output for nodequery");
       const sharedNodes: NodeElementMarkdown[] = [];
     
       // TODO this might be triggered by a change to our own nodes, in which case we don't need to do anything

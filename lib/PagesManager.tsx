@@ -120,7 +120,9 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
     
       // this kicks off a codepath that attempts to append newly matching nodes to existing
       // FormulaDisplayNodes with node queries, without otherwise affecting them (i.e. not removing or changing existing nodes)
-      addPagesResults(updatedPages.filter((p) => p.status === PageStatus.EditFromSharedNodes));
+      const filteredUpdatedPages = updatedPages.filter((p) => p.status === PageStatus.EditFromSharedNodes);
+      console.log("filteredUpdatedPages", filteredUpdatedPages);
+      addPagesResults(filteredUpdatedPages);
     }
     for (const page of pages) {
       if (!pagesToUpdate.has(page.title)) {

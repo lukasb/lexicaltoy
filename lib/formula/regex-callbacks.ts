@@ -89,20 +89,30 @@ export function removeFindNodes(node: NodeElementMarkdown): void {
   }
 }
 
-export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Page[]) => Promise<FormulaOutput>]> = [
+export function getFormulaOutputType(formula: string): FormulaOutputType | null {
+  for (const [regex, , outputType] of regexCallbacks) {
+    if (regex.test(formula)) {
+      return outputType;
+    }
+  }
+  return null;
+}
+
+export const regexCallbacks: Array<
+  [RegExp, (match: RegExpMatchArray, pages: Page[]) => Promise<FormulaOutput>, FormulaOutputType]
+> = [
   [
     /^find\((.+)\)$/,
     async (match, pages) => {
-
       // for now, find(abc,def|ghi) will find all lines that contain "abc" AND ("def" OR "ghi")
       // we also check the title when matching, so if one substring is in the title and another
       // is in the line, we match
 
-      const substrings = match[1].split(",").map(s => s.trim());
+      const substrings = match[1].split(",").map((s) => s.trim());
 
       const orClauses: { [key: string]: string[] } = {};
       for (const substring of substrings) {
-        const orClause = substring.split("|").map(s => s.trim());
+        const orClause = substring.split("|").map((s) => s.trim());
         orClauses[substring] = orClause;
       }
 
@@ -112,7 +122,7 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
         let unmatchedSubstrings = [...substrings];
 
         // search terms can appear in the title or the content of the page
-        unmatchedSubstrings = unmatchedSubstrings.filter(substring => {
+        unmatchedSubstrings = unmatchedSubstrings.filter((substring) => {
           const substrOrClauses = orClauses[substring];
           for (const substrOrClause of substrOrClauses) {
             if (page.title.includes(substrOrClause)) {
@@ -122,18 +132,21 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
           return true;
         });
 
-        function processNodes(nodesMarkdown: NodeElementMarkdown[], unmatchedSubstrings: string[], orClauses: { [key: string]: string[] }): NodeElementMarkdown[] {
-        
+        function processNodes(
+          nodesMarkdown: NodeElementMarkdown[],
+          unmatchedSubstrings: string[],
+          orClauses: { [key: string]: string[] }
+        ): NodeElementMarkdown[] {
           const output: NodeElementMarkdown[] = [];
           for (let node of nodesMarkdown) {
             const currentNodeMarkdown = node.baseNode.nodeMarkdown;
-            const matchesAll = unmatchedSubstrings.every(substring => {
+            const matchesAll = unmatchedSubstrings.every((substring) => {
               const substrOrClauses = orClauses[substring];
-              return substrOrClauses.some(substrOrClause => 
+              return substrOrClauses.some((substrOrClause) =>
                 currentNodeMarkdown.includes(substrOrClause)
               );
             });
-        
+
             if (matchesAll) {
               // Avoid circular references by excluding lines with find() formulas
               if (!findFormulaStartRegex.test(currentNodeMarkdown)) {
@@ -145,21 +158,26 @@ export const regexCallbacks: Array<[RegExp, (match: RegExpMatchArray, pages: Pag
               // this is an intentional choice - but we could decide the other way, that every
               // match should appear at the top level
               if (node.children && node.children.length > 0) {
-                output.push(...processNodes(node.children, unmatchedSubstrings, orClauses));
+                output.push(
+                  ...processNodes(node.children, unmatchedSubstrings, orClauses)
+                );
               }
             }
           }
-        
+
           return output;
         }
-        
+
         const nodesMarkdown = splitMarkdownByNodes(page.value, page.title);
-        output.push(...processNodes(nodesMarkdown, unmatchedSubstrings, orClauses));
+        output.push(
+          ...processNodes(nodesMarkdown, unmatchedSubstrings, orClauses)
+        );
       }
       return {
         output: output,
         type: FormulaOutputType.NodeMarkdown,
       };
     },
+    FormulaOutputType.NodeMarkdown,
   ],
 ];

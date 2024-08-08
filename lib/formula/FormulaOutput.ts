@@ -77,7 +77,7 @@ async function getPagesContext(pageSpecs: string[], pages: Page[]): Promise<stri
 export async function getFormulaOutput(formula: string, pages: Page[], dialogueContext?: DialogueElement[]): Promise<FormulaOutput | null> {
 
   // Check if the formula matches any of the regex patterns
-  for (const [regex, callback] of regexCallbacks) {
+  for (const [regex, callback, type] of regexCallbacks) {
     const match = formula.match(regex);
     if (match) {
       return await callback(match, pages);

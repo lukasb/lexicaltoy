@@ -15,6 +15,24 @@ import {
   FormulaOutputType,
 } from "@/lib/formula/formula-definitions";
 import { DialogueElement } from "../ai";
+import { QueryCounter } from './query-counter';
+import { getFormulaOutputType } from "./regex-callbacks";
+
+export const nodeQueries = new QueryCounter();
+
+export function registerFormula(formula: string): void {
+  if (getFormulaOutputType(formula) === FormulaOutputType.NodeMarkdown) {
+    //console.log("registering formula", formula);
+    nodeQueries.increment(formula);
+  }
+}
+
+export function unregisterFormula(formula: string): void {
+  if (getFormulaOutputType(formula) === FormulaOutputType.NodeMarkdown) {
+    //console.log("unregistering formula", formula);
+    nodeQueries.decrement(formula);
+  }
+}
 
 export const useFormulaResultService = () => {
   const { sharedNodeMap, setSharedNodeMap } = useSharedNodeContext();
@@ -29,7 +47,7 @@ export const useFormulaResultService = () => {
   ): Map<string, QueryNode> => {
     const updatedMap = new Map(nodeMap);
     const resultKeys = new Set<string>();
-
+    if (query.includes('WAITING')) console.log("merging nodes", resultNodes);
     resultNodes.forEach((result) => {
       const key = createSharedNodeKey(result);
       resultKeys.add(key);
@@ -93,7 +111,7 @@ export const useFormulaResultService = () => {
   };
 
   async function getFormulaOutputs(
-    formulas: Set<string>,
+    formulas: IterableIterator<string>,
     pages: Page[]
   ): Promise<Map<string, FormulaOutput>> {
     const promises = Array.from(formulas).map(async (formula) => {
@@ -105,22 +123,24 @@ export const useFormulaResultService = () => {
     return new Map(results);
   }
 
+  const debugQueries = (queries: IterableIterator<string>): string => {
+    return Array.from(queries).join('\n');
+  };
+
   const updatePagesResults = async (pagesToQuery: Page[]): Promise<void> => {
     let updatedMap = new Map(sharedNodeMap);
-    const formulas = new Set<string>();
 
-    // Delete current results for the page while collecting all the formulas
+    // Delete current results for the page
     for (const [key] of updatedMap.entries()) {
       const keyElements: SharedNodeKeyElements = getSharedNodeKeyElements(key);
-      for (const query of updatedMap.get(key)?.queries ?? []) {
-        formulas.add(query);
-      }
       if (pagesToQuery.some((page) => page.title === keyElements.pageName))
         updatedMap.delete(key);
     }
 
+    console.log("updating pages results", debugQueries(nodeQueries.getUniqueQueries()));
+
     // run all the formulas over the updated pages and add to the shared node map
-    getFormulaOutputs(formulas, pagesToQuery)
+    getFormulaOutputs(nodeQueries.getUniqueQueries(), pagesToQuery)
       .then((outputMap) => {
         outputMap.forEach((formulaOutput, formula) => {
           if (
@@ -144,17 +164,11 @@ export const useFormulaResultService = () => {
 
   const addPagesResults = async (pagesToQuery: Page[]): Promise<void> => {
     let updatedMap = new Map(sharedNodeMap);
-    const formulas = new Set<string>();
-    
-    for (const [key] of updatedMap.entries()) {
-      const keyElements: SharedNodeKeyElements = getSharedNodeKeyElements(key);
-      for (const query of updatedMap.get(key)?.queries ?? []) {
-        formulas.add(query);
-      }
-    }
+
+    console.log("adding pages results", debugQueries(nodeQueries.getUniqueQueries()));
 
     // run all the formulas over the updated pages and add to the shared node map
-    getFormulaOutputs(formulas, pagesToQuery)
+    getFormulaOutputs(nodeQueries.getUniqueQueries(), pagesToQuery)
       .then((outputMap) => {
         outputMap.forEach((formulaOutput, formula) => {
           if (
@@ -175,6 +189,6 @@ export const useFormulaResultService = () => {
   return {
     getFormulaResults,
     updatePagesResults,
-    addPagesResults
+    addPagesResults,
   };
 };
