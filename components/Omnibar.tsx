@@ -14,6 +14,7 @@ import { Page } from "@/lib/definitions";
 import { PagesContext } from "@/_app/context/pages-context";
 import { isTouchDevice } from "@/lib/window-helpers";
 import { getTodayJournalTitle } from "@/lib/journal-helpers";
+import { getModifierKey } from "@/lib/utils";
 
 const Omnibar = forwardRef(({
   openOrCreatePageByTitle
@@ -32,6 +33,7 @@ const Omnibar = forwardRef(({
   const skipTermResolutionRef = useRef(false);
   const pages = useContext(PagesContext);
   const [todayJournalTitle, setTodayJournalTitle] = useState(getTodayJournalTitle());
+  const modifierKey = getModifierKey();
 
   // TODO accessibility
   // TODO Escape sets focus back to last active editor
@@ -249,7 +251,7 @@ const Omnibar = forwardRef(({
         value={displayValue}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        placeholder="Search or Create"
+        placeholder={`Search or Create (${modifierKey} + K)`}
       />
       <div className="absolute top-full left-0 right-0 mt-1 z-50">
         {(results.length > 0 || showCreatePageOption) && (
