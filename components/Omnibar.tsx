@@ -33,7 +33,11 @@ const Omnibar = forwardRef(({
   const skipTermResolutionRef = useRef(false);
   const pages = useContext(PagesContext);
   const [todayJournalTitle, setTodayJournalTitle] = useState(getTodayJournalTitle());
-  const modifierKey = getModifierKey();
+  const [modifierKey, setModifierKey] = useState("");
+
+  useEffect(() => {
+    setModifierKey(getModifierKey());
+  }, []);
 
   // TODO accessibility
   // TODO Escape sets focus back to last active editor

@@ -39,7 +39,11 @@ function EditorContainer({
   const [isEditorExpanded, setIsEditorExpanded] = useState(true);
   const touchDevice = isTouchDevice();
   const [isMobile, setIsMobile] = useState<boolean>(false);
-  const modifierKey = getModifierKey();
+  const [modifierKey, setModifierKey] = useState("");
+
+  useEffect(() => {
+    setModifierKey(getModifierKey());
+  }, []);
 
   useBreakpoint(768, isMobile, setIsMobile);
 
