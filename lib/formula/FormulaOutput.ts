@@ -9,7 +9,7 @@ import {
 import { Page } from '@/lib/definitions';
 import { getPageMarkdown } from '@/lib/pages-helpers';
 import { stripBrackets } from '@/lib/transform-helpers';
-import { getLastTwoWeeksJournalPages } from '@/lib/journal-helpers';
+import { getLastSixWeeksJournalPages } from '@/lib/journal-helpers';
 import { regexCallbacks } from './regex-callbacks';
 import { WIKILINK_REGEX, extractWikilinks } from '@/lib/text-utils';
 import { LexicalEditor, $getNodeByKey } from 'lexical';
@@ -39,7 +39,7 @@ async function getPagesContext(pageSpecs: string[], pages: Page[]): Promise<stri
 
     if (pageTitle.endsWith("/")) {
       if (pageTitle === "journals/") {
-        const journalPages = await getLastTwoWeeksJournalPages(pages);
+        const journalPages = await getLastSixWeeksJournalPages(pages);
         journalPages.forEach(page => uniquePages.add(page));
       } else {
         pages

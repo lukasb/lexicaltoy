@@ -92,14 +92,14 @@ export const getLastWeekJournalPages = (currentPages: Page[]): Page[] => {
   return lastTwoWeeksJournalPages;
 }
 
-// get the last two weeks of journal pages
+// get the last six weeks of journal pages
 // we only check based on date here, not on number of pages returned
-export async function getLastTwoWeeksJournalPages(currentPages: Page[]): Promise<Page[]> {
+export async function getLastSixWeeksJournalPages(currentPages: Page[]): Promise<Page[]> {
   const today = new Date();
-  const twoWeeksAgo = subWeeks(today, 2);
+  const sixWeeksAgo = subWeeks(today, 6);
   const journalPages: Page[] = [];
 
-  for (let date = twoWeeksAgo; date <= today; date.setDate(date.getDate() + 1)) {
+  for (let date = sixWeeksAgo; date <= today; date.setDate(date.getDate() + 1)) {
     const journalPage = getJournalPageByDate(currentPages, date);
     if (journalPage) {
       journalPages.push(journalPage);
