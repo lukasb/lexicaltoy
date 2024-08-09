@@ -5,7 +5,7 @@ import {
   DecoratorNode,
   NodeKey,
   SerializedLexicalNode,
-  Spread
+  Spread,
 } from 'lexical';
 import { TextNode } from 'lexical';
 import FormulaDisplayComponent from './FormulaDisplayComponent';

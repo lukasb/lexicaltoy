@@ -22,6 +22,7 @@ import {
   REMOVE_TEXT_COMMAND,
   OUTDENT_CONTENT_COMMAND,
   INSERT_PARAGRAPH_COMMAND,
+  COPY_COMMAND,
   $isTextNode
 } from "lexical";
 import {
@@ -345,5 +346,37 @@ export function registerFormulaCommandHandlers(
         },
         COMMAND_PRIORITY_HIGH
       ),
+      editor.registerCommand(
+        COPY_COMMAND,
+        (event: ClipboardEvent | null) => {
+          const selection = $getSelection();
+          if (selection === null) {
+            const windowSelection = window.getSelection();
+            if (windowSelection && windowSelection.rangeCount > 0) {
+              const range = windowSelection.getRangeAt(0);
+              let currentNode = range.commonAncestorContainer as Node;
+
+              while (currentNode && currentNode !== document.body) {
+                if (currentNode.nodeType === Node.ELEMENT_NODE) {
+                  const element = currentNode as HTMLElement;
+                  if (element.tagName.toLowerCase() === 'div') {
+                    // TODO probably there's a better way to figure out if the selection is within a FormulaDisplayComponent
+                    if (element.classList.contains('border-formulaBorderColor')) {
+                      event?.clipboardData?.setData('text/plain', windowSelection.toString());
+                      return true;
+                    } else {
+                      return false;
+                    }
+                  }
+                }
+                currentNode = currentNode.parentNode as Node;
+              }
+            }
+            return false;
+          }
+          return false;
+        },
+        COMMAND_PRIORITY_CRITICAL
+      )
     );
   }
