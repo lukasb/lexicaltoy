@@ -14,8 +14,8 @@
 //const FORMULA_REGEX = /^=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
 //const FORMULA_LIST_ITEM_REGEX = /^(\s*)-\s?=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
 
-const FORMULA_REGEX = /^=(.+?)(?:\s*\|\|\|result:\n([\s\S]*?)\|\|\|)?$/gs;
-const FORMULA_LIST_ITEM_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:\n([\s\S]*?)\|\|\|)?$/gm;
+const FORMULA_REGEX = /^=(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?$/gs;
+const FORMULA_LIST_ITEM_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?$/gm;
 
 // formula as stored by the nodes has the = sign at the front, maybe should change that
 export function getFormulaMarkdown(formula: string, output?: string): string {
@@ -50,6 +50,7 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
   let formulaLines: string[] = [];
   let formulaIndent = '';
 
+  if (markdown.includes('Polanyi')) console.log("markdown is", markdown);
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
@@ -67,6 +68,7 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
       if (line.trim() === '|||' || !line.trim()) {
         inFormula = false;
         const fullFormula = formulaLines.join('\n');
+        if (markdown.includes('Polanyi')) console.log("full formula is", fullFormula);
         const matches = Array.from(fullFormula.matchAll(FORMULA_LIST_ITEM_REGEX));
 
         if (matches.length > 0) {

@@ -139,6 +139,7 @@ function Editor({
       const trimmedPageContents = pageContentsWithoutSharedNodes.replace(/\s$/, '');
       const trimmedPageValue = page.value.replace(/\s$/, '');
       if (trimmedPageContents !== trimmedPageValue) {
+        if (!trimmedPageValue.includes('||||||') && trimmedPageContents.includes('||||||')) console.log("FOUND IT");
         pendingChangeRef.current = pageContentsWithoutSharedNodes;
         debouncedSave(pageContentsWithoutSharedNodes);
       } else {
