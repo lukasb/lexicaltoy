@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { Page } from "@/lib/definitions";
 import { isTouchDevice } from "@/lib/window-helpers";
 import NoSSRWrapper from "./NoSSRWrapper";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, ChevronDown, ChevronUp } from "lucide-react";
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Pin } from 'lucide-react';
 import { useBreakpoint } from "@/lib/window-helpers";
@@ -35,9 +35,9 @@ function EditorContainer({
   const [showDebug, setShowDebug] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [localIsPinned, setLocalIsPinned] = useState(isPinned);
+  const [isEditorExpanded, setIsEditorExpanded] = useState(true);
   const touchDevice = isTouchDevice();
-  const [isMobile, setIsMobile] =
-    useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
   useBreakpoint(768, isMobile, setIsMobile);
 
@@ -50,6 +50,10 @@ function EditorContainer({
     e.stopPropagation();
     setLocalIsPinned(!localIsPinned);
     onPagePinToggle(page.id);
+  };
+
+  const toggleEditorExpansion = () => {
+    setIsEditorExpanded(!isEditorExpanded);
   };
 
   // TODO maybe render a headless editor on the server to enable server-side rendering?
@@ -129,6 +133,22 @@ function EditorContainer({
                     )}
                     <DropdownMenu.Item
                       className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
+                      onClick={toggleEditorExpansion}
+                    >
+                      {isEditorExpanded ? (
+                        <>
+                          <ChevronUp className="inline-block mr-2" />
+                          Collapse
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="inline-block mr-2" />
+                          Expand
+                        </>
+                      )}
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                      className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
                       onClick={() => setShowDebug(!showDebug)}
                     >
                       {showDebug ? "Hide Debug" : "Show Debug"}
@@ -140,14 +160,14 @@ function EditorContainer({
           </div>
         </div>
         <NoSSRWrapper>
-          <div className="pl-[22px] pr-1 md:pl-[29px] mt-4">
+          <div className={`pl-[22px] pr-1 md:pl-[29px] mt-4 ${isEditorExpanded ? '' : 'hidden'}`}>
             <Editor
               page={page}
               showDebugInfo={showDebug}
               updatePageContentsLocal={updatePageContentsLocal}
               openOrCreatePageByTitle={openOrCreatePageByTitle}
               requestFocus={requestFocus}
-              closePage={closePage} // Added this line
+              closePage={closePage}
             />
           </div>
         </NoSSRWrapper>
@@ -155,7 +175,5 @@ function EditorContainer({
     </div>
   );
 }
-/*
 
-*/
 export default EditorContainer;
