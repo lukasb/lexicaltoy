@@ -64,13 +64,28 @@ function FlexibleEditorLayout ({
       </div>
     );
   } else {
+    const leftColumnPages: string[] = [];
+    const rightColumnPages: string[] = [];
+
+    sortedPageIds.forEach((pageId, index) => {
+      if (pinnedPageIds.includes(pageId)) {
+        rightColumnPages.push(pageId);
+      } else {
+        if (index % 2 === 0) {
+          leftColumnPages.push(pageId);
+        } else {
+          rightColumnPages.push(pageId);
+        }
+      }
+    });
+
     return (
       <div className="flex gap-4 w-full">
         <div className="column flex flex-col w-1/2">
-          {sortedPageIds.filter((_, index) => index % 2 === 0).map((pageId, index) => renderEditorContainer(pageId, index === 0))}
+          {leftColumnPages.map((pageId, index) => renderEditorContainer(pageId, index === 0))}
         </div>
         <div className="column flex flex-col w-1/2">
-          {sortedPageIds.filter((_, index) => index % 2 !== 0).map((pageId) => renderEditorContainer(pageId, false))}
+          {rightColumnPages.map((pageId) => renderEditorContainer(pageId, false))}
         </div>
       </div>
     );
