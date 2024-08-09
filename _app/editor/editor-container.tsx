@@ -10,6 +10,7 @@ import { MoreVertical, ChevronDown, ChevronUp } from "lucide-react";
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Pin } from 'lucide-react';
 import { useBreakpoint } from "@/lib/window-helpers";
+import { getModifierKey } from "@/lib/utils";
 
 function EditorContainer({
   page,
@@ -38,6 +39,7 @@ function EditorContainer({
   const [isEditorExpanded, setIsEditorExpanded] = useState(true);
   const touchDevice = isTouchDevice();
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const modifierKey = getModifierKey();
 
   useBreakpoint(768, isMobile, setIsMobile);
 
@@ -121,7 +123,7 @@ function EditorContainer({
                       className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
                       onClick={() => closePage(page.id)}
                     >
-                      Close
+                      Close {!isMobile && `(${modifierKey} + u)`}
                     </DropdownMenu.Item>
                     {!page.isJournal && (
                       <DropdownMenu.Item
