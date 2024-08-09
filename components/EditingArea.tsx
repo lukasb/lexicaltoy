@@ -207,7 +207,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                     );
                   }}
                   updatePageContentsLocal={(id, newValue, newRevisionNumber) => {
-                    if (newValue.includes('||||||')) console.log("THIS BROKE IT");
                     setCurrentPages((prevPages) =>
                       prevPages.map((page) =>
                         page.id === id

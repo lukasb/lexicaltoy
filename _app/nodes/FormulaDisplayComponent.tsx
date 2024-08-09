@@ -33,7 +33,6 @@ export default function FormulaDisplayComponent(
   const pageLineMarkdownMapRef = useRef<Map<string, string>>(new Map<string, string>());
 
   useEffect(() => {
-    console.log('registering formula', formula);
     registerFormula(formula);
     return () => {
       unregisterFormula(formula);

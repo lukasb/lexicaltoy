@@ -90,7 +90,6 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
       if (page) {
         const lines = page.value.split("\n");
         const currentMarkdown = getNodeElementFullMarkdown(value.output);
-        if (page.title === 'Jul 31st, 2024' && page.value.includes('||||||')) console.log("BROKEN");
         if (lines.slice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd).join("\n") !== currentMarkdown) {
           lines.splice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd - keyElements.lineNumberStart + 1, ...currentMarkdown.split("\n"));
         }
@@ -122,7 +121,6 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
       // this kicks off a codepath that attempts to append newly matching nodes to existing
       // FormulaDisplayNodes with node queries, without otherwise affecting them (i.e. not removing or changing existing nodes)
       const filteredUpdatedPages = updatedPages.filter((p) => p.status === PageStatus.EditFromSharedNodes);
-      console.log("filteredUpdatedPages", filteredUpdatedPages);
       addPagesResults(filteredUpdatedPages);
     }
     for (const page of pages) {

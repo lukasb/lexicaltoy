@@ -117,7 +117,6 @@ export function registerFormulaCommandHandlers(
         const { formula: formulaText, result: resultString } =
           parseFormulaMarkdown(textContents);
         if (formulaText && resultString) {
-          console.log("creating FDN with", formulaText, resultString);
           const formulaDisplayNode = $createFormulaDisplayNode(
             formulaText,
             resultString

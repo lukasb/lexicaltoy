@@ -68,9 +68,7 @@ function $updateListItems(root: RootNode, markdownLines: string[]) {
         //console.log('updating list item - old', element.getTextContent());
         //console.log("updating list item - new", newMarkdown);
         // TODO maybe use $myConvertFromMarkdownString - $convertFromMarkdownString will always try to move the selection
-        if (newMarkdown.includes('Polanyi')) console.log("updating list item with", newMarkdown);
         $convertFromMarkdownString(newMarkdown, TRANSFORMERS, element as ListItemNode);
-        if (newMarkdown.includes('Polanyi')) console.log("element now has", element.getTextContent());
       }
     } else if (markdownLines[i] !== "") {
       previousBlank = false;
@@ -134,7 +132,6 @@ export function PageListenerPlugin({
               focusOffset = selection.focus.offset;
             }
             const root = $getRoot();
-            console.log("updating list items");
             $updateListItems(root, page.value.split("\n"));
             if (anchorKey && focusKey) {
               const newSelection = $createRangeSelection();

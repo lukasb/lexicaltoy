@@ -164,10 +164,8 @@ export function $deleteFormulaDisplayNodeChildren(node: FormulaDisplayNode) {
 export function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   const textContents = node.getTextContent();
   const { formula: formulaText, result: resultString } = parseFormulaMarkdown(textContents);
-  if (resultString === "@@childnodes") console.log("creating FDN with @@childnodes");
   if (!formulaText) return;
   let formulaDisplayNode = null;
-  //if (formulaText.includes('Polanyi')) console.log("creating FDN with", formulaText, resultString);
   if (resultString) {
     formulaDisplayNode = $createFormulaDisplayNode(formulaText, resultString);
   } else {
