@@ -168,7 +168,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
   const handlePagePinToggle = (pageId: string) => {
     console.log("toggling pin for", pageId);
-    const newPinnedPageIds = togglePagePin(pageId, pinnedPageIds);
+    const newPinnedPageIds = togglePagePin(pageId);
     setPinnedPageIds(newPinnedPageIds);
   };
 

@@ -84,32 +84,58 @@ export async function getPageMarkdown(page: Page): Promise<string> {
   } 
 }
 
-const STORAGE_KEY = "pinnedPageIds";
+const PINNED_STORAGE_KEY = "pinnedPageIds";
+const COLLAPSED_STORAGE_KEY = "collapsedPageIds";
 
-export function serializePagePins(pageIds: string[]): void {
+type PageStateKey = "pinned" | "collapsed";
+
+function serializePageState(pageIds: string[], stateKey: PageStateKey): void {
   if (typeof window !== 'undefined') {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(pageIds));
+    const storageKey = stateKey === "pinned" ? PINNED_STORAGE_KEY : COLLAPSED_STORAGE_KEY;
+    localStorage.setItem(storageKey, JSON.stringify(pageIds));
   }
 }
 
-export function deserializePagePins(): string[] {
+function deserializePageState(stateKey: PageStateKey): string[] {
   if (typeof window !== 'undefined') {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const storageKey = stateKey === "pinned" ? PINNED_STORAGE_KEY : COLLAPSED_STORAGE_KEY;
+    return JSON.parse(localStorage.getItem(storageKey) || '[]');
   }
   return [];
 }
 
-export function togglePagePin(pageId: string, pinnedPageIds: string[]): string[] {
-  const index = pinnedPageIds.indexOf(pageId);
+function togglePageState(pageId: string, stateKey: PageStateKey): string[] {
+  const currentState = deserializePageState(stateKey);
+  const index = currentState.indexOf(pageId);
   if (index > -1) {
-    pinnedPageIds.splice(index, 1);
+    currentState.splice(index, 1);
   } else {
-    pinnedPageIds.push(pageId);
+    currentState.push(pageId);
   }
-  serializePagePins(pinnedPageIds);
-  return pinnedPageIds;
+  serializePageState(currentState, stateKey);
+  return currentState;
+}
+
+export function togglePagePin(pageId: string): string[] {
+  return togglePageState(pageId, "pinned");
+}
+
+export function togglePageCollapse(pageId: string): string[] {
+  return togglePageState(pageId, "collapsed");
 }
 
 export function getPinnedPageIds(): string[] {
-  return deserializePagePins();
+  return deserializePageState("pinned");
+}
+
+export function getCollapsedPageIds(): string[] {
+  return deserializePageState("collapsed");
+}
+
+export function isPagePinned(pageId: string): boolean {
+  return getPinnedPageIds().includes(pageId);
+}
+
+export function isPageCollapsed(pageId: string): boolean {
+  return getCollapsedPageIds().includes(pageId);
 }
