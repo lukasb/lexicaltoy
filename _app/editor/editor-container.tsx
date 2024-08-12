@@ -21,7 +21,9 @@ function EditorContainer({
   openOrCreatePageByTitle,
   deletePage,
   isPinned,
+  isCollapsed,
   onPagePinToggle,
+  onPageCollapseToggle,
 }: {
   page: Page;
   requestFocus: boolean;
@@ -31,12 +33,14 @@ function EditorContainer({
   openOrCreatePageByTitle: (title: string) => void;
   deletePage: (id: string, oldRevisionNumber: number) => void;
   isPinned: boolean;
+  isCollapsed: boolean;
   onPagePinToggle: (pageId: string) => void;
+  onPageCollapseToggle: (pageId: string) => void;
 }) {
   const [showDebug, setShowDebug] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [localIsPinned, setLocalIsPinned] = useState(isPinned);
-  const [isEditorExpanded, setIsEditorExpanded] = useState(true);
+  const [localIsCollapsed, setLocalIsCollapsed] = useState(false);
   const touchDevice = isTouchDevice();
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [modifierKey, setModifierKey] = useState("");
@@ -51,6 +55,10 @@ function EditorContainer({
     setLocalIsPinned(isPinned);
   }, [isPinned]);
 
+  useEffect(() => {
+    setLocalIsCollapsed(isCollapsed);
+  }, [isCollapsed]);
+
   const handlePinToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -58,8 +66,9 @@ function EditorContainer({
     onPagePinToggle(page.id);
   };
 
-  const toggleEditorExpansion = () => {
-    setIsEditorExpanded(!isEditorExpanded);
+  const handleCollapsedToggle = () => {
+    setLocalIsCollapsed(!localIsCollapsed);
+    onPageCollapseToggle(page.id);
   };
 
   // TODO maybe render a headless editor on the server to enable server-side rendering?
@@ -139,9 +148,9 @@ function EditorContainer({
                     )}
                     <DropdownMenu.Item
                       className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
-                      onClick={toggleEditorExpansion}
+                      onClick={handleCollapsedToggle}
                     >
-                      {isEditorExpanded ? (
+                      {!localIsCollapsed ? (
                         <>
                           <ChevronUp className="inline-block mr-2" />
                           Collapse
@@ -166,7 +175,7 @@ function EditorContainer({
           </div>
         </div>
         <NoSSRWrapper>
-          <div className={`pl-[22px] pr-1 md:pl-[29px] mt-4 ${isEditorExpanded ? '' : 'hidden'}`}>
+          <div className={`pl-[22px] pr-1 md:pl-[29px] mt-4 ${localIsCollapsed ? 'hidden' : ''}`}>
             <Editor
               page={page}
               showDebugInfo={showDebug}

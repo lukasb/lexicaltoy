@@ -21,7 +21,12 @@ import FlexibleEditorLayout from "./FlexibleEditorContainer";
 import PagesManager from "../lib/PagesManager";
 import { SharedNodeProvider } from "../_app/context/shared-node-context";
 import { ActiveEditorProvider } from "@/_app/context/active-editor-context";
-import { getPinnedPageIds, togglePagePin } from "@/lib/pages-helpers";
+import { 
+  getPinnedPageIds, 
+  togglePagePin,
+  getCollapsedPageIds,
+  togglePageCollapse
+} from "@/lib/pages-helpers";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -30,10 +35,16 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const emptyPageMarkdownString = '- ';
 
   const [pinnedPageIds, setPinnedPageIds] = useState<string[]>([]);
+  const [collapsedPageIds, setCollapsedPageIds] = useState<string[]>([]);
 
   useEffect(() => {
     const pnnedPageIds = getPinnedPageIds();
     setPinnedPageIds(pnnedPageIds);
+  }, []);
+
+  useEffect(() => {
+    const collapsedPageIds = getCollapsedPageIds();
+    setCollapsedPageIds(collapsedPageIds);
   }, []);
 
   const initialPageId = findMostRecentlyEditedPage(currentPages)?.id;
@@ -172,6 +183,11 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     setPinnedPageIds(newPinnedPageIds);
   };
 
+  const handlePageCollapseToggle = (pageId: string) => {
+    const newCollapsedPageIds = togglePageCollapse(pageId);
+    setCollapsedPageIds(newCollapsedPageIds);
+  };
+
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <PagesContext.Provider value={currentPages}>
@@ -227,6 +243,8 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                   deletePage={handleDeletePage}
                   pinnedPageIds={pinnedPageIds}
                   onPagePinToggle={handlePagePinToggle}
+                  collapsedPageIds={collapsedPageIds}
+                  onPageCollapseToggle={handlePageCollapseToggle}
             />
           )}
           </SharedNodeProvider>

@@ -16,6 +16,8 @@ function FlexibleEditorLayout ({
   deletePage,
   pinnedPageIds,
   onPagePinToggle,
+  collapsedPageIds,
+  onPageCollapseToggle
 }: {
   openPageIds: string[];
   currentPages: Page[];
@@ -26,6 +28,8 @@ function FlexibleEditorLayout ({
   deletePage: (id: string) => void;
   pinnedPageIds: string[];
   onPagePinToggle: (pageId: string) => void;
+  collapsedPageIds: string[];
+  onPageCollapseToggle: (pageId: string) => void;
 }) {
 
   const [isSmallWidthViewport, setIsSmallWidthViewport] = useState<boolean>(false);
@@ -106,6 +110,8 @@ function FlexibleEditorLayout ({
         deletePage={deletePage}
         onPagePinToggle={onPagePinToggle}
         isPinned={pinnedPageIds.includes(page.id)}
+        isCollapsed={collapsedPageIds.includes(page.id)}
+        onPageCollapseToggle={onPageCollapseToggle}
       />
     );
   }
