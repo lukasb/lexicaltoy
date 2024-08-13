@@ -9,6 +9,7 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "seed": "node -r dotenv/config ./scripts/seed-db.js",
+    "prune": "node -r dotenv/config ./scripts/prune_history.js",
     "test": "jest --watch",
     "adduser": "node -r dotenv/config ./scripts/create-user.js",
     "check": "npm run lint && npm run type-check"
