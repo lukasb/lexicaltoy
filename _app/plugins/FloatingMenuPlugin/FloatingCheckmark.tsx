@@ -3,6 +3,7 @@ import React, {
   forwardRef,
   useCallback,
   useRef,
+  useEffect,
 } from "react";
 import {
   BaseSelection,
@@ -73,11 +74,17 @@ function computeFloatingCheckmarkPositionInternal(editor: LexicalEditor) {
 const FloatingCheckmark = forwardRef<HTMLDivElement, FloatingMenuProps>(
   ({ editor, coords }, ref) => {
     const [cancelled, setCancelled] = useState(false);
-    const [position, setPosition] = useState({top: coords?.y, left: coords?.x});
+    const [position, setPosition] = useState({top: 0, left: 0});
 
     const shouldShow = coords !== undefined;
 
     const itemRefs = useRef<(React.RefObject<HTMLLIElement> | null)[]>([]);
+
+    useEffect(() => {
+      if (coords) {
+        setPosition({top: coords.y, left: coords.x});
+      }
+    }, [coords]);
 
     const handleClick = useCallback(() => {
       editor.dispatchCommand(SWAP_FORMULA_EDITOR_FOR_DISPLAY, undefined);
