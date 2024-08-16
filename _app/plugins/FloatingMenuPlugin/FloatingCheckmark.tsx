@@ -3,6 +3,7 @@ import React, {
   forwardRef,
   useCallback,
   useRef,
+  useEffect,
 } from "react";
 import {
   BaseSelection,
@@ -17,6 +18,8 @@ import { SWAP_FORMULA_EDITOR_FOR_DISPLAY } from "@/lib/formula-commands";
 // TODO figure out actual line height instead of hardcoding 30
 // this is copied from FloatingWikiPageNames.tsx should probably be shared
 const editorLineHeight = 30;
+
+const checkmarkWidth = 150;
 
 export function shouldShowFloatingCheckmark(selection: BaseSelection) {
   if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
@@ -35,8 +38,8 @@ export function computeFloatingCheckmarkPosition(
   if (!position) return { x: 0, y: 0 };
   const {cursorLeft, cursorTop, rootX, rootY} = position;
   let newX = cursorLeft - rootX;
-  if (newX + 250 > window.innerWidth) {
-    newX = window.innerWidth - 250;
+  if (newX + checkmarkWidth > window.innerWidth) {
+    newX = window.innerWidth - checkmarkWidth;
   }
   return {
     x: newX,
@@ -73,11 +76,17 @@ function computeFloatingCheckmarkPositionInternal(editor: LexicalEditor) {
 const FloatingCheckmark = forwardRef<HTMLDivElement, FloatingMenuProps>(
   ({ editor, coords }, ref) => {
     const [cancelled, setCancelled] = useState(false);
-    const [position, setPosition] = useState({top: coords?.y, left: coords?.x});
+    const [position, setPosition] = useState({top: 0, left: 0});
 
     const shouldShow = coords !== undefined;
 
     const itemRefs = useRef<(React.RefObject<HTMLLIElement> | null)[]>([]);
+
+    useEffect(() => {
+      if (coords) {
+        setPosition({top: coords.y, left: coords.x});
+      }
+    }, [coords]);
 
     const handleClick = useCallback(() => {
       editor.dispatchCommand(SWAP_FORMULA_EDITOR_FOR_DISPLAY, undefined);
