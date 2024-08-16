@@ -19,6 +19,8 @@ import { SWAP_FORMULA_EDITOR_FOR_DISPLAY } from "@/lib/formula-commands";
 // this is copied from FloatingWikiPageNames.tsx should probably be shared
 const editorLineHeight = 30;
 
+const checkmarkWidth = 150;
+
 export function shouldShowFloatingCheckmark(selection: BaseSelection) {
   if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
   const node = selection.getNodes()[0];
@@ -36,8 +38,8 @@ export function computeFloatingCheckmarkPosition(
   if (!position) return { x: 0, y: 0 };
   const {cursorLeft, cursorTop, rootX, rootY} = position;
   let newX = cursorLeft - rootX;
-  if (newX + 250 > window.innerWidth) {
-    newX = window.innerWidth - 250;
+  if (newX + checkmarkWidth > window.innerWidth) {
+    newX = window.innerWidth - checkmarkWidth;
   }
   return {
     x: newX,
