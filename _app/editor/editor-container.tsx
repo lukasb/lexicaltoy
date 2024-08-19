@@ -78,7 +78,9 @@ function EditorContainer({
   // TODO maybe render a headless editor on the server to enable server-side rendering?
   return (
     <div className="flex flex-col items-start md:mb-4">
-      <div className="relative border-solid shadow-md dark:shadow-gray-500/50 md:shadow-none md:border-4 md:border-indigo-300 md:rounded-lg m-0 pt-2 pr-2.5 md:pr-7 pb-7 pl-0 w-full max-w-7xl">
+      <div className={`relative border-solid shadow-md dark:shadow-gray-500/50 md:shadow-none md:border-4 md:rounded-lg m-0 pt-2 pr-2.5 md:pr-7 pb-7 pl-0 w-full max-w-7xl ${
+        localIsCollapsed ? 'md:border-indigo-200' : 'md:border-indigo-300'
+      }`}>
         {!isMobile && !touchDevice && (
           <button
             className="absolute top-2 left-2 text-base text-indigo-600 py-0 px-1 rounded md:opacity-0 md:hover:opacity-100 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 z-40"
@@ -88,7 +90,9 @@ function EditorContainer({
           </button>
         )}
         <div className="h-1 md:h-3"></div>
-        <div className="sticky top-0 m-0 p-0 bg-bgBase/85 z-30 grid grid-rows-1 grid-cols-[21px_1fr] md:grid-cols-[28px_1fr] group items-center">
+        <div className={`sticky top-0 m-0 p-0 bg-bgBase/85 z-30 grid grid-rows-1 grid-cols-[21px_1fr] md:grid-cols-[28px_1fr] group items-center ${
+          localIsCollapsed ? 'text-gray-500' : ''
+        }`}>
           <div className="col-start-2 row-start-1 flex justify-between items-center">
             <div onClick={handleTitleClick} className="cursor-pointer flex-grow">
               <EditablePageTitle
