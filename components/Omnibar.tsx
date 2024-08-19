@@ -16,6 +16,7 @@ import { isTouchDevice } from "@/lib/window-helpers";
 import { getTodayJournalTitle } from "@/lib/journal-helpers";
 import { getModifierKey } from "@/lib/utils";
 import { useBreakpoint } from "@/lib/window-helpers";
+import { highlightText } from "@/lib/text-helpers"; // Added this import
 
 const Omnibar = forwardRef(({
   openOrCreatePageByTitle
@@ -317,9 +318,12 @@ const Omnibar = forwardRef(({
           selectedIndex >= 0 &&
           selectedIndex < results.length && (
             <div className="w-full bg-white shadow-md mt-2 p-4 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-              <div className="whitespace-pre-wrap break-words">
-                {results[selectedIndex].value}
-              </div>
+              <div 
+                className="whitespace-pre-wrap break-words"
+                dangerouslySetInnerHTML={{
+                  __html: highlightText(results[selectedIndex].value, term)
+                }}
+              />
             </div>
           )}
       </div>
