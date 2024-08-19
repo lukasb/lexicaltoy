@@ -44,6 +44,7 @@ function EditorContainer({
   const touchDevice = isTouchDevice();
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [modifierKey, setModifierKey] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     setModifierKey(getModifierKey());
@@ -100,6 +101,8 @@ function EditorContainer({
                 pageId={page.id}
                 isJournal={page.isJournal}
                 updatePageTitleLocal={updatePageTitleLocal}
+                isEditing={isEditing}
+                setIsEditing={setIsEditing}
               />
             </div>
             <div className="flex items-center">
