@@ -71,6 +71,10 @@ function EditorContainer({
     onPageCollapseToggle(page.id);
   };
 
+  const handleTitleClick = () => {
+    handleCollapsedToggle();
+  };
+
   // TODO maybe render a headless editor on the server to enable server-side rendering?
   return (
     <div className="flex flex-col items-start md:mb-4">
@@ -86,12 +90,14 @@ function EditorContainer({
         <div className="h-1 md:h-3"></div>
         <div className="sticky top-0 m-0 p-0 bg-bgBase/85 z-30 grid grid-rows-1 grid-cols-[21px_1fr] md:grid-cols-[28px_1fr] group items-center">
           <div className="col-start-2 row-start-1 flex justify-between items-center">
-            <EditablePageTitle
-              initialTitle={page.title}
-              pageId={page.id}
-              isJournal={page.isJournal}
-              updatePageTitleLocal={updatePageTitleLocal}
-            />
+            <div onClick={handleTitleClick} className="cursor-pointer flex-grow">
+              <EditablePageTitle
+                initialTitle={page.title}
+                pageId={page.id}
+                isJournal={page.isJournal}
+                updatePageTitleLocal={updatePageTitleLocal}
+              />
+            </div>
             <div className="flex items-center">
               <button
                 onClick={handlePinToggle}
