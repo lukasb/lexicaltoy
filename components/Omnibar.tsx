@@ -98,8 +98,6 @@ const Omnibar = forwardRef(({
         }
   
         setResults(filteredPages);
-        // if the user's search term is not an exact page title match, show the "create page" option
-        setShowCreatePageOption((!startMatch || term !== startMatch.title) && term.trim() !== "");
       } else {
         resetSelf();
       }
@@ -114,24 +112,31 @@ const Omnibar = forwardRef(({
   // we also set the selected index for the results list
   useEffect(() => {
     const searchPagesAsync = async () => {
-      if (displayValue !== term && displayValue.toLowerCase().startsWith(term.toLowerCase())) {
+      
         const filteredPages = await searchPages(pages, displayValue);
         const exactMatchIndex = filteredPages.findIndex(
           (page) => page.title.toLowerCase() === displayValue.toLowerCase()
         );
   
         if (inputRef.current && exactMatchIndex !== -1) {
-          const startPos = term.length;
-          const endPos = displayValue.length;
-          inputRef.current.setSelectionRange(startPos, endPos);
-          setSelectedIndex(exactMatchIndex);
-          if (!isTouchDevice()) {
-            setShowPageContent(true);
+          if (displayValue !== term && displayValue.toLowerCase().startsWith(term.toLowerCase())) {
+            const startPos = term.length;
+            const endPos = displayValue.length;
+            inputRef.current.setSelectionRange(startPos, endPos);
+            setSelectedIndex(exactMatchIndex);
+            if (!isTouchDevice()) {
+              setShowPageContent(true);
+            }
           }
         } else {
           setSelectedIndex(-1);
         }
-      }
+        if (exactMatchIndex === -1 && term.trim() !== "") {
+          setShowCreatePageOption(true);
+          setSelectedIndex(0);
+        } else {
+          setShowCreatePageOption(false);
+        }
     };
   
     searchPagesAsync();
