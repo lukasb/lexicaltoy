@@ -98,7 +98,8 @@ const Omnibar = forwardRef(({
         }
   
         setResults(filteredPages);
-        setShowCreatePageOption(filteredPages.length === 0 && term.trim() !== "");
+        // if the user's search term is not an exact page title match, show the "create page" option
+        setShowCreatePageOption((!startMatch || term !== startMatch.title) && term.trim() !== "");
       } else {
         resetSelf();
       }
@@ -188,7 +189,7 @@ const Omnibar = forwardRef(({
         return newIndex;
       });*/
       setSelectedIndex((prevIndex) =>
-        Math.min(prevIndex + 1, results.length - 1)
+        Math.min(prevIndex + 1, showCreatePageOption ? results.length : results.length - 1)
       );
       if (!isTouchDevice()) {
         setShowPageContent(true);
@@ -207,7 +208,7 @@ const Omnibar = forwardRef(({
       event.preventDefault();
     } else if (event.key === "Enter") {
       if (selectedIndex > -1 && results.length > 0) {
-        openOrCreatePageByTitle(results[selectedIndex].title);
+        openOrCreatePageByTitle(results[showCreatePageOption? selectedIndex - 1 : selectedIndex].title);
         resetSelf();
       } else {
         openOrCreatePageByTitle(displayValue);
@@ -276,11 +277,24 @@ const Omnibar = forwardRef(({
             ref={ulRef}
             className="w-full bg-white shadow-md max-h-[300px] md:max-h-[300px] lg:max-h-[300px] overflow-auto rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
           >
+            {showCreatePageOption && (
+              <li
+                className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
+                  selectedIndex === 0
+                    ? "selected-item bg-gray-200 dark:bg-gray-700"
+                    : ""
+                } dark:text-white`}
+                onClick={() => openOrCreatePageByTitle(term)}
+                data-testid="create-page-option"
+              >
+                <span className="inline-flex items-center justify-center p-1 bg-indigo-300 text-white font-bold rounded">Create page</span> {term}
+              </li>
+            )}
             {results.map((result, index) => (
               <li
-                key={index}
+                key={showCreatePageOption ? index + 1 : index}
                 className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
-                  selectedIndex === index
+                  selectedIndex === (showCreatePageOption ? index + 1 : index)
                     ? "selected-item bg-gray-200 dark:bg-gray-700"
                     : ""
                 } dark:text-white`}
@@ -306,23 +320,10 @@ const Omnibar = forwardRef(({
                 </div>
               </li>
             ))}
-            {showCreatePageOption && (
-              <li
-                className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
-                  selectedIndex === results.length
-                    ? "selected-item bg-gray-200 dark:bg-gray-700"
-                    : ""
-                } dark:text-white`}
-                onClick={() => openOrCreatePageByTitle(term)}
-                data-testid="create-page-option"
-              >
-                Create page <i>{term}</i>
-              </li>
-            )}
           </ul>
         )}
         {showPageContent &&
-          !showCreatePageOption &&
+          (!showCreatePageOption || showCreatePageOption && selectedIndex > 0) &&
           selectedIndex >= 0 &&
           selectedIndex < results.length && (
             <div className="w-full bg-white shadow-md mt-2 p-4 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
