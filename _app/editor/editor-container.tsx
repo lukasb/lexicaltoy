@@ -2,7 +2,7 @@
 
 import Editor from "./editor";
 import EditablePageTitle from "./pageTitle";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import { Page } from "@/lib/definitions";
 import { isTouchDevice } from "@/lib/window-helpers";
 import NoSSRWrapper from "./NoSSRWrapper";
@@ -11,6 +11,8 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Pin } from 'lucide-react';
 import { useBreakpoint } from "@/lib/window-helpers";
 import { getModifierKey } from "@/lib/utils";
+import { updatePageTitle } from '@/lib/db';
+import { PagesContext } from '@/_app/context/pages-context';
 
 function EditorContainer({
   page,
@@ -45,6 +47,12 @@ function EditorContainer({
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [modifierKey, setModifierKey] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const pages = useContext(PagesContext);
+
+  const getPage = useCallback((id: string) => {
+    return pages.find((page) => page.id === id);
+  }, [pages]);
 
   useEffect(() => {
     setModifierKey(getModifierKey());
@@ -76,6 +84,28 @@ function EditorContainer({
     handleCollapsedToggle();
   };
 
+  const handleRename = (newTitle: string) => {
+    if (newTitle && newTitle !== page.title) {
+      storePageTitle(newTitle);
+    }
+    setIsRenameDialogOpen(false);
+  };
+
+  // TODO this assumes that the page won't be renamed elsewhere in the same PagesContext
+  const storePageTitle = async (newTitle: string) => {
+    if (!page) return;
+    try {
+      const { revisionNumber, lastModified, error } = await updatePageTitle(page.id, newTitle, page.revisionNumber);
+      if (!revisionNumber || !lastModified) {
+        alert("Failed to update title because you edited an old version, please relead for the latest version.");
+        return;
+      }
+      updatePageTitleLocal(page.id, newTitle, revisionNumber, lastModified);
+    } catch (error) {
+      alert("Failed to update title");
+    }
+  };
+
   // TODO maybe render a headless editor on the server to enable server-side rendering?
   return (
     <div className="flex flex-col items-start md:mb-4">
@@ -98,11 +128,6 @@ function EditorContainer({
             <div onClick={handleTitleClick} className="cursor-pointer flex-grow">
               <EditablePageTitle
                 initialTitle={page.title}
-                pageId={page.id}
-                isJournal={page.isJournal}
-                updatePageTitleLocal={updatePageTitleLocal}
-                isEditing={isEditing}
-                setIsEditing={setIsEditing}
               />
             </div>
             <div className="flex items-center">
@@ -145,6 +170,12 @@ function EditorContainer({
                     align="end"
                     sideOffset={5}
                   >
+                    <DropdownMenu.Item
+                      className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
+                      onClick={() => setIsRenameDialogOpen(true)}
+                    >
+                      Rename
+                    </DropdownMenu.Item>
                     <DropdownMenu.Item
                       className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
                       onClick={() => closePage(page.id)}
@@ -200,8 +231,53 @@ function EditorContainer({
           </div>
         </NoSSRWrapper>
       </div>
+      <RenameDialog
+        isOpen={isRenameDialogOpen}
+        onClose={() => setIsRenameDialogOpen(false)}
+        onRename={handleRename}
+        initialTitle={page.title}
+      />
     </div>
   );
 }
+
+const RenameDialog = ({ isOpen, onClose, onRename, initialTitle }: {
+  isOpen: boolean;
+  onClose: () => void;
+  onRename: (newTitle: string) => void;
+  initialTitle: string;
+}) => {
+  const [newTitle, setNewTitle] = useState(initialTitle);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg">
+        <h2 className="text-xl mb-4 dark:text-white">Rename Page</h2>
+        <input
+          type="text"
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          className="w-full p-2 mb-4 border rounded dark:bg-gray-700 dark:text-white"
+        />
+        <div className="flex justify-end">
+          <button
+            onClick={onClose}
+            className="mr-2 px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded dark:text-white"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onRename(newTitle)}
+            className="px-4 py-2 bg-indigo-500 text-white rounded"
+          >
+            Rename
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default EditorContainer;
