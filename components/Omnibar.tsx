@@ -73,6 +73,10 @@ const Omnibar = forwardRef(({
     };
   }, [term, showReverseChronologicalList]); 
   
+  // this useEffect checks to see if the user's search term is a match for a page title
+  // say the user types "auto" and there's a page called "automobile"
+  // in this case, we set the displayed text of the omnibar (displayValue) to "automobile"
+  // see the next useEffect for some remaining display logic
   useEffect(() => {
     const searchPagesAsync = async () => {
       if (skipTermResolutionRef.current === true) {
@@ -103,6 +107,10 @@ const Omnibar = forwardRef(({
     searchPagesAsync();
   }, [term, pages]);
 
+  // this useEffect checks to see if the search term the user typed (term) and the actual text in the omnibar (displayValue) are different
+  // say the user types "auto" and the omnibar displays "automobile"
+  // in this case, we want to select the text "mobile" in the omnibar - this is basically the same behavior as the Chrome omnibar
+  // we also set the selected index for the results list
   useEffect(() => {
     const searchPagesAsync = async () => {
       if (displayValue !== term && displayValue.toLowerCase().startsWith(term.toLowerCase())) {
