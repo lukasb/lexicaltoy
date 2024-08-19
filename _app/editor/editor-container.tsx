@@ -2,7 +2,7 @@
 
 import Editor from "./editor";
 import EditablePageTitle from "./pageTitle";
-import { useState, useEffect, useContext, useCallback } from "react";
+import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import { Page } from "@/lib/definitions";
 import { isTouchDevice } from "@/lib/window-helpers";
 import NoSSRWrapper from "./NoSSRWrapper";
@@ -85,8 +85,9 @@ function EditorContainer({
   };
 
   const handleRename = (newTitle: string) => {
-    if (newTitle && newTitle !== page.title) {
-      storePageTitle(newTitle);
+    const trimmedTitle = newTitle.trim();
+    if (trimmedTitle && trimmedTitle !== page.title) {
+      updatePageTitleLocal(page.id, trimmedTitle, page.revisionNumber, new Date());
     }
     setIsRenameDialogOpen(false);
   };
@@ -248,17 +249,45 @@ const RenameDialog = ({ isOpen, onClose, onRename, initialTitle }: {
   initialTitle: string;
 }) => {
   const [newTitle, setNewTitle] = useState(initialTitle);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Reset newTitle to initialTitle and focus the input when the dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setNewTitle(initialTitle);
+      // Use setTimeout to ensure the input is focused after the dialog is rendered
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+    }
+  }, [isOpen, initialTitle]);
 
   if (!isOpen) return null;
+
+  const handleRename = () => {
+    if (newTitle.trim() !== '') {
+      onRename(newTitle);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && newTitle.trim() !== '') {
+      handleRename();
+    } else if (e.key === 'Escape') {
+      onClose();
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg">
         <h2 className="text-xl mb-4 dark:text-white">Rename Page</h2>
         <input
+          ref={inputRef}
           type="text"
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
+          onKeyDown={handleKeyDown}
           className="w-full p-2 mb-4 border rounded dark:bg-gray-700 dark:text-white"
         />
         <div className="flex justify-end">
@@ -269,8 +298,9 @@ const RenameDialog = ({ isOpen, onClose, onRename, initialTitle }: {
             Cancel
           </button>
           <button
-            onClick={() => onRename(newTitle)}
-            className="px-4 py-2 bg-indigo-500 text-white rounded"
+            onClick={handleRename}
+            disabled={newTitle.trim() === ''}
+            className="px-4 py-2 bg-indigo-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Rename
           </button>
