@@ -33,6 +33,7 @@ const Omnibar = forwardRef(({
   const inputRef = useRef<HTMLInputElement>(null);
   const ulRef = useRef<HTMLUListElement>(null);
   const skipTermResolutionRef = useRef(false);
+  const skipDisplayValueResolutionRef = useRef(false);
   const pages = useContext(PagesContext);
   const [todayJournalTitle, setTodayJournalTitle] = useState(getTodayJournalTitle());
   const [modifierKey, setModifierKey] = useState("");
@@ -112,7 +113,11 @@ const Omnibar = forwardRef(({
   // we also set the selected index for the results list
   useEffect(() => {
     const searchPagesAsync = async () => {
-      
+      if (skipDisplayValueResolutionRef.current === true) {
+        skipDisplayValueResolutionRef.current = false;
+        return;
+      }
+
         const filteredPages = await searchPages(pages, displayValue);
         const exactMatchIndex = filteredPages.findIndex(
           (page) => page.title.toLowerCase() === displayValue.toLowerCase()
@@ -141,6 +146,14 @@ const Omnibar = forwardRef(({
   
     searchPagesAsync();
   }, [displayValue, term, pages]);
+
+  useEffect(() => {
+    const indexInResults = showCreatePageOption ? selectedIndex - 1 : selectedIndex;
+    if (indexInResults > -1 && indexInResults < results.length) {
+      skipDisplayValueResolutionRef.current = true;
+      setDisplayValue(results[indexInResults].title);
+    }
+  }, [showCreatePageOption, selectedIndex, results]);
   
   const handleClickOutside = useCallback((event: { target: Node | null}) => {
     if (ulRef.current && !ulRef.current.contains(event.target)) {
