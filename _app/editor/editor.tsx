@@ -106,7 +106,7 @@ function Editor({
   const pendingChangeRef = useRef<string | null>(null);
   const localVersionRef = useRef<number>(page.revisionNumber);
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
-  const [mightHighlight, setMightHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
+  const [shouldHighlight, setShouldHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
@@ -145,7 +145,7 @@ function Editor({
       if (trimmedPageContents !== trimmedPageValue) {
         pendingChangeRef.current = pageContentsWithoutSharedNodes;
         debouncedSave(pageContentsWithoutSharedNodes);
-        setMightHighlight(false);
+        setShouldHighlight(false);
         deleteSearchTerms(page.id);
       } else {
         pendingChangeRef.current = null; // Clear pending change if content matches current page value
@@ -197,7 +197,7 @@ function Editor({
         <WikilinkEventListenerPlugin
           openOrCreatePageByTitle={openOrCreatePageByTitle}
         />
-        {mightHighlight && <SearchHighlighterPlugin pageId={page.id} />}
+        {shouldHighlight && <SearchHighlighterPlugin pageId={page.id} />}
         {floatingAnchorElem && !isSmallWidthViewport && (
           <>
             <FloatingMenuPlugin
@@ -259,7 +259,7 @@ function Editor({
           </>
         )}
         {showDebugInfo && <TreeViewPlugin />}
-        {requestFocus && <AutoFocusPlugin/>}
+        {requestFocus && !shouldHighlight && <AutoFocusPlugin/>}
       </LexicalComposer>
     </PromisesProvider>
   );
