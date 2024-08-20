@@ -206,13 +206,6 @@ const Omnibar = forwardRef(({
       if (term === "" && results.length === 0) {
         showReverseChronologicalList();
       }      
-      /*setSelectedIndex((prevIndex) => {
-        const newIndex = Math.max(Math.min(prevIndex + 1, results.length - 1), 0);
-        if (newIndex < results.length) {
-          setDisplayValue(results[newIndex].title);
-        }
-        return newIndex;
-      });*/
       setSelectedIndex((prevIndex) => {
         const newIndex = Math.min(prevIndex + 1, showCreatePageOption ? results.length : results.length - 1);
         handleUpdatedSelectedIndex(newIndex);
@@ -220,19 +213,11 @@ const Omnibar = forwardRef(({
       });
       event.preventDefault();
     } else if (event.key === "ArrowUp") {
-      /*setSelectedIndex((prevIndex) => {
-        const newIndex = Math.max(prevIndex - 1, 0);
-        setDisplayValue(results[newIndex].title);
-        return newIndex;
-      });*/
       setSelectedIndex((prevIndex) => {
         const newIndex = Math.max(prevIndex - 1, 0);
         handleUpdatedSelectedIndex(newIndex);
         return newIndex;
       });
-      if (!isTouchDevice()) {
-        setShowPageContent(true);
-      }
       event.preventDefault();
     } else if (event.key === "Enter") {
       if (selectedIndex > -1 && results.length > 0) {
