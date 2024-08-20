@@ -12,27 +12,20 @@ export function SearchHighlighterPlugin({
   const { getSearchTerms } = useSearchTerms();
 
   useEffect(() => {
-    // Your plugin logic here
-    // This will run when the editor is first initialized
-
     setTimeout(() => {
       editor.read(() => {
         console.log('Editor loaded for pageId (read-only):', pageId);
         const searchTerms = getSearchTerms(pageId);
         if(searchTerms.length > 0) {
-          console.log('searchTerms:', searchTerms);
+          console.log('highlighting searchTerms:', searchTerms);
         }
-      });
-      editor.registerUpdateListener((editorState) => {
-        console.log('editor updated, time to disable highlighting', pageId);
       });
     }, 0);
 
-    // Cleanup function if needed
     return () => {
-      // Cleanup logic
+      console.log('unmounting search highlighter plugin', pageId);
     };
-  }, [editor, pageId]);
+  }, [editor, pageId, getSearchTerms]);
 
   return null;
 }

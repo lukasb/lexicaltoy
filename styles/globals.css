@@ -45,7 +45,7 @@ body {
 
 ::highlight(search-results) {
   background-color: yellow;
-  color: white;
+  color: black;
 }
 
  .PlaygroundEditorTheme__ltr {

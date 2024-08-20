@@ -104,6 +104,7 @@ function Editor({
   const [isSmallWidthViewport, setIsSmallWidthViewport] = useState<boolean>(false);
   const pendingChangeRef = useRef<string | null>(null);
   const localVersionRef = useRef<number>(page.revisionNumber);
+  const [mightHighlight, setMightHighlight] = useState<boolean>(true);
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
@@ -142,6 +143,7 @@ function Editor({
       if (trimmedPageContents !== trimmedPageValue) {
         pendingChangeRef.current = pageContentsWithoutSharedNodes;
         debouncedSave(pageContentsWithoutSharedNodes);
+        setMightHighlight(false);
       } else {
         pendingChangeRef.current = null; // Clear pending change if content matches current page value
       }
@@ -192,7 +194,7 @@ function Editor({
         <WikilinkEventListenerPlugin
           openOrCreatePageByTitle={openOrCreatePageByTitle}
         />
-        <SearchHighlighterPlugin pageId={page.id} />
+        {mightHighlight && <SearchHighlighterPlugin pageId={page.id} />}
         {floatingAnchorElem && !isSmallWidthViewport && (
           <>
             <FloatingMenuPlugin
