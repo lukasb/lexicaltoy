@@ -51,10 +51,15 @@ export function SearchHighlighterPlugin({
       const searchResultsHighlight = new Highlight(...ranges);
       CSS.highlights.set("search-results", searchResultsHighlight);
 
-      // Scroll the first result into view
+      // Scroll the first result into view and select it
       if (ranges[0]) {
         const firstElement = ranges[0].startContainer.parentElement;
         firstElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Select the first result
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(ranges[0]);
       }
     }
   }, [pageId, getSearchTerms, editor]);
