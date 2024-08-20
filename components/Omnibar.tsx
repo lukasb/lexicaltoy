@@ -349,7 +349,7 @@ const Omnibar = forwardRef(({
         {showPageContent &&
           (!showCreatePageOption || (showCreatePageOption && selectedIndex > 0)) &&
           selectedIndex >= 0 &&
-          selectedIndex < results.length && (
+          (showCreatePageOption ? selectedIndex <= results.length : selectedIndex < results.length) && (
             <div className="w-full bg-white shadow-md mt-2 p-4 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
               <div 
                 className="whitespace-pre-wrap break-words"
