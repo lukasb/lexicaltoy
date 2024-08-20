@@ -38,6 +38,7 @@ const Omnibar = forwardRef(({
   const [todayJournalTitle, setTodayJournalTitle] = useState(getTodayJournalTitle());
   const [modifierKey, setModifierKey] = useState("");
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [storedTerm, setStoredTerm] = useState("");
 
   useEffect(() => {
     setModifierKey(getModifierKey());
@@ -151,9 +152,13 @@ const Omnibar = forwardRef(({
     const indexInResults = showCreatePageOption ? selectedIndex - 1 : selectedIndex;
     if (indexInResults > -1 && indexInResults < results.length) {
       skipDisplayValueResolutionRef.current = true;
+      setStoredTerm(term);
       setDisplayValue(results[indexInResults].title);
+      if (!isTouchDevice()) {
+        setShowPageContent(true);
+      }
     }
-  }, [showCreatePageOption, selectedIndex, results]);
+  }, [showCreatePageOption, selectedIndex, results, term]);
   
   const handleClickOutside = useCallback((event: { target: Node | null}) => {
     if (ulRef.current && !ulRef.current.contains(event.target)) {
@@ -187,6 +192,7 @@ const Omnibar = forwardRef(({
   const resetSelf = () => {
     setTerm("");
     setDisplayValue("");
+    setStoredTerm("");
     setResults([]);
     setSelectedIndex(-1);
     setShowCreatePageOption(false);
@@ -341,14 +347,14 @@ const Omnibar = forwardRef(({
           </ul>
         )}
         {showPageContent &&
-          (!showCreatePageOption || showCreatePageOption && selectedIndex > 0) &&
+          (!showCreatePageOption || (showCreatePageOption && selectedIndex > 0)) &&
           selectedIndex >= 0 &&
           selectedIndex < results.length && (
             <div className="w-full bg-white shadow-md mt-2 p-4 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
               <div 
                 className="whitespace-pre-wrap break-words"
                 dangerouslySetInnerHTML={{
-                  __html: highlightText(results[selectedIndex].value, term)
+                  __html: highlightText(results[showCreatePageOption ? selectedIndex - 1 : selectedIndex].value, storedTerm)
                 }}
               />
             </div>
