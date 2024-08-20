@@ -148,8 +148,9 @@ const Omnibar = forwardRef(({
     searchPagesAsync();
   }, [displayValue, term, pages]);
 
-  useEffect(() => {
-    const indexInResults = showCreatePageOption ? selectedIndex - 1 : selectedIndex;
+  // this is used for when the user uses the arrow keys to navigate the results list
+  const handleUpdatedSelectedIndex = (newIndex: number) => {
+    const indexInResults = showCreatePageOption ? newIndex - 1 : newIndex;
     if (indexInResults > -1 && indexInResults < results.length) {
       skipDisplayValueResolutionRef.current = true;
       setStoredTerm(term);
@@ -158,7 +159,7 @@ const Omnibar = forwardRef(({
         setShowPageContent(true);
       }
     }
-  }, [showCreatePageOption, selectedIndex, results, term]);
+  };
   
   const handleClickOutside = useCallback((event: { target: Node | null}) => {
     if (ulRef.current && !ulRef.current.contains(event.target)) {
@@ -212,12 +213,11 @@ const Omnibar = forwardRef(({
         }
         return newIndex;
       });*/
-      setSelectedIndex((prevIndex) =>
-        Math.min(prevIndex + 1, showCreatePageOption ? results.length : results.length - 1)
-      );
-      if (!isTouchDevice()) {
-        setShowPageContent(true);
-      }
+      setSelectedIndex((prevIndex) => {
+        const newIndex = Math.min(prevIndex + 1, showCreatePageOption ? results.length : results.length - 1);
+        handleUpdatedSelectedIndex(newIndex);
+        return newIndex;
+      });
       event.preventDefault();
     } else if (event.key === "ArrowUp") {
       /*setSelectedIndex((prevIndex) => {
@@ -225,7 +225,11 @@ const Omnibar = forwardRef(({
         setDisplayValue(results[newIndex].title);
         return newIndex;
       });*/
-      setSelectedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+      setSelectedIndex((prevIndex) => {
+        const newIndex = Math.max(prevIndex - 1, 0);
+        handleUpdatedSelectedIndex(newIndex);
+        return newIndex;
+      });
       if (!isTouchDevice()) {
         setShowPageContent(true);
       }
