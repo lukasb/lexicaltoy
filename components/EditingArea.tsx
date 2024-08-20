@@ -21,6 +21,7 @@ import FlexibleEditorLayout from "./FlexibleEditorContainer";
 import PagesManager from "../lib/PagesManager";
 import { SharedNodeProvider } from "../_app/context/shared-node-context";
 import { ActiveEditorProvider } from "@/_app/context/active-editor-context";
+import { SearchTermsProvider } from "@/_app/context/search-terms-context";
 import { 
   getPinnedPageIds, 
   togglePagePin,
@@ -193,6 +194,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
       <PagesContext.Provider value={currentPages}>
         <ActiveEditorProvider>
         <SharedNodeProvider>
+        <SearchTermsProvider>
         <PagesManager setPages={setCurrentPages} />
         <Omnibar
           ref={omnibarRef}
@@ -247,6 +249,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                   onPageCollapseToggle={handlePageCollapseToggle}
             />
           )}
+          </SearchTermsProvider>
           </SharedNodeProvider>
         </ActiveEditorProvider>
       </PagesContext.Provider>

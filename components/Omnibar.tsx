@@ -16,7 +16,8 @@ import { isTouchDevice } from "@/lib/window-helpers";
 import { getTodayJournalTitle } from "@/lib/journal-helpers";
 import { getModifierKey } from "@/lib/utils";
 import { useBreakpoint } from "@/lib/window-helpers";
-import { highlightText } from "@/lib/text-helpers"; // Added this import
+import { highlightText } from "@/lib/text-helpers";
+import { useSearchTerms } from "@/_app/context/search-terms-context";
 
 const Omnibar = forwardRef(({
   openOrCreatePageByTitle
@@ -39,6 +40,7 @@ const Omnibar = forwardRef(({
   const [modifierKey, setModifierKey] = useState("");
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [storedTerm, setStoredTerm] = useState("");
+  const { searchTermsMap, setSearchTerms, getSearchTerms } = useSearchTerms();
 
   useEffect(() => {
     setModifierKey(getModifierKey());
@@ -200,6 +202,12 @@ const Omnibar = forwardRef(({
     setShowPageContent(false);
   }
 
+  const handleOpenExistingPage = (page: Page) => {
+    setSearchTerms(page.id, storedTerm);
+    openOrCreatePageByTitle(page.title);
+    resetSelf();
+  }
+
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "ArrowDown") {
       // if the search box is empty, show a reverse chronological list of all pages
@@ -221,7 +229,7 @@ const Omnibar = forwardRef(({
       event.preventDefault();
     } else if (event.key === "Enter") {
       if (selectedIndex > -1 && results.length > 0) {
-        openOrCreatePageByTitle(results[showCreatePageOption? selectedIndex - 1 : selectedIndex].title);
+        handleOpenExistingPage(results[showCreatePageOption? selectedIndex - 1 : selectedIndex]);
         resetSelf();
       } else {
         openOrCreatePageByTitle(displayValue);
@@ -246,7 +254,7 @@ const Omnibar = forwardRef(({
   };
 
   const handleSearchResultsClick = (result: Page) => {
-    openOrCreatePageByTitle(result.title);
+    handleOpenExistingPage(result);
     resetSelf();
   };
 

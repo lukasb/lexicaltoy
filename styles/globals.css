@@ -43,6 +43,11 @@ body {
   }
 }
 
+::highlight(search-results) {
+  background-color: yellow;
+  color: white;
+}
+
  .PlaygroundEditorTheme__ltr {
   text-align: left;
 }

@@ -52,6 +52,7 @@ import { FormattableTextNode } from "@/_app/nodes/FormattableTextNode";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
 import FloatingCheckmark from "../plugins/FloatingMenuPlugin/FloatingCheckmark";
 import { shouldShowFloatingCheckmark, computeFloatingCheckmarkPosition } from "../plugins/FloatingMenuPlugin/FloatingCheckmark";
+import { SearchHighlighterPlugin } from "@/_app/plugins/SearchHighlighterPlugin";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -191,6 +192,7 @@ function Editor({
         <WikilinkEventListenerPlugin
           openOrCreatePageByTitle={openOrCreatePageByTitle}
         />
+        <SearchHighlighterPlugin pageId={page.id} />
         {floatingAnchorElem && !isSmallWidthViewport && (
           <>
             <FloatingMenuPlugin
