@@ -273,6 +273,22 @@ const Omnibar = forwardRef(({
     return () => clearInterval(intervalId);
   }, [todayJournalTitle]);
 
+  useEffect(() => {
+    if (showPageContent && results.length > 0 && selectedIndex >= 0) {
+      const contentPreview = document.querySelector('.page-content-preview');
+      const highlightedText = contentPreview?.querySelector('.highlight');
+      if (contentPreview && highlightedText) {
+        const previewRect = contentPreview.getBoundingClientRect();
+        const highlightRect = highlightedText.getBoundingClientRect();
+
+        if (highlightRect.top < previewRect.top || highlightRect.bottom > previewRect.bottom) {
+          const highlightOffset = highlightRect.top - previewRect.top;
+          contentPreview.scrollTop += highlightOffset - previewRect.height / 2 + highlightRect.height / 2;
+        }
+      }
+    }
+  }, [showPageContent, results, selectedIndex]);
+
   return (
     <div className="relative my-4 max-w-7xl w-full">
       <input
@@ -339,7 +355,7 @@ const Omnibar = forwardRef(({
           (!showCreatePageOption || (showCreatePageOption && selectedIndex > 0)) &&
           selectedIndex >= 0 &&
           (showCreatePageOption ? selectedIndex <= results.length : selectedIndex < results.length) && (
-            <div className="w-full bg-white shadow-md mt-2 p-4 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+            <div className="w-full bg-white shadow-md mt-2 p-4 rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white page-content-preview" style={{ maxHeight: '800px', overflowY: 'auto' }}>
               <div 
                 className="whitespace-pre-wrap break-words"
                 dangerouslySetInnerHTML={{
