@@ -105,8 +105,8 @@ function Editor({
   const [isSmallWidthViewport, setIsSmallWidthViewport] = useState<boolean>(false);
   const pendingChangeRef = useRef<string | null>(null);
   const localVersionRef = useRef<number>(page.revisionNumber);
-  const [mightHighlight, setMightHighlight] = useState<boolean>(true);
-  const { deleteSearchTerms } = useSearchTerms();
+  const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
+  const [mightHighlight, setMightHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
