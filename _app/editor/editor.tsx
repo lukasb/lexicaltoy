@@ -53,6 +53,7 @@ import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
 import FloatingCheckmark from "../plugins/FloatingMenuPlugin/FloatingCheckmark";
 import { shouldShowFloatingCheckmark, computeFloatingCheckmarkPosition } from "../plugins/FloatingMenuPlugin/FloatingCheckmark";
 import { SearchHighlighterPlugin } from "@/_app/plugins/SearchHighlighterPlugin";
+import { useSearchTerms } from "../context/search-terms-context";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -105,6 +106,7 @@ function Editor({
   const pendingChangeRef = useRef<string | null>(null);
   const localVersionRef = useRef<number>(page.revisionNumber);
   const [mightHighlight, setMightHighlight] = useState<boolean>(true);
+  const { deleteSearchTerms } = useSearchTerms();
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
@@ -144,11 +146,12 @@ function Editor({
         pendingChangeRef.current = pageContentsWithoutSharedNodes;
         debouncedSave(pageContentsWithoutSharedNodes);
         setMightHighlight(false);
+        deleteSearchTerms(page.id);
       } else {
         pendingChangeRef.current = null; // Clear pending change if content matches current page value
       }
     });
-  }, [page.value, debouncedSave]);
+  }, [page.value, debouncedSave, deleteSearchTerms, page.id]);
 
   const onBeforeUnload = useCallback(() => {
     if (pendingChangeRef.current) {

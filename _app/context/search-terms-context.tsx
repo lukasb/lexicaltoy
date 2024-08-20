@@ -8,6 +8,7 @@ interface SearchTermsContextType {
   searchTermsMap: SearchTermsMap;
   setSearchTerms: (pageId: string, searchString: string) => void;
   getSearchTerms: (pageId: string) => string[];
+  deleteSearchTerms: (pageId: string) => void;
 }
 
 const SearchTermsContext = createContext<SearchTermsContextType | undefined>(undefined);
@@ -39,8 +40,16 @@ export const SearchTermsProvider: React.FC<SearchTermsProviderProps> = ({ childr
     return searchTermsMap[pageId] || [];
   };
 
+  const deleteSearchTerms = (pageId: string) => {
+    setSearchTermsMap(prevMap => {
+      const newMap = { ...prevMap };
+      delete newMap[pageId];
+      return newMap;
+    });
+  };
+
   return (
-    <SearchTermsContext.Provider value={{ searchTermsMap, setSearchTerms, getSearchTerms }}>
+    <SearchTermsContext.Provider value={{ searchTermsMap, setSearchTerms, getSearchTerms, deleteSearchTerms }}>
       {children}
     </SearchTermsContext.Provider>
   );
