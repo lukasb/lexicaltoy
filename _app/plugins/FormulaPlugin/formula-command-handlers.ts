@@ -23,7 +23,8 @@ import {
   OUTDENT_CONTENT_COMMAND,
   INSERT_PARAGRAPH_COMMAND,
   COPY_COMMAND,
-  $isTextNode
+  $isTextNode,
+  PASTE_COMMAND,
 } from "lexical";
 import {
   ListItemNode,
@@ -374,6 +375,29 @@ export function registerFormulaCommandHandlers(
             return false;
           }
           return false;
+        },
+        COMMAND_PRIORITY_CRITICAL
+      ),
+      editor.registerCommand(
+        PASTE_COMMAND,
+        (event: ClipboardEvent | null) => {
+          if (!haveExistingFormulaEditorNode() || !event) return false;
+
+          const selection = $getSelection();
+          if (selection === null || !$isRangeSelection(selection)) return false;
+
+          const activeNode = selection.anchor.getNode();
+          if (activeNode.getKey() !== getFormulaEditorNodeKey()) return false;
+
+          const text = event?.clipboardData?.getData('text/plain') || event?.clipboardData?.getData('text/uri-list');
+          if (!text) return false;
+
+          // replace newlines with spaces
+          const textSansNewlines = text.replace(/\n/g, ' ');
+
+          selection.insertText(textSansNewlines);
+
+          return true;
         },
         COMMAND_PRIORITY_CRITICAL
       )
