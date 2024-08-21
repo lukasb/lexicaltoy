@@ -136,6 +136,7 @@ export function registerFormulaCommandHandlers(
         // this logic is mostly around making sure if we serialize a FormulaEditorNode
         // that it is turned back into a FormulaDisplayNode when the editor is reloaded
         // TODO maybe handle this in FormulaEditorNode.importJSON instead?
+        
         const textContents = node.getTextContent();
 
         if (!textContents.startsWith("=")) {
@@ -165,15 +166,14 @@ export function registerFormulaCommandHandlers(
       editor.registerCommand(
         SELECTION_CHANGE_COMMAND,
         () => {
+          if (!haveExistingFormulaEditorNode()) return false;
+
           const selection = $getSelection();
           if (selection === null) return false;
 
           if ($isNodeSelection(selection)) {
             const node = selection.getNodes()[0];
-            if (
-              haveExistingFormulaEditorNode() &&
-              node.getKey() !== getFormulaEditorNodeKey()
-            ) {
+            if (node.getKey() !== getFormulaEditorNodeKey()) {
               $replaceExistingFormulaEditorNode();
             }
             return false;
@@ -184,11 +184,10 @@ export function registerFormulaCommandHandlers(
           }
 
           const activeNode = selection.anchor.getNode();
+          const activeListItem = $getListItemContainingNode(activeNode);
+          const activeListItemFirstChild = activeListItem?.getFirstChild();
 
-          if (
-            haveExistingFormulaEditorNode() &&
-            activeNode.getKey() !== getFormulaEditorNodeKey()
-          ) {
+          if (activeListItemFirstChild?.getKey() !== getFormulaEditorNodeKey()) {
             // we're about to get rid of the node that has (had) the selection
             // before the selection change handler has completed, so we have to
             // fix the selection here
