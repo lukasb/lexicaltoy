@@ -191,7 +191,7 @@ const Omnibar = forwardRef(({
     if (newValue === "") skipTermResolutionRef.current = false;
     setTerm(newValue);
     setDisplayValue(newValue);
-    storedTermRef.current = term;
+    storedTermRef.current = newValue;
   };
 
   const resetSelf = () => {
