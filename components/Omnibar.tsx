@@ -130,9 +130,9 @@ const Omnibar = forwardRef(({
           if (displayValue !== term && displayValue.toLowerCase().startsWith(term.toLowerCase())) {
             const startPos = term.length;
             const endPos = displayValue.length;
-            console.time("setSelectionRange");
+            //console.time("setSelectionRange");
             inputRef.current.setSelectionRange(startPos, endPos);
-            console.timeEnd("setSelectionRange");
+            //console.timeEnd("setSelectionRange");
             setSelectedIndex(exactMatchIndex);
             if (!isTouchDevice()) {
               setShowPageContent(true);
