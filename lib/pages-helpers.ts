@@ -7,15 +7,19 @@ import { myCreateHeadlessEditor } from './editor-utils';
 
 export function searchPageTitles(pages: Page[], term: string): Page[] {
   const normalizedTerm = term.toLowerCase();
-  const startsWithTerm = pages.filter((page) =>
-    page.title.toLowerCase().startsWith(normalizedTerm)
-  );
-  const includesTerm = pages.filter(
-    (page) =>
-      page.title.toLowerCase().includes(normalizedTerm) &&
-      !page.title.toLowerCase().startsWith(normalizedTerm)
-  );
-  return [...startsWithTerm, ...includesTerm];
+  const result: Page[] = [];
+  const includesTerm: Page[] = [];
+
+  for (const page of pages) {
+    const normalizedTitle = page.title.toLowerCase();
+    if (normalizedTitle.startsWith(normalizedTerm)) {
+      result.push(page);
+    } else if (normalizedTitle.includes(normalizedTerm)) {
+      includesTerm.push(page);
+    }
+  }
+
+  return result.concat(includesTerm);
 }
 
 export async function searchPages(pages: Page[], searchTerm: string): Promise<Page[]> {
