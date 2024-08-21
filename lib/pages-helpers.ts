@@ -28,24 +28,23 @@ export function searchPages(pages: Page[], searchTerm: string): Page[] {
   if (searchTerms.length === 0) return [];
 
   return pages.reduce((results, page) => {
-    const termsInTitle = searchTerms.filter(term => 
-      page.title.toLowerCase().includes(term.toLowerCase())
-    );
+    const matchedTerms = new Set<string>();
 
-    if (termsInTitle.length === searchTerms.length) {
-      results[0].push(page);
-    } else if (termsInTitle.length > 0) {
-      const termsInContent = searchTerms.filter(term => 
-        page.value.toLowerCase().includes(term.toLowerCase())
-      );
-      if ((termsInTitle.length + termsInContent.length) === searchTerms.length) {
-        results[1].push(page);
+    searchTerms.forEach(term => {
+      const lowercaseTerm = term.toLowerCase();
+      if (page.title.toLowerCase().includes(lowercaseTerm)) {
+        matchedTerms.add(lowercaseTerm);
+      } else if (page.value.toLowerCase().includes(lowercaseTerm)) {
+        matchedTerms.add(lowercaseTerm);
       }
-    } else {
-      const termsInContent = searchTerms.filter(term => 
-        page.value.toLowerCase().includes(term.toLowerCase())
-      );
-      if (termsInContent.length === searchTerms.length) {
+    });
+
+    if (matchedTerms.size === searchTerms.length) {
+      if (searchTerms.every(term => page.title.toLowerCase().includes(term.toLowerCase()))) {
+        results[0].push(page);
+      } else if (searchTerms.some(term => page.title.toLowerCase().includes(term.toLowerCase()))) {
+        results[1].push(page);
+      } else {
         results[2].push(page);
       }
     }
