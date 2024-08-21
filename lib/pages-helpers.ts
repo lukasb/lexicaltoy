@@ -23,51 +23,35 @@ export function searchPageTitles(pages: Page[], term: string): Page[] {
 }
 
 export function searchPages(pages: Page[], searchTerm: string): Page[] {
-  const searchTerms = new Set(searchTerm.split(/\s+/).filter(term => term.length > 0));
+  const searchTerms = searchTerm.split(/\s+/).filter(term => term.length > 0);
   
-  if (searchTerms.size === 0) return [];
+  if (searchTerms.length === 0) return [];
 
-  const regexTerms = Array.from(searchTerms).map(term => new RegExp(term, 'i'));
-  const results: Page[][] = [[], [], []];
+  return pages.reduce((results, page) => {
+    const termsInTitle = searchTerms.filter(term => 
+      page.title.toLowerCase().includes(term.toLowerCase())
+    );
 
-  for (const page of pages) {
-    const titleMatches = new Set<RegExp>();
-    const contentMatches = new Set<RegExp>();
-
-    for (const regex of regexTerms) {
-      if (regex.test(page.title)) {
-        titleMatches.add(regex);
-      }
-    }
-
-    if (titleMatches.size === searchTerms.size) {
+    if (termsInTitle.length === searchTerms.length) {
       results[0].push(page);
-      continue; // Early termination for full title match
-    }
-
-    if (titleMatches.size > 0) {
-      for (const regex of regexTerms) {
-        if (!titleMatches.has(regex) && regex.test(page.value)) {
-          contentMatches.add(regex);
-        }
-      }
-      if (titleMatches.size + contentMatches.size === searchTerms.size) {
+    } else if (termsInTitle.length > 0) {
+      const termsInContent = searchTerms.filter(term => 
+        page.value.toLowerCase().includes(term.toLowerCase())
+      );
+      if ((termsInTitle.length + termsInContent.length) === searchTerms.length) {
         results[1].push(page);
-        continue; // Early termination for partial title + content match
       }
     } else {
-      for (const regex of regexTerms) {
-        if (regex.test(page.value)) {
-          contentMatches.add(regex);
-        }
-      }
-      if (contentMatches.size === searchTerms.size) {
+      const termsInContent = searchTerms.filter(term => 
+        page.value.toLowerCase().includes(term.toLowerCase())
+      );
+      if (termsInContent.length === searchTerms.length) {
         results[2].push(page);
       }
     }
-  }
 
-  return results.flat();
+    return results;
+  }, [[], [], []] as [Page[], Page[], Page[]]).flat();
 }
 
 export function findMostRecentlyEditedPage(pages: Page[]): Page | null {
