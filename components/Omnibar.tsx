@@ -331,7 +331,7 @@ const Omnibar = forwardRef(({
             )}
             {results.map((result, index) => (
               <li
-                key={showCreatePageOption ? index + 1 : index}
+                key={result.id}
                 className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
                   selectedIndex === (showCreatePageOption ? index + 1 : index)
                     ? "selected-item bg-gray-200 dark:bg-gray-700"
