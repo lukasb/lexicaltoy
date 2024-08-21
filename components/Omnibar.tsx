@@ -100,7 +100,6 @@ const Omnibar = forwardRef(({
           setDisplayValue(startMatch.title);
         } else {
           setDisplayValue(term);
-          setSelectedIndex(-1);
         }
   
         setResults(filteredPages);
@@ -138,14 +137,14 @@ const Omnibar = forwardRef(({
             setShowPageContent(true);
           }
         }
-      } else {
-        setSelectedIndex(-1);
-      }
-      if (exactMatchIndex === -1 && term.trim() !== "") {
-        setShowCreatePageOption(true);
-        setSelectedIndex(0);
-      } else {
-        setShowCreatePageOption(false);
+      } else {        
+        if (exactMatchIndex === -1 && term.trim() !== "") {
+          setShowCreatePageOption(true);
+          setSelectedIndex(0);
+        } else {
+          setShowCreatePageOption(false);
+          setSelectedIndex(-1);
+        }
       }
     };
   
