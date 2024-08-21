@@ -41,6 +41,7 @@ const Omnibar = forwardRef(({
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const storedTermRef = useRef("");
   const { searchTermsMap, setSearchTerms, getSearchTerms } = useSearchTerms();
+  const filteredPagesRef = useRef<Page[]>([]);
 
   useEffect(() => {
     setModifierKey(getModifierKey());
@@ -90,6 +91,7 @@ const Omnibar = forwardRef(({
   
       if (term) {
         const filteredPages = await searchPages(pages, term);
+        filteredPagesRef.current = filteredPages;
         const startMatch = filteredPages.find((page) =>
           page.title.toLowerCase().startsWith(term.toLowerCase())
         );
@@ -121,32 +123,30 @@ const Omnibar = forwardRef(({
         return;
       }
 
-        const filteredPages = await searchPages(pages, displayValue);
-        const exactMatchIndex = filteredPages.findIndex(
-          (page) => page.title.toLowerCase() === displayValue.toLowerCase()
-        );
+      const filteredPages = filteredPagesRef.current;
+      const exactMatchIndex = filteredPages.findIndex(
+        (page) => page.title.toLowerCase() === displayValue.toLowerCase()
+      );
   
-        if (inputRef.current && exactMatchIndex !== -1) {
-          if (displayValue !== term && displayValue.toLowerCase().startsWith(term.toLowerCase())) {
-            const startPos = term.length;
-            const endPos = displayValue.length;
-            //console.time("setSelectionRange");
-            inputRef.current.setSelectionRange(startPos, endPos);
-            //console.timeEnd("setSelectionRange");
-            setSelectedIndex(exactMatchIndex);
-            if (!isTouchDevice()) {
-              setShowPageContent(true);
-            }
+      if (inputRef.current && exactMatchIndex !== -1) {
+        if (displayValue !== term && displayValue.toLowerCase().startsWith(term.toLowerCase())) {
+          const startPos = term.length;
+          const endPos = displayValue.length;
+          inputRef.current.setSelectionRange(startPos, endPos);
+          setSelectedIndex(exactMatchIndex);
+          if (!isTouchDevice()) {
+            setShowPageContent(true);
           }
-        } else {
-          setSelectedIndex(-1);
         }
-        if (exactMatchIndex === -1 && term.trim() !== "") {
-          setShowCreatePageOption(true);
-          setSelectedIndex(0);
-        } else {
-          setShowCreatePageOption(false);
-        }
+      } else {
+        setSelectedIndex(-1);
+      }
+      if (exactMatchIndex === -1 && term.trim() !== "") {
+        setShowCreatePageOption(true);
+        setSelectedIndex(0);
+      } else {
+        setShowCreatePageOption(false);
+      }
     };
   
     searchPagesAsync();
