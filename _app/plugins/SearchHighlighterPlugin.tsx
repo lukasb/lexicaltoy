@@ -9,11 +9,14 @@ export function SearchHighlighterPlugin({
 }): null {
   const [editor] = useLexicalComposerContext();
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
-  //const observerRef = useRef<MutationObserver | null>(null);
 
   const highlightSearchTerms = useCallback(() => {
     const searchTerms = getSearchTerms(pageId);
     if (!searchTerms || searchTerms.length === 0) return;
+
+    if (searchTerms.includes("typhoon")) {
+      console.log("typhoon 2");
+    }
 
     CSS.highlights?.clear();
 

@@ -39,7 +39,7 @@ const Omnibar = forwardRef(({
   const [todayJournalTitle, setTodayJournalTitle] = useState(getTodayJournalTitle());
   const [modifierKey, setModifierKey] = useState("");
   const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [storedTerm, setStoredTerm] = useState("");
+  const storedTermRef = useRef("");
   const { searchTermsMap, setSearchTerms, getSearchTerms } = useSearchTerms();
 
   useEffect(() => {
@@ -155,7 +155,7 @@ const Omnibar = forwardRef(({
     const indexInResults = showCreatePageOption ? newIndex - 1 : newIndex;
     if (indexInResults > -1 && indexInResults < results.length) {
       skipDisplayValueResolutionRef.current = true;
-      setStoredTerm(term);
+      storedTermRef.current = term;
       setDisplayValue(results[indexInResults].title);
       if (!isTouchDevice()) {
         setShowPageContent(true);
@@ -195,7 +195,7 @@ const Omnibar = forwardRef(({
   const resetSelf = () => {
     setTerm("");
     setDisplayValue("");
-    setStoredTerm("");
+    storedTermRef.current = "";
     setResults([]);
     setSelectedIndex(-1);
     setShowCreatePageOption(false);
@@ -203,7 +203,10 @@ const Omnibar = forwardRef(({
   }
 
   const handleOpenExistingPage = (page: Page) => {
-    setSearchTerms(page.id, storedTerm);
+    if (storedTermRef.current.includes("typhoon")) {
+      console.log("typhoon 1");
+    }
+    setSearchTerms(page.id, storedTermRef.current);
     openOrCreatePageByTitle(page.title);
     resetSelf();
   }
@@ -367,7 +370,7 @@ const Omnibar = forwardRef(({
               <div 
                 className="whitespace-pre-wrap break-words"
                 dangerouslySetInnerHTML={{
-                  __html: highlightText(results[showCreatePageOption ? selectedIndex - 1 : selectedIndex].value, storedTerm)
+                  __html: highlightText(results[showCreatePageOption ? selectedIndex - 1 : selectedIndex].value, storedTermRef.current)
                 }}
               />
             </div>
