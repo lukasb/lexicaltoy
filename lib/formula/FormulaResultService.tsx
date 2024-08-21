@@ -119,10 +119,6 @@ export const useFormulaResultService = () => {
     return new Map(results);
   }
 
-  const debugQueries = (queries: IterableIterator<string>): string => {
-    return Array.from(queries).join('\n');
-  };
-
   const updatePagesResults = async (pagesToQuery: Page[]): Promise<void> => {
     let updatedMap = new Map(sharedNodeMap);
 

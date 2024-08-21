@@ -15,8 +15,8 @@ import { getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
 // TODO maybe use Redux so we don't have an O(n) operation here every time
 function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAction<Page[]>> }) {
   const pages = useContext(PagesContext);
-  const { sharedNodeMap, setSharedNodeMap } = useSharedNodeContext();
-  const { getFormulaResults, updatePagesResults, addPagesResults } = useFormulaResultService();
+  const { sharedNodeMap } = useSharedNodeContext();
+  const { updatePagesResults, addPagesResults } = useFormulaResultService();
   
   // Create a ref to store the save queue
   const saveQueue = useRef<Map<string, { page: Page, timestamp: number }>>(new Map());

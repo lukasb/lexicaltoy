@@ -57,9 +57,12 @@ export function createBaseNodeMarkdown(
   return { pageName, lineNumberStart, lineNumberEnd, nodeMarkdown };
 }
 
-export function getNodeElementEndLine(node: NodeElementMarkdown) {
-  if (node.children.length === 0) return node.baseNode.lineNumberEnd;
-  return node.children[node.children.length-1].baseNode.lineNumberEnd;
+export function getNodeElementEndLine(node: NodeElementMarkdown): number {
+  if (node.children.length === 0) {
+    return node.baseNode.lineNumberEnd;
+  }
+  const lastChild = node.children[node.children.length - 1];
+  return getNodeElementEndLine(lastChild);
 }
 
 export function getNodeElementFullMarkdown(node: NodeElementMarkdown, depth: number = 0): string {
