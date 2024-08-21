@@ -22,32 +22,33 @@ export function searchPageTitles(pages: Page[], term: string): Page[] {
   return result.concat(includesTerm);
 }
 
-export async function searchPages(pages: Page[], searchTerm: string): Promise<Page[]> {
+export function searchPages(pages: Page[], searchTerm: string): Page[] {
   const searchTerms = searchTerm.toLowerCase().split(/\s+/).filter(term => term.length > 0);
   
   if (searchTerms.length === 0) return [];
 
-  const allInTitle: Page[] = [];
-  const someInTitleAllInContent: Page[] = [];
-  const allInContent: Page[] = [];
-
-  pages.forEach(page => {
+  return pages.reduce((results, page) => {
     const normalizedTitle = page.title.toLowerCase();
-    const normalizedContent = page.value.toLowerCase();
-
     const termsInTitle = searchTerms.filter(term => normalizedTitle.includes(term));
-    const termsInContent = searchTerms.filter(term => normalizedContent.includes(term));
 
     if (termsInTitle.length === searchTerms.length) {
-      allInTitle.push(page);
-    } else if (termsInTitle.length > 0 && (termsInTitle.length + termsInContent.length) === searchTerms.length) {
-      someInTitleAllInContent.push(page);
-    } else if (termsInContent.length === searchTerms.length) {
-      allInContent.push(page);
+      results[0].push(page);
+    } else if (termsInTitle.length > 0) {
+      const normalizedContent = page.value.toLowerCase();
+      const termsInContent = searchTerms.filter(term => normalizedContent.includes(term));
+      if ((termsInTitle.length + termsInContent.length) === searchTerms.length) {
+        results[1].push(page);
+      }
+    } else {
+      const normalizedContent = page.value.toLowerCase();
+      const termsInContent = searchTerms.filter(term => normalizedContent.includes(term));
+      if (termsInContent.length === searchTerms.length) {
+        results[2].push(page);
+      }
     }
-  });
 
-  return [...allInTitle, ...someInTitleAllInContent, ...allInContent];
+    return results;
+  }, [[], [], []] as [Page[], Page[], Page[]]).flat();
 }
 
 export function findMostRecentlyEditedPage(pages: Page[]): Page | null {
