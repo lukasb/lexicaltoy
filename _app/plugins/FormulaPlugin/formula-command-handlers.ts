@@ -392,10 +392,7 @@ export function registerFormulaCommandHandlers(
           const text = event?.clipboardData?.getData('text/plain') || event?.clipboardData?.getData('text/uri-list');
           if (!text) return false;
 
-          // replace newlines with spaces
-          const textSansNewlines = text.replace(/\n/g, ' ');
-
-          selection.insertText(textSansNewlines);
+          selection.insertText(text);
 
           return true;
         },
