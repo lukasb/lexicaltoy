@@ -23,25 +23,28 @@ export function searchPageTitles(pages: Page[], term: string): Page[] {
 }
 
 export function searchPages(pages: Page[], searchTerm: string): Page[] {
-  const searchTerms = searchTerm.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+  const searchTerms = searchTerm.split(/\s+/).filter(term => term.length > 0);
   
   if (searchTerms.length === 0) return [];
 
   return pages.reduce((results, page) => {
-    const normalizedTitle = page.title.toLowerCase();
-    const termsInTitle = searchTerms.filter(term => normalizedTitle.includes(term));
+    const termsInTitle = searchTerms.filter(term => 
+      page.title.toLowerCase().includes(term.toLowerCase())
+    );
 
     if (termsInTitle.length === searchTerms.length) {
       results[0].push(page);
     } else if (termsInTitle.length > 0) {
-      const normalizedContent = page.value.toLowerCase();
-      const termsInContent = searchTerms.filter(term => normalizedContent.includes(term));
+      const termsInContent = searchTerms.filter(term => 
+        page.value.toLowerCase().includes(term.toLowerCase())
+      );
       if ((termsInTitle.length + termsInContent.length) === searchTerms.length) {
         results[1].push(page);
       }
     } else {
-      const normalizedContent = page.value.toLowerCase();
-      const termsInContent = searchTerms.filter(term => normalizedContent.includes(term));
+      const termsInContent = searchTerms.filter(term => 
+        page.value.toLowerCase().includes(term.toLowerCase())
+      );
       if (termsInContent.length === searchTerms.length) {
         results[2].push(page);
       }
