@@ -14,10 +14,6 @@ export function SearchHighlighterPlugin({
     const searchTerms = getSearchTerms(pageId);
     if (!searchTerms || searchTerms.length === 0) return;
 
-    if (searchTerms.includes("typhoon")) {
-      console.log("typhoon 2");
-    }
-
     CSS.highlights?.clear();
 
     const editorElement = editor.getRootElement();

@@ -155,7 +155,6 @@ const Omnibar = forwardRef(({
     const indexInResults = showCreatePageOption ? newIndex - 1 : newIndex;
     if (indexInResults > -1 && indexInResults < results.length) {
       skipDisplayValueResolutionRef.current = true;
-      storedTermRef.current = term;
       setDisplayValue(results[indexInResults].title);
       if (!isTouchDevice()) {
         setShowPageContent(true);
@@ -190,6 +189,7 @@ const Omnibar = forwardRef(({
     if (newValue === "") skipTermResolutionRef.current = false;
     setTerm(newValue);
     setDisplayValue(newValue);
+    storedTermRef.current = term;
   };
 
   const resetSelf = () => {
@@ -203,9 +203,6 @@ const Omnibar = forwardRef(({
   }
 
   const handleOpenExistingPage = (page: Page) => {
-    if (storedTermRef.current.includes("typhoon")) {
-      console.log("typhoon 1");
-    }
     setSearchTerms(page.id, storedTermRef.current);
     openOrCreatePageByTitle(page.title);
     resetSelf();
