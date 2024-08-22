@@ -1,7 +1,7 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
-const userName = "Alice";
-const userEmail = "alice@nextmail.com";
+const userName = "Jan";
+const userEmail = "janeazy@gmail.com";
 const userPassword = "123456";
 
 const defaultPageValue = "- ";
@@ -10,12 +10,15 @@ const defaultPageTitle = "My First Page";
 const nodeEnv = process.env.NODE_ENV || 'development';
 
 let envfile;
+let manualPageId;
 if (nodeEnv === 'production') {
   console.log('production db');
   envfile = './.env.production.local';
+  manualPageId = "a1106fd8-cb90-4bd6-8031-f4ede8ee0d24";
 } else if (nodeEnv === 'development') {
   console.log('development db');
   envfile = './.env.development.local';
+  manualPageId = "a1106fd8-cb90-4bd6-8031-f4ede8ee0d24"; // yes same as prod
 } else {
   console.log("NODE_ENV not set");
   process.exit(1);
@@ -28,6 +31,7 @@ async function main() {
 
   newUserId = await addUser(userName, userEmail, userPassword, client);
   await addPage(newUserId, defaultPageValue, defaultPageTitle, client);
+  await copyManualPage(newUserId, client);  // Add this line
   
   await client.end();
 }
@@ -79,5 +83,32 @@ async function addPage(userId, value, title, client) {
     }
   } catch (error) {
     console.error("Error inserting page:", error);
+  }
+}
+
+async function copyManualPage(userId, client) {
+  try {
+    const manualPage = await client.sql`
+      SELECT value, title FROM pages WHERE id = ${manualPageId};
+    `;
+
+    if (manualPage.rows && manualPage.rows.length > 0) {
+      const { value, title } = manualPage.rows[0];
+      const insertedPage = await client.sql`
+        INSERT INTO pages (userId, value, title)
+        VALUES (${userId}, ${value}, ${title})
+        RETURNING id;
+      `;
+
+      if (insertedPage.rows && insertedPage.rows.length > 0) {
+        console.log("Copied manual page with new id", insertedPage.rows[0].id);
+      } else {
+        console.log("Failed to copy manual page");
+      }
+    } else {
+      console.log("Manual page not found");
+    }
+  } catch (error) {
+    console.error("Error copying manual page:", error);
   }
 }
