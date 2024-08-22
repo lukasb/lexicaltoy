@@ -1,20 +1,17 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { useEffect, useCallback } from 'react';
-
-// doesn't work in Firefox (but is in Firefox nightly)
-// https://developer.mozilla.org/en-US/docs/Web/API/CSS_Custom_Highlight_API#browser_compatibility
-//
-// highlights the given search terms in the editor
-// then scrolls to the first search term and selects it
+import { useEffect, useRef, useCallback } from 'react';
+import { useSearchTerms } from '../context/search-terms-context';
 
 export function SearchHighlighterPlugin({
-  searchTerms
+  pageId
 }: {
-  searchTerms: string[];
+  pageId: string;
 }): null {
   const [editor] = useLexicalComposerContext();
+  const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
 
   const highlightSearchTerms = useCallback(() => {
+    const searchTerms = getSearchTerms(pageId);
     if (!searchTerms || searchTerms.length === 0) return;
 
     CSS.highlights?.clear();
@@ -48,30 +45,34 @@ export function SearchHighlighterPlugin({
       currentNode = treeWalker.nextNode();
     }
 
+    // Create a Highlight object for the ranges
     if (CSS.highlights && ranges.length > 0) {
       const searchResultsHighlight = new Highlight(...ranges);
       CSS.highlights.set("search-results", searchResultsHighlight);
 
+      // Scroll the first result into view and select it
       if (ranges[0]) {
         const firstElement = ranges[0].startContainer.parentElement;
         firstElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
+        // Select the first result
         const selection = window.getSelection();
         selection?.removeAllRanges();
         selection?.addRange(ranges[0]);
       }
     }
-  }, [searchTerms, editor]);
+  }, [pageId, getSearchTerms, editor]);
 
   useEffect(() => {
+    // Initial highlight
     highlightSearchTerms();
 
     return () => {
-      if (searchTerms.length > 0) {
+      if (getSearchTerms(pageId).length > 0) {
         CSS.highlights?.clear();
       }
     };
-  }, [editor, searchTerms, highlightSearchTerms]);
+  }, [editor, pageId, getSearchTerms, deleteSearchTerms, highlightSearchTerms]);
 
   return null;
 }
