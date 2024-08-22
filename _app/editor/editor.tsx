@@ -145,7 +145,7 @@ function Editor({
       if (trimmedPageContents !== trimmedPageValue) {
         pendingChangeRef.current = pageContentsWithoutSharedNodes;
         debouncedSave(pageContentsWithoutSharedNodes);
-        setShouldHighlight(false);
+        //setShouldHighlight(false);
         deleteSearchTerms(page.id);
       } else {
         pendingChangeRef.current = null; // Clear pending change if content matches current page value
