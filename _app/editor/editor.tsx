@@ -106,6 +106,7 @@ function Editor({
   const pendingChangeRef = useRef<string | null>(null);
   const localVersionRef = useRef<number>(page.revisionNumber);
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
+  const [searchTerms, setSearchTerms] = useState<string[]>([]);
   const [shouldHighlight, setShouldHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
 
   const getPage = useCallback((id: string) => {
@@ -169,6 +170,10 @@ function Editor({
     };
   }, [onBeforeUnload, saveChange]);
 
+  React.useEffect(() => {
+    setSearchTerms(getSearchTerms(page.id));
+  }, [page.id, getSearchTerms]);
+
   return (
     <PromisesProvider>
       <LexicalComposer initialConfig={initialConfig}>
@@ -197,7 +202,7 @@ function Editor({
         <WikilinkEventListenerPlugin
           openOrCreatePageByTitle={openOrCreatePageByTitle}
         />
-        {shouldHighlight && <SearchHighlighterPlugin pageId={page.id} />}
+        {shouldHighlight && <SearchHighlighterPlugin searchTerms={searchTerms} />}
         {floatingAnchorElem && !isSmallWidthViewport && (
           <>
             <FloatingMenuPlugin
