@@ -16,7 +16,7 @@ import {
 } from "@/lib/formula/formula-definitions";
 import { DialogueElement } from "../ai";
 import { QueryCounter } from './query-counter';
-import { getFormulaOutputType } from "./regex-callbacks";
+import { getFormulaOutputType } from "./formula-parser";
 
 export const nodeQueries = new QueryCounter();
 

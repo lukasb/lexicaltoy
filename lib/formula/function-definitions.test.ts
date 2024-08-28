@@ -1,8 +1,8 @@
 import { 
   splitMarkdownByNodes,
   removeFindNodes,
-  regexCallbacks
-} from "./regex-callbacks";
+  functionDefinitions
+} from "./function-definitions";
 import { NodeElementMarkdown } from "./formula-definitions";
 import { FormulaOutput, FormulaOutputType } from "./formula-definitions";
 import { Page, PageStatus } from "../definitions";
@@ -332,7 +332,7 @@ describe('find() function in regexCallbacks', () => {
   ];
 
   async function testFindFunction(formula: string): Promise<FormulaOutput | undefined> {
-    for (const [regex, callback] of regexCallbacks) {
+    for (const [regex, callback] of functionDefinitions) {
       const match = formula.match(regex);
       if (match && regex.toString() === '/^find\\((.+)\\)$/') {
         return await callback(match, mockPages);

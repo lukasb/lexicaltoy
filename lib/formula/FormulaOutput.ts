@@ -10,12 +10,15 @@ import { Page } from '@/lib/definitions';
 import { getPageMarkdown } from '@/lib/pages-helpers';
 import { stripBrackets } from '@/lib/transform-helpers';
 import { getLastSixWeeksJournalPages } from '@/lib/journal-helpers';
-import { regexCallbacks } from './regex-callbacks';
+import { functionDefinitions } from './formula-parser';
 import { WIKILINK_REGEX, extractWikilinks } from '@/lib/text-utils';
 import { LexicalEditor, $getNodeByKey } from 'lexical';
 import { ListItemNode } from '@lexical/list';
 import { $isFormulaDisplayNode } from '@/_app/nodes/FormulaNode';
 import { $isListItemNode } from '@lexical/list';
+import { parseFormula } from './formula-parser';
+import { DefaultArguments } from './formula-parser';
+import { CstNodeWithChildren, getChildrenByName, getTokenImage } from './formula-parser';
 
 const todoInstructions = `
 Below you'll see the contents of one or more pages. Pages may include to-do list items that look like this:
@@ -31,7 +34,7 @@ Items marked with DONE are complete, all other items are incomplete.
 User content:
 `;
 
-async function getPagesContext(pageSpecs: string[], pages: Page[]): Promise<string | null> {
+export async function getPagesContext(pageSpecs: string[], pages: Page[]): Promise<string | null> {
   const uniquePages = new Set<Page>();
 
   async function addPages(pageSpec: string) {
@@ -75,27 +78,55 @@ async function getPagesContext(pageSpecs: string[], pages: Page[]): Promise<stri
 }
 
 export async function getFormulaOutput(formula: string, pages: Page[], dialogueContext?: DialogueElement[]): Promise<FormulaOutput | null> {
+  try {
+      // Parse the formula using our new parser
+      const parsedFormula = parseFormula(formula) as CstNodeWithChildren;
 
-  // Check if the formula matches any of the regex patterns
-  for (const [regex, callback, type] of regexCallbacks) {
-    const match = formula.match(regex);
-    if (match) {
-      return await callback(match, pages);
-    }
+      // Extract function name and arguments from the parsed formula
+      const functionCallNode = getChildrenByName(parsedFormula, 'functionCall')[0] as CstNodeWithChildren;
+      const functionName = getTokenImage(getChildrenByName(functionCallNode, 'Identifier')[0]);
+
+      const argumentListNode = getChildrenByName(functionCallNode, 'argumentList')[0] as CstNodeWithChildren;
+      const args = getChildrenByName(argumentListNode, 'argument').map(arg => {
+          const argNode = arg as CstNodeWithChildren;
+          if (getChildrenByName(argNode, 'StringLiteral').length > 0) {
+              return getTokenImage(getChildrenByName(argNode, 'StringLiteral')[0]).slice(1, -1); // Remove quotes
+          } else if (getChildrenByName(argNode, 'WikiLink').length > 0) {
+              return getTokenImage(getChildrenByName(argNode, 'WikiLink')[0]);
+          } else if (getChildrenByName(argNode, 'stringSet').length > 0) {
+              const stringSetNode = getChildrenByName(argNode, 'stringSet')[0] as CstNodeWithChildren;
+              return getChildrenByName(stringSetNode, 'stringSetItem').map(item => {
+                  const itemNode = item as CstNodeWithChildren;
+                  if (getChildrenByName(itemNode, 'StringLiteral').length > 0) {
+                      return getTokenImage(getChildrenByName(itemNode, 'StringLiteral')[0]).slice(1, -1);
+                  } else {
+                      return getTokenImage(getChildrenByName(itemNode, 'Word')[0]);
+                  }
+              }).join(' ');
+          } else if (getChildrenByName(argNode, 'typeOrTypes').length > 0) {
+              const typeOrTypesNode = getChildrenByName(argNode, 'typeOrTypes')[0] as CstNodeWithChildren;
+              return getChildrenByName(typeOrTypesNode, 'NodeType').map(node => getTokenImage(node)).join('|');
+          }
+          return '';
+      });
+
+      // Find the corresponding function definition
+      const funcDef = functionDefinitions.find(def => def.name === functionName);
+
+      if (funcDef) {
+          // Prepare the default arguments
+          const defaultArgs: DefaultArguments = { pages, dialogueElements: dialogueContext };
+
+          // Call the function's callback with the default arguments and parsed arguments
+          return await funcDef.callback(defaultArgs, ...args);
+      } else {
+          console.error(`Unknown function: ${functionName}`);
+          return null;
+      }
+  } catch (error) {
+      console.error("Error parsing or executing formula:", error);
+      return null;
   }
-
-  let prompt = formula;
-  if (WIKILINK_REGEX.exec(formula) !== null) {
-    const referencedPages = extractWikilinks(formula);
-    const pagesContext = await getPagesContext(referencedPages, pages);
-    prompt = prompt + pagesContext;
-  }
-
-  if (!dialogueContext) return null;
-  const gptResponse = await getShortGPTChatResponse(prompt, dialogueContext);
-  if (!gptResponse) return null;
-
-  return { output: gptResponse, type: FormulaOutputType.Text };
 }
 
 function $getGPTPair(listItem: ListItemNode): DialogueElement | undefined {
