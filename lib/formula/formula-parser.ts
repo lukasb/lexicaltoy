@@ -120,167 +120,75 @@ export function getTokenImage(token: IToken | CstNodeWithChildren): string {
   return 'image' in token ? token.image : '';
 }
 
+// Define tokens
 const Equal = createToken({ name: "Equal", pattern: /=/ });
 const Identifier = createToken({ name: "Identifier", pattern: /[a-zA-Z]\w*/ });
+const TodoStatus = createToken({ name: "TodoStatus", pattern: /TODO|DONE|NOW|WAITING|DOING/, longer_alt: Identifier });
+const StringLiteral = createToken({ name: "StringLiteral", pattern: /"(?:[^"\\]|\\.)*"/ });
+const SpecialToken = createToken({ name: "SpecialToken", pattern: /#[a-zA-Z]+/ });
+const Pipe = createToken({ name: "Pipe", pattern: /\|/ });
 const LParen = createToken({ name: "LParen", pattern: /\(/ });
 const RParen = createToken({ name: "RParen", pattern: /\)/ });
 const Comma = createToken({ name: "Comma", pattern: /,/ });
-const StringLiteral = createToken({ name: "StringLiteral", pattern: /"(?:[^"\\]|\\.)*"/ });
-const WikiLink = createToken({ name: "WikiLink", pattern: /\[\[[^\]]+\]\]/ });
-const Word = createToken({ name: "Word", pattern: /[^\s|(),]+/ });
-const Or = createToken({ name: "Or", pattern: /\|/ });
-const WhiteSpace = createToken({ name: "WhiteSpace", pattern: /\s+/, group: Lexer.SKIPPED });
-const NodeType = createToken({ name: "NodeType", pattern: new RegExp(nodeTypes.map(type => type.name).join("|")) });
+const FilePath = createToken({ name: "FilePath", pattern: /\[\[[^\]]+\]\]/ });
 
-const allTokens = [Equal, Identifier, LParen, RParen, Comma, StringLiteral, WikiLink, Word, Or, WhiteSpace, NodeType];
+const allTokens = [
+  Equal,
+  StringLiteral,
+  FilePath,
+  SpecialToken,
+  Identifier,
+  Pipe,
+  LParen,
+  RParen,
+  Comma,
+];
+
 const FormulaLexer = new Lexer(allTokens);
 
 class FormulaParser extends CstParser {
-  private currentFunction: FunctionDefinition | null = null;
-  private currentArgIndex: number = 0;
-
   constructor() {
-      super(allTokens, {
-          recoveryEnabled: true,
-      });
-      this.performSelfAnalysis();
+    super(allTokens);
+    this.performSelfAnalysis();
   }
 
   formula = this.RULE("formula", () => {
-      this.CONSUME(Equal);
-      this.SUBRULE(this.functionCall);
+    this.CONSUME(Equal);
+    this.SUBRULE(this.functionCall);
   });
 
   functionCall = this.RULE("functionCall", () => {
-      const funcToken = this.CONSUME(Identifier);
-
-      this.ACTION(() => {
-        this.currentFunction = functionDefinitions.find(def => def.name === funcToken.image) || null;
-        if (!this.currentFunction) {
-          this.RAISE_ERROR(funcToken, `Unknown function: ${funcToken.image}`);
-        }
-      });
-      
-      this.CONSUME(LParen);
-      this.OPTION(() => {
-          this.SUBRULE(this.argumentList);
-      });
-      this.CONSUME(RParen);
-      this.currentFunction = null;
-      this.currentArgIndex = 0;
+    this.CONSUME(Identifier);
+    this.CONSUME(LParen);
+    this.SUBRULE(this.argumentList);
+    this.CONSUME(RParen);
   });
 
   argumentList = this.RULE("argumentList", () => {
     this.SUBRULE(this.argument);
     this.MANY(() => {
-        this.CONSUME(Comma);
-        this.SUBRULE2(this.argument);
+      this.CONSUME(Comma);
+      this.SUBRULE2(this.argument);
     });
   });
 
   argument = this.RULE("argument", () => {
-    if (!this.currentFunction) {
-        this.RAISE_ERROR(this.LA(1), "Unexpected argument outside of function call");
-        return;
-    }
-
-    let argDef = this.currentFunction.arguments[this.currentArgIndex];
-    
-    // If we've passed all defined arguments, check if the last one is variadic
-    if (!argDef && this.currentArgIndex > 0) {
-        const lastArgDef = this.currentFunction.arguments[this.currentFunction.arguments.length - 1];
-        if (lastArgDef.variadic) {
-            argDef = lastArgDef;
-        } else {
-            this.RAISE_ERROR(this.LA(1), `Too many arguments for function ${this.currentFunction.name}`);
-            return;
-        }
-    }
-
-    if (!argDef) {
-        this.RAISE_ERROR(this.LA(1), `Unexpected argument for function ${this.currentFunction.name}`);
-        return;
-    }
-
-    switch (argDef.type) {
-        case "string":
-            this.CONSUME(StringLiteral);
-            break;
-        case "string_set":
-            this.SUBRULE(this.stringSet);
-            break;
-        case "wikilink":
-            this.CONSUME(WikiLink);
-            break;
-        case "type_or_types":
-            this.SUBRULE(this.typeOrTypes);
-            break;
-        default:
-            this.RAISE_ERROR(this.LA(1), `Unknown argument type: ${argDef.type}`);
-    }
-
-    // Only increment the argument index if we're not dealing with a variadic argument
-    // or if it's the first occurrence of the variadic argument
-    if (!argDef.variadic || this.currentArgIndex < this.currentFunction.arguments.length - 1) {
-        this.currentArgIndex++;
-    }
+    this.OR([
+      { ALT: () => this.CONSUME(StringLiteral) },
+      { ALT: () => this.CONSUME(SpecialToken) },
+      { ALT: () => this.SUBRULE(this.pipeExpression) },
+      { ALT: () => this.SUBRULE(this.functionCall) },
+      { ALT: () => this.CONSUME(FilePath) },
+    ]);
   });
 
-  stringSet = this.RULE("stringSet", () => {
-    this.AT_LEAST_ONE_SEP({
-      SEP: WhiteSpace,
-      DEF: () => {
-          this.OR([
-              { ALT: () => this.SUBRULE(this.phrase) },
-              { ALT: () => this.CONSUME(Word) }
-          ]);
-      }
-  });
-  });
-
-  phrase = this.RULE("phrase", () => {
-      this.CONSUME(StringLiteral);
-  });
-
-  typeOrTypes = this.RULE("typeOrTypes", () => {
-    this.AT_LEAST_ONE_SEP({
-        SEP: Or,
-        DEF: () => this.CONSUME(NodeType)
+  pipeExpression = this.RULE("pipeExpression", () => {
+    this.CONSUME(TodoStatus);
+    this.AT_LEAST_ONE(() => {
+      this.CONSUME(Pipe);
+      this.CONSUME2(TodoStatus);
     });
   });
-
-  partialFormula = this.RULE("partialFormula", () => {
-    this.OPTION(() => this.CONSUME(Equal));
-    this.OPTION1(() => {
-        this.SUBRULE(this.partialFunctionCall);
-    });
-  });
-
-  partialFunctionCall = this.RULE("partialFunctionCall", () => {
-      this.CONSUME(Identifier);
-      this.OPTION(() => {
-          this.CONSUME(LParen);
-          this.OPTION1(() => {
-              this.SUBRULE(this.partialArgumentList);
-          });
-          this.OPTION2(() => this.CONSUME(RParen));
-      });
-  });
-
-  partialArgumentList = this.RULE("partialArgumentList", () => {
-      this.MANY_SEP({
-          SEP: Comma,
-          DEF: () => {
-              this.SUBRULE(this.argument);
-          }
-      });
-  });
-
-  RAISE_ERROR(token: IToken, message: string): void {
-    console.error(message, token);
-      // Skip to the end of the current function call to allow partial parsing to continue
-      this.CONSUME(RParen, { LABEL: "RECOVERY" });
-  }
 }
 
 const parser = new FormulaParser();
@@ -295,64 +203,6 @@ export function parseFormula(input: string) {
       throw new Error(`Parsing errors detected: ${errorMessages}`);
   }
   return cst;
-}
-
-function parsePartialFormula(input: string) {
-  const lexResult = FormulaLexer.tokenize(input);
-  parser.input = lexResult.tokens;
-  const cst = parser.partialFormula();
-  
-  return {
-      cst,
-      errors: parser.errors,
-      tokens: lexResult.tokens
-  };
-}
-
-function getContextualHelp(input: string): string {
-  const result = parsePartialFormula(input);
-  const tokens = result.tokens;
-  
-  if (tokens.length === 0 || (tokens.length === 1 && tokens[0].tokenType === Equal)) {
-      return `Available functions: ${functionDefinitions.map(f => f.name).join(", ")}`;
-  }
-  
-  if (tokens[1] && tokens[1].tokenType === Identifier) {
-      const functionName = tokens[1].image;
-      const funcDef = functionDefinitions.find(f => f.name === functionName);
-      
-      if (!funcDef) {
-          return `Unknown function: ${functionName}. Available functions: ${functionDefinitions.map(f => f.name).join(", ")}`;
-      }
-      
-      if (tokens[2]?.tokenType !== LParen) {
-          return `${funcDef.description}. Start arguments with opening parenthesis.`;
-      }
-      
-      const cst = result.cst as CstNodeWithChildren;
-      const partialFunctionCall = cst.children.partialFunctionCall?.[0] as CstNodeWithChildren | undefined;
-      const partialArgumentList = partialFunctionCall?.children.partialArgumentList?.[0] as CstNodeWithChildren | undefined;
-      const args = partialArgumentList?.children.argument || [];
-      const currentArgIndex = args.length;
-      
-      if (currentArgIndex < funcDef.arguments.length) {
-        const currentArg = funcDef.arguments[currentArgIndex];
-        let helpText = `${currentArg.description} (${currentArg.type})${currentArg.required ? " (required)" : " (optional)"}`;
-        if (currentArg.variadic) {
-            helpText += " (can be repeated)";
-        }
-        if (currentArg.type === "string_set") {
-            helpText += ". Use spaces between terms, \"quotes\" for phrases, and | for OR";
-        } else if (currentArg.type === "type_or_types") {
-            helpText += `. Valid types: ${nodeTypes.map(type => type.name).join(", ")}. Use | for OR`;
-        }
-        return helpText;
-      } else {
-          return "All arguments provided. Close function with ')'";
-      }
-  }
-  
-  return "Continue entering your formula";
 }
 
 export function getFormulaOutputType(formula: string): FormulaOutputType | null {

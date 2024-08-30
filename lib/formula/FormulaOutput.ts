@@ -86,6 +86,8 @@ export async function getFormulaOutput(formula: string, pages: Page[], dialogueC
       const functionCallNode = getChildrenByName(parsedFormula, 'functionCall')[0] as CstNodeWithChildren;
       const functionName = getTokenImage(getChildrenByName(functionCallNode, 'Identifier')[0]);
 
+      console.log("functionName", functionName);
+      
       const argumentListNode = getChildrenByName(functionCallNode, 'argumentList')[0] as CstNodeWithChildren;
       const args = getChildrenByName(argumentListNode, 'argument').map(arg => {
           const argNode = arg as CstNodeWithChildren;
