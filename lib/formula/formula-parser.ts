@@ -123,7 +123,12 @@ export function getTokenImage(token: IToken | CstNodeWithChildren): string {
 // Define tokens
 const Equal = createToken({ name: "Equal", pattern: /=/ });
 const Identifier = createToken({ name: "Identifier", pattern: /[a-zA-Z]\w*/ });
-const TodoStatus = createToken({ name: "TodoStatus", pattern: /TODO|DONE|NOW|WAITING|DOING/, longer_alt: Identifier });
+const todoStatuses = ["TODO", "DONE", "NOW", "WAITING", "DOING"];
+const TodoStatus = createToken({
+  name: "TodoStatus",
+  pattern: new RegExp(todoStatuses.join("|")),
+  longer_alt: Identifier
+});
 const StringLiteral = createToken({ name: "StringLiteral", pattern: /"(?:[^"\\]|\\.)*"/ });
 const SpecialToken = createToken({ name: "SpecialToken", pattern: /#[a-zA-Z]+/ });
 const Pipe = createToken({ name: "Pipe", pattern: /\|/ });
