@@ -19,6 +19,8 @@ import { $isListItemNode } from '@lexical/list';
 import { parseFormula } from './formula-parser';
 import { DefaultArguments } from './formula-parser';
 import { CstNodeWithChildren, getChildrenByName, getTokenImage } from './formula-parser';
+import { FormulaLexer, FormulaParser, FunctionDefinition } from './formula-parser';
+import { IToken } from 'chevrotain';
 
 const todoInstructions = `
 Below you'll see the contents of one or more pages. Pages may include to-do list items that look like this:
@@ -77,57 +79,68 @@ export async function getPagesContext(pageSpecs: string[], pages: Page[]): Promi
   return generateContextStr(Array.from(uniquePages));
 }
 
-export async function getFormulaOutput(formula: string, pages: Page[], dialogueContext?: DialogueElement[]): Promise<FormulaOutput | null> {
+export async function getFormulaOutput(
+  formula: string,
+  pages: Page[],
+  dialogueContext?: DialogueElement[]
+): Promise<FormulaOutput | null> {
   try {
-      // Parse the formula using our new parser
-      const parsedFormula = parseFormula(formula) as CstNodeWithChildren;
-
-      // Extract function name and arguments from the parsed formula
-      const functionCallNode = getChildrenByName(parsedFormula, 'functionCall')[0] as CstNodeWithChildren;
-      const functionName = getTokenImage(getChildrenByName(functionCallNode, 'Identifier')[0]);
-
-      console.log("functionName", functionName);
-      
-      const argumentListNode = getChildrenByName(functionCallNode, 'argumentList')[0] as CstNodeWithChildren;
-      const args = getChildrenByName(argumentListNode, 'argument').map(arg => {
-          const argNode = arg as CstNodeWithChildren;
-          if (getChildrenByName(argNode, 'StringLiteral').length > 0) {
-              return getTokenImage(getChildrenByName(argNode, 'StringLiteral')[0]).slice(1, -1); // Remove quotes
-          } else if (getChildrenByName(argNode, 'WikiLink').length > 0) {
-              return getTokenImage(getChildrenByName(argNode, 'WikiLink')[0]);
-          } else if (getChildrenByName(argNode, 'stringSet').length > 0) {
-              const stringSetNode = getChildrenByName(argNode, 'stringSet')[0] as CstNodeWithChildren;
-              return getChildrenByName(stringSetNode, 'stringSetItem').map(item => {
-                  const itemNode = item as CstNodeWithChildren;
-                  if (getChildrenByName(itemNode, 'StringLiteral').length > 0) {
-                      return getTokenImage(getChildrenByName(itemNode, 'StringLiteral')[0]).slice(1, -1);
-                  } else {
-                      return getTokenImage(getChildrenByName(itemNode, 'Word')[0]);
-                  }
-              }).join(' ');
-          } else if (getChildrenByName(argNode, 'typeOrTypes').length > 0) {
-              const typeOrTypesNode = getChildrenByName(argNode, 'typeOrTypes')[0] as CstNodeWithChildren;
-              return getChildrenByName(typeOrTypesNode, 'NodeType').map(node => getTokenImage(node)).join('|');
-          }
-          return '';
-      });
-
-      // Find the corresponding function definition
-      const funcDef = functionDefinitions.find(def => def.name === functionName);
-
-      if (funcDef) {
-          // Prepare the default arguments
-          const defaultArgs: DefaultArguments = { pages, dialogueElements: dialogueContext };
-
-          // Call the function's callback with the default arguments and parsed arguments
-          return await funcDef.callback(defaultArgs, ...args);
-      } else {
-          console.error(`Unknown function: ${functionName}`);
-          return null;
-      }
-  } catch (error) {
-      console.error("Error parsing or executing formula:", error);
+    const formulaWithEqualSign = formula.startsWith("=") ? formula : `=${formula}`;
+    const lexingResult = FormulaLexer.tokenize(formulaWithEqualSign);
+    
+    if (lexingResult.errors.length > 0) {
+      console.error("Lexing errors:", lexingResult.errors);
       return null;
+    }
+
+    const parser = new FormulaParser();
+    parser.input = lexingResult.tokens;
+    const cst = parser.formula() as CstNodeWithChildren;
+
+    if (parser.errors.length > 0) {
+      console.error("Parsing errors:", parser.errors);
+      return null;
+    }
+
+    const functionCallNode = cst.children.functionCall[0] as CstNodeWithChildren;
+    const functionName = (functionCallNode.children.Identifier[0] as IToken).image;
+    const argumentListNode = functionCallNode.children.argumentList[0] as CstNodeWithChildren;
+
+    const args: string[] = argumentListNode.children.argument.map((arg: any): string => {
+      if (arg.children.StringLiteral) {
+        return arg.children.StringLiteral[0].image.slice(1, -1); // Remove quotes
+      } else if (arg.children.SpecialToken) {
+        return arg.children.SpecialToken[0].image;
+      } else if (arg.children.pipeExpression) {
+        return arg.children.pipeExpression[0].children.TodoStatus.map((token: any) => token.image).join('|');
+      } else if (arg.children.functionCall) {
+        // Recursive call for nested function calls
+        const nestedResult = getFormulaOutput(arg.children.functionCall[0].image, pages, dialogueContext);
+        return nestedResult ? JSON.stringify(nestedResult) : '';
+      } else if (arg.children.FilePath) {
+        return arg.children.FilePath[0].image.slice(2, -2); // Remove [[ and ]]
+      }
+      return '';
+    });
+
+    // Find the corresponding function definition
+    const funcDef = functionDefinitions.find((def: FunctionDefinition) => def.name === functionName);
+
+    if (funcDef) {
+      // Prepare the default arguments
+      const defaultArgs = { pages, dialogueElements: dialogueContext };
+
+      console.log("args", args);
+      
+      // Call the function's callback with the default arguments and parsed arguments
+      return await funcDef.callback(defaultArgs, args);
+    } else {
+      console.error(`Unknown function: ${functionName}`);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error parsing or executing formula:", error);
+    return null;
   }
 }
 

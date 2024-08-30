@@ -28,10 +28,17 @@ export const findCallback = async (defaultArgs: DefaultArguments, terms: string[
   // we also check the title when matching, so if one substring is in the title and another
   // is in the line, we match
 
-  if (!defaultArgs.pages) return null;
-  
+  console.log("findCallback", terms);
+  if (!Array.isArray(terms)) console.log("terms is not an array");
+  if (!defaultArgs.pages || terms.length === 0 || !Array.isArray(terms)) return null;
+  console.log("have pages and terms");
+  console.log("what is going on here");
+
   const substrings = terms.map((s) => s.trim());
 
+  console.log("substrings", substrings);
+
+  // create a map of substrings to their OR clauses
   const orClauses: { [key: string]: string[] } = {};
   for (const substring of substrings) {
     const orClause = substring.split("|").map((s) => s.trim());
@@ -39,6 +46,8 @@ export const findCallback = async (defaultArgs: DefaultArguments, terms: string[
   }
 
   const output: NodeElementMarkdown[] = [];
+
+  console.log("pages terms", defaultArgs.pages.length, terms.length);
 
   for (const page of defaultArgs.pages) {
     let unmatchedSubstrings = [...substrings];
@@ -95,13 +104,13 @@ export const findCallback = async (defaultArgs: DefaultArguments, terms: string[
       ...processNodes(nodesMarkdown, unmatchedSubstrings, orClauses)
     );
   }
+
+  console.log("output", output);
+
   return {
     output: output,
     type: FormulaOutputType.NodeMarkdown,
-  };
-
-
-    
+  };  
 };
 
 export const findFormulaStartRegex = /^\s*- =find\(/;

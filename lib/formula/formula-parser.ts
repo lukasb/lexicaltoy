@@ -149,9 +149,9 @@ const allTokens = [
   Comma,
 ];
 
-const FormulaLexer = new Lexer(allTokens);
+export const FormulaLexer = new Lexer(allTokens);
 
-class FormulaParser extends CstParser {
+export class FormulaParser extends CstParser {
   constructor() {
     super(allTokens);
     this.performSelfAnalysis();
