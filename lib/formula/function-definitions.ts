@@ -9,8 +9,9 @@ import { getShortGPTChatResponse } from "../ai";
 import { DefaultArguments } from "./formula-parser";
 
 export const askCallback = async (defaultArgs: DefaultArguments, question: string, context?: string[]): Promise<FormulaOutput | null> => {
+  if (Array.isArray(question)) console.log("question is an array", question);
     // Implementation of ask function
-    let prompt = question;
+    let prompt: string = question;
     if (context && defaultArgs.pages) {
       const pagesContext = await getPagesContext(context, defaultArgs.pages);
       prompt = prompt + pagesContext;

@@ -21,6 +21,7 @@ import { DefaultArguments } from './formula-parser';
 import { CstNodeWithChildren, getChildrenByName, getTokenImage } from './formula-parser';
 import { FormulaLexer, FormulaParser, FunctionDefinition } from './formula-parser';
 import { IToken } from 'chevrotain';
+import { NodeElementMarkdown } from './formula-definitions';
 
 const todoInstructions = `
 Below you'll see the contents of one or more pages. Pages may include to-do list items that look like this:
@@ -79,6 +80,27 @@ export async function getPagesContext(pageSpecs: string[], pages: Page[]): Promi
   return generateContextStr(Array.from(uniquePages));
 }
 
+function getOutputAsString(output: FormulaOutput): string {
+  if (output.type === FormulaOutputType.Text) {
+    return output.output as string;
+  } else if (output.type === FormulaOutputType.NodeMarkdown) {
+    let outputStr = "";
+    for (const node of output.output as NodeElementMarkdown[]) {
+      outputStr += nodeToString(node);
+    }
+    return outputStr;
+
+    function nodeToString(node: NodeElementMarkdown): string {
+      let result = node.baseNode.nodeMarkdown + "\n";
+      for (const child of node.children) {
+        result += nodeToString(child);
+      }
+      return result;
+    }
+  }
+  return "";
+}
+
 export async function getFormulaOutput(
   formula: string,
   pages: Page[],
@@ -106,7 +128,7 @@ export async function getFormulaOutput(
     const functionName = (functionCallNode.children.Identifier[0] as IToken).image;
     const argumentListNode = functionCallNode.children.argumentList[0] as CstNodeWithChildren;
 
-    const args: string[] = argumentListNode.children.argument.map((arg: any): string => {
+    const parsedArgs: string[] = await Promise.all(argumentListNode.children.argument.map(async (arg: any): Promise<string> => {
       if (arg.children.StringLiteral) {
         return arg.children.StringLiteral[0].image.slice(1, -1); // Remove quotes
       } else if (arg.children.SpecialToken) {
@@ -114,14 +136,13 @@ export async function getFormulaOutput(
       } else if (arg.children.pipeExpression) {
         return arg.children.pipeExpression[0].children.TodoStatus.map((token: any) => token.image).join('|');
       } else if (arg.children.functionCall) {
-        // Recursive call for nested function calls
-        const nestedResult = getFormulaOutput(arg.children.functionCall[0].image, pages, dialogueContext);
-        return nestedResult ? JSON.stringify(nestedResult) : '';
+        const nestedResult = await getFormulaOutput(arg.children.functionCall[0].image, pages, dialogueContext);
+        return nestedResult ? getOutputAsString(nestedResult) : '';
       } else if (arg.children.FilePath) {
-        return arg.children.FilePath[0].image.slice(2, -2); // Remove [[ and ]]
+        return arg.children.FilePath[0].image;
       }
       return '';
-    });
+    }));
 
     // Find the corresponding function definition
     const funcDef = functionDefinitions.find((def: FunctionDefinition) => def.name === functionName);
@@ -130,10 +151,18 @@ export async function getFormulaOutput(
       // Prepare the default arguments
       const defaultArgs = { pages, dialogueElements: dialogueContext };
 
-      console.log("args", args);
+      const preparedArgs = funcDef.arguments.map((argDef, index) => {
+        if (argDef.type === 'string_set' || (argDef.variadic && index === funcDef.arguments.length - 1)) {
+          // For string_set type or variadic last argument, pass the rest of the args as an array
+          return parsedArgs.slice(index);
+        } else {
+          // For other types, pass the single argument
+          return parsedArgs[index];
+        }
+      });
       
       // Call the function's callback with the default arguments and parsed arguments
-      return await funcDef.callback(defaultArgs, args);
+      return await funcDef.callback(defaultArgs, ...preparedArgs);
     } else {
       console.error(`Unknown function: ${functionName}`);
       return null;

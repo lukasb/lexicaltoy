@@ -23,14 +23,6 @@ export interface DefaultArguments {
   dialogueElements?: DialogueElement[];
 }
 
-export interface FunctionDefinition {
-  name: string;
-  arguments: ArgumentDefinition[];
-  description: string;
-  callback: (defaultArgs: DefaultArguments, ...args: any[]) => Promise<FormulaOutput | null>;
-  formulaOutputType: FormulaOutputType;
-}
-
 // TODO I define these in like three places, need to consolidate
 export const nodeTypes: NodeType[] = [
   {
@@ -59,6 +51,15 @@ export const nodeTypes: NodeType[] = [
     regex: /^DOING/
   },
 ];
+
+
+export interface FunctionDefinition {
+  name: string;
+  arguments: ArgumentDefinition[];
+  description: string;
+  callback: (defaultArgs: DefaultArguments, ...args: any[]) => Promise<FormulaOutput | null>;
+  formulaOutputType: FormulaOutputType;
+}
 
 export const functionDefinitions: FunctionDefinition[] = [
   {
@@ -103,7 +104,6 @@ export const functionDefinitions: FunctionDefinition[] = [
       formulaOutputType: FormulaOutputType.NodeMarkdown
   }
 ];
-
 
 export interface CstNodeWithChildren extends CstNode {
   children: {
@@ -211,9 +211,10 @@ export function parseFormula(input: string) {
 }
 
 export function getFormulaOutputType(formula: string): FormulaOutputType | null {
+  let fullFormula = formula.startsWith("=") ? formula : `=${formula}`;
   try {
       // Parse the formula using our parser
-      const parsedFormula = parseFormula(formula) as CstNodeWithChildren;
+      const parsedFormula = parseFormula(fullFormula) as CstNodeWithChildren;
 
       // Extract function name from the parsed formula
       const functionCallNode = getChildrenByName(parsedFormula, 'functionCall')[0] as CstNodeWithChildren;

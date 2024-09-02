@@ -46,6 +46,8 @@ export default async function handler(
 
     messages.push({ role: "user", content: prompt});
 
+    console.log("messages", messages);
+    
     try {
 
       const chatCompletion = await openai.chat.completions.create({
