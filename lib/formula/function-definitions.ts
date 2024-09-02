@@ -106,7 +106,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, terms: string[
   };  
 };
 
-export const findFormulaStartRegex = /^\s*- =find\(/;
+export const findFormulaStartRegex = /^\s*- =(find\(|[^,]*,\s*find\()/;
 
 export function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMarkdown[] {
   const lines = markdown.split("\n");
