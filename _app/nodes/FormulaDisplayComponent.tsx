@@ -62,10 +62,12 @@ export default function FormulaDisplayComponent(
                   getNodeElementFullMarkdown(node));
               });
               pageLineMarkdownMapRef.current = markdownMap;
-              editor.dispatchCommand(CREATE_FORMULA_NODES, {
-                displayNodeKey: nodeKey,
-                nodesMarkdown: response.output as NodeElementMarkdown[],
-              });
+              if (response.output.length > 0) {
+                editor.dispatchCommand(CREATE_FORMULA_NODES, {
+                  displayNodeKey: nodeKey,
+                  nodesMarkdown: response.output as NodeElementMarkdown[],
+                });
+              }
               editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
                 displayNodeKey: nodeKey,
                 output: "@@childnodes",
