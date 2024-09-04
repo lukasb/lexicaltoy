@@ -1,9 +1,4 @@
 import { Page } from './definitions';
-import { 
-  $convertToMarkdownString, 
-  TRANSFORMERS
-} from '@lexical/markdown';
-import { myCreateHeadlessEditor } from './editor-utils';
 
 export function searchPageTitles(pages: Page[], term: string): Page[] {
   const normalizedTerm = term.toLowerCase();
@@ -63,32 +58,6 @@ export function findMostRecentlyEditedPage(pages: Page[]): Page | null {
   }, pages[0]);
   
   return mostRecentlyEditedPage;
-}
-
-function getPageMarkdownInternal(page: Page): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const editor = myCreateHeadlessEditor();
-    editor.setEditorState(editor.parseEditorState(page.value));
-    try {
-      editor.update(() => {
-        const markdown = $convertToMarkdownString(TRANSFORMERS);
-        resolve(markdown);
-      });
-    } catch (e) {
-      console.log(e);
-      reject(e);
-    }
-  });
-}
-
-export async function getPageMarkdown(page: Page): Promise<string> {
-  try {
-    const markdown = await getPageMarkdownInternal(page);
-    return markdown;
-  } catch (e) {
-    console.error(e);
-    return "";
-  } 
 }
 
 const PINNED_STORAGE_KEY = "pinnedPageIds";

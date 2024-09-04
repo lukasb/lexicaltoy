@@ -1,43 +1,129 @@
 import { 
   FormulaOutput,
-  FormulaOutputType,
   createBaseNodeMarkdown,
-  NodeElementMarkdown
+  NodeElementMarkdown,
+  FormulaValueType,
 } from "./formula-definitions";
-import { getPagesContext } from "./FormulaOutput";
 import { getShortGPTChatResponse } from "../ai";
-import { DefaultArguments } from "./formula-parser";
+import { DefaultArguments, possibleArguments } from "./formula-parser";
+import { Page } from "../definitions";
+import { getLastSixWeeksJournalPages } from "../journal-helpers";
+import { stripBrackets } from "../transform-helpers";
 
-export const askCallback = async (defaultArgs: DefaultArguments, question: string, context?: string[]): Promise<FormulaOutput | null> => {
-  if (Array.isArray(question)) console.log("question is an array", question);
-    // Implementation of ask function
-    let prompt: string = question;
-    if (context && defaultArgs.pages) {
-      const pagesContext = await getPagesContext(context, defaultArgs.pages);
-      prompt = prompt + pagesContext;
+const todoInstructions = `
+Below you'll see the contents of one or more pages. Pages may include to-do list items that look like this:
+
+Example content:
+- TODO buy groceries
+- DOING prepare taxes
+- NOW call janet
+- LATER write a letter to grandma
+- DONE make a cake
+
+Items marked with DONE are complete, all other items are incomplete.
+User content:
+`;
+
+function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
+  const pageValues: string[] = [];
+
+  function addPages(pageSpec: string) {
+    const pageTitle = stripBrackets(pageSpec);
+
+    if (pageTitle.endsWith("/")) {
+      if (pageTitle === "journals/") {
+        const journalPages = getLastSixWeeksJournalPages(pages);
+        journalPages.forEach(page => pageValues.push(page.value));
+      } else {
+        pages
+          .filter(p => p.title.startsWith(pageTitle.slice(0, -1)))
+          .forEach(page => pageValues.push(page.value));
+      }
+    } else {
+      const page = pages.find(p => p.title === pageSpec);
+      if (page) pageValues.push(page.value);
     }
+  }
+
+  for (const pageSpec of pageSpecs) {
+    addPages(pageSpec);
+  }
+
+  return pageValues;
+}
+
+function stripOuterQuotes(s: string): string {
+  return s.replace(/^"(.*)"$/, '$1');
+}
+
+export const askCallback = async (defaultArgs: DefaultArguments, userArgs: string[]): Promise<FormulaOutput | null> => {
 
   if (!defaultArgs.dialogueElements) return null;
+
+  let prompt: string = "";
+  let contextSpecs: string[] = [];
+  let contextResults: string[] = [];
+
+  const nodeMarkdownPossibleArguments = possibleArguments.filter(arg => arg.type === FormulaValueType.NodeMarkdown);
+    
+  // if a user arg is a wikilink variant, we need to get the relevant page contents if the page exists
+  for (const arg of userArgs) {  
+    for (const nodeMarkdownArg of nodeMarkdownPossibleArguments) {
+      if (nodeMarkdownArg.regex && arg.match(nodeMarkdownArg.regex)) {
+        contextSpecs.push(arg);
+      }
+    }
+  }
+
+  if (contextSpecs.length > 0 && defaultArgs.pages) {
+    contextResults = getPagesContext(contextSpecs, defaultArgs.pages);
+  }
+
+  if (contextResults.length > 0) {
+    prompt = todoInstructions;
+  }
+
+  for (const arg of userArgs) {
+    for (const nodeMarkdownArg of nodeMarkdownPossibleArguments) {
+      if (nodeMarkdownArg.regex && arg.match(nodeMarkdownArg.regex)) {
+        if (contextResults.length > 0) {
+          prompt += "\n## " + stripBrackets(arg) + "\n" + contextResults.shift() + "\n";
+        }
+        break;
+      }
+    }
+    prompt += "\n" + stripOuterQuotes(arg) + "\n";
+  }
+
   const gptResponse = await getShortGPTChatResponse(prompt, defaultArgs.dialogueElements);
   if (!gptResponse) return null;
 
-  return { output: gptResponse, type: FormulaOutputType.Text };
+  return { output: gptResponse, type: FormulaValueType.Text };
 };
 
-export const findCallback = async (defaultArgs: DefaultArguments, terms: string[], types?: string[]): Promise<FormulaOutput | null> => {
+export const findCallback = async (defaultArgs: DefaultArguments, userArgs: string[]): Promise<FormulaOutput | null> => {
     
   // we also check the title when matching, so if one substring is in the title and another
   // is in the line, we match
 
-  if (!defaultArgs.pages || terms.length === 0 || !Array.isArray(terms)) return null;
+  if (!defaultArgs.pages || userArgs.length === 0) return null;
 
-  const substrings = terms.map((s) => s.trim().toLowerCase());
+  const nodeTypesArgDef = possibleArguments.find(arg => arg.type === FormulaValueType.NodeTypeOrTypes);
+  if (!nodeTypesArgDef || !nodeTypesArgDef.regex) return null;
+
+  // behavior is undefined if you provide more than one todo status argument
+  // in that case we just use the first
+  // (multiple statuses in one argument separated by | is okay)
+
+  const nodeTypes = userArgs.filter(arg => nodeTypesArgDef.regex!.test(arg));
+  const substrings = userArgs
+    .filter(arg => !nodeTypesArgDef.regex!.test(arg))
+    .map((s) => s.trim().toLowerCase().replace(/^"(.*)"$/, '$1'));
 
   // create a map of substrings to their OR clauses
-  const orClauses: { [key: string]: string[] } = {};
-  for (const substring of substrings) {
-    const orClause = substring.split("|").map((s) => s.trim().toLowerCase());
-    orClauses[substring] = orClause;
+  let orStatuses: string[] = [];
+  if (nodeTypes.length > 0) {
+    orStatuses = nodeTypes[0].split("|").map((s) => s.trim().toLowerCase());
   }
 
   const output: NodeElementMarkdown[] = [];
@@ -47,62 +133,57 @@ export const findCallback = async (defaultArgs: DefaultArguments, terms: string[
 
     // search terms can appear in the title or the content of the page
     unmatchedSubstrings = unmatchedSubstrings.filter((substring) => {
-      const substrOrClauses = orClauses[substring];
-      for (const substrOrClause of substrOrClauses) {
-        if (page.title.toLowerCase().includes(substrOrClause)) {
-          return false;
-        }
+      if (page.title.toLowerCase().includes(substring)) {
+        return false;
       }
       return true;
     });
 
     function processNodes(
-      nodesMarkdown: NodeElementMarkdown[],
-      unmatchedSubstrings: string[],
-      orClauses: { [key: string]: string[] }
-    ): NodeElementMarkdown[] {
-      const output: NodeElementMarkdown[] = [];
-      for (let node of nodesMarkdown) {
-        const currentNodeMarkdown = node.baseNode.nodeMarkdown.toLowerCase();
-        const matchesAll = unmatchedSubstrings.every((substring) => {
-          const substrOrClauses = orClauses[substring];
-          return substrOrClauses.some((substrOrClause) =>
-            currentNodeMarkdown.includes(substrOrClause)
+        nodesMarkdown: NodeElementMarkdown[],
+        unmatchedSubstrings: string[],
+        orStatuses: string[]
+      ): NodeElementMarkdown[] {
+        const output: NodeElementMarkdown[] = [];
+        for (let node of nodesMarkdown) {
+          const currentNodeMarkdown = node.baseNode.nodeMarkdown.toLowerCase();
+          const matchesAllSubstrings = unmatchedSubstrings.every((substring) =>
+            currentNodeMarkdown.includes(substring)
           );
-        });
+          const matchesStatus = orStatuses.length === 0 || orStatuses.some((status) =>
+            new RegExp(`^\s*- ${status}`).test(currentNodeMarkdown)
+          );
 
-        if (matchesAll) {
-          // Avoid circular references by excluding lines with find() formulas
-          if (!findFormulaStartRegex.test(currentNodeMarkdown)) {
-            removeFindNodes(node);
-            output.push(node);
-          }
-        } else {
-          // no need to process these, they will be included as part of their parent
-          // this is an intentional choice - but we could decide the other way, that every
-          // match should appear at the top level
-          if (node.children && node.children.length > 0) {
-            output.push(
-              ...processNodes(node.children, unmatchedSubstrings, orClauses)
-            );
+          if (matchesAllSubstrings && matchesStatus) {
+            // Avoid circular references by excluding lines with find() formulas
+            if (!findFormulaStartRegex.test(currentNodeMarkdown)) {
+              removeFindNodes(node);
+              output.push(node);
+            }
+          } else {
+            // didn't match, check children
+            if (node.children && node.children.length > 0) {
+              output.push(
+                ...processNodes(node.children, unmatchedSubstrings, orStatuses)
+              );
+            }
           }
         }
+
+        return output;
       }
 
-      return output;
+      const nodesMarkdown = splitMarkdownByNodes(page.value, page.title);
+      output.push(
+        ...processNodes(nodesMarkdown, unmatchedSubstrings, orStatuses)
+      );
     }
-
-    const nodesMarkdown = splitMarkdownByNodes(page.value, page.title);
-    output.push(
-      ...processNodes(nodesMarkdown, unmatchedSubstrings, orClauses)
-    );
-  }
 
   console.log("output", output);
 
   return {
     output: output,
-    type: FormulaOutputType.NodeMarkdown,
+    type: FormulaValueType.NodeMarkdown,
   };  
 };
 

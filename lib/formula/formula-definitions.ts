@@ -5,9 +5,10 @@ const UserPromptSchema = z.object({ prompt: z.string() });
 export type UserPrompt = z.infer<typeof UserPromptSchema>;
 */
 
-export enum FormulaOutputType {
+export enum FormulaValueType {
   Text = 'text',
   NodeMarkdown = 'nodeMarkdown',
+  NodeTypeOrTypes = 'nodeTypeOrTypes',
 }
 
 export const BaseNodeMarkdownSchema = z.object({
@@ -36,7 +37,7 @@ const FormulaOutputSchema = z.object({
     z.string(),
     z.array(NodeElementMarkdownSchema),
   ]),
-  type: z.nativeEnum(FormulaOutputType)
+  type: z.nativeEnum(FormulaValueType)
 });
 
 export type FormulaOutput = z.infer<typeof FormulaOutputSchema>;

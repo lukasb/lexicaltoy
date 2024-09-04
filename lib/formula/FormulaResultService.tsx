@@ -12,7 +12,7 @@ import { PagesContext } from "@/_app/context/pages-context";
 import {
   NodeElementMarkdown,
   FormulaOutput,
-  FormulaOutputType,
+  FormulaValueType,
 } from "@/lib/formula/formula-definitions";
 import { DialogueElement } from "../ai";
 import { QueryCounter } from './query-counter';
@@ -21,13 +21,13 @@ import { getFormulaOutputType } from "./formula-parser";
 export const nodeQueries = new QueryCounter();
 
 export function registerFormula(formula: string): void {
-  if (getFormulaOutputType(formula) === FormulaOutputType.NodeMarkdown) {
+  if (getFormulaOutputType(formula) === FormulaValueType.NodeMarkdown) {
     nodeQueries.increment(formula);
   }
 }
 
 export function unregisterFormula(formula: string): void {
-  if (getFormulaOutputType(formula) === FormulaOutputType.NodeMarkdown) {
+  if (getFormulaOutputType(formula) === FormulaValueType.NodeMarkdown) {
     nodeQueries.decrement(formula);
   }
 }
@@ -93,7 +93,7 @@ export const useFormulaResultService = () => {
 
     if (!output) return null;
 
-    if (output.type === FormulaOutputType.NodeMarkdown) {
+    if (output.type === FormulaValueType.NodeMarkdown) {
       const resultNodes = output.output as NodeElementMarkdown[];
 
       // TODO maybe only update the map if things have actually changed
@@ -135,7 +135,7 @@ export const useFormulaResultService = () => {
         outputMap.forEach((formulaOutput, formula) => {
           if (
             formulaOutput &&
-            formulaOutput.type === FormulaOutputType.NodeMarkdown
+            formulaOutput.type === FormulaValueType.NodeMarkdown
           ) {
             const resultNodes = formulaOutput.output as NodeElementMarkdown[];
             updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
@@ -161,7 +161,7 @@ export const useFormulaResultService = () => {
         outputMap.forEach((formulaOutput, formula) => {
           if (
             formulaOutput &&
-            formulaOutput.type === FormulaOutputType.NodeMarkdown
+            formulaOutput.type === FormulaValueType.NodeMarkdown
           ) {
             const resultNodes = formulaOutput.output as NodeElementMarkdown[];
             updatedMap = mergeResults(resultNodes, formula, updatedMap, false);

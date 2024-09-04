@@ -1,7 +1,7 @@
 import { createToken, Lexer, CstParser, TokenType, IToken, CstNode } from "chevrotain";
 import { Page } from "../definitions";
 import { DialogueElement } from "../ai";
-import { FormulaOutput, FormulaOutputType } from "./formula-definitions";
+import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 import { askCallback, findCallback } from "./function-definitions";
 
 interface NodeType {
@@ -10,13 +10,45 @@ interface NodeType {
   regex: RegExp;
 }
 
-interface ArgumentDefinition {
-  name: string;
-  type: "string" | "string_set" | "wikilink" | "type_or_types";
+interface PossibleArguments {
+  displayName: string;
+  type: FormulaValueType;
   description: string;
-  required: boolean;
-  variadic?: boolean;  // New field to indicate variadic arguments
+  regex?: RegExp;
 }
+
+export const possibleArguments: PossibleArguments[] = [
+  {
+    displayName: "text",
+    type: FormulaValueType.Text,
+    description: 'text in quote marks "like this"',
+    regex: /"[^"]*"/
+  },
+  {
+    displayName: "wikilink",
+    type: FormulaValueType.NodeMarkdown,
+    description: 'add a [[wikilink]] to include the contents of a page',
+    regex: /\[\[[^\]]+\]\]/
+  },
+  {
+    displayName: "todos by status",
+    type: FormulaValueType.NodeTypeOrTypes,
+    description: "todo, done, now, waiting, or doing. separate with | to search for multiple",
+    regex: /^(?:todo|doing|done|waiting|now)(?:\|(?:todo|doing|done|waiting|now))*$/i
+  },
+  {
+    displayName: "[[journals/]]",
+    type: FormulaValueType.NodeMarkdown,
+    description: "add [[journals/]] to include the last six weeks of journal entries",
+    regex: /\[\[journals\/\]\]/
+  },
+  {
+    displayName: "[[foldername/]]",
+    type: FormulaValueType.NodeMarkdown,
+    description: "add [[foldername/]] to include the contents of all pages that start with foldername",
+    regex: /\[\[.*?\/\]\]/
+  }
+]
 
 export interface DefaultArguments {
   pages?: Page[];
@@ -52,56 +84,37 @@ export const nodeTypes: NodeType[] = [
   },
 ];
 
-
 export interface FunctionDefinition {
   name: string;
-  arguments: ArgumentDefinition[];
+  allowedArgumentTypes: FormulaValueType[];
   description: string;
-  callback: (defaultArgs: DefaultArguments, ...args: any[]) => Promise<FormulaOutput | null>;
-  formulaOutputType: FormulaOutputType;
+  example: string;
+  callback: (defaultArgs: DefaultArguments, userArgs: string[]) => Promise<FormulaOutput | null>;
+  formulaOutputType: FormulaValueType;
 }
 
 export const functionDefinitions: FunctionDefinition[] = [
   {
       name: "ask",
-      arguments: [
-          {
-              name: "question",
-              type: "string",
-              description: "The question to ask",
-              required: true
-          },
-          {
-              name: "context",
-              type: "wikilink",
-              description: "Additional context pages",
-              required: false,
-              variadic: true
-          }
+      allowedArgumentTypes: [
+          FormulaValueType.Text,
+          FormulaValueType.NodeMarkdown
       ],
-      description: "Ask a question with optional context",
+      description: "Ask ChatGPT a question",
+      example: 'ask("I need a pasta sauce without onions",[[recipes/]]',
       callback: askCallback,
-      formulaOutputType: FormulaOutputType.Text
+      formulaOutputType: FormulaValueType.Text
   },
   {
       name: "find",
-      arguments: [
-          {
-              name: "terms",
-              type: "string_set",
-              description: "Search terms",
-              required: true
-          },
-          {
-            name: "types",
-            type: "type_or_types",
-            description: "Node types to include",
-            required: false
-          }
+      allowedArgumentTypes: [
+          FormulaValueType.Text,
+          FormulaValueType.NodeTypeOrTypes
       ],
-      description: "Find notes matching the given terms",
+      description: "Find text or todos in your notes",
+      example: 'find("#taxes",now|waiting)',
       callback: findCallback,
-      formulaOutputType: FormulaOutputType.NodeMarkdown
+      formulaOutputType: FormulaValueType.NodeMarkdown
   }
 ];
 
@@ -123,7 +136,7 @@ export function getTokenImage(token: IToken | CstNodeWithChildren): string {
 // Define tokens
 const Equal = createToken({ name: "Equal", pattern: /=/ });
 const Identifier = createToken({ name: "Identifier", pattern: /[a-zA-Z]\w*/ });
-const todoStatuses = ["TODO", "DONE", "NOW", "WAITING", "DOING"];
+const todoStatuses = ["todo", "done", "now", "waiting", "doing"];
 const TodoStatus = createToken({
   name: "TodoStatus",
   pattern: new RegExp(todoStatuses.join("|")),
@@ -135,12 +148,12 @@ const Pipe = createToken({ name: "Pipe", pattern: /\|/ });
 const LParen = createToken({ name: "LParen", pattern: /\(/ });
 const RParen = createToken({ name: "RParen", pattern: /\)/ });
 const Comma = createToken({ name: "Comma", pattern: /,/ });
-const FilePath = createToken({ name: "FilePath", pattern: /\[\[[^\]]+\]\]/ });
+const Wikilink = createToken({ name: "FilePath", pattern: /\[\[[^\]]+\]\]/ });
 
 const allTokens = [
   Equal,
   StringLiteral,
-  FilePath,
+  Wikilink,
   SpecialToken,
   Identifier,
   Pipe,
@@ -183,7 +196,7 @@ export class FormulaParser extends CstParser {
       { ALT: () => this.CONSUME(SpecialToken) },
       { ALT: () => this.SUBRULE(this.pipeExpression) },
       { ALT: () => this.SUBRULE(this.functionCall) },
-      { ALT: () => this.CONSUME(FilePath) },
+      { ALT: () => this.CONSUME(Wikilink) },
     ]);
   });
 
@@ -210,7 +223,7 @@ export function parseFormula(input: string) {
   return cst;
 }
 
-export function getFormulaOutputType(formula: string): FormulaOutputType | null {
+export function getFormulaOutputType(formula: string): FormulaValueType | null {
   let fullFormula = formula.startsWith("=") ? formula : `=${formula}`;
   try {
       // Parse the formula using our parser
@@ -234,4 +247,14 @@ export function getFormulaOutputType(formula: string): FormulaOutputType | null 
       console.error("Error parsing formula:", error);
       return null;
   }
+}
+
+export function argumentTypeMatch(argumentValue: string, argumentType: FormulaValueType): boolean {
+  const possibleArgumentsForType = possibleArguments.filter(arg => arg.type === argumentType);
+  for (const arg of possibleArgumentsForType) {
+    if (arg.regex && arg.regex.test(argumentValue)) {
+      return true;
+    }
+  }
+  return false;
 }

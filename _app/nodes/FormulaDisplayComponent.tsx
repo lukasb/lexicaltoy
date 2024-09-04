@@ -7,7 +7,7 @@ import {
   ADD_FORMULA_NODES
 } from '@/lib/formula-commands';
 import { usePromises } from '../context/formula-request-context';
-import { FormulaOutputType, NodeElementMarkdown, getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
+import { FormulaValueType, NodeElementMarkdown, getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
 import { useSharedNodeContext, createSharedNodeKey } from '../context/shared-node-context';
 import { useFormulaResultService } from '../../lib/formula/FormulaResultService';
 import { slurpDialogueContext } from '@/lib/formula/FormulaOutput';
@@ -45,13 +45,13 @@ export default function FormulaDisplayComponent(
       const promise = getFormulaResults(prompt, dialogueContext)
         .then(response => {
           if (response) {
-            if (response.type === FormulaOutputType.Text) {
+            if (response.type === FormulaValueType.Text) {
               setOutput(response.output as string);
               editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
                 displayNodeKey: nodeKey,
                 output: response.output as string,
               });
-            } else if (response.type === FormulaOutputType.NodeMarkdown) {
+            } else if (response.type === FormulaValueType.NodeMarkdown) {
               setOutput("@@childnodes");
               // TODO store the nodeMarkdowns locally so we can check when updates happen
               // TODO what if there are no results?
