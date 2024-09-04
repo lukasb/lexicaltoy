@@ -119,6 +119,7 @@ export function registerFormulaCommandHandlers(
         const { formula: formulaText, result: resultString } =
           parseFormulaMarkdown(textContents);
         if (formulaText && resultString) {
+          console.log("transforming formattabletextnode to formula display node");
           const formulaDisplayNode = $createFormulaDisplayNode(
             formulaText,
             resultString
@@ -338,7 +339,12 @@ export function registerFormulaCommandHandlers(
         (payload) => {
           const selection = $getSelection();
           if (selection === null || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
-          const anchorLI = $getListItemContainingNode(selection.anchor.getNode());
+          const anchorNode = selection.anchor.getNode();
+          if ($isFormulaEditorNode(anchorNode) && selection.anchor.offset !== anchorNode.getTextContentSize()){
+            $replaceWithFormulaDisplayNode(anchorNode);
+            return true;
+          } 
+          const anchorLI = $getListItemContainingNode(anchorNode);
           if (!anchorLI) return false;
           const displayNode = getAncestorFormulaDisplayNode(anchorLI);
           if (displayNode) return true;

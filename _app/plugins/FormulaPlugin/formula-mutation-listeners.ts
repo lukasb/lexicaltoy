@@ -17,7 +17,7 @@ import {
   $getWikilinkNodeFromSharedNode,
   $replaceDisplayNodeWithEditor,
 } from "./formula-node-helpers";
-import { FormulaDisplayNode } from "@/_app/nodes/FormulaNode";
+import { FormulaDisplayNode, $isFormulaEditorNode } from "@/_app/nodes/FormulaNode";
 import { WikilinkNode } from "@/_app/nodes/WikilinkNode";
 import { FormattableTextNode } from "@/_app/nodes/FormattableTextNode";
 import { TodoCheckboxStatusNode } from "@/_app/nodes/TodoNode";
@@ -42,6 +42,10 @@ export function registerFormulaMutationListeners(
 
             const listItem = $getContainingListItemNode(node);
             if (!listItem) continue;
+
+            // don't propagate edits to formula editor nodes
+            const firstChild = listItem.getFirstChild();
+            //if (firstChild && $isFormulaEditorNode(firstChild)) continue;
             
             if (localSharedNodeMap.has(listItem.getKey()) || childSharedNodeMap.has(listItem.getKey())) {
               
