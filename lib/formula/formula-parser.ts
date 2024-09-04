@@ -17,6 +17,8 @@ interface PossibleArguments {
   regex?: RegExp;
 }
 
+export const TODO_STATUS_REGEX = /(now|later|doing|waiting|done)(\|(now|later|doing|waiting|done))*/i;
+
 export const possibleArguments: PossibleArguments[] = [
   {
     displayName: "text",
@@ -34,7 +36,7 @@ export const possibleArguments: PossibleArguments[] = [
     displayName: "todos by status",
     type: FormulaValueType.NodeTypeOrTypes,
     description: "todo, done, now, waiting, or doing. separate with | to search for multiple",
-    regex: /^(?:todo|doing|done|waiting|now)(?:\|(?:todo|doing|done|waiting|now))*$/i
+    regex: TODO_STATUS_REGEX
   },
   {
     displayName: "[[journals/]]",
@@ -133,18 +135,15 @@ export function getTokenImage(token: IToken | CstNodeWithChildren): string {
   return 'image' in token ? token.image : '';
 }
 
-// Define tokens
 const Equal = createToken({ name: "Equal", pattern: /=/ });
 const Identifier = createToken({ name: "Identifier", pattern: /[a-zA-Z]\w*/ });
-const todoStatuses = ["todo", "done", "now", "waiting", "doing"];
 const TodoStatus = createToken({
   name: "TodoStatus",
-  pattern: new RegExp(todoStatuses.join("|")),
+  pattern: TODO_STATUS_REGEX,
   longer_alt: Identifier
 });
 const StringLiteral = createToken({ name: "StringLiteral", pattern: /"(?:[^"\\]|\\.)*"/ });
 const SpecialToken = createToken({ name: "SpecialToken", pattern: /#[a-zA-Z]+/ });
-const Pipe = createToken({ name: "Pipe", pattern: /\|/ });
 const LParen = createToken({ name: "LParen", pattern: /\(/ });
 const RParen = createToken({ name: "RParen", pattern: /\)/ });
 const Comma = createToken({ name: "Comma", pattern: /,/ });
@@ -155,8 +154,8 @@ const allTokens = [
   StringLiteral,
   Wikilink,
   SpecialToken,
+  TodoStatus,
   Identifier,
-  Pipe,
   LParen,
   RParen,
   Comma,
@@ -194,18 +193,10 @@ export class FormulaParser extends CstParser {
     this.OR([
       { ALT: () => this.CONSUME(StringLiteral) },
       { ALT: () => this.CONSUME(SpecialToken) },
-      { ALT: () => this.SUBRULE(this.pipeExpression) },
+      { ALT: () => this.CONSUME(TodoStatus) },
       { ALT: () => this.SUBRULE(this.functionCall) },
       { ALT: () => this.CONSUME(Wikilink) },
     ]);
-  });
-
-  pipeExpression = this.RULE("pipeExpression", () => {
-    this.CONSUME(TodoStatus);
-    this.AT_LEAST_ONE(() => {
-      this.CONSUME(Pipe);
-      this.CONSUME2(TodoStatus);
-    });
   });
 }
 
