@@ -83,8 +83,8 @@ async function getFormulaOutputInner(
       return arg.children.StringLiteral[0].image;
     } else if (arg.children.SpecialToken) {
       return arg.children.SpecialToken[0].image;
-    } else if (arg.children.pipeExpression) {
-      return arg.children.pipeExpression[0].children.TodoStatus.map((token: any) => token.image).join('|');
+    } else if (arg.children.TodoStatus) {
+      return arg.children.TodoStatus[0].image;
     } else if (arg.children.functionCall) {
       const nestedResult = await getFormulaOutputInner(arg as CstNodeWithChildren, pages, dialogueContext);
       return nestedResult ? getOutputAsString(nestedResult) : '';

@@ -5,7 +5,7 @@ import {
   FormulaValueType,
 } from "./formula-definitions";
 import { getShortGPTChatResponse } from "../ai";
-import { DefaultArguments, possibleArguments } from "./formula-parser";
+import { DefaultArguments, possibleArguments, TODO_STATUS_REGEX_EXTERNAL } from "./formula-parser";
 import { Page } from "../definitions";
 import { getLastSixWeeksJournalPages } from "../journal-helpers";
 import { stripBrackets } from "../transform-helpers";
@@ -108,23 +108,22 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: stri
 
   if (!defaultArgs.pages || userArgs.length === 0) return null;
 
-  const nodeTypesArgDef = possibleArguments.find(arg => arg.type === FormulaValueType.NodeTypeOrTypes);
-  if (!nodeTypesArgDef || !nodeTypesArgDef.regex) return null;
-
   // behavior is undefined if you provide more than one todo status argument
   // in that case we just use the first
   // (multiple statuses in one argument separated by | is okay)
 
-  const nodeTypes = userArgs.filter(arg => nodeTypesArgDef.regex!.test(arg));
-  const substrings = userArgs
-    .filter(arg => !nodeTypesArgDef.regex!.test(arg))
-    .map((s) => s.trim().toLowerCase().replace(/^"(.*)"$/, '$1'));
-
-  // create a map of substrings to their OR clauses
+  const substrings: string[] = [];
   let orStatuses: string[] = [];
-  if (nodeTypes.length > 0) {
-    orStatuses = nodeTypes[0].split("|").map((s) => s.trim().toLowerCase());
-  }
+
+  userArgs.forEach(arg => {
+    if (TODO_STATUS_REGEX_EXTERNAL.test(arg)) {
+      orStatuses = orStatuses.concat(arg.split("|").map(s => s.toLowerCase().trim()));
+    } else {
+      substrings.push(arg.trim().toLowerCase().replace(/^"(.*)"$/, '$1'));
+    }
+  });
+  
+  if (substrings.length === 0 && orStatuses.length === 0) return null;
 
   const output: NodeElementMarkdown[] = [];
 
@@ -180,7 +179,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: stri
     }
 
   console.log("output", output);
-
+  
   return {
     output: output,
     type: FormulaValueType.NodeMarkdown,

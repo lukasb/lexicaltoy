@@ -17,7 +17,8 @@ interface PossibleArguments {
   regex?: RegExp;
 }
 
-export const TODO_STATUS_REGEX = /(now|later|doing|waiting|done)(\|(now|later|doing|waiting|done))*/i;
+const TODO_STATUS_REGEX_LEXER = /(now|later|doing|waiting|done)(\|(now|later|doing|waiting|done))*/i;
+export const TODO_STATUS_REGEX_EXTERNAL = /^(now|later|doing|waiting|done)(\|(now|later|doing|waiting|done))*$/i;
 
 export const possibleArguments: PossibleArguments[] = [
   {
@@ -36,7 +37,7 @@ export const possibleArguments: PossibleArguments[] = [
     displayName: "todos by status",
     type: FormulaValueType.NodeTypeOrTypes,
     description: "todo, done, now, waiting, or doing. separate with | to search for multiple",
-    regex: TODO_STATUS_REGEX
+    regex: TODO_STATUS_REGEX_LEXER
   },
   {
     displayName: "[[journals/]]",
@@ -139,7 +140,7 @@ const Equal = createToken({ name: "Equal", pattern: /=/ });
 const Identifier = createToken({ name: "Identifier", pattern: /[a-zA-Z]\w*/ });
 const TodoStatus = createToken({
   name: "TodoStatus",
-  pattern: TODO_STATUS_REGEX,
+  pattern: TODO_STATUS_REGEX_LEXER,
   longer_alt: Identifier
 });
 const StringLiteral = createToken({ name: "StringLiteral", pattern: /"(?:[^"\\]|\\.)*"/ });
