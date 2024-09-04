@@ -75,14 +75,20 @@ export default function FormulaDisplayComponent(
             }
             return response;
           } else {
+            setOutput("error processing formula");
             console.log("no response");
             return null;
           }
         })
+        .catch(error => {
+          console.error("Error in getFormulaResults:", error);
+          setOutput("Error occurred while processing formula");
+          return null;
+        })
         .finally(() => {
           removePromise(nodeKey);
         });
-        addPromise(nodeKey, promise);
+        if (promise) addPromise(nodeKey, promise);
       }
   }, [addPromise, removePromise, hasPromise, editor, nodeKey, getFormulaResults]);
 
