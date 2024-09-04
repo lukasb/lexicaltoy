@@ -117,7 +117,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: stri
 
   userArgs.forEach(arg => {
     if (TODO_STATUS_REGEX_EXTERNAL.test(arg)) {
-      orStatuses = orStatuses.concat(arg.split("|").map(s => s.toLowerCase().trim()));
+      orStatuses = orStatuses.concat(arg.split("|").map(s => s.toUpperCase().trim()));
     } else {
       substrings.push(arg.trim().toLowerCase().replace(/^"(.*)"$/, '$1'));
     }
@@ -145,17 +145,17 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: stri
       ): NodeElementMarkdown[] {
         const output: NodeElementMarkdown[] = [];
         for (let node of nodesMarkdown) {
-          const currentNodeMarkdown = node.baseNode.nodeMarkdown.toLowerCase();
+          const lowercaseMarkdown = node.baseNode.nodeMarkdown.toLowerCase();
           const matchesAllSubstrings = unmatchedSubstrings.every((substring) =>
-            currentNodeMarkdown.includes(substring)
+            lowercaseMarkdown.includes(substring)
           );
           const matchesStatus = orStatuses.length === 0 || orStatuses.some((status) =>
-            new RegExp(`^\s*- ${status}`).test(currentNodeMarkdown)
+            new RegExp(`^\s*- ${status}`).test(node.baseNode.nodeMarkdown)
           );
 
           if (matchesAllSubstrings && matchesStatus) {
             // Avoid circular references by excluding lines with find() formulas
-            if (!findFormulaStartRegex.test(currentNodeMarkdown)) {
+            if (!findFormulaStartRegex.test(lowercaseMarkdown)) {
               removeFindNodes(node);
               output.push(node);
             }
