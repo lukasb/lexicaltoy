@@ -51,7 +51,8 @@ export default async function handler(
     for (const url of urls) {
       try {
         // Fetch the web page content
-        const response = await axios.get(url, {
+        const urlWithProtocol = url.startsWith("http") ? url : "https://" + url;
+        const response = await axios.get(urlWithProtocol, {
           timeout: 10000, // 10 second timeout
         });
     
