@@ -92,7 +92,7 @@ export interface FunctionDefinition {
   allowedArgumentTypes: FormulaValueType[];
   description: string;
   example: string;
-  callback: (defaultArgs: DefaultArguments, userArgs: string[]) => Promise<FormulaOutput | null>;
+  callback: (defaultArgs: DefaultArguments, userArgs: FormulaOutput[]) => Promise<FormulaOutput | null>;
   formulaOutputType: FormulaValueType;
 }
 

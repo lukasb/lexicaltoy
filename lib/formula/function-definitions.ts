@@ -9,6 +9,7 @@ import { DefaultArguments, possibleArguments, TODO_STATUS_REGEX_EXTERNAL } from 
 import { Page } from "../definitions";
 import { getLastSixWeeksJournalPages } from "../journal-helpers";
 import { stripBrackets } from "../transform-helpers";
+import { getOutputAsString } from "./FormulaOutput";
 
 const todoInstructions = `
 Below you'll see the contents of one or more pages. Pages may include to-do list items that look like this:
@@ -56,7 +57,7 @@ function stripOuterQuotes(s: string): string {
   return s.replace(/^"(.*)"$/, '$1');
 }
 
-export const askCallback = async (defaultArgs: DefaultArguments, userArgs: string[]): Promise<FormulaOutput | null> => {
+export const askCallback = async (defaultArgs: DefaultArguments, userArgs: FormulaOutput[]): Promise<FormulaOutput | null> => {
 
   if (!defaultArgs.dialogueElements) return null;
 
@@ -68,9 +69,12 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: strin
     
   // if a user arg is a wikilink variant, we need to get the relevant page contents if the page exists
   for (const arg of userArgs) {  
-    for (const nodeMarkdownArg of nodeMarkdownPossibleArguments) {
-      if (nodeMarkdownArg.regex && arg.match(nodeMarkdownArg.regex)) {
-        contextSpecs.push(arg);
+    if (arg.type === FormulaValueType.Text) {
+      const text = arg.output as string;
+      for (const nodeMarkdownArg of nodeMarkdownPossibleArguments) {
+        if (nodeMarkdownArg.regex && text.match(nodeMarkdownArg.regex)) {
+          contextSpecs.push(text);
+        }
       }
     }
   }
@@ -79,20 +83,26 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: strin
     contextResults = getPagesContext(contextSpecs, defaultArgs.pages);
   }
 
-  if (contextResults.length > 0) {
+  if (contextResults.length > 0 || userArgs.filter(arg => arg.type === FormulaValueType.NodeMarkdown).length > 0) {
     prompt = todoInstructions;
   }
 
   for (const arg of userArgs) {
-    for (const nodeMarkdownArg of nodeMarkdownPossibleArguments) {
-      if (nodeMarkdownArg.regex && arg.match(nodeMarkdownArg.regex)) {
-        if (contextResults.length > 0) {
-          prompt += "\n## " + stripBrackets(arg) + "\n" + contextResults.shift() + "\n";
+    if (arg.type === FormulaValueType.Text) {
+      const text = arg.output as string;
+      for (const nodeMarkdownArg of nodeMarkdownPossibleArguments) {
+        if (nodeMarkdownArg.regex && text.match(nodeMarkdownArg.regex)) {
+          if (contextResults.length > 0) {
+            prompt += "\n## " + stripBrackets(text) + "\n" + contextResults.shift() + "\n";
+          }
+          break;
         }
-        break;
       }
+      prompt += "\n" + stripOuterQuotes(text) + "\n";
+    } else if (arg.type === FormulaValueType.NodeMarkdown) {
+      // TODO maybe include the page name
+      prompt += "\n" + getOutputAsString(arg) + "\n";
     }
-    prompt += "\n" + stripOuterQuotes(arg) + "\n";
   }
 
   const gptResponse = await getShortGPTChatResponse(prompt, defaultArgs.dialogueElements);
@@ -101,7 +111,7 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: strin
   return { output: gptResponse, type: FormulaValueType.Text };
 };
 
-export const findCallback = async (defaultArgs: DefaultArguments, userArgs: string[]): Promise<FormulaOutput | null> => {
+export const findCallback = async (defaultArgs: DefaultArguments, userArgs: FormulaOutput[]): Promise<FormulaOutput | null> => {
     
   // we also check the title when matching, so if one substring is in the title and another
   // is in the line, we match
@@ -116,10 +126,12 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: stri
   let orStatuses: string[] = [];
 
   userArgs.forEach(arg => {
-    if (TODO_STATUS_REGEX_EXTERNAL.test(arg)) {
-      orStatuses = orStatuses.concat(arg.split("|").map(s => s.toUpperCase().trim()));
-    } else {
-      substrings.push(arg.trim().toLowerCase().replace(/^"(.*)"$/, '$1'));
+    if (arg.type !== FormulaValueType.Text && arg.type !== FormulaValueType.NodeTypeOrTypes) return;
+    const text = arg.output as string;
+    if (arg.type === FormulaValueType.NodeTypeOrTypes) {
+      orStatuses = orStatuses.concat(text.split("|").map(s => s.toUpperCase().trim()));
+    } else if (arg.type === FormulaValueType.Text) {
+      substrings.push(text.trim().toLowerCase().replace(/^"(.*)"$/, '$1'));
     }
   });
   
@@ -177,8 +189,6 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: stri
         ...processNodes(nodesMarkdown, unmatchedSubstrings, orStatuses)
       );
     }
-
-  console.log("output", output);
 
   return {
     output: output,

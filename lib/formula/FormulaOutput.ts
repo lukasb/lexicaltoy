@@ -17,7 +17,7 @@ import { FormulaLexer, FormulaParser, FunctionDefinition } from './formula-parse
 import { IToken } from 'chevrotain';
 import { NodeElementMarkdown } from './formula-definitions';
 
-function getOutputAsString(output: FormulaOutput): string {
+export function getOutputAsString(output: FormulaOutput): string {
   if (output.type === FormulaValueType.Text) {
     return output.output as string;
   } else if (output.type === FormulaValueType.NodeMarkdown) {
@@ -58,7 +58,6 @@ export async function getFormulaOutput(
     const lexingResult = FormulaLexer.tokenize(formulaWithEqualSign);
     
     if (lexingResult.errors.length > 0) {
-      console.error("Lexing errors:", lexingResult.errors);
       return getGPTResponse(formula, dialogueContext);
     }
 
@@ -70,7 +69,6 @@ export async function getFormulaOutput(
       if (!partialFormulaRegex.test(formulaWithEqualSign) && dialogueContext) {
         return getGPTResponse(formula, dialogueContext);
       } else {
-        console.error("Parsing errors:", parser.errors);
         return null;
       }
     }
@@ -93,23 +91,22 @@ async function getFormulaOutputInner(
 
   // TODO validate arguments against function definition
 
-  const parsedArgs: string[] = await Promise.all(argumentListNode.children.argument.map(async (arg: any): Promise<string> => {
+  const parsedArgs: FormulaOutput[] = await Promise.all(argumentListNode.children.argument.map(async (arg: any): Promise<FormulaOutput> => {
     if (arg.children.StringLiteral) {
-      return arg.children.StringLiteral[0].image;
+      return { output: arg.children.StringLiteral[0].image, type: FormulaValueType.Text };
     } else if (arg.children.SpecialToken) {
-      return arg.children.SpecialToken[0].image;
+      return { output: arg.children.SpecialToken[0].image, type: FormulaValueType.Text };
     } else if (arg.children.TodoStatus) {
-      return arg.children.TodoStatus[0].image;
+      return { output: arg.children.TodoStatus[0].image, type: FormulaValueType.NodeTypeOrTypes };
     } else if (arg.children.functionCall) {
       const nestedResult = await getFormulaOutputInner(arg as CstNodeWithChildren, pages, dialogueContext);
-      return nestedResult ? getOutputAsString(nestedResult) : '';
+      return nestedResult ? nestedResult : { output: '', type: FormulaValueType.Text };
     } else if (arg.children.FilePath) {
-      return arg.children.FilePath[0].image;
+      // TODO should probably get the page contents here and pass them in
+      return { output: arg.children.FilePath[0].image, type: FormulaValueType.Text };
     }
-    return '';
+    return { output: '', type: FormulaValueType.Text };
   }));
-
-  console.log("parsedArgs", parsedArgs);
 
   // Find the corresponding function definition
   const funcDef = functionDefinitions.find((def: FunctionDefinition) => def.name === functionName);
