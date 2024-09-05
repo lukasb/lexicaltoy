@@ -10,6 +10,7 @@ import { Page } from "../definitions";
 import { getLastSixWeeksJournalPages } from "../journal-helpers";
 import { stripBrackets } from "../transform-helpers";
 import { getOutputAsString } from "./FormulaOutput";
+import { getUrl } from "../getUrl";
 
 const instructionsWithContext = `
 You will get a prompt from the user, and content from one or more pages. Pages may include to-do list items that look like this:
@@ -280,3 +281,35 @@ export function removeFindNodes(node: NodeElementMarkdown): void {
     removeFindNodes(child);
   }
 }
+
+export const getUrlCallback = async (defaultArgs: DefaultArguments, userArgs: FormulaOutput[]): Promise<FormulaOutput | null> => {
+  if (userArgs.length === 0) return null;
+
+  let pagesContents: string = "";
+  const urls = [];
+  for (const arg of userArgs) {
+    if (arg.type !== FormulaValueType.Text) continue;
+    // strip outer quotes
+    const url = (arg.output as string).replace(/^"(.*)"$/, '$1').trim();
+    urls.push(url);
+  }
+
+  try {
+    // Fetch the content from the URL
+    const markdownContents = await getUrl(urls);
+
+    if (!markdownContents) return null;
+
+    for (const [url, markdownContent] of markdownContents) {
+      pagesContents += "## " + url + "\n" + markdownContent + "\n\n";
+    }
+  } catch (error) {
+    console.error('Error fetching or rendering content:', error);
+  }
+
+  return {
+    output: pagesContents,
+    type: FormulaValueType.Text
+  };
+}
+    

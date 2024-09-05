@@ -2,7 +2,7 @@ import { createToken, Lexer, CstParser, TokenType, IToken, CstNode } from "chevr
 import { Page } from "../definitions";
 import { DialogueElement } from "../ai";
 import { FormulaOutput, FormulaValueType } from "./formula-definitions";
-import { askCallback, findCallback } from "./function-definitions";
+import { askCallback, findCallback, getUrlCallback } from "./function-definitions";
 
 interface NodeType {
   name: string;
@@ -118,6 +118,16 @@ export const functionDefinitions: FunctionDefinition[] = [
       example: 'find("#taxes",now|waiting)',
       callback: findCallback,
       formulaOutputType: FormulaValueType.NodeMarkdown
+  },
+  {
+      name: "getUrl",
+      allowedArgumentTypes: [
+        FormulaValueType.Text
+      ],
+      description: "Get the contents of one or more URLs as Markdown",
+      example: 'getUrl("https://thekitchn.com/marcella-hazans-amazing-4ingre-144538")',
+      callback: getUrlCallback,
+      formulaOutputType: FormulaValueType.Text
   }
 ];
 
