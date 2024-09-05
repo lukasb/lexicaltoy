@@ -5,7 +5,7 @@ import {
   FormulaValueType,
 } from "./formula-definitions";
 import { getShortGPTChatResponse } from "../ai";
-import { DefaultArguments, possibleArguments, TODO_STATUS_REGEX_EXTERNAL } from "./formula-parser";
+import { DefaultArguments, possibleArguments } from "./formula-parser";
 import { Page } from "../definitions";
 import { getLastSixWeeksJournalPages } from "../journal-helpers";
 import { stripBrackets } from "../transform-helpers";
@@ -212,6 +212,7 @@ export function splitMarkdownByNodes(markdown: string, pageName: string): NodeEl
   let isProcessingListItems = false;
   const indentStack: number[] = [];
   let lastListItem;
+  let isProcessingFormula = false;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -219,7 +220,11 @@ export function splitMarkdownByNodes(markdown: string, pageName: string): NodeEl
     const isListItem = trimmedLine.startsWith("-");
     const indentation = line.length - trimmedLine.length;
 
-    if (trimmedLine === "" || isListItem) {
+    if (isListItem && /- =\w+\(.*\) \|\|\|result:/.test(trimmedLine)) {
+      isProcessingFormula = true;
+    }
+
+    if ((trimmedLine === "" && !isProcessingFormula) || (isListItem && (!isProcessingFormula || /^\s*- =\w+\(.*\) \|\|\|result:/.test(trimmedLine)))) {
       if (trimmedLine !== "") {
         while (indentation < currentIndentation && stack.length > 1) {
           stack.pop();
@@ -240,7 +245,7 @@ export function splitMarkdownByNodes(markdown: string, pageName: string): NodeEl
         
         stack[stack.length - 1].children.push(newNode);
         lastListItem = newNode;
-      } else {
+      } else if (!isProcessingFormula) {
         if (isProcessingListItems) {
           isProcessingListItems = false;
           while (stack.length > 1) {
@@ -256,6 +261,9 @@ export function splitMarkdownByNodes(markdown: string, pageName: string): NodeEl
         const currentNode = stack[stack.length - 1].children[stack[stack.length - 1].children.length - 1] || stack[stack.length - 1];
         currentNode.baseNode.nodeMarkdown += (currentNode.baseNode.nodeMarkdown ? "\n" : "") + line;
         currentNode.baseNode.lineNumberEnd = i + 1;
+        if (isProcessingFormula && trimmedLine.startsWith("|||")) {
+          isProcessingFormula = false;
+        }
       } else {
         const newNode: NodeElementMarkdown = {
           baseNode: createBaseNodeMarkdown(pageName, i + 1, i + 1, trimmedLine),
@@ -266,6 +274,13 @@ export function splitMarkdownByNodes(markdown: string, pageName: string): NodeEl
     }
   }
 
+  if (pageName === 'Sep 5th, 2024') {
+    console.group("splitMarkdownByNodes");
+    console.log("markdown is", markdown);
+    console.log("results are", rootNode.children);
+    console.groupEnd();
+  }
+  
   return rootNode.children;
 }
 
