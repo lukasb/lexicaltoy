@@ -317,7 +317,7 @@ export const getUrlCallback = async (defaultArgs: DefaultArguments, userArgs: Fo
   }
 
   return {
-    output: pagesContents,
+    output: pagesContents.trim(),
     type: FormulaValueType.Text
   };
 }

@@ -15,6 +15,7 @@
 //const FORMULA_LIST_ITEM_REGEX = /^(\s*)-\s?=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
 
 const FORMULA_REGEX = /^=(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?$/gs;
+const FORMULA_START_REGEX = /^=(.*?)(?:\s*\|\|\|result:|$)/s;
 const FORMULA_LIST_ITEM_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?$/gm;
 
 // formula as stored by the nodes has the = sign at the front, maybe should change that
@@ -33,14 +34,30 @@ export interface ParseResult {
 }
 
 export function parseFormulaMarkdown(markdownString: string): ParseResult {
-  const matches = Array.from(markdownString.matchAll(FORMULA_REGEX));
-  if (matches.length > 0) {
-    const formula = matches[0][1].trim();
-    const result = matches[0][2] ? matches[0][2].trim() : null;
-    return { formula, result };
-  } else {
-    return { formula: null, result: null };
+  const match = markdownString.match(FORMULA_START_REGEX);
+  const resultMarker = '|||result:';
+  const resultMarkerLength = resultMarker.length;
+
+  if (match) {
+    const formula = match[1].trim();
+    const resultStart = markdownString.indexOf(resultMarker);
+    
+    if (resultStart !== -1) {
+      if (markdownString.includes("kottke")) console.log("resultStart", resultStart);
+      const resultEnd = markdownString.indexOf('|||', resultStart + resultMarkerLength);
+      if (resultEnd !== -1) {
+        if (markdownString.includes("kottke")) console.log("resultEnd", resultEnd);
+        const result = markdownString.slice(resultStart + 10, resultEnd).trim();
+        return { formula, result };
+      } else {
+        console.log("no result end");
+      }
+    }
+    
+    return { formula, result: null };
   }
+  
+  return { formula: null, result: null };
 }
 
 export function stripSharedNodesFromMarkdown(markdown: string): string {

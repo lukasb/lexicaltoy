@@ -116,10 +116,13 @@ export function registerFormulaCommandHandlers(
           return;
         }
         const textContents = parentNode.getTextContent();
+        if (textContents.includes("kottke")) {
+          console.log("grandparent", parentNode.getParent());
+        }
         const { formula: formulaText, result: resultString } =
           parseFormulaMarkdown(textContents);
         if (formulaText && resultString) {
-          console.log("transforming formattabletextnode to formula display node");
+          console.log("transforming formattabletextnode to formula display node", parentNode);
           const formulaDisplayNode = $createFormulaDisplayNode(
             formulaText,
             resultString
