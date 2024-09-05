@@ -4,6 +4,7 @@ import {
 } from './formula-definitions';
 import { 
   DialogueElement,
+  getShortGPTChatResponse,
  } from '@/lib/ai';
 import { Page } from '@/lib/definitions';
 import { functionDefinitions } from './formula-parser';
@@ -37,6 +38,16 @@ function getOutputAsString(output: FormulaOutput): string {
   return "";
 }
 
+const partialFormulaRegex = /=\s?[a-zA-z]+\(/;
+
+async function getGPTResponse(formula: string, dialogueContext?: DialogueElement[]): Promise<FormulaOutput | null> {
+  const formulaWithoutEqualSign = formula.startsWith("=") ? formula.slice(1) : formula;
+  if (!dialogueContext) return null;
+  const gptResponse = await getShortGPTChatResponse(formulaWithoutEqualSign, dialogueContext);
+  if (!gptResponse) return null;
+  return { output: gptResponse, type: FormulaValueType.Text };
+}
+
 export async function getFormulaOutput(
   formula: string,
   pages: Page[],
@@ -48,7 +59,7 @@ export async function getFormulaOutput(
     
     if (lexingResult.errors.length > 0) {
       console.error("Lexing errors:", lexingResult.errors);
-      return null;
+      return getGPTResponse(formula, dialogueContext);
     }
 
     const parser = new FormulaParser();
@@ -56,8 +67,12 @@ export async function getFormulaOutput(
     const cst = parser.formula() as CstNodeWithChildren;
 
     if (parser.errors.length > 0) {
-      console.error("Parsing errors:", parser.errors);
-      return null;
+      if (!partialFormulaRegex.test(formulaWithEqualSign) && dialogueContext) {
+        return getGPTResponse(formula, dialogueContext);
+      } else {
+        console.error("Parsing errors:", parser.errors);
+        return null;
+      }
     }
 
     return getFormulaOutputInner(cst, pages, dialogueContext);
