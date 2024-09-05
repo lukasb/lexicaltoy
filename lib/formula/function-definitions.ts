@@ -11,6 +11,7 @@ import { getLastSixWeeksJournalPages } from "../journal-helpers";
 import { stripBrackets } from "../transform-helpers";
 import { getOutputAsString } from "./FormulaOutput";
 import { getUrl } from "../getUrl";
+import { sanitizeText } from "../text-helpers";
 
 const instructionsWithContext = `
 You will get a prompt from the user, and content from one or more pages. Pages may include to-do list items that look like this:
@@ -274,13 +275,6 @@ export function splitMarkdownByNodes(markdown: string, pageName: string): NodeEl
     }
   }
 
-  if (pageName === 'Sep 5th, 2024') {
-    console.group("splitMarkdownByNodes");
-    console.log("markdown is", markdown);
-    console.log("results are", rootNode.children);
-    console.groupEnd();
-  }
-  
   return rootNode.children;
 }
 
@@ -316,7 +310,7 @@ export const getUrlCallback = async (defaultArgs: DefaultArguments, userArgs: Fo
     if (!markdownContents) return null;
 
     for (const [url, markdownContent] of markdownContents) {
-      pagesContents += "## " + url + "\n" + markdownContent + "\n\n";
+      pagesContents += "## " + url + "\n" + sanitizeText(markdownContent) + "\n\n";
     }
   } catch (error) {
     console.error('Error fetching or rendering content:', error);

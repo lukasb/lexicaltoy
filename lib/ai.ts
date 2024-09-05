@@ -1,17 +1,4 @@
-function processResult(result: string): string {
-  // Strip Markdown elements that could interfere with document structure
-  result = result.replace(/^#+\s/gm, '');  // Remove headings
-  result = result.replace(/^(\s*)[-*+]\s/gm, '$1‣ ');  // Replace bullets with emoji, preserving leading whitespace
-  
-  // Replace two or more consecutive newlines with a single newline
-  result = result.replace(/\n{2,}/g, '\n');
-  
-  // Indent all lines
-  return result.split('\n')
-    .map(line => line.trim() ? '  ' + line : '')
-    .join('\n')
-    .trim();
-}
+import { sanitizeText } from "./text-helpers";
 
 export type DialogueElement = {
   userQuestion: string;
@@ -37,7 +24,7 @@ export async function getShortGPTChatResponse(prompt: string, dialogueContext: D
 
     const result = await response.json();
     console.log("chatCompletion", result.response);
-    return processResult(result.response);
+    return sanitizeText(result.response);
   } catch (error) {
     console.error("Error fetching chat response:", error);
     return null;
