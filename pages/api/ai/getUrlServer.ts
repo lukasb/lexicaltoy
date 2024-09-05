@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getSessionServer } from '@/lib/getAuth';
 import axios from 'axios';
-import TurndownService from 'turndown';
-import * as cheerio from 'cheerio';
+import {convertHtmlToMarkdown} from 'dom-to-semantic-markdown';
+import {JSDOM} from 'jsdom';
 
 export const config = {
   maxDuration: 60,
@@ -11,6 +11,22 @@ export const config = {
 type ApiResponse = {
   response?: { [key: string]: string };
   error?: string;
+}
+
+function setupDOMPolyfill() {
+  const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
+
+  // Polyfill global objects if they don't exist
+  if (typeof global.window === "undefined") global.window = dom.window as any;
+  if (typeof global.document === "undefined")
+    global.document = dom.window.document;
+  if (typeof global.Node === "undefined") global.Node = dom.window.Node;
+  if (typeof global.Element === "undefined")
+    global.Element = dom.window.Element;
+  if (typeof global.HTMLElement === "undefined")
+    global.HTMLElement = dom.window.HTMLElement;
+  if (typeof global.DOMParser === "undefined")
+    global.DOMParser = dom.window.DOMParser;
 }
 
 export default async function handler(
@@ -41,18 +57,12 @@ export default async function handler(
     
         const html = response.data;
     
-        // Parse the HTML using cheerio
-        const $ = cheerio.load(html);
-    
-        // Remove script and style tags
-        $('script, style').remove();
-    
-        // Get the main content (you might need to adjust this selector)
-        const mainContent = $('body').html() || '';
-    
+        setupDOMPolyfill();
+
         // Convert HTML to Markdown
-        const turndownService = new TurndownService();
-        const markdown = turndownService.turndown(mainContent);
+        const dom = new JSDOM(html);
+
+        const markdown = convertHtmlToMarkdown(html, {overrideDOMParser: new dom.window.DOMParser()});
     
         markdownContent.set(url, markdown);
       } catch (error) {
