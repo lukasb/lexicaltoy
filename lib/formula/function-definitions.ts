@@ -11,18 +11,20 @@ import { getLastSixWeeksJournalPages } from "../journal-helpers";
 import { stripBrackets } from "../transform-helpers";
 import { getOutputAsString } from "./FormulaOutput";
 
-const todoInstructions = `
-Below you'll see the contents of one or more pages. Pages may include to-do list items that look like this:
+const instructionsWithContext = `
+You will get a prompt from the user, and content from one or more pages. Pages may include to-do list items that look like this:
 
-Example content:
+## Today's agenda 
 - TODO buy groceries
 - DOING prepare taxes
 - NOW call janet
 - LATER write a letter to grandma
 - DONE make a cake
+## END OF PAGE CONTENTS
 
 Items marked with DONE are complete, all other items are incomplete.
-User content:
+
+User prompt:
 `;
 
 function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
@@ -84,7 +86,7 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
   }
 
   if (contextResults.length > 0 || userArgs.filter(arg => arg.type === FormulaValueType.NodeMarkdown).length > 0) {
-    prompt = todoInstructions;
+    prompt += instructionsWithContext;
   }
 
   for (const arg of userArgs) {
@@ -93,7 +95,7 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
       for (const nodeMarkdownArg of nodeMarkdownPossibleArguments) {
         if (nodeMarkdownArg.regex && text.match(nodeMarkdownArg.regex)) {
           if (contextResults.length > 0) {
-            prompt += "\n## " + stripBrackets(text) + "\n" + contextResults.shift() + "\n";
+            prompt += "\n## " + stripBrackets(text) + "\n" + contextResults.shift() + "\n" + "## END OF PAGE CONTENTS\n";
           }
           break;
         }
