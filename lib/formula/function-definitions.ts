@@ -310,7 +310,7 @@ export const getUrlCallback = async (defaultArgs: DefaultArguments, userArgs: Fo
     if (!markdownContents) return null;
 
     for (const [url, markdownContent] of markdownContents) {
-      pagesContents += "## " + url + "\n" + sanitizeText(markdownContent) + "\n\n";
+      pagesContents += "## " + url + "\n" + sanitizeText(markdownContent) + "##END PAGE CONTENTS\n";
     }
   } catch (error) {
     console.error('Error fetching or rendering content:', error);
