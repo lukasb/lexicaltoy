@@ -9,7 +9,6 @@ import React, {
   useCallback,
   useContext
 } from "react";
-import { searchPages } from "@/lib/pages-helpers";
 import { Page } from "@/lib/definitions";
 import { PagesContext } from "@/_app/context/pages-context";
 import { isTouchDevice } from "@/lib/window-helpers";
@@ -18,6 +17,7 @@ import { getModifierKey } from "@/lib/utils";
 import { useBreakpoint } from "@/lib/window-helpers";
 import { highlightText } from "@/lib/text-helpers";
 import { useSearchTerms } from "@/_app/context/search-terms-context";
+import { useMiniSearch } from "@/_app/context/minisearch-context";
 
 const Omnibar = forwardRef(({
   openOrCreatePageByTitle
@@ -42,6 +42,19 @@ const Omnibar = forwardRef(({
   const storedTermRef = useRef("");
   const { searchTermsMap, setSearchTerms, getSearchTerms } = useSearchTerms();
   const filteredPagesRef = useRef<Page[]>([]);
+  const { miniSearch } = useMiniSearch();
+
+  // TODO logic should match searchPages in pages-helpers
+  const handleSearch = useCallback(async (term: string): Promise<Page[]> => {
+    if (miniSearch) {
+      const results = miniSearch.search(term, { prefix: true, boost: { title: 2 }});
+      return results.map((result) => {
+        const page = pages.find((page) => page.id === result.id);
+        return page;
+      }).filter((page) => page !== null) as Page[];
+    }
+    return [];
+  }, [pages, miniSearch]);
 
   useEffect(() => {
     setModifierKey(getModifierKey());
@@ -90,7 +103,7 @@ const Omnibar = forwardRef(({
       }
   
       if (term) {
-        const filteredPages = await searchPages(pages, term);
+        const filteredPages = await handleSearch(term);
         filteredPagesRef.current = filteredPages;
         const startMatch = filteredPages.find((page) =>
           page.title.toLowerCase().startsWith(term.toLowerCase())
@@ -109,7 +122,7 @@ const Omnibar = forwardRef(({
     };
   
     searchPagesAsync();
-  }, [term, pages]);
+  }, [term, pages, handleSearch]);
 
   // this useEffect checks to see if the search term the user typed (term) and the actual text in the omnibar (displayValue) are different
   // say the user types "auto" and the omnibar displays "automobile"

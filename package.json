@@ -35,6 +35,7 @@
     "jsdom": "^25.0.0",
     "lexical": "^0.17.0",
     "lucide-react": "^0.396.0",
+    "minisearch": "^7.1.0",
     "next": "^14.2.4",
     "next-auth": "^4.24.8",
     "openai": "^4.28.4",
