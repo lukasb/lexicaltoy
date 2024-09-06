@@ -2,7 +2,6 @@ import React, {
   useState,
   forwardRef,
   useCallback,
-  useRef,
   useEffect,
 } from "react";
 import {
@@ -51,6 +50,10 @@ export function computeFloatingCheckmarkPosition(
 function computeFloatingCheckmarkPositionInternal(editor: LexicalEditor) {
   // lexical selections don't let you get a range?
   const theSelection = window.getSelection();
+  if (!theSelection || !$isRangeSelection(theSelection) || !theSelection.isCollapsed())
+  {
+    console.log("problem with selection");
+  }
   const range = theSelection?.getRangeAt(0);
   const rect = range?.getBoundingClientRect();
 
@@ -75,12 +78,9 @@ function computeFloatingCheckmarkPositionInternal(editor: LexicalEditor) {
 
 const FloatingCheckmark = forwardRef<HTMLDivElement, FloatingMenuProps>(
   ({ editor, coords }, ref) => {
-    const [cancelled, setCancelled] = useState(false);
     const [position, setPosition] = useState({top: 0, left: 0});
 
     const shouldShow = coords !== undefined;
-
-    const itemRefs = useRef<(React.RefObject<HTMLLIElement> | null)[]>([]);
 
     useEffect(() => {
       if (coords) {
@@ -99,7 +99,7 @@ const FloatingCheckmark = forwardRef<HTMLDivElement, FloatingMenuProps>(
         style={{
           top: position.top,
           left: position.left,
-          display: shouldShow ? 'block' : 'none',
+          display: shouldShow && (position.top !== 0 || position.left !== 0) ? 'block' : 'none',
         }}
       >
         <button
