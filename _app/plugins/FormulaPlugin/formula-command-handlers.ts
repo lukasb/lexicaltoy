@@ -128,7 +128,6 @@ export function registerFormulaCommandHandlers(
             parentNode.getChildrenSize(),
             [formulaDisplayNode]
           );
-          //node.replace(formulaDisplayNode);
         } else if (textContents.startsWith("=")) {
           $replaceTextNodeWithEditor(node);
         }

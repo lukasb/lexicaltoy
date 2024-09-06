@@ -115,6 +115,10 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
   return { output: gptResponse, type: FormulaValueType.Text };
 };
 
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export const findCallback = async (defaultArgs: DefaultArguments, userArgs: FormulaOutput[]): Promise<FormulaOutput | null> => {
     
   // we also check the title when matching, so if one substring is in the title and another
@@ -135,20 +139,21 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
     if (arg.type === FormulaValueType.NodeTypeOrTypes) {
       orStatuses = orStatuses.concat(text.split("|").map(s => s.toUpperCase().trim()));
     } else if (arg.type === FormulaValueType.Text) {
-      substrings.push(text.trim().toLowerCase().replace(/^"(.*)"$/, '$1'));
+      substrings.push(text.trim().replace(/^"(.*)"$/, '$1'));
     }
   });
   
   if (substrings.length === 0 && orStatuses.length === 0) return null;
+  const substringRegexps = substrings.map(substring => new RegExp(`\\b${escapeRegExp(substring)}\\b`, 'i'));
 
   const output: NodeElementMarkdown[] = [];
 
   for (const page of defaultArgs.pages) {
-    let unmatchedSubstrings = [...substrings];
+    let unmatchedSubstringRegexps = [...substringRegexps];
 
     // search terms can appear in the title or the content of the page
-    unmatchedSubstrings = unmatchedSubstrings.filter((substring) => {
-      if (page.title.toLowerCase().includes(substring)) {
+    unmatchedSubstringRegexps = unmatchedSubstringRegexps.filter((substringRegexp) => {
+      if (substringRegexp.test(page.title)) {
         return false;
       }
       return true;
@@ -156,22 +161,22 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
 
     function processNodes(
         nodesMarkdown: NodeElementMarkdown[],
-        unmatchedSubstrings: string[],
+        substringRegexps: RegExp[],
         orStatuses: string[]
       ): NodeElementMarkdown[] {
         const output: NodeElementMarkdown[] = [];
         for (let node of nodesMarkdown) {
-          const lowercaseMarkdown = node.baseNode.nodeMarkdown.toLowerCase();
-          const matchesAllSubstrings = unmatchedSubstrings.every((substring) =>
-            lowercaseMarkdown.includes(substring)
+          const nodeMarkdown = node.baseNode.nodeMarkdown;
+          const matchesAllSubstrings = substringRegexps.every((regexp) =>
+            regexp.test(nodeMarkdown)
           );
           const matchesStatus = orStatuses.length === 0 || orStatuses.some((status) =>
-            new RegExp(`^\s*- ${status}`).test(node.baseNode.nodeMarkdown)
+            new RegExp(`^\s*- ${status}`).test(nodeMarkdown)
           );
 
           if (matchesAllSubstrings && matchesStatus) {
             // Avoid circular references by excluding lines with find() formulas
-            if (!findFormulaStartRegex.test(lowercaseMarkdown)) {
+            if (!findFormulaStartRegex.test(nodeMarkdown)) {
               removeFindNodes(node);
               output.push(node);
             }
@@ -179,7 +184,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
             // didn't match, check children
             if (node.children && node.children.length > 0) {
               output.push(
-                ...processNodes(node.children, unmatchedSubstrings, orStatuses)
+                ...processNodes(node.children, substringRegexps, orStatuses)
               );
             }
           }
@@ -190,7 +195,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
 
       const nodesMarkdown = splitMarkdownByNodes(page.value, page.title);
       output.push(
-        ...processNodes(nodesMarkdown, unmatchedSubstrings, orStatuses)
+        ...processNodes(nodesMarkdown, unmatchedSubstringRegexps, orStatuses)
       );
     }
 
