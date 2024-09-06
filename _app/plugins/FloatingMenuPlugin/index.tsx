@@ -87,6 +87,7 @@ export function FloatingMenuPlugin({
           editorState.read(() => $handleEditorUpdate());
         }
       ),
+      // TODO this should probably be done somewhere else ...
       editor.registerCommand(
         FOCUS_COMMAND,
         () => {

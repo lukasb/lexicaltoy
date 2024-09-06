@@ -9,6 +9,7 @@ export function SearchHighlighterPlugin({
 }): null {
   const [editor] = useLexicalComposerContext();
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
+  const alreadyHighlighted = useRef(false);
 
   const highlightSearchTerms = useCallback(() => {
     const searchTerms = getSearchTerms(pageId);
@@ -51,7 +52,7 @@ export function SearchHighlighterPlugin({
       CSS.highlights.set("search-results", searchResultsHighlight);
 
       // Scroll the first result into view and select it
-      if (ranges[0]) {
+      if (!alreadyHighlighted.current && ranges[0]) {
         const firstElement = ranges[0].startContainer.parentElement;
         firstElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
@@ -59,12 +60,13 @@ export function SearchHighlighterPlugin({
         const selection = window.getSelection();
         selection?.removeAllRanges();
         selection?.addRange(ranges[0]);
+        alreadyHighlighted.current = true;
       }
     }
   }, [pageId, getSearchTerms, editor]);
 
   useEffect(() => {
-    // Initial highlight
+    
     highlightSearchTerms();
 
     return () => {
