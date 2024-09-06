@@ -341,6 +341,28 @@ describe('find() function in regexCallbacks', () => {
       deleted: false,
       status: PageStatus.Quiescent,
     },
+    {
+      id: '7',
+      value: '- this has a #hashtag\n- this is another line\nThis is a multiline continuation',
+      userId: 'user1',
+      title: 'Page 7',
+      lastModified: new Date('2023-01-02'),
+      revisionNumber: 1,
+      isJournal: false,
+      deleted: false,
+      status: PageStatus.Quiescent,
+    },
+    {
+      id: '8',
+      value: '- #starttag \n- this is another line\nThis is a multiline continuation',
+      userId: 'user1',
+      title: 'Page 8',
+      lastModified: new Date('2023-01-02'),
+      revisionNumber: 1,
+      isJournal: false,
+      deleted: false,
+      status: PageStatus.Quiescent,
+    },
   ];
 
   async function testFindFunction(terms: string[], statuses?: string[]): Promise<FormulaOutput | null> {
@@ -429,6 +451,22 @@ describe('find() function in regexCallbacks', () => {
     expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('\n');
     expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('multiline');
     expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 5');
+  });
+
+  test('find() finds by hashtag', async () => {
+    const result = await testFindFunction(['"#hashtag"']);
+    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
+    expect(result?.output).toHaveLength(1);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('hashtag');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 7');
+  });
+
+  test('find() finds hashtag at beginning of line', async () => {
+    const result = await testFindFunction(['"#starttag"']);
+    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
+    expect(result?.output).toHaveLength(1);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('starttag');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 8');
   });
 
   test('find() returns empty array when no matches', async () => {
