@@ -1,11 +1,12 @@
 import { 
   splitMarkdownByNodes,
   removeFindNodes,
-  functionDefinitions
 } from "./function-definitions";
 import { NodeElementMarkdown } from "./formula-definitions";
 import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 import { Page, PageStatus } from "../definitions";
+import { findCallback } from "./function-definitions";
+import { DefaultArguments } from "./formula-parser";
 
 // Helper function to create a BaseNodeMarkdown for comparison
 function createBaseNodeMarkdown(pageName: string, lineNumberStart: number, lineNumberEnd: number, nodeMarkdown: string) {
@@ -331,14 +332,18 @@ describe('find() function in regexCallbacks', () => {
     },
   ];
 
-  async function testFindFunction(formula: string): Promise<FormulaOutput | undefined> {
-    for (const [regex, callback] of functionDefinitions) {
-      const match = formula.match(regex);
-      if (match && regex.toString() === '/^find\\((.+)\\)$/') {
-        return await callback(match, mockPages);
+  async function testFindFunction(formula: string): Promise<FormulaOutput | null> {
+    const defaultArguments: DefaultArguments = {
+      pages: mockPages
+    };
+    const userArguments: FormulaOutput[] = [
+      {
+        type: FormulaValueType.Text,
+        output: formula
       }
-    }
-    return undefined;
+    ];
+
+    return await findCallback(defaultArguments, userArguments);
   }
 
   test('find() matches single keyword', async () => {
