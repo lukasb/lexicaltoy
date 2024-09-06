@@ -9,7 +9,7 @@ import { DefaultArguments, possibleArguments } from "./formula-parser";
 import { Page } from "../definitions";
 import { getLastSixWeeksJournalPages } from "../journal-helpers";
 import { stripBrackets } from "../transform-helpers";
-import { getOutputAsString } from "./FormulaOutput";
+import { getOutputAsString } from "./formula-helpers";
 import { getUrl } from "../getUrl";
 import { sanitizeText } from "../text-helpers";
 
@@ -145,7 +145,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
   
   if (substrings.length === 0 && orStatuses.length === 0) return null;
   const substringRegexps = substrings.map(substring => new RegExp(`\\b${escapeRegExp(substring)}\\b`, 'i'));
-
+  
   const output: NodeElementMarkdown[] = [];
 
   for (const page of defaultArgs.pages) {

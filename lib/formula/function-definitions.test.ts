@@ -330,24 +330,38 @@ describe('find() function in regexCallbacks', () => {
       deleted: false,
       status: PageStatus.Quiescent,
     },
+    {
+      id: '6',
+      value: '- NOW this is a todo.\n- LATER Another todo.\nThis is a multiline continuation',
+      userId: 'user1',
+      title: 'Page 6',
+      lastModified: new Date('2023-01-02'),
+      revisionNumber: 1,
+      isJournal: false,
+      deleted: false,
+      status: PageStatus.Quiescent,
+    },
   ];
 
-  async function testFindFunction(formula: string): Promise<FormulaOutput | null> {
+  async function testFindFunction(terms: string[], statuses?: string[]): Promise<FormulaOutput | null> {
     const defaultArguments: DefaultArguments = {
       pages: mockPages
     };
-    const userArguments: FormulaOutput[] = [
-      {
-        type: FormulaValueType.Text,
-        output: formula
-      }
-    ];
-
+    const userArguments: FormulaOutput[] = terms.map(arg => ({
+      type: FormulaValueType.Text,
+      output: arg
+    }));
+    if (statuses) {
+      userArguments.push({
+        type: FormulaValueType.NodeTypeOrTypes,
+        output: statuses.join('|')
+      });
+    }
     return await findCallback(defaultArguments, userArguments);
   }
 
   test('find() matches single keyword', async () => {
-    const result = await testFindFunction('find(content)');
+    const result = await testFindFunction(['"content"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(4);
     expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
@@ -361,7 +375,7 @@ describe('find() function in regexCallbacks', () => {
   });
 
   test('find() matches multiple keywords (AND logic)', async () => {
-    const result = await testFindFunction('find(content,keywords)');
+    const result = await testFindFunction(['"content"', '"keywords"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(1);
     expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
@@ -369,18 +383,26 @@ describe('find() function in regexCallbacks', () => {
     expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('keywords');
   });
 
+  test('find() finds by todo status', async () => {
+    const result = await testFindFunction([], ['now']);
+    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
+    expect(result?.output).toHaveLength(1);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('this is a todo');
+  });
+
   test('find() matches OR clauses', async () => {
-    const result = await testFindFunction('find(Page 1|Page 2,text)');
+    const result = await testFindFunction([],['now|later']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(2);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('text');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('text');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('this is a todo');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('Another todo');
   });
 
   test('find() matches in page title', async () => {
-    const result = await testFindFunction('find(Page 1,keywords)');
+    const result = await testFindFunction(['"Page 1"','"keywords"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(2);
     expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('keywords');
@@ -390,7 +412,7 @@ describe('find() function in regexCallbacks', () => {
   });
 
   test('find() returns nested children', async () => {
-    const result = await testFindFunction('find(shuffle)');
+    const result = await testFindFunction(['"shuffle"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(1);
     expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('Carolina');
@@ -400,7 +422,7 @@ describe('find() function in regexCallbacks', () => {
   });
 
   test('find() includes multiline continuations', async () => {
-    const result = await testFindFunction('find(amazing)');
+    const result = await testFindFunction(['"amazing"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(1);
     expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('amazing');
@@ -410,25 +432,8 @@ describe('find() function in regexCallbacks', () => {
   });
 
   test('find() returns empty array when no matches', async () => {
-    const result = await testFindFunction('find(nonexistent)');
+    const result = await testFindFunction(['"nonexistent"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(0);
-  });
-
-  test('find() does not match invalid formula', async () => {
-    const result = await testFindFunction('findwrong(keyword)');
-    expect(result).toBeUndefined();
-  });
-
-  test('find() handles parentheses in search terms', async () => {
-    const result = await testFindFunction('find(content (with parentheses))');
-    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
-    expect(result?.output).toHaveLength(0); // Assuming no match in our mock data
-  });
-
-  test('find() handles special characters in search terms', async () => {
-    const result = await testFindFunction('find(content*with%special&characters)');
-    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
-    expect(result?.output).toHaveLength(0); // Assuming no match in our mock data
   });
 });
