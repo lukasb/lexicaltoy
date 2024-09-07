@@ -44,7 +44,7 @@ function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
           .forEach(page => pageValues.push(page.value));
       }
     } else {
-      const page = pages.find(p => p.title === pageSpec);
+      const page = pages.find(p => p.title === pageTitle);
       if (page) pageValues.push(page.value);
     }
   }
@@ -312,6 +312,7 @@ export const getUrlCallback = async (defaultArgs: DefaultArguments, userArgs: Fo
       pagesContents += "## " + url + "\n" + sanitizeText(markdownContent) + "##END PAGE CONTENTS\n";
     }
   } catch (error) {
+    pagesContents = "Error fetching or rendering content.";
     console.error('Error fetching or rendering content:', error);
   }
 

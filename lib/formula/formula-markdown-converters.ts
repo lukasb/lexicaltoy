@@ -14,8 +14,8 @@
 //const FORMULA_REGEX = /^=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
 //const FORMULA_LIST_ITEM_REGEX = /^(\s*)-\s?=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
 
-const FORMULA_REGEX = /^=(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?$/gs;
-const FORMULA_START_REGEX = /^=(.*?)(?:\s*\|\|\|result:|$)/s;
+const FORMULA_REGEX = /^=(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?$/g;
+const FORMULA_START_REGEX = /^=(.*?)(?:\s*\|\|\|result:|$)/;
 const FORMULA_LIST_ITEM_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?$/gm;
 
 // formula as stored by the nodes has the = sign at the front, maybe should change that
