@@ -15,47 +15,49 @@ interface PossibleArguments {
   type: FormulaValueType;
   description: string;
   regex?: RegExp;
+  resolver?: (argument: string, defaultArgs: DefaultArguments) => Promise<FormulaOutput | null>;
 }
 
 const TODO_STATUS_REGEX_LEXER = /(now|later|doing|waiting|done)(\|(now|later|doing|waiting|done))*/i;
 export const TODO_STATUS_REGEX_EXTERNAL = /^(now|later|doing|waiting|done)(\|(now|later|doing|waiting|done))*$/i;
 
+// the order of these is important - it will take the first match
 export const possibleArguments: PossibleArguments[] = [
-  {
-    displayName: "text",
-    type: FormulaValueType.Text,
-    description: 'text in quote marks "like this"',
-    regex: /"[^"]*"/
-  },
-  {
-    displayName: "wikilink",
-    type: FormulaValueType.NodeMarkdown,
-    description: 'add a [[wikilink]] to include the contents of a page',
-    regex: /\[\[[^\]]+\]\]/
-  },
-  {
-    displayName: "todos by status",
-    type: FormulaValueType.NodeTypeOrTypes,
-    description: "todo, done, now, waiting, or doing. separate with | to search for multiple",
-    regex: TODO_STATUS_REGEX_LEXER
-  },
   {
     displayName: "[[journals/]]",
     type: FormulaValueType.NodeMarkdown,
     description: "add [[journals/]] to include the last six weeks of journal entries",
-    regex: /\[\[journals\/\]\]/
+    regex: /^\[\[journals\/\]\]$/
   },
   {
     displayName: "[[foldername/]]",
     type: FormulaValueType.NodeMarkdown,
     description: "add [[foldername/]] to include the contents of all pages that start with foldername",
-    regex: /\[\[.*?\/\]\]/
+    regex: /^\[\[.*?\/\]\]$/
+  },
+  {
+    displayName: "wikilink",
+    type: FormulaValueType.NodeMarkdown,
+    description: 'add a [[wikilink]] to include the contents of a page',
+    regex: /^\[\[[^\]]+\]\]$/
+  },
+  {
+    displayName: "text",
+    type: FormulaValueType.Text,
+    description: 'text in quote marks "like this"',
+    regex: /^\"[^\"]*\"$/
+  },
+  {
+    displayName: "todos by status",
+    type: FormulaValueType.NodeTypeOrTypes,
+    description: "todo, done, now, waiting, or doing. separate with | to search for multiple",
+    regex: TODO_STATUS_REGEX_EXTERNAL
   },
   {
     displayName: "context:off",
     type: FormulaValueType.NodeMarkdown,
     description: "don't include context from the current page",
-    regex: /\[\[.*?\/\]\]/
+    regex: /^context:off$/
   },
 ]
 
