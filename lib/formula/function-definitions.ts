@@ -45,7 +45,7 @@ function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
           .forEach(page => pageValues.push(page.value));
       }
     } else {
-      const page = pages.find(p => p.title === pageSpec);
+      const page = pages.find(p => p.title === pageTitle);
       if (page) pageValues.push(page.value);
     }
   }
