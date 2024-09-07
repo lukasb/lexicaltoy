@@ -313,6 +313,7 @@ export const getUrlCallback = async (defaultArgs: DefaultArguments, userArgs: Fo
       pagesContents += "## " + url + "\n" + sanitizeText(markdownContent) + "##END PAGE CONTENTS\n";
     }
   } catch (error) {
+    pagesContents = "Error fetching or rendering content.";
     console.error('Error fetching or rendering content:', error);
   }
 
