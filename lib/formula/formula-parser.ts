@@ -17,8 +17,8 @@ interface PossibleArguments {
   regex?: RegExp;
 }
 
-const TODO_STATUS_REGEX_LEXER = /(now|later|doing|waiting|done)(\|(now|later|doing|waiting|done))*/i;
-export const TODO_STATUS_REGEX_EXTERNAL = /^(now|later|doing|waiting|done)(\|(now|later|doing|waiting|done))*$/i;
+const TODO_STATUS_REGEX_LEXER = /(now|later|doing|waiting|done|todo)(\|(now|later|doing|waiting|done|todo))*/i;
+export const TODO_STATUS_REGEX_EXTERNAL = /^(now|later|doing|waiting|done|todo)(\|(now|later|doing|waiting|done|todo))*$/i;
 
 export const possibleArguments: PossibleArguments[] = [
   {
