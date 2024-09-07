@@ -50,7 +50,13 @@ export const possibleArguments: PossibleArguments[] = [
     type: FormulaValueType.NodeMarkdown,
     description: "add [[foldername/]] to include the contents of all pages that start with foldername",
     regex: /\[\[.*?\/\]\]/
-  }
+  },
+  {
+    displayName: "context:off",
+    type: FormulaValueType.NodeMarkdown,
+    description: "don't include context from the current page",
+    regex: /\[\[.*?\/\]\]/
+  },
 ]
 
 export interface DefaultArguments {
