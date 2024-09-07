@@ -15,6 +15,7 @@ import { $isListItemNode } from '@lexical/list';
 import { CstNodeWithChildren } from './formula-parser';
 import { FormulaLexer, FormulaParser, FunctionDefinition } from './formula-parser';
 import { IToken } from 'chevrotain';
+import { possibleArguments } from './formula-parser';
 
 const partialFormulaRegex = /=\s?[a-zA-z]+\(/;
 
@@ -80,7 +81,20 @@ async function getFormulaOutputInner(
       const nestedResult = await getFormulaOutputInner(arg as CstNodeWithChildren, pages, dialogueContext);
       return nestedResult ? nestedResult : { output: '', type: FormulaValueType.Text };
     } else if (arg.children.FilePath) {
-      // TODO should probably get the page contents here and pass them in
+      for (const possibleArg of possibleArguments) {
+        if (possibleArg.regex && possibleArg.regex.test(arg.children.FilePath[0].image)) {
+          if (!possibleArg.resolver) {
+            console.error(`No resolver for ${possibleArg.displayName}`);
+            return { output: '', type: FormulaValueType.Text };
+          }
+          const resolverOutput = await possibleArg.resolver!(arg.children.FilePath[0].image, { pages, dialogueElements: dialogueContext });
+          if (!resolverOutput) {
+            console.error(`Resolver for ${possibleArg.displayName} returned null`);
+            return { output: '', type: FormulaValueType.Text };
+          }
+          return resolverOutput;
+        }
+      }
       return { output: arg.children.FilePath[0].image, type: FormulaValueType.Text };
     }
     return { output: '', type: FormulaValueType.Text };

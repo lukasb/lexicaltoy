@@ -3,6 +3,12 @@ import { Page } from "../definitions";
 import { DialogueElement } from "../ai";
 import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 import { askCallback, findCallback, getUrlCallback } from "./function-definitions";
+import { getLastSixWeeksJournalPages } from "../journal-helpers";
+
+export interface DefaultArguments {
+  pages?: Page[];
+  dialogueElements?: DialogueElement[];
+}
 
 interface NodeType {
   name: string;
@@ -21,23 +27,27 @@ interface PossibleArguments {
 const TODO_STATUS_REGEX_LEXER = /(now|later|doing|waiting|done)(\|(now|later|doing|waiting|done))*/i;
 export const TODO_STATUS_REGEX_EXTERNAL = /^(now|later|doing|waiting|done)(\|(now|later|doing|waiting|done))*$/i;
 
+const resolveJournalPages = async (argument: string, defaultArgs: DefaultArguments) => {
+  
+}
+
 // the order of these is important - it will take the first match
 export const possibleArguments: PossibleArguments[] = [
   {
     displayName: "[[journals/]]",
-    type: FormulaValueType.NodeMarkdown,
+    type: FormulaValueType.Text,
     description: "add [[journals/]] to include the last six weeks of journal entries",
     regex: /^\[\[journals\/\]\]$/
   },
   {
     displayName: "[[foldername/]]",
-    type: FormulaValueType.NodeMarkdown,
+    type: FormulaValueType.Text,
     description: "add [[foldername/]] to include the contents of all pages that start with foldername",
     regex: /^\[\[.*?\/\]\]$/
   },
   {
     displayName: "wikilink",
-    type: FormulaValueType.NodeMarkdown,
+    type: FormulaValueType.Text,
     description: 'add a [[wikilink]] to include the contents of a page',
     regex: /^\[\[[^\]]+\]\]$/
   },
@@ -60,11 +70,6 @@ export const possibleArguments: PossibleArguments[] = [
     regex: /^context:off$/
   },
 ]
-
-export interface DefaultArguments {
-  pages?: Page[];
-  dialogueElements?: DialogueElement[];
-}
 
 // TODO I define these in like three places, need to consolidate
 export const nodeTypes: NodeType[] = [

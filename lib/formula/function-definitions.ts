@@ -7,7 +7,6 @@ import {
 import { getShortGPTChatResponse } from "../ai";
 import { DefaultArguments, possibleArguments } from "./formula-parser";
 import { Page } from "../definitions";
-import { getLastSixWeeksJournalPages } from "../journal-helpers";
 import { stripBrackets } from "../transform-helpers";
 import { getOutputAsString } from "./formula-helpers";
 import { getUrl } from "../getUrl";
