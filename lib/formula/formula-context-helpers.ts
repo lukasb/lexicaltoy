@@ -42,6 +42,10 @@ function getListItemMarkdownWithChildren(listItem: ListItemNode, indent: string)
       const child = listContainingChildren.getChildAtIndex(i);
       if ($isListItemNode(child)) {
         markdown += indent + getListItemMarkdownWithChildren(child, indent + '  ');
+        if ($getListItemContainingChildren(child)) {
+          // skip sibling containing children
+          i++;
+        }
       }
     }
   }
@@ -95,10 +99,13 @@ export function getMarkdownUpTo(listItemKey: string, include: boolean, root: Roo
       } else {
         if (!listContainsLIWithKey(node, listItemKey)) {
           const childrenSize = node.getChildrenSize();
-          for (let i = 0; i < childrenSize; i++) {
-            const child = node.getChildAtIndex(i);
+          for (let j = 0; j < childrenSize; j++) {
+            const child = node.getChildAtIndex(j);
             if ($isListItemNode(child)) {
               fullMarkdown += getListItemMarkdownWithChildren(child, '');
+              if ($getListItemContainingChildren(child)) {
+                j++;
+              }
             }
           }
         } else {
