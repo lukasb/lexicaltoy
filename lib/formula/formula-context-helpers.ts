@@ -41,7 +41,7 @@ function getListItemMarkdownWithChildren(listItem: ListItemNode, indent: string)
     for (let i = 0; i < childrenSize; i++) {
       const child = listContainingChildren.getChildAtIndex(i);
       if ($isListItemNode(child)) {
-        markdown += indent + '    ' + getListItemMarkdownWithChildren(child, indent + '    ');
+        markdown += indent + getListItemMarkdownWithChildren(child, indent + '  ');
       }
     }
   }
@@ -57,7 +57,7 @@ function getMarkdownUpToListItemFromListItem(listItemKey: string, include: boole
 
   const listContainingChildren = $getListContainingChildren(listItem);
   if (!listContainingChildren) return fullMarkdown;
-  return fullMarkdown + getMarkdownUpToListItemFromList(listItemKey, include, listContainingChildren, indent + '    ');
+  return fullMarkdown + getMarkdownUpToListItemFromList(listItemKey, include, listContainingChildren, indent + '  ');
 }
 
 function getMarkdownUpToListItemFromList(listItemKey: string, include: boolean, list: ListNode, indent: string): string {
@@ -67,10 +67,8 @@ function getMarkdownUpToListItemFromList(listItemKey: string, include: boolean, 
     const child = list.getChildAtIndex(i);
     if (!$isListItemNode(child)) continue;
     if (!listItemContainsLIWithKey(child, listItemKey)) {
-      console.log("doesn't contain it", child.getTextContent());
       fullMarkdown += getListItemMarkdownWithChildren(child, indent);
     } else {
-      console.log("does contain it");
       fullMarkdown += getMarkdownUpToListItemFromListItem(listItemKey, include, child, indent);
       break;
     }
