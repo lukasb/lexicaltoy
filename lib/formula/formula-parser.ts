@@ -3,6 +3,7 @@ import { Page } from "../definitions";
 import { DialogueElement } from "../ai";
 import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 import { askCallback, findCallback, getUrlCallback } from "./function-definitions";
+import { PageAndDialogueContext } from "./FormulaOutput";
 
 interface NodeType {
   name: string;
@@ -15,7 +16,6 @@ interface PossibleArguments {
   type: FormulaValueType;
   description: string;
   regex?: RegExp;
-  resolver?: (argument: string, defaultArgs: DefaultArguments) => Promise<FormulaOutput | null>;
 }
 
 const TODO_STATUS_REGEX_LEXER = /(now|later|doing|waiting|done|todo)(\|(now|later|doing|waiting|done|todo))*/i;
@@ -54,16 +54,16 @@ export const possibleArguments: PossibleArguments[] = [
     regex: TODO_STATUS_REGEX_EXTERNAL
   },
   {
-    displayName: "context:off",
+    displayName: "context:",
     type: FormulaValueType.NodeMarkdown,
-    description: "don't include context from the current page",
-    regex: /^context:off$/
+    description: "context:off starts a new conversation without sending any page contents.\ncontext:new starts a new conversation with the current page contents.",
+    regex: /^context:(off|new)$/
   },
 ]
 
 export interface DefaultArguments {
   pages?: Page[];
-  dialogueElements?: DialogueElement[];
+  context?: PageAndDialogueContext;
 }
 
 // TODO I define these in like three places, need to consolidate

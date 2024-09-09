@@ -12,9 +12,10 @@ import { stripBrackets } from "../transform-helpers";
 import { getOutputAsString } from "./formula-helpers";
 import { getUrl } from "../getUrl";
 import { sanitizeText } from "../text-helpers";
+import { getGPTResponse } from "./gpt-formula-handlers";
 
 const instructionsWithContext = `
-You will get a prompt from the user, and content from one or more pages. Pages may include to-do list items that look like this:
+You will receive user questions or instructions, and content from one or more pages. Pages will look like this:
 
 ## Today's agenda 
 - TODO buy groceries
@@ -22,11 +23,13 @@ You will get a prompt from the user, and content from one or more pages. Pages m
 - NOW call janet
 - LATER write a letter to grandma
 - DONE make a cake
+- Who should I invite?
+ - John
+ - Jane
+ - Mary
 ## END OF PAGE CONTENTS
 
-Items marked with DONE are complete, all other items are incomplete.
-
-User prompt:
+Items that start with TODO, DOING, NOW, LATER, DONE, or WAITING are todos.
 `;
 
 function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
@@ -63,7 +66,7 @@ function stripOuterQuotes(s: string): string {
 
 export const askCallback = async (defaultArgs: DefaultArguments, userArgs: FormulaOutput[]): Promise<FormulaOutput | null> => {
 
-  if (!defaultArgs.dialogueElements) return null;
+  if (!defaultArgs.context) return null;
 
   let prompt: string = "";
   let contextSpecs: string[] = [];
@@ -87,7 +90,9 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
     contextResults = getPagesContext(contextSpecs, defaultArgs.pages);
   }
 
-  if (contextResults.length > 0 || userArgs.filter(arg => arg.type === FormulaValueType.NodeMarkdown).length > 0) {
+  if (
+    (contextResults.length > 0 || userArgs.filter(arg => arg.type === FormulaValueType.NodeMarkdown).length > 0)
+    || defaultArgs.context?.priorMarkdown.length > 0) {
     prompt += instructionsWithContext;
   }
 
@@ -109,10 +114,10 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
     }
   }
 
-  const gptResponse = await getShortGPTChatResponse(prompt, defaultArgs.dialogueElements);
+  const gptResponse = await getGPTResponse(prompt, defaultArgs.context);
   if (!gptResponse) return null;
 
-  return { output: gptResponse, type: FormulaValueType.Text };
+  return gptResponse;
 };
 
 export const findCallback = async (defaultArgs: DefaultArguments, userArgs: FormulaOutput[]): Promise<FormulaOutput | null> => {
