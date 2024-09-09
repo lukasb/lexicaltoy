@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { Page } from '../definitions';
 
 /*
 const UserPromptSchema = z.object({ prompt: z.string() });
@@ -10,7 +9,6 @@ export enum FormulaValueType {
   Text = 'text',
   NodeMarkdown = 'nodeMarkdown',
   NodeTypeOrTypes = 'nodeTypeOrTypes',
-  Pages = 'pages',
 }
 
 export const BaseNodeMarkdownSchema = z.object({
@@ -38,7 +36,6 @@ const FormulaOutputSchema = z.object({
   output: z.union([
     z.string(),
     z.array(NodeElementMarkdownSchema),
-    z.array(Page)
   ]),
   type: z.nativeEnum(FormulaValueType)
 });
