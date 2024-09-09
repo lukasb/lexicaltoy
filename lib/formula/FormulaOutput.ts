@@ -9,7 +9,7 @@ import {
 import { Page } from '@/lib/definitions';
 import { functionDefinitions } from './formula-parser';
 import { LexicalEditor, $getNodeByKey, RootNode, ElementNode } from 'lexical';
-import { ListItemNode } from '@lexical/list';
+import { ListItemNode, $isListNode } from '@lexical/list';
 import { $isFormulaDisplayNode } from '@/_app/nodes/FormulaNode';
 import { $isListItemNode } from '@lexical/list';
 import { CstNodeWithChildren } from './formula-parser';
@@ -131,7 +131,12 @@ export function slurpDialogueContext(displayNodeKey: string, editor: LexicalEdit
         if (dialogue) {
           context.unshift(dialogue);
         } else {
-          priorMarkdown = getMarkdownUpTo(prevListItem.__key, true, root);
+          if ($isListNode(prevListItem.getFirstChild())) {
+            prevListItem = prevListItem.getPreviousSibling();
+          }
+          if (prevListItem) {
+            priorMarkdown = getMarkdownUpTo(prevListItem.__key, true, root);
+          }
           break;
         }
         prevListItem = prevListItem.getPreviousSibling();
@@ -140,7 +145,7 @@ export function slurpDialogueContext(displayNodeKey: string, editor: LexicalEdit
         if (listItem) priorMarkdown = getMarkdownUpTo(listItem.__key, false, root);
       }
     } else {
-      if (listItem) priorMarkdown = getMarkdownUpTo(displayNodeKey, false, root);
+      if (listItem) priorMarkdown = getMarkdownUpTo(listItem.__key, false, root);
     }
   })
   return { dialogueContext: context, priorMarkdown: priorMarkdown || "" };

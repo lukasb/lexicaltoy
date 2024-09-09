@@ -16,7 +16,6 @@ function getPromptWithContext(formula: string, priorMarkdown: string): string {
 export async function getGPTResponse(prompt: string, context?: PageAndDialogueContext): Promise<FormulaOutput | null> {
   const formulaWithoutEqualSign = prompt.startsWith("=") ? prompt.slice(1) : prompt;
   if (!context) return null;
-  console.log("prior markdown", context.priorMarkdown);
   let fullPrompt = "";
   if (context.dialogueContext.length > 0) {
     // if we're in an ongoing conversation, the contents of the current document will have already been sent
