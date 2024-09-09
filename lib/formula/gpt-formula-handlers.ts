@@ -4,13 +4,13 @@ import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 
 function getPromptWithContext(formula: string, priorMarkdown: string): string {
   return `
-  The user is asking a question in the context of a document. The question might or not be related to the document.
-  # DOCUMENT CONTENT
-  ${priorMarkdown}
-  # END DOCUMENT CONTENT
+The user is asking a question in the context of a document. The question might or not be related to the document.
+# DOCUMENT CONTENT
+${priorMarkdown}
+# END DOCUMENT CONTENT
 
-  ${formula}
-  `
+${formula}
+`
 }
 
 export async function getGPTResponse(prompt: string, context?: PageAndDialogueContext): Promise<FormulaOutput | null> {
