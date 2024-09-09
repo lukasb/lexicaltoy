@@ -26,13 +26,31 @@ function listItemContainsLIWithKey(listItem: ListItemNode, LIKey: string): boole
   return false;
 }
 
+function getListItemMarkdownWithChildren(listItem: ListItemNode): string {
+  let markdown = "";
+  markdown += '- ' +$convertToMarkdownString(TRANSFORMERS, {
+    getChildren: () => [listItem],
+  } as unknown as ElementNode) + "\n";
+  const listContainingChildren = $getListContainingChildren(listItem);
+  if (listContainingChildren) {
+    const childrenSize = listContainingChildren.getChildrenSize();
+    for (let i = 0; i < childrenSize; i++) {
+      const child = listContainingChildren.getChildAtIndex(i);
+      if ($isListItemNode(child)) {
+        markdown += '    ' +getListItemMarkdownWithChildren(child);
+      }
+    }
+  }
+  return markdown;
+}
+
 function getMarkdownUpToListItemFromListItem(listItemKey: string, include: boolean, listItem: ListItemNode): string {
   let fullMarkdown = "";
   if (listItem.__key === listItemKey) {
     if (include) {
-      fullMarkdown += $convertToMarkdownString(TRANSFORMERS, {
+      fullMarkdown += '- ' + $convertToMarkdownString(TRANSFORMERS, {
         getChildren: () => [listItem],
-      } as unknown as ElementNode);
+      } as unknown as ElementNode) + "\n";
     }
     return fullMarkdown;
   }
@@ -48,9 +66,7 @@ function getMarkdownUpToListItemFromList(listItemKey: string, include: boolean, 
     const child = list.getChildAtIndex(i);
     if (!$isListItemNode(child)) continue;
     if (!listItemContainsLIWithKey(child, listItemKey)) {
-      fullMarkdown += $convertToMarkdownString(TRANSFORMERS, {
-        getChildren: () => [child],
-      } as unknown as ElementNode);
+      fullMarkdown += getListItemMarkdownWithChildren(child);
     } else {
       fullMarkdown += getMarkdownUpToListItemFromListItem(listItemKey, include, child);
     }
@@ -67,12 +83,16 @@ export function getMarkdownUpTo(listItemKey: string, include: boolean, root: Roo
       if (!$isListNode(node)) {
         fullMarkdown += $convertToMarkdownString(TRANSFORMERS, {
           getChildren: () => [node],
-        } as unknown as ElementNode);
+        } as unknown as ElementNode) + "\n";
       } else {
         if (!listContainsLIWithKey(node, listItemKey)) {
-          fullMarkdown += $convertToMarkdownString(TRANSFORMERS, {
-            getChildren: () => [node],
-          } as unknown as ElementNode);
+          const childrenSize = node.getChildrenSize();
+          for (let i = 0; i < childrenSize; i++) {
+            const child = node.getChildAtIndex(i);
+            if ($isListItemNode(child)) {
+              fullMarkdown += getListItemMarkdownWithChildren(child);
+            }
+          }
         } else {
           fullMarkdown += getMarkdownUpToListItemFromList(listItemKey, include, node);
           break;

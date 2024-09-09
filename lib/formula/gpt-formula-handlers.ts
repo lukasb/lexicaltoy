@@ -27,7 +27,7 @@ export async function getGPTResponse(prompt: string, context?: PageAndDialogueCo
     fullPrompt = getPromptWithContext(formulaWithoutEqualSign, context.priorMarkdown);
   }
   const gptResponse = await getShortGPTChatResponse(
-    getPromptWithContext(fullPrompt, context.priorMarkdown),
+    fullPrompt,
     context.dialogueContext);
   if (!gptResponse) return null;
   return { output: gptResponse, type: FormulaValueType.Text };
