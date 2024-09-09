@@ -37,7 +37,7 @@ function getListItemMarkdownWithChildren(listItem: ListItemNode): string {
     for (let i = 0; i < childrenSize; i++) {
       const child = listContainingChildren.getChildAtIndex(i);
       if ($isListItemNode(child)) {
-        markdown += '    ' +getListItemMarkdownWithChildren(child);
+        markdown += '    ' + getListItemMarkdownWithChildren(child);
       }
     }
   }
@@ -69,6 +69,11 @@ function getMarkdownUpToListItemFromList(listItemKey: string, include: boolean, 
       fullMarkdown += getListItemMarkdownWithChildren(child);
     } else {
       fullMarkdown += getMarkdownUpToListItemFromListItem(listItemKey, include, child);
+    }
+    if ($getListItemContainingChildren(child)){
+      // in this case our next sibling just has our children
+      // we've already processed our children, so we skip our next sibling
+      i++;
     }
   }
   return fullMarkdown;
