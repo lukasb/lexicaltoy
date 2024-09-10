@@ -81,6 +81,7 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
 
     // If shared nodes have been updated, update the pages
     // If pages have been updated, invalidate their shared nodes
+    // (we avoid circularity by tracking the shared node that was the source of the update)
 
     const pagesToUpdate = new Map<string, string>();
 
@@ -88,12 +89,12 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
       const keyElements: SharedNodeKeyElements = getSharedNodeKeyElements(key);
       const page = pages.find((p) => p.title === keyElements.pageName);
       if (page) {
-        const lines = page.value.split("\n");
-        const currentMarkdown = getNodeElementFullMarkdown(value.output);
-        if (lines.slice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd).join("\n") !== currentMarkdown) {
-          lines.splice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd - keyElements.lineNumberStart + 1, ...currentMarkdown.split("\n"));
-        }
         if (page.status !== PageStatus.UserEdit && value.needsSyncToPage) {
+          const lines = page.value.split("\n");
+          const currentMarkdown = getNodeElementFullMarkdown(value.output);
+          if (lines.slice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd).join("\n") !== currentMarkdown) {
+            lines.splice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd - keyElements.lineNumberStart + 1, ...currentMarkdown.split("\n"));
+          }
           pagesToUpdate.set(keyElements.pageName, lines.join("\n"));
           sharedNodeMap.set(key, { ...value, needsSyncToPage: false });
         } else if (page.status === PageStatus.UserEdit && value.needsSyncToPage) {
