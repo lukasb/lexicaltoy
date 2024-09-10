@@ -3,6 +3,7 @@ import { Page } from "../definitions";
 import { DialogueElement } from "../ai";
 import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 import { askCallback, findCallback, getUrlCallback } from "./function-definitions";
+import { PageAndDialogueContext } from "./FormulaOutput";
 
 interface NodeType {
   name: string;
@@ -20,42 +21,49 @@ interface PossibleArguments {
 const TODO_STATUS_REGEX_LEXER = /(now|later|doing|waiting|done|todo)(\|(now|later|doing|waiting|done|todo))*/i;
 export const TODO_STATUS_REGEX_EXTERNAL = /^(now|later|doing|waiting|done|todo)(\|(now|later|doing|waiting|done|todo))*$/i;
 
+// the order of these is important - it will take the first match
 export const possibleArguments: PossibleArguments[] = [
-  {
-    displayName: "text",
-    type: FormulaValueType.Text,
-    description: 'text in quote marks "like this"',
-    regex: /"[^"]*"/
-  },
-  {
-    displayName: "wikilink",
-    type: FormulaValueType.NodeMarkdown,
-    description: 'add a [[wikilink]] to include the contents of a page',
-    regex: /\[\[[^\]]+\]\]/
-  },
-  {
-    displayName: "todos by status",
-    type: FormulaValueType.NodeTypeOrTypes,
-    description: "todo, done, now, waiting, or doing. separate with | to search for multiple",
-    regex: TODO_STATUS_REGEX_LEXER
-  },
   {
     displayName: "[[journals/]]",
     type: FormulaValueType.NodeMarkdown,
     description: "add [[journals/]] to include the last six weeks of journal entries",
-    regex: /\[\[journals\/\]\]/
+    regex: /^\[\[journals\/\]\]$/
   },
   {
     displayName: "[[foldername/]]",
     type: FormulaValueType.NodeMarkdown,
     description: "add [[foldername/]] to include the contents of all pages that start with foldername",
-    regex: /\[\[.*?\/\]\]/
-  }
+    regex: /^\[\[.*?\/\]\]$/
+  },
+  {
+    displayName: "wikilink",
+    type: FormulaValueType.NodeMarkdown,
+    description: 'add a [[wikilink]] to include the contents of a page',
+    regex: /^\[\[[^\]]+\]\]$/
+  },
+  {
+    displayName: "text",
+    type: FormulaValueType.Text,
+    description: 'text in quote marks "like this"',
+    regex: /^\"[^\"]*\"$/
+  },
+  {
+    displayName: "todos by status",
+    type: FormulaValueType.NodeTypeOrTypes,
+    description: "todo, done, now, waiting, or doing. separate with | to search for multiple",
+    regex: TODO_STATUS_REGEX_EXTERNAL
+  },
+  {
+    displayName: "context:",
+    type: FormulaValueType.NodeMarkdown,
+    description: "context:off starts a new conversation without sending any page contents.\ncontext:new starts a new conversation with the current page contents.",
+    regex: /^context:(off|new)$/
+  },
 ]
 
 export interface DefaultArguments {
   pages?: Page[];
-  dialogueElements?: DialogueElement[];
+  context?: PageAndDialogueContext;
 }
 
 // TODO I define these in like three places, need to consolidate

@@ -8,35 +8,30 @@ import {
  } from '@/lib/ai';
 import { Page } from '@/lib/definitions';
 import { functionDefinitions } from './formula-parser';
-import { LexicalEditor, $getNodeByKey } from 'lexical';
-import { ListItemNode } from '@lexical/list';
+import { LexicalEditor, $getNodeByKey, RootNode, ElementNode } from 'lexical';
+import { ListItemNode, $isListNode } from '@lexical/list';
 import { $isFormulaDisplayNode } from '@/_app/nodes/FormulaNode';
 import { $isListItemNode } from '@lexical/list';
 import { CstNodeWithChildren } from './formula-parser';
 import { FormulaLexer, FormulaParser, FunctionDefinition } from './formula-parser';
 import { IToken } from 'chevrotain';
+import { $getRoot } from 'lexical';
+import { getMarkdownUpTo } from './formula-context-helpers';
+import { getGPTResponse } from './gpt-formula-handlers';
 
 const partialFormulaRegex = /=\s?[a-zA-z]+\(/;
-
-async function getGPTResponse(formula: string, dialogueContext?: DialogueElement[]): Promise<FormulaOutput | null> {
-  const formulaWithoutEqualSign = formula.startsWith("=") ? formula.slice(1) : formula;
-  if (!dialogueContext) return null;
-  const gptResponse = await getShortGPTChatResponse(formulaWithoutEqualSign, dialogueContext);
-  if (!gptResponse) return null;
-  return { output: gptResponse, type: FormulaValueType.Text };
-}
 
 export async function getFormulaOutput(
   formula: string,
   pages: Page[],
-  dialogueContext?: DialogueElement[]
+  context?: PageAndDialogueContext
 ): Promise<FormulaOutput | null> {
   try {
     const formulaWithEqualSign = formula.startsWith("=") ? formula : `=${formula}`;
     const lexingResult = FormulaLexer.tokenize(formulaWithEqualSign);
     
     if (lexingResult.errors.length > 0) {
-      return getGPTResponse(formula, dialogueContext);
+      return getGPTResponse(formula, context);
     }
 
     const parser = new FormulaParser();
@@ -44,14 +39,14 @@ export async function getFormulaOutput(
     const cst = parser.formula() as CstNodeWithChildren;
 
     if (parser.errors.length > 0) {
-      if (!partialFormulaRegex.test(formulaWithEqualSign) && dialogueContext) {
-        return getGPTResponse(formula, dialogueContext);
+      if (!partialFormulaRegex.test(formulaWithEqualSign) && context) {
+        return getGPTResponse(formula, context);
       } else {
         return null;
       }
     }
 
-    return getFormulaOutputInner(cst, pages, dialogueContext);
+    return getFormulaOutputInner(cst, pages, context);
   } catch (error) {
     console.error("Error parsing or executing formula:", error);
     return null;
@@ -61,7 +56,7 @@ export async function getFormulaOutput(
 async function getFormulaOutputInner(
   cst: CstNodeWithChildren,
   pages: Page[],
-  dialogueContext?: DialogueElement[]
+  context?: PageAndDialogueContext
 ): Promise<FormulaOutput | null> {
   const functionCallNode = cst.children.functionCall[0] as CstNodeWithChildren;
   const functionName = (functionCallNode.children.Identifier[0] as IToken).image;
@@ -77,7 +72,7 @@ async function getFormulaOutputInner(
     } else if (arg.children.TodoStatus) {
       return { output: arg.children.TodoStatus[0].image, type: FormulaValueType.NodeTypeOrTypes };
     } else if (arg.children.functionCall) {
-      const nestedResult = await getFormulaOutputInner(arg as CstNodeWithChildren, pages, dialogueContext);
+      const nestedResult = await getFormulaOutputInner(arg as CstNodeWithChildren, pages, context);
       return nestedResult ? nestedResult : { output: '', type: FormulaValueType.Text };
     } else if (arg.children.FilePath) {
       // TODO should probably get the page contents here and pass them in
@@ -91,7 +86,7 @@ async function getFormulaOutputInner(
 
   if (funcDef) {
     // Prepare the default arguments
-    const defaultArgs = { pages, dialogueElements: dialogueContext };
+    const defaultArgs = { pages, context };
     
     // Call the function's callback with the default arguments and parsed arguments
     return await funcDef.callback(defaultArgs, parsedArgs);
@@ -113,23 +108,45 @@ function $getGPTPair(listItem: ListItemNode): DialogueElement | undefined {
   return undefined;
 }
 
-export function slurpDialogueContext(displayNodeKey: string, editor: LexicalEditor): DialogueElement[] {
+export type PageAndDialogueContext = {
+  dialogueContext: DialogueElement[];
+  priorMarkdown: string; // Markdown from nodes above provided dialogueContext
+}
+
+// return context for the current conversation (any dialogue for preceding list items)
+// and the markdown from before the current list item
+export function slurpDialogueContext(displayNodeKey: string, editor: LexicalEditor): PageAndDialogueContext {
   let context: DialogueElement[] = [];
+  let priorMarkdown: string | undefined = undefined;
   editor.getEditorState().read(() => {
     const listItem = $getNodeByKey(displayNodeKey)?.getParent();
+    const root = $getRoot();
     let prevListItem = listItem?.getPreviousSibling();
-    while (
-      prevListItem && 
-      $isListItemNode(prevListItem)
-    ) {
-      const dialogue = $getGPTPair(prevListItem);
-      if (dialogue) {
-        context.unshift(dialogue);
-      } else {
-        break;
+    if (prevListItem) {
+      while (
+        prevListItem && 
+        $isListItemNode(prevListItem)
+      ) {
+        const dialogue = $getGPTPair(prevListItem);
+        if (dialogue) {
+          context.unshift(dialogue);
+        } else {
+          if ($isListNode(prevListItem.getFirstChild())) {
+            prevListItem = prevListItem.getPreviousSibling();
+          }
+          if (prevListItem) {
+            priorMarkdown = getMarkdownUpTo(prevListItem.__key, true, root);
+          }
+          break;
+        }
+        prevListItem = prevListItem.getPreviousSibling();
       }
-      prevListItem = prevListItem.getPreviousSibling();
+      if (!priorMarkdown) {
+        if (listItem) priorMarkdown = getMarkdownUpTo(listItem.__key, false, root);
+      }
+    } else {
+      if (listItem) priorMarkdown = getMarkdownUpTo(listItem.__key, false, root);
     }
   })
-  return context;
+  return { dialogueContext: context, priorMarkdown: priorMarkdown || "" };
 }

@@ -7,7 +7,7 @@ import {
   SharedNodeKeyElements,
   getSharedNodeKeyElements,
 } from "@/_app/context/shared-node-context";
-import { getFormulaOutput } from "@/lib/formula/FormulaOutput";
+import { getFormulaOutput, PageAndDialogueContext } from "@/lib/formula/FormulaOutput";
 import { PagesContext } from "@/_app/context/pages-context";
 import {
   NodeElementMarkdown,
@@ -86,10 +86,10 @@ export const useFormulaResultService = () => {
 
   const getFormulaResults = async (
     query: string,
-    dialogueContext?: DialogueElement[]
+    context?: PageAndDialogueContext
   ): Promise<FormulaOutput | null> => {
     // Perform the query and fetch the results
-    const output = await getFormulaOutput(query, pages, dialogueContext);
+    const output = await getFormulaOutput(query, pages, context);
 
     if (!output) return null;
 
