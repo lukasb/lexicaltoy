@@ -14,14 +14,9 @@ function listContainsLIWithKey(list: ListNode, LIKey: string): boolean {
 }
 
 function listItemContainsLIWithKey(listItem: ListItemNode, LIKey: string): boolean {
-  console.log("listItemContainsLIWithKey", listItem.__key, LIKey);
-  if (listItem.__key === LIKey) {
-    console.log("returning true");
-    return true;
-  }
+  if (listItem.__key === LIKey) return true;
   const listContainingChildren = $getListContainingChildren(listItem);
   if (!listContainingChildren) return false;
-
   let child = listContainingChildren.getFirstChild();
   while (child && $isListItemNode(child)) {
     if (listItemContainsLIWithKey(child, LIKey)) return true;
@@ -87,7 +82,6 @@ function getMarkdownUpToListItemFromList(listItemKey: string, include: boolean, 
 
 export function getMarkdownUpTo(listItemKey: string, include: boolean, root: RootNode): string {
   let fullMarkdown = "";
-  console.log("getMarkdownUpTo", listItemKey, include);
   const topLevelNodes = root.getChildrenSize();
   for (let i = 0; i < topLevelNodes; i++) {
     const node = root.getChildAtIndex(i);
