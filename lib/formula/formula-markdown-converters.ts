@@ -43,10 +43,8 @@ export function parseFormulaMarkdown(markdownString: string): ParseResult {
     const resultStart = markdownString.indexOf(resultMarker);
     
     if (resultStart !== -1) {
-      if (markdownString.includes("kottke")) console.log("resultStart", resultStart);
       const resultEnd = markdownString.indexOf('|||', resultStart + resultMarkerLength);
       if (resultEnd !== -1) {
-        if (markdownString.includes("kottke")) console.log("resultEnd", resultEnd);
         const result = markdownString.slice(resultStart + 10, resultEnd).trim();
         return { formula, result };
       } else {
@@ -77,7 +75,6 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
         formulaIndent = formulaStart[1];
         formulaLines = [line];
       } else {
-        console.log("pushing", line);
         processedLines.push(line);
       }
     } else {

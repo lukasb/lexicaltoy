@@ -30,7 +30,6 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
       if (isDevelopmentEnvironment) console.time(`savePage_${pageId}`);
 
       try {
-        console.log("saving page", page.title, page.value);
         const { revisionNumber, lastModified } = await updatePageContentsWithHistory(page.id, page.value, page.revisionNumber);
         if (isDevelopmentEnvironment) console.timeEnd(`savePage_${pageId}`);
 
@@ -63,10 +62,8 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
   }, [savePagesToDatabase]);
 
   useEffect(() => {
-    console.log("iterating over pages");
     pages.forEach(page => {
       if (page.status === PageStatus.PendingWrite) {
-        console.log("adding page to save queue", page.title, page.value);
         const currentTimestamp = Date.now();
         const existingSave = saveQueue.current.get(page.id);
 
@@ -95,15 +92,9 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
         if (page.status !== PageStatus.UserEdit && value.needsSyncToPage) {
           const lines = page.value.split("\n");
           const currentMarkdown = getNodeElementFullMarkdown(value.output);
-          console.log("new markdown", currentMarkdown);
-          console.log("old markdown", lines.slice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd).join("\n"));
-          // print number of leading spaces in currentMarkdown
-          console.log("number of leading spaces in currentMarkdown", currentMarkdown.match(/^\s*/)?.[0]?.length);
-          console.log("number of leading spaces in old markdown", lines.slice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd).join("\n").match(/^\s*/)?.[0]?.length);
           if (lines.slice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd).join("\n") !== currentMarkdown) {
             lines.splice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd - keyElements.lineNumberStart + 1, ...currentMarkdown.split("\n"));
           }
-          console.log("new full markdown", lines.join("\n"));
           pagesToUpdate.set(keyElements.pageName, lines.join("\n"));
           sharedNodeMap.set(key, { ...value, needsSyncToPage: false });
         } else if (page.status === PageStatus.UserEdit && value.needsSyncToPage) {
@@ -121,7 +112,6 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
       const updatedPages = pages.map(p => {
         const updatedPage = pagesToUpdate.get(p.title);
         if (updatedPage) {
-          console.log("updating page", p.title, updatedPage);
           return { ...p, value: updatedPage, status: PageStatus.EditFromSharedNodes };
         }
         return p;
@@ -137,7 +127,6 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
     for (const page of pages) {
       if (!pagesToUpdate.has(page.title)) {
         if (page.status === PageStatus.UserEdit || page.status === PageStatus.EditFromSharedNodes) {
-          if (page.title === 'Sep 9th, 2024') console.log("updating page", page.status, page.value);
           setPages((prevPages) =>
             prevPages.map((p) =>
               p.id === page.id ? { ...p, status: PageStatus.PendingWrite } : p

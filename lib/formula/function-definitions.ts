@@ -156,7 +156,6 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
   const output: NodeElementMarkdown[] = [];
 
   for (const page of defaultArgs.pages) {
-    //if (page.title === 'Sep 9th, 2024') console.log(page.value);
     let unmatchedSubstringRegexps = [...substrings];
 
     // search terms can appear in the title or the content of the page
@@ -184,7 +183,6 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
 
           if (matchesAllSubstrings && matchesStatus) {
             // Avoid circular references by excluding lines with find() formulas
-            if (unmatchedSubstrings.includes("#askwcontext")) console.log(nodeMarkdown);
             if (!findFormulaStartRegex.test(nodeMarkdown)) {
               removeFindNodes(node);
               output.push(node);
