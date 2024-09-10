@@ -17,10 +17,16 @@ import { getGPTResponse } from "./gpt-formula-handlers";
 const instructionsWithContext = `
 You will receive user questions or instructions, and content from one or more pages. Pages will look like this:
 
-## Today's agenda 
+## Today's agenda
+Hmmm ... need to figure out meaning of life today.
 - TODO buy groceries
 - DOING prepare taxes
 - NOW call janet
+- =find("#parser")
+- =ask("What is the meaning of life?") |||result: There has been much debate on this topic.
+The most common answer is 42.
+|||
+- =why 42? |||result: Because 6*7=42|||
 - LATER write a letter to grandma
 - DONE make a cake
 - Who should I invite?
@@ -29,7 +35,8 @@ You will receive user questions or instructions, and content from one or more pa
  - Mary
 ## END OF PAGE CONTENTS
 
-Items that start with TODO, DOING, NOW, LATER, DONE, or WAITING are todos.
+Items that start with TODO, DOING, NOW, LATER, DONE, or WAITING are todos. Bullet points that start with = are formulas.
+Formulas that start with ask(), or don't have an explicit function, trigger a chat with GPT.
 `;
 
 function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
