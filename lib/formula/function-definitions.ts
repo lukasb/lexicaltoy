@@ -71,16 +71,15 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
   let prompt: string = "";
   let contextSpecs: string[] = [];
   let contextResults: string[] = [];
-
-  const nodeMarkdownPossibleArguments = possibleArguments.filter(arg => arg.type === FormulaValueType.NodeMarkdown);
     
   // if a user arg is a wikilink variant, we need to get the relevant page contents if the page exists
-  for (const arg of userArgs) {  
-    if (arg.type === FormulaValueType.Text) {
+  for (const arg of userArgs) {
+    if (arg.type === FormulaValueType.Wikilink) {
       const text = arg.output as string;
-      for (const nodeMarkdownArg of nodeMarkdownPossibleArguments) {
-        if (nodeMarkdownArg.regex && text.match(nodeMarkdownArg.regex)) {
+      for (const possibleArg of possibleArguments) {
+        if (possibleArg.type === FormulaValueType.Wikilink && possibleArg.regex && text.match(possibleArg.regex)) {
           contextSpecs.push(text);
+          break;
         }
       }
     }
@@ -89,7 +88,7 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
   if (contextSpecs.length > 0 && defaultArgs.pages) {
     contextResults = getPagesContext(contextSpecs, defaultArgs.pages);
   }
-
+  
   if (
     (contextResults.length > 0 || userArgs.filter(arg => arg.type === FormulaValueType.NodeMarkdown).length > 0)
     || defaultArgs.context?.priorMarkdown.length > 0) {
@@ -97,20 +96,21 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
   }
 
   for (const arg of userArgs) {
+    const argString = getOutputAsString(arg);
     if (arg.type === FormulaValueType.Text) {
-      const text = arg.output as string;
-      for (const nodeMarkdownArg of nodeMarkdownPossibleArguments) {
-        if (nodeMarkdownArg.regex && text.match(nodeMarkdownArg.regex)) {
+      prompt += "\n" + stripOuterQuotes(argString) + "\n";
+    } else if (arg.type === FormulaValueType.Wikilink) { 
+      for (const possibleArg of possibleArguments) {
+        if (possibleArg.type === FormulaValueType.Wikilink && possibleArg.regex && argString.match(possibleArg.regex)) {
           if (contextResults.length > 0) {
-            prompt += "\n## " + stripBrackets(text) + "\n" + contextResults.shift() + "\n" + "## END OF PAGE CONTENTS\n";
+            prompt += "\n## " + stripBrackets(argString) + "\n" + contextResults.shift() + "\n" + "## END OF PAGE CONTENTS\n";
           }
           break;
         }
       }
-      prompt += "\n" + stripOuterQuotes(text) + "\n";
     } else if (arg.type === FormulaValueType.NodeMarkdown) {
       // TODO maybe include the page name
-      prompt += "\n" + getOutputAsString(arg) + "\n";
+      prompt += "\n" + argString + "\n";
     }
   }
 

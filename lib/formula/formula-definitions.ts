@@ -9,6 +9,7 @@ export enum FormulaValueType {
   Text = 'text',
   NodeMarkdown = 'nodeMarkdown',
   NodeTypeOrTypes = 'nodeTypeOrTypes',
+  Wikilink = 'wikilink',
 }
 
 export const BaseNodeMarkdownSchema = z.object({

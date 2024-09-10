@@ -25,19 +25,19 @@ export const TODO_STATUS_REGEX_EXTERNAL = /^(now|later|doing|waiting|done|todo)(
 export const possibleArguments: PossibleArguments[] = [
   {
     displayName: "[[journals/]]",
-    type: FormulaValueType.NodeMarkdown,
+    type: FormulaValueType.Wikilink,
     description: "add [[journals/]] to include the last six weeks of journal entries",
     regex: /^\[\[journals\/\]\]$/
   },
   {
     displayName: "[[foldername/]]",
-    type: FormulaValueType.NodeMarkdown,
+    type: FormulaValueType.Wikilink,
     description: "add [[foldername/]] to include the contents of all pages that start with foldername",
     regex: /^\[\[.*?\/\]\]$/
   },
   {
     displayName: "wikilink",
-    type: FormulaValueType.NodeMarkdown,
+    type: FormulaValueType.Wikilink,
     description: 'add a [[wikilink]] to include the contents of a page',
     regex: /^\[\[[^\]]+\]\]$/
   },
@@ -166,7 +166,7 @@ const SpecialToken = createToken({ name: "SpecialToken", pattern: /#[a-zA-Z]+/ }
 const LParen = createToken({ name: "LParen", pattern: /\(/ });
 const RParen = createToken({ name: "RParen", pattern: /\)/ });
 const Comma = createToken({ name: "Comma", pattern: /,/ });
-const Wikilink = createToken({ name: "FilePath", pattern: /\[\[[^\]]+\]\]/ });
+const Wikilink = createToken({ name: "Wikilink", pattern: /\[\[[^\]]+\]\]/ });
 
 const allTokens = [
   Equal,

@@ -74,9 +74,9 @@ async function getFormulaOutputInner(
     } else if (arg.children.functionCall) {
       const nestedResult = await getFormulaOutputInner(arg as CstNodeWithChildren, pages, context);
       return nestedResult ? nestedResult : { output: '', type: FormulaValueType.Text };
-    } else if (arg.children.FilePath) {
+    } else if (arg.children.Wikilink) {
       // TODO should probably get the page contents here and pass them in
-      return { output: arg.children.FilePath[0].image, type: FormulaValueType.Text };
+      return { output: arg.children.Wikilink[0].image, type: FormulaValueType.Wikilink };
     }
     return { output: '', type: FormulaValueType.Text };
   }));

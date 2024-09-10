@@ -1,7 +1,7 @@
 import { FormulaOutput, FormulaValueType, NodeElementMarkdown } from "./formula-definitions";
 
 export function getOutputAsString(output: FormulaOutput): string {
-  if (output.type === FormulaValueType.Text) {
+  if (output.type === FormulaValueType.Text || output.type === FormulaValueType.Wikilink) {
     return output.output as string;
   } else if (output.type === FormulaValueType.NodeMarkdown) {
     let outputStr = "";

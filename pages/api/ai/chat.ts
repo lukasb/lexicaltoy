@@ -56,9 +56,6 @@ export default async function handler(
 
     openAIMessages.push({ role: "user", content: prompt});
     anthropicMessages.push({ role: "user", content: prompt});
-
-    console.log("OpenAI messages", openAIMessages);
-    console.log("Anthropic messages", anthropicMessages);
     
     try {
       let response;
