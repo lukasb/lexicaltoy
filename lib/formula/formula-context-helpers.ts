@@ -1,113 +1,77 @@
+import { ListItemNode, ListNode, $isListItemNode, $isListNode } from '@lexical/list';
+import { RootNode,ElementNode, $isElementNode } from 'lexical';
 import { $convertToMarkdownString, TRANSFORMERS } from "@lexical/markdown";
-import { $getListItemContainingChildren } from '../list-utils';
-import { $getListContainingChildren } from '@/lib/list-utils';
-import { ListItemNode, $isListItemNode, $isListNode, ListNode } from '@lexical/list';
-import { RootNode, ElementNode } from 'lexical';
 
-function listContainsLIWithKey(list: ListNode, LIKey: string): boolean {
-  const listItems = list.getChildrenSize();
-  for (let i = 0; i < listItems; i++) {
-    const listItem = list.getChildAtIndex(i);
-    if ($isListItemNode(listItem) && listItemContainsLIWithKey(listItem, LIKey)) return true;
+class LexicalListUtils {
+  static getListContainingChildren(listItem: ListItemNode): ListNode | null {
+    const nextSibling = listItem.getNextSibling();
+    return $isListNode(nextSibling) ? nextSibling : null;
   }
-  return false;
-}
 
-function listItemContainsLIWithKey(listItem: ListItemNode, LIKey: string): boolean {
-  if (listItem.__key === LIKey) return true;
-  const listContainingChildren = $getListContainingChildren(listItem);
-  if (!listContainingChildren) return false;
-  let child = listContainingChildren.getFirstChild();
-  while (child && $isListItemNode(child)) {
-    if (listItemContainsLIWithKey(child, LIKey)) return true;
-    child = child.getNextSibling();
-  }
-  return false;
-}
-
-function getListItemMarkdownWithChildren(listItem: ListItemNode, indent: string): string {
-  let markdown = "";
-  markdown += indent + '- ' +$convertToMarkdownString(TRANSFORMERS, {
-    getChildren: () => [listItem],
-  } as unknown as ElementNode) + "\n";
-  const listContainingChildren = $getListContainingChildren(listItem);
-  if (listContainingChildren) {
-    const childrenSize = listContainingChildren.getChildrenSize();
-    for (let i = 0; i < childrenSize; i++) {
-      const child = listContainingChildren.getChildAtIndex(i);
-      if ($isListItemNode(child)) {
-        markdown += indent + getListItemMarkdownWithChildren(child, indent + '  ');
-        if ($getListItemContainingChildren(child)) {
-          // skip sibling containing children
-          i++;
+  static traverseListItemsDepthFirst(
+    node: ListNode | ListItemNode,
+    callback: (node: ListNode | ListItemNode, depth: number) => boolean,
+    depth: number = 0
+  ): boolean {
+    if ($isListItemNode(node)) {
+      const firstChild = node.getFirstChild();
+      if ($isListNode(firstChild)) {
+        if (this.traverseListItemsDepthFirst(firstChild, callback, depth)) {
+          return true;
         }
-      }
-    }
-  }
-  return markdown;
-}
-
-function getMarkdownUpToListItemFromListItem(listItemKey: string, include: boolean, listItem: ListItemNode, indent: string): string {
-  if (listItem.__key === listItemKey && !include) return "";
-
-  let fullMarkdown = indent + '- ' + $convertToMarkdownString(TRANSFORMERS, {
-    getChildren: () => [listItem],
-  } as unknown as ElementNode) + "\n";
-
-  const listContainingChildren = $getListContainingChildren(listItem);
-  if (!listContainingChildren) return fullMarkdown;
-  return fullMarkdown + getMarkdownUpToListItemFromList(listItemKey, include, listContainingChildren, indent + '  ');
-}
-
-function getMarkdownUpToListItemFromList(listItemKey: string, include: boolean, list: ListNode, indent: string): string {
-  let fullMarkdown = "";
-  const childrenSize = list.getChildrenSize();
-  for (let i = 0; i < childrenSize; i++) {
-    const child = list.getChildAtIndex(i);
-    if (!$isListItemNode(child)) continue;
-    if (!listItemContainsLIWithKey(child, listItemKey)) {
-      fullMarkdown += getListItemMarkdownWithChildren(child, indent);
-    } else {
-      fullMarkdown += getMarkdownUpToListItemFromListItem(listItemKey, include, child, indent);
-      break;
-    }
-    if ($getListItemContainingChildren(child)){
-      // in this case our next sibling just has our children
-      // we've already processed our children, so we skip our next sibling
-      i++;
-    }
-  }
-  return fullMarkdown;
-}
-
-export function getMarkdownUpTo(listItemKey: string, include: boolean, root: RootNode): string {
-  let fullMarkdown = "";
-  const topLevelNodes = root.getChildrenSize();
-  for (let i = 0; i < topLevelNodes; i++) {
-    const node = root.getChildAtIndex(i);
-    if (node) {
-      if (!$isListNode(node)) {
-        fullMarkdown += $convertToMarkdownString(TRANSFORMERS, {
-          getChildren: () => [node],
-        } as unknown as ElementNode) + "\n";
       } else {
-        if (!listContainsLIWithKey(node, listItemKey)) {
-          const childrenSize = node.getChildrenSize();
-          for (let j = 0; j < childrenSize; j++) {
-            const child = node.getChildAtIndex(j);
-            if ($isListItemNode(child)) {
-              fullMarkdown += getListItemMarkdownWithChildren(child, '');
-              if ($getListItemContainingChildren(child)) {
-                j++;
-              }
-            }
-          }
-        } else {
-          fullMarkdown += getMarkdownUpToListItemFromList(listItemKey, include, node, '');
-          break;
+        if (callback(node, depth)) {
+          return true;
         }
       }
     }
+    if ($isListNode(node)) {
+      for (const child of node.getChildren()) {
+        if ($isListItemNode(child)) {
+          if (this.traverseListItemsDepthFirst(child, callback, depth + 1)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
+
+  static getMarkdownForNode(node: ElementNode): string {
+    return $convertToMarkdownString(TRANSFORMERS, {
+      getChildren: () => [node],
+    } as unknown as ElementNode);
+  }
+
+  static getMarkdownUpTo(root: ListNode | ListItemNode, targetKey: string): string {
+    let markdown = "";
+    let found = false;
+
+    this.traverseListItemsDepthFirst(root, (node, depth) => {
+      if ($isListItemNode(node)) {
+        if (node.__key === targetKey) {
+          found = true;
+          return true; // Stop traversal
+        } else {
+          markdown += "  ".repeat(depth - 1) + "- " + this.getMarkdownForNode(node) + "\n";
+        }
+      }
+      return false; // Continue traversal
+    });
+
+    return markdown;
+  }
+}
+
+export function getMarkdownUpTo(listItemKey: string, root: RootNode): string {
+  let fullMarkdown = "";
+  root.getChildren().forEach(node => {
+    if ($isListNode(node)) {
+      fullMarkdown += LexicalListUtils.getMarkdownUpTo(node, listItemKey);
+    } else if ($isElementNode(node)) {
+      fullMarkdown += LexicalListUtils.getMarkdownForNode(node) + "\n";
+    }
+  });
+
   return fullMarkdown;
 }

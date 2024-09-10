@@ -131,21 +131,19 @@ export function slurpDialogueContext(displayNodeKey: string, editor: LexicalEdit
         if (dialogue) {
           context.unshift(dialogue);
         } else {
-          if ($isListNode(prevListItem.getFirstChild())) {
-            prevListItem = prevListItem.getPreviousSibling();
-          }
-          if (prevListItem) {
-            priorMarkdown = getMarkdownUpTo(prevListItem.__key, true, root);
+          const nextSibling = prevListItem.getNextSibling();
+          if (nextSibling) {
+            priorMarkdown = getMarkdownUpTo(nextSibling.__key, root);
           }
           break;
         }
         prevListItem = prevListItem.getPreviousSibling();
       }
       if (!priorMarkdown) {
-        if (listItem) priorMarkdown = getMarkdownUpTo(listItem.__key, false, root);
+        if (listItem) priorMarkdown = getMarkdownUpTo(listItem.__key, root);
       }
     } else {
-      if (listItem) priorMarkdown = getMarkdownUpTo(listItem.__key, false, root);
+      if (listItem) priorMarkdown = getMarkdownUpTo(listItem.__key, root);
     }
   })
   return { dialogueContext: context, priorMarkdown: priorMarkdown || "" };
