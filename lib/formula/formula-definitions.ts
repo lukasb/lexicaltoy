@@ -68,7 +68,8 @@ export function getNodeElementEndLine(node: NodeElementMarkdown): number {
 }
 
 export function getNodeElementFullMarkdown(node: NodeElementMarkdown, depth: number = 0): string {
-  const indent = '    '.repeat(depth);
+  //const indent = '    '.repeat(depth);
+  const indent = '';
   let markdown = indent + node.baseNode.nodeMarkdown;
   
   if (node.children.length > 0) {

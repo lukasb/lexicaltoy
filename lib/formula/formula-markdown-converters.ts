@@ -77,6 +77,7 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
         formulaIndent = formulaStart[1];
         formulaLines = [line];
       } else {
+        console.log("pushing", line);
         processedLines.push(line);
       }
     } else {
@@ -103,7 +104,7 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
               if (
                 (nextMatch && nextMatch[1].length > formulaIndent.length) // skip any list item indented further than the formula
                 || (!nextMatch && line.trim())) { // or any multiline continuation of one of those list items
-
+                  
                   i++;
 
               } else {

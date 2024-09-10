@@ -139,7 +139,9 @@ function Editor({
     if (!editorState) return;
     editorState.read(() => {
       const editorStateMarkdown = $convertToMarkdownString(TRANSFORMERS);
+      if (page.title === 'Sep 9th, 2024') console.log("editorStateMarkdown", editorStateMarkdown);
       const pageContentsWithoutSharedNodes = stripSharedNodesFromMarkdown(editorStateMarkdown);
+      if (page.title === 'Sep 9th, 2024') console.log("pageContentsWithoutSharedNodes", pageContentsWithoutSharedNodes);
       const trimmedPageContents = pageContentsWithoutSharedNodes.replace(/\s$/, '');
       const trimmedPageValue = page.value.replace(/\s$/, '');
       if (trimmedPageContents !== trimmedPageValue) {

@@ -380,6 +380,7 @@ function findWikilinkListItemByPageName(
   return null;
 }
 
+// this is used when we already have formula output nodes, but we need to add more
 export function addFormulaOutputNodes(
   editor: LexicalEditor,
   displayNode: FormulaDisplayNode,
