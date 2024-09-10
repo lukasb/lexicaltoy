@@ -16,6 +16,7 @@
     "jest": "jest"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.3",
     "@heroicons/react": "^2.1.1",
     "@lexical/clipboard": "^0.17.0",
     "@lexical/headless": "^0.17.0",
