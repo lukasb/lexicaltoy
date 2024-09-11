@@ -68,6 +68,8 @@ function $updateListItems(root: RootNode, markdownLines: string[]) {
         //console.log('updating list item - old', element.getTextContent());
         //console.log("updating list item - new", newMarkdown);
         // TODO maybe use $myConvertFromMarkdownString - $convertFromMarkdownString will always try to move the selection
+        console.log("new markdown", newMarkdown);
+        console.log("updating this element", element as ListItemNode);
         $convertFromMarkdownString(newMarkdown, TRANSFORMERS, element as ListItemNode);
       }
     } else if (markdownLines[i] !== "") {
