@@ -39,8 +39,12 @@ Items that start with TODO, DOING, NOW, LATER, DONE, or WAITING are todos. Bulle
 Formulas that start with ask(), or don't have an explicit function, trigger a chat with GPT.
 `;
 
-function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
-  const pageValues: string[] = [];
+function getPageContext(page: Page): string {
+  return "## " + page.title + "\n" + page.value + "\n## END OF PAGE CONTENTS\n";
+}
+
+function getPagesContext(pageSpecs: string[], pages: Page[]): string {
+  let pagesContext = "";
 
   function addPages(pageSpec: string) {
     const pageTitle = stripBrackets(pageSpec);
@@ -48,15 +52,15 @@ function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
     if (pageTitle.endsWith("/")) {
       if (pageTitle === "journals/") {
         const journalPages = getLastSixWeeksJournalPages(pages);
-        journalPages.forEach(page => pageValues.push(page.value));
+        journalPages.forEach(page => pagesContext += getPageContext(page));
       } else {
         pages
           .filter(p => p.title.startsWith(pageTitle.slice(0, -1)))
-          .forEach(page => pageValues.push(page.value));
+          .forEach(page => pagesContext += getPageContext(page));
       }
     } else {
       const page = pages.find(p => p.title === pageTitle);
-      if (page) pageValues.push(page.value);
+      if (page) pagesContext += getPageContext(page);
     }
   }
 
@@ -64,7 +68,7 @@ function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
     addPages(pageSpec);
   }
 
-  return pageValues;
+  return pagesContext;
 }
 
 function stripOuterQuotes(s: string): string {
@@ -77,7 +81,7 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
 
   let prompt: string = "";
   let contextSpecs: string[] = [];
-  let contextResults: string[] = [];
+  let contextResults: string = "";
     
   // if a user arg is a wikilink variant, we need to get the relevant page contents if the page exists
   for (const arg of userArgs) {
@@ -110,7 +114,7 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
       for (const possibleArg of possibleArguments) {
         if (possibleArg.type === FormulaValueType.Wikilink && possibleArg.regex && argString.match(possibleArg.regex)) {
           if (contextResults.length > 0) {
-            prompt += "\n## " + stripBrackets(argString) + "\n" + contextResults.shift() + "\n" + "## END OF PAGE CONTENTS\n";
+            prompt += "\n" + contextResults + "\n";
           }
           break;
         }
