@@ -3,6 +3,7 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { PagesContext } from "../context/pages-context";
 import { 
   $convertFromMarkdownString,
+  $convertToMarkdownString,
   TRANSFORMERS
 } from "@lexical/markdown";
 import { PageStatus } from "@/lib/definitions";
@@ -65,12 +66,16 @@ function $updateListItems(root: RootNode, markdownLines: string[]) {
           if (nextMatch) break;
           newMarkdown = newMarkdown + "\n" + markdownLines[j];
         }
-        //console.log('updating list item - old', element.getTextContent());
-        //console.log("updating list item - new", newMarkdown);
         // TODO maybe use $myConvertFromMarkdownString - $convertFromMarkdownString will always try to move the selection
-        console.log("new markdown", newMarkdown);
-        console.log("updating this element", element as ListItemNode);
-        $convertFromMarkdownString(newMarkdown, TRANSFORMERS, element as ListItemNode);
+        // TODO we don't update FDNs here well. this just breaks. handle updates to formula nodes in shared nodes better.
+        let skip = false;
+        if (newMarkdown.startsWith("=")) {
+          const oldMarkdown = $convertToMarkdownString(TRANSFORMERS, {
+            getChildren: () => [element],
+          } as unknown as ElementNode);
+          if (oldMarkdown === newMarkdown) skip = true;
+        }
+        if (!skip) $convertFromMarkdownString(newMarkdown, TRANSFORMERS, element as ListItemNode);
       }
     } else if (markdownLines[i] !== "") {
       previousBlank = false;
