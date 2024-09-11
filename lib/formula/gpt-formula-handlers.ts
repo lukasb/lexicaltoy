@@ -28,7 +28,11 @@ export async function getGPTResponse(prompt: string, context?: PageAndDialogueCo
     // (unless the user excluded  it on purpose, in which case we also shouldn't send it)
   //  fullPrompt = formulaWithoutEqualSign;
   //} else {
-    fullPrompt = getPromptWithContext(formulaWithoutEqualSign, context.priorMarkdown);
+    if (context.priorMarkdown.trim().length > 0) {
+      fullPrompt = getPromptWithContext(formulaWithoutEqualSign, context.priorMarkdown);
+    } else {
+      fullPrompt = formulaWithoutEqualSign;
+    }
   //}
   const gptResponse = await getShortGPTChatResponse(
     fullPrompt,
