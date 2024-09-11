@@ -103,6 +103,9 @@ describe('stripSharedNodesFromMarkdown', () => {
 `;
     const expected = `
 - =find(something)
+  |||result:
+  @@childnodes
+  |||
 - Next item
 `;
     expect(stripSharedNodesFromMarkdown(markdown)).toBe(expected);
@@ -141,11 +144,17 @@ describe('stripSharedNodesFromMarkdown', () => {
 `;
     const expected = `
 - =find(something)
+  |||result:
+  @@childnodes
+  |||
 - =calculate(2 + 2)
   |||result:
   4
   |||
 - =find(another thing)
+  |||result:
+  @@childnodes
+  |||
 - Final item
 `;
     expect(stripSharedNodesFromMarkdown(markdown)).toBe(expected);
@@ -166,6 +175,9 @@ describe('stripSharedNodesFromMarkdown', () => {
 `;
     const expected = `
 - =find(something)
+  |||result:
+  @@childnodes
+  |||
 - Next item
 `;
     expect(stripSharedNodesFromMarkdown(markdown)).toBe(expected);
@@ -183,6 +195,9 @@ describe('stripSharedNodesFromMarkdown', () => {
 `;
     const expected = `
   - =find(something)
+    |||result:
+    @@childnodes
+    |||
   - Next item
 `;
     expect(stripSharedNodesFromMarkdown(markdown)).toBe(expected);

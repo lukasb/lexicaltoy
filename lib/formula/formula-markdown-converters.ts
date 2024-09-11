@@ -85,14 +85,9 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
         const matches = Array.from(fullFormula.matchAll(FORMULA_LIST_ITEM_REGEX));
 
         if (matches.length > 0) {
+          processedLines.push(fullFormula);
           const [, indent, question, result] = matches[0];
           if (question.startsWith('find(')) {
-            if (result && result.trim() != '@@childnodes') {
-              processedLines.push(fullFormula);
-            } else {
-              processedLines.push(`${indent}- =${question}`);
-            }
-
             // Skip child list items
             while (i + 1 < lines.length) {
               const nextLine = lines[i + 1];
@@ -101,15 +96,13 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
               if (
                 (nextMatch && nextMatch[1].length > formulaIndent.length) // skip any list item indented further than the formula
                 || (!nextMatch && line.trim())) { // or any multiline continuation of one of those list items
-                  
+
                   i++;
 
               } else {
                 break;
               }
             }
-          } else {
-            processedLines.push(fullFormula);
           }
         } else {
           // If it doesn't match our formula pattern, just add the lines as is

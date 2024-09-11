@@ -58,11 +58,11 @@ Line 3`;
         baseNode: createBaseNodeMarkdown('TestPage', 1, 1, '- Item 1'),
         children: [
           {
-            baseNode: createBaseNodeMarkdown('TestPage', 2, 2, '- Nested 1'),
+            baseNode: createBaseNodeMarkdown('TestPage', 2, 2, '  - Nested 1'),
             children: []
           },
           {
-            baseNode: createBaseNodeMarkdown('TestPage', 3, 3, '- Nested 2'),
+            baseNode: createBaseNodeMarkdown('TestPage', 3, 3, '  - Nested 2'),
             children: []
           },
         ]
@@ -131,16 +131,16 @@ continues here
         baseNode: createBaseNodeMarkdown('TestPage', 1, 1, '- Item 1'),
         children: [
           {
-            baseNode: createBaseNodeMarkdown('TestPage', 2, 2, '- Nested 1'),
+            baseNode: createBaseNodeMarkdown('TestPage', 2, 2, '  - Nested 1'),
             children: [
               {
-                baseNode: createBaseNodeMarkdown('TestPage', 3, 3, '- Deep nested 1'),
+                baseNode: createBaseNodeMarkdown('TestPage', 3, 3, '    - Deep nested 1'),
                 children: []
               },
             ]
           },
           {
-            baseNode: createBaseNodeMarkdown('TestPage', 4, 4, '- Nested 2'),
+            baseNode: createBaseNodeMarkdown('TestPage', 4, 4, '  - Nested 2'),
             children: []
           },
         ]

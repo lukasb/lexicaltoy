@@ -31,6 +31,7 @@ export default function FormulaDisplayComponent(
   const { sharedNodeMap } = useSharedNodeContext();
   const { getFormulaResults } = useFormulaResultService();
   const pageLineMarkdownMapRef = useRef<Map<string, string>>(new Map<string, string>());
+  const fetchedNodes = useRef<boolean>(false);
 
   useEffect(() => {
     registerFormula(formula);
@@ -94,8 +95,9 @@ export default function FormulaDisplayComponent(
 
   useEffect(() => {
 
-    if (output === "") {
-      setOutput("(getting response...)");
+    if (output === "" || (output === "@@childnodes" && !fetchedNodes.current)) {
+      fetchedNodes.current = true;
+      if (output === "") setOutput("(getting response...)");
       getFormulaOutput(formula);
     } else if (output === "@@childnodes") {
       const sharedNodes: NodeElementMarkdown[] = [];
