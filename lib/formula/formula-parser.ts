@@ -254,7 +254,7 @@ export function getFormulaOutputType(formula: string): FormulaValueType | null {
           return null;
       }
   } catch (error) {
-      console.error("Error parsing formula:", error);
+      //console.error("Error parsing formula:", error);
       return null;
   }
 }

@@ -50,10 +50,10 @@ export function computeFloatingCheckmarkPosition(
 function computeFloatingCheckmarkPositionInternal(editor: LexicalEditor) {
   // lexical selections don't let you get a range?
   const theSelection = window.getSelection();
-  if (!theSelection || !$isRangeSelection(theSelection) || !theSelection.isCollapsed())
+  /*if (!theSelection || !$isRangeSelection(theSelection) || !theSelection.isCollapsed())
   {
     console.log("problem with selection");
-  }
+  }*/
   const range = theSelection?.getRangeAt(0);
   const rect = range?.getBoundingClientRect();
 
