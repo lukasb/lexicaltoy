@@ -171,6 +171,7 @@ export default function FormulaDisplayComponent(
   return (
     <div 
       className="inline items-baseline border-l-4 border-formulaBorderColor pl-1 -ml-1"
+      style={{ WebkitUserSelect: 'text', userSelect: 'text', WebkitTouchCallout: 'default' }}
     >
       <span className="font-semibold bg-bgFormula">{formula}:
         <button className="inline-flex items-center justify-center p-1 text-xs hover:bg-gray-200 rounded" onClick={() => replaceSelfWithEditorNode()}>
