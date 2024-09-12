@@ -28,6 +28,7 @@ import {
 } from "lexical";
 import {
   ListItemNode,
+  $isListItemNode
 } from "@lexical/list";
 import { mergeRegister } from "@lexical/utils";
 import { 
@@ -40,7 +41,8 @@ import {
   SWAP_FORMULA_EDITOR_FOR_DISPLAY,
   STORE_FORMULA_OUTPUT,
   CREATE_FORMULA_NODES,
-  ADD_FORMULA_NODES
+  ADD_FORMULA_NODES,
+  PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY
 } from "@/lib/formula-commands";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
 import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
@@ -204,6 +206,21 @@ export function registerFormulaCommandHandlers(
           }
 
           return false;
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+      editor.registerCommand(
+        PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY,
+        ({ displayNodeKey }) => {
+          const displayNode = $getNodeByKey(displayNodeKey);
+          if (displayNode && $isFormulaDisplayNode(displayNode)) {
+            const parentNode = displayNode.getParent();
+            if (parentNode && $isListItemNode(parentNode)) {
+              parentNode.selectEnd();
+            }
+            displayNode.selectEnd();
+          }
+          return true;
         },
         COMMAND_PRIORITY_EDITOR
       ),

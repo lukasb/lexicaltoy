@@ -12,6 +12,7 @@ import { useSharedNodeContext, createSharedNodeKey } from '../context/shared-nod
 import { useFormulaResultService } from '../../lib/formula/FormulaResultService';
 import { slurpDialogueContext } from '@/lib/formula/FormulaOutput';
 import { registerFormula, unregisterFormula } from '../../lib/formula/FormulaResultService';
+import { PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY } from '@/lib/formula-commands';
 
 export default function FormulaDisplayComponent(
   { formula: initialFormula,
@@ -168,10 +169,23 @@ export default function FormulaDisplayComponent(
     );
   };
 
+  const handleInteractionEnd = useCallback(() => {
+    const selection = window.getSelection();
+    const text = selection?.toString();
+
+    if (!text) {
+      editor.dispatchCommand(PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY, {
+        displayNodeKey: nodeKey
+      });
+    }
+  }, [editor, nodeKey]);
+
   return (
     <div 
       className="inline items-baseline border-l-4 border-formulaBorderColor pl-1 -ml-1"
       style={{ WebkitUserSelect: 'text', userSelect: 'text', WebkitTouchCallout: 'default' }}
+      onMouseUp={handleInteractionEnd}
+      onTouchEnd={handleInteractionEnd}
     >
       <span className="font-semibold bg-bgFormula">{formula}:
         <button className="inline-flex items-center justify-center p-1 text-xs hover:bg-gray-200 rounded" onClick={() => replaceSelfWithEditorNode()}>
