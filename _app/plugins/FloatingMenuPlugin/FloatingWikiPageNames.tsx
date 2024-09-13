@@ -60,6 +60,9 @@ function $search(selection: null | BaseSelection): [boolean, string] {
   let i = node.getTextContentSize();
   let c;
   while (i-- && i >= 0 && (c = text[i]) !== "[") {
+    if (text[i] === "]" && i > 0 && text[i - 1] === "]") {
+      return [false, ""];
+    }
     searchText.push(c);
   }
   if (text[i] !== "[" || i === 0 || text[i - 1] !== "[") {
