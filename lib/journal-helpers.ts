@@ -71,25 +71,24 @@ export function getJournalPageByDate(currentPages: Page[], date: Date) {
   return journalPage;
 }
 
-// get last seven days of journal pages
-// if we have some days without pages, go back up to two weeks
+// Get the last seven journal pages, searching as far back as necessary
 export const getLastWeekJournalPages = (currentPages: Page[]): Page[] => {
   const today = new Date();
-  const lastTwoWeeksJournalPages: Page[] = [];
+  const journalPages: Page[] = [];
   
-  for (let i = 0; i < 14; i++) {
-    const date = new Date();
+  for (let i = 0; currentPages.length > 0; i++) {
+    const date = new Date(today);
     date.setDate(today.getDate() - i);
     const journalPage = getJournalPageByDate(currentPages, date);
-    if (journalPage) {
-      lastTwoWeeksJournalPages.push(journalPage);
-    }
-    if (lastTwoWeeksJournalPages.length >= 7) {
-      break;
+    if (journalPage && journalPage.isJournal) {
+      journalPages.push(journalPage);
+      if (journalPages.length >= 7) {
+        break;
+      }
     }
   }
   
-  return lastTwoWeeksJournalPages;
+  return journalPages;
 }
 
 // get the last six weeks of journal pages
