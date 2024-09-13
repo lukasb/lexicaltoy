@@ -129,7 +129,12 @@ function computeFloatingWikiPageNamesPositionInternal(editor: LexicalEditor) {
 const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
   ({ editor, coords }, ref) => {
     const pages = useContext(PagesContext);
-    const [results, setResults] = useState<WikilinkResult[]>([]);
+    const [results, setResults] = useState<WikilinkResult[]>(() => {
+      const formulaArguments = possibleArguments
+        .filter(arg => arg.type === FormulaValueType.Wikilink && arg.displayName !== "wikilink")
+        .map(arg => ({ title: arg.displayName, description: arg.description }));
+      return [...formulaArguments, ...pages.map(page => ({ title: page.title }))];
+    });
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [cancelled, setCancelled] = useState(false);
     const [position, setPosition] = useState({top: coords?.y, left: coords?.x});
@@ -220,7 +225,12 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
               resetSelf();
               return;
             }
-            const searchResults = searchPageTitles(pages, match);
+            let searchResults: Page[] = [];
+            if (match !== "") {
+              searchResults = searchPageTitles(pages, match);
+            } else {
+              searchResults = pages;
+            }
             let filteredPages: WikilinkResult[] = searchResults.map(page => ({
               title: page.title,
             }));
