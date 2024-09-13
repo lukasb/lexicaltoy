@@ -168,7 +168,7 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   }
 }
 
-export function $isFormulaDisplayNode(node: LexicalNode): node is FormulaDisplayNode {
+export function $isFormulaDisplayNode(node: LexicalNode | null | undefined): node is FormulaDisplayNode {
   return node instanceof FormulaDisplayNode;
 }
 

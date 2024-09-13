@@ -28,7 +28,9 @@ import {
 } from "lexical";
 import {
   ListItemNode,
-  $isListItemNode
+  $isListItemNode,
+  $createListItemNode,
+  $isListNode
 } from "@lexical/list";
 import { mergeRegister } from "@lexical/utils";
 import { 
@@ -98,6 +100,19 @@ function $shouldNotDelete(): boolean {
     (focusAncestor && !selectionNodes.includes(focusAncestor))
   ) return true;
   return false;
+}
+
+function addBulletAfterListItem(listItem: ListItemNode) {
+  const newListItem = $createListItemNode();
+  const nextSibling = listItem.getNextSibling();
+
+  if ($isListItemNode(nextSibling) && $isListNode(nextSibling.getFirstChild())) {
+    nextSibling.insertAfter(newListItem);
+  } else {
+    listItem.insertAfter(newListItem);
+  }
+
+  newListItem.select();
 }
 
 export function registerFormulaCommandHandlers(
@@ -358,7 +373,13 @@ export function registerFormulaCommandHandlers(
           if ($isFormulaEditorNode(anchorNode) && selection.anchor.offset !== anchorNode.getTextContentSize()){
             $replaceWithFormulaDisplayNode(anchorNode);
             return true;
-          } 
+          }
+          if ($isListItemNode(anchorNode) 
+            && $isFormulaDisplayNode(anchorNode.getFirstChild())
+            && selection.anchor.offset > 0) {
+                addBulletAfterListItem(anchorNode);
+                return true;
+          }
           const anchorLI = $getListItemContainingNode(anchorNode);
           if (!anchorLI) return false;
           const displayNode = getAncestorFormulaDisplayNode(anchorLI);
