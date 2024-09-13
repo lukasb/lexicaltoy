@@ -4,7 +4,11 @@ import {
   NodeElementMarkdown,
   FormulaValueType,
 } from "./formula-definitions";
-import { getShortGPTChatResponse } from "../ai";
+import { 
+  FIND_FORMULA_START_REGEX,
+  FORMULA_LIST_ITEM_WITH_RESULTS_REGEX,
+  IS_FORMULA_REGEX
+} from "./formula-markdown-converters";
 import { DefaultArguments, possibleArguments } from "./formula-parser";
 import { Page } from "../definitions";
 import { getLastSixWeeksJournalPages } from "../journal-helpers";
@@ -189,7 +193,9 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
 
           if (matchesAllSubstrings && matchesStatus) {
             // Avoid circular references by excluding lines with find() formulas
-            if (!findFormulaStartRegex.test(nodeMarkdown)) {
+            if (!FIND_FORMULA_START_REGEX.test(nodeMarkdown)
+              // if it's a non-find formula, it has to have results for us to include it
+              && (!IS_FORMULA_REGEX.test(nodeMarkdown) || FORMULA_LIST_ITEM_WITH_RESULTS_REGEX.test(nodeMarkdown))) {
               removeFindNodes(node);
               output.push(node);
             }
@@ -217,8 +223,6 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
     type: FormulaValueType.NodeMarkdown,
   };  
 };
-
-export const findFormulaStartRegex = /^\s*- =(find\(|[^,]*,\s*find\()/;
 
 export function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMarkdown[] {
   const lines = markdown.split("\n");
@@ -301,7 +305,7 @@ export function splitMarkdownByNodes(markdown: string, pageName: string): NodeEl
 export function removeFindNodes(node: NodeElementMarkdown): void {
   for (let i = 0; i < node.children.length; i++) {
     const child = node.children[i];
-    if (findFormulaStartRegex.test(child.baseNode.nodeMarkdown)) {
+    if (FIND_FORMULA_START_REGEX.test(child.baseNode.nodeMarkdown)) {
       node.children.splice(i);
       return;
     }

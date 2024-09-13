@@ -11,12 +11,12 @@
   * We (will eventually) escape any pipe symbols in the formula and output to avoid conflicts with our custom markdown.
   */
 
-//const FORMULA_REGEX = /^=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
-//const FORMULA_LIST_ITEM_REGEX = /^(\s*)-\s?=(.+?)(?:\s*{result:\s*(.+?)})?\s*$/;
 
-const FORMULA_REGEX = /^=(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?$/g;
 const FORMULA_START_REGEX = /^=(.*?)(?:\s*\|\|\|result:|$)/;
 const FORMULA_LIST_ITEM_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?$/gm;
+export const FORMULA_LIST_ITEM_WITH_RESULTS_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)$/gm;
+export const FIND_FORMULA_START_REGEX = /^\s*- =(find\(|[^,]*,\s*find\()/;
+export const IS_FORMULA_REGEX = /^\s*- =/;
 
 // formula as stored by the nodes has the = sign at the front, maybe should change that
 export function getFormulaMarkdown(formula: string, output?: string): string {
