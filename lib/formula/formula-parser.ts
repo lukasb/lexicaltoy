@@ -24,15 +24,15 @@ export const TODO_STATUS_REGEX_EXTERNAL = /^(now|later|doing|waiting|done|todo)(
 // the order of these is important - it will take the first match
 export const possibleArguments: PossibleArguments[] = [
   {
-    displayName: "[[journals/]]",
+    displayName: "journals/",
     type: FormulaValueType.Wikilink,
-    description: "add [[journals/]] to include the last six weeks of journal entries",
+    description: "include the last six weeks of journal entries",
     regex: /^\[\[journals\/\]\]$/
   },
   {
-    displayName: "[[foldername/]]",
+    displayName: "foldername/",
     type: FormulaValueType.Wikilink,
-    description: "add [[foldername/]] to include the contents of all pages that start with foldername",
+    description: "include the contents of all pages that start with foldername",
     regex: /^\[\[.*?\/\]\]$/
   },
   {

@@ -8,7 +8,7 @@ import React, {
   createRef
 } from "react";
 import { searchPageTitles } from "@/lib/pages-helpers";
-import { Page } from "@/lib/definitions";
+import { Page, PageStatus } from "@/lib/definitions";
 import {
   BaseSelection,
   $isRangeSelection,
@@ -26,6 +26,8 @@ import { isSmallWidthViewport } from "@/lib/window-helpers";
 import { createDOMRange } from "@lexical/selection";
 import { $isFormulaEditorNode } from "@/_app/nodes/FormulaNode";
 import { $isFormattableTextNode } from "@/_app/nodes/FormattableTextNode";
+import { possibleArguments } from "@/lib/formula/formula-parser";
+import { FormulaValueType } from "@/lib/formula/formula-definitions";
 
 // TODO figure out actual line height instead of hardcoding 30
 const editorLineHeight = 30;
@@ -33,42 +35,52 @@ const menuLineHeight = 40;
 const mobileMaxHeight = 100;
 const desktopMaxHeight = 400;
 
+type WikilinkResult = {
+  title: string;
+  description?: string;
+}
+
 export function shouldShowFloatingWikiPageNames(selection: BaseSelection) {
   if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
-  const [hasMatch, match] = $search(selection);
+  const [hasMatch, match, inFormula] = $search(selection);
   return hasMatch;
 }
 
 // tries to find "[[wikilink pagename" before the cursor
-// returns [true, "wikilink pagename"] if it finds one
-function $search(selection: null | BaseSelection): [boolean, string] {
+// returns [true, "wikilink pagename", inFormula] if it finds one
+// inFormula is true if the wikilink is inside a formula
+function $search(selection: null | BaseSelection): [boolean, string, boolean] {
   if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
-    return [false, ""];
+    return [false, "", false];
   }
   const node = selection.getNodes()[0];
   const anchor = selection.anchor;
+  let inFormula = false;
   // Check siblings?
   if (
     !$isTextNode(node) ||
     (!$isFormattableTextNode(node) && !$isFormulaEditorNode(node)) ||
     !$isAtNodeEnd(anchor)
   ) {
-    return [false, ""];
+    return [false, "", false];
+  } else if ($isFormulaEditorNode(node)) {
+    inFormula = true;
   }
   const searchText = [];
   const text = node.getTextContent();
   let i = node.getTextContentSize();
   let c;
+  
   while (i-- && i >= 0 && (c = text[i]) !== "[") {
     if (text[i] === "]" && i > 0 && text[i - 1] === "]") {
-      return [false, ""];
+      return [false, "", false];
     }
     searchText.push(c);
   }
   if (text[i] !== "[" || i === 0 || text[i - 1] !== "[") {
-    return [false, ""];
+    return [false, "", false];
   }
-  return [true, searchText.reverse().join("")];
+  return [true, searchText.reverse().join(""), inFormula];
 }
 
 export function computeFloatingWikiPageNamesPosition(
@@ -117,7 +129,7 @@ function computeFloatingWikiPageNamesPositionInternal(editor: LexicalEditor) {
 const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
   ({ editor, coords }, ref) => {
     const pages = useContext(PagesContext);
-    const [results, setResults] = useState<Page[]>(pages);
+    const [results, setResults] = useState<WikilinkResult[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [cancelled, setCancelled] = useState(false);
     const [position, setPosition] = useState({top: coords?.y, left: coords?.x});
@@ -171,11 +183,11 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
       }
     }, [selectedIndex]);
 
-    const handleSelectSuggestion = useCallback((page: Page) => {
+    const handleSelectSuggestion = useCallback((result: WikilinkResult) => {
       editor.update(() => {
         const selection = $getSelection();
         if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return;
-        const [hasMatch, match] = $search(selection);
+        const [hasMatch, match, inFormula] = $search(selection);
         if (!hasMatch) return;
 
         const {anchor, focus} = selection;
@@ -193,7 +205,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
           selection.removeText();
         }
         
-        selection.insertText(page.title + "]]");
+        selection.insertText(result.title + "]]");
         resetSelf();
       });
     }, [editor, resetSelf]);
@@ -203,12 +215,21 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         ({ editorState }) => {
           editorState.read(() => {
             const selection = $getSelection();
-            const [hasMatch, match] = $search(selection);
+            const [hasMatch, match, inFormula] = $search(selection);
             if (!hasMatch) {
               resetSelf();
               return;
             }
-            const filteredPages = searchPageTitles(pages, match);
+            const searchResults = searchPageTitles(pages, match);
+            let filteredPages: WikilinkResult[] = searchResults.map(page => ({
+              title: page.title,
+            }));
+            if (inFormula) {
+              const formulaArguments = possibleArguments
+                .filter(arg => arg.type === FormulaValueType.Wikilink && arg.displayName !== "wikilink")
+                .map(arg => ({ title: arg.displayName, description: arg.description }));
+              filteredPages = [...formulaArguments, ...filteredPages];
+            }
             setResults(filteredPages);
           });
         }
