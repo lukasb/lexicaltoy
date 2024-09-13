@@ -1,22 +1,5 @@
 import { Page } from './definitions';
 
-export function searchPageTitles(pages: Page[], term: string): Page[] {
-  const normalizedTerm = term.toLowerCase();
-  const result: Page[] = [];
-  const includesTerm: Page[] = [];
-
-  for (const page of pages) {
-    const normalizedTitle = page.title.toLowerCase();
-    if (normalizedTitle.startsWith(normalizedTerm)) {
-      result.push(page);
-    } else if (normalizedTitle.includes(normalizedTerm)) {
-      includesTerm.push(page);
-    }
-  }
-
-  return result.concat(includesTerm);
-}
-
 export function searchPages(pages: Page[], searchTerm: string): Page[] {
   const searchTerms = searchTerm.split(/\s+/).filter(term => term.length > 0);
   

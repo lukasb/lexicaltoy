@@ -7,8 +7,7 @@ import React, {
   useRef,
   createRef
 } from "react";
-import { searchPageTitles } from "@/lib/pages-helpers";
-import { Page, PageStatus } from "@/lib/definitions";
+import { Page } from "@/lib/definitions";
 import {
   BaseSelection,
   $isRangeSelection,
@@ -38,6 +37,23 @@ const desktopMaxHeight = 400;
 type WikilinkResult = {
   title: string;
   description?: string;
+}
+
+export function searchPageTitles(potentialResults: WikilinkResult[], term: string): WikilinkResult[] {
+  const normalizedTerm = term.toLowerCase();
+  const result: WikilinkResult[] = [];
+  const includesTerm: WikilinkResult[] = [];
+
+  for (const potentialResult of potentialResults) {
+    const normalizedTitle = potentialResult.title.toLowerCase();
+    if (normalizedTitle.startsWith(normalizedTerm)) {
+      result.push(potentialResult);
+    } else if (normalizedTitle.includes(normalizedTerm)) {
+      includesTerm.push(potentialResult);
+    }
+  }
+
+  return result.concat(includesTerm);
 }
 
 export function shouldShowFloatingWikiPageNames(selection: BaseSelection) {
@@ -225,22 +241,24 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
               resetSelf();
               return;
             }
-            let searchResults: Page[] = [];
-            if (match !== "") {
-              searchResults = searchPageTitles(pages, match);
-            } else {
-              searchResults = pages;
-            }
-            let filteredPages: WikilinkResult[] = searchResults.map(page => ({
-              title: page.title,
-            }));
+            let searchResults: WikilinkResult[] = [];
+            const potentialResults: WikilinkResult[] = pages.map(page => ({title: page.title}));
             if (inFormula) {
               const formulaArguments = possibleArguments
                 .filter(arg => arg.type === FormulaValueType.Wikilink && arg.displayName !== "wikilink")
-                .map(arg => ({ title: arg.displayName, description: arg.description }));
-              filteredPages = [...formulaArguments, ...filteredPages];
+                .map(arg => ({ 
+                  title: arg.nameDisplayHelper ? arg.nameDisplayHelper(arg.displayName) : arg.displayName,
+                  description: arg.descriptionDisplayHelper ? arg.descriptionDisplayHelper(arg.displayName) : arg.description
+                }));
+              potentialResults.unshift(...formulaArguments);
             }
-            setResults(filteredPages);
+            if (match !== "") {
+              console.log("potentialResults", potentialResults.filter(result => result.description));
+              searchResults = searchPageTitles(potentialResults, match);
+            } else {
+              searchResults = potentialResults;
+            }
+            setResults(searchResults);
           });
         }
       );
@@ -318,7 +336,12 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
               }`}
               onClick={() => handleSelectSuggestion(result)}
             >
-              {result.title}
+              <span>{result.title}</span>
+              {result.description && (
+                <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                  {result.description}
+                </span>
+              )}
             </li>
           ))}
         </ul>

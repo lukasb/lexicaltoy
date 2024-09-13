@@ -16,6 +16,8 @@ interface PossibleArguments {
   type: FormulaValueType;
   description: string;
   regex?: RegExp;
+  nameDisplayHelper?: (input: string) => string;
+  descriptionDisplayHelper?: (input: string) => string;
 }
 
 const TODO_STATUS_REGEX_LEXER = /(now|later|doing|waiting|done|todo)(\|(now|later|doing|waiting|done|todo))*/i;
@@ -33,7 +35,15 @@ export const possibleArguments: PossibleArguments[] = [
     displayName: "foldername/",
     type: FormulaValueType.Wikilink,
     description: "include the contents of all pages that start with foldername",
-    regex: /^\[\[.*?\/\]\]$/
+    regex: /^\[\[.*?\/\]\]$/,
+    nameDisplayHelper: (input: string) => { 
+      const folderName = input.length > 0 ? input : "foldername";
+      return folderName + "/"; 
+    },
+    descriptionDisplayHelper: (input: string) => { 
+      const folderName = input.length > 0 ? input : "foldername";
+      return "include the contents of all pages whose titles start with " + folderName; 
+    }
   },
   {
     displayName: "wikilink",
