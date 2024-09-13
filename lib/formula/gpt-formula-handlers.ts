@@ -4,7 +4,7 @@ import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 
 function getPromptWithContext(formula: string, priorMarkdown: string): string {
   return `
-The user is asking a question in the context of a document. The question might or not be related to the document.
+The user is editing this document with an app that supports inline chats with language models. The question might or not be related to the rest of the document. If it's not related, ignore the document content when answering the user question.
 # DOCUMENT CONTENT
 ${priorMarkdown}
 # END DOCUMENT CONTENT
