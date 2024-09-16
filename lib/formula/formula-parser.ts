@@ -18,6 +18,7 @@ interface PossibleArguments {
   regex?: RegExp;
   nameDisplayHelper?: (input: string) => string;
   descriptionDisplayHelper?: (input: string) => string;
+  shouldShow?: (input: string) => boolean;
 }
 
 const TODO_STATUS_REGEX_LEXER = /(now|later|doing|waiting|done|todo)(\|(now|later|doing|waiting|done|todo))*/i;
@@ -29,7 +30,10 @@ export const possibleArguments: PossibleArguments[] = [
     displayName: "journals/",
     type: FormulaValueType.Wikilink,
     description: "include the last six weeks of journal entries",
-    regex: /^\[\[journals\/\]\]$/
+    regex: /^\[\[journals\/\]\]$/,
+    shouldShow: (input: string) => {
+      return (input.length === 0 || "journals/".startsWith(input));
+    }
   },
   {
     displayName: "foldername/",

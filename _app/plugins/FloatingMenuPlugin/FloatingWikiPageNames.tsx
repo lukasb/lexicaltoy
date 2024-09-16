@@ -37,23 +37,30 @@ const desktopMaxHeight = 400;
 type WikilinkResult = {
   title: string;
   description?: string;
+  showTop?: boolean;
 }
 
 export function searchPageTitles(potentialResults: WikilinkResult[], term: string): WikilinkResult[] {
   const normalizedTerm = term.toLowerCase();
-  const result: WikilinkResult[] = [];
+  const exactMatch: WikilinkResult[] = [];
+  const topResults: WikilinkResult[] = [];
+  const startsWithTerm: WikilinkResult[] = [];
   const includesTerm: WikilinkResult[] = [];
 
   for (const potentialResult of potentialResults) {
     const normalizedTitle = potentialResult.title.toLowerCase();
-    if (normalizedTitle.startsWith(normalizedTerm)) {
-      result.push(potentialResult);
+    if (normalizedTitle === normalizedTerm) {
+      exactMatch.push(potentialResult);
+    } else if (potentialResult.showTop) {
+      topResults.push(potentialResult);
+    } else if (normalizedTitle.startsWith(normalizedTerm)) {
+      startsWithTerm.push(potentialResult);
     } else if (normalizedTitle.includes(normalizedTerm)) {
       includesTerm.push(potentialResult);
     }
   }
 
-  return result.concat(includesTerm);
+  return [...exactMatch, ...topResults, ...startsWithTerm, ...includesTerm];
 }
 
 export function shouldShowFloatingWikiPageNames(selection: BaseSelection) {
@@ -245,15 +252,19 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
             const potentialResults: WikilinkResult[] = pages.map(page => ({title: page.title}));
             if (inFormula) {
               const formulaArguments = possibleArguments
-                .filter(arg => arg.type === FormulaValueType.Wikilink && arg.displayName !== "wikilink")
+                .filter(arg => 
+                  arg.type === FormulaValueType.Wikilink
+                  && arg.displayName !== "wikilink"
+                  && (arg.shouldShow ? arg.shouldShow(match) : true)
+                )
                 .map(arg => ({ 
-                  title: arg.nameDisplayHelper ? arg.nameDisplayHelper(arg.displayName) : arg.displayName,
-                  description: arg.descriptionDisplayHelper ? arg.descriptionDisplayHelper(arg.displayName) : arg.description
+                  title: arg.nameDisplayHelper ? arg.nameDisplayHelper(match) : arg.displayName,
+                  description: arg.descriptionDisplayHelper ? arg.descriptionDisplayHelper(match) : arg.description,
+                  showTop: true
                 }));
               potentialResults.unshift(...formulaArguments);
             }
             if (match !== "") {
-              console.log("potentialResults", potentialResults.filter(result => result.description));
               searchResults = searchPageTitles(potentialResults, match);
             } else {
               searchResults = potentialResults;
