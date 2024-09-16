@@ -30,6 +30,7 @@ export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, r
     }
   }
   
+  console.log("Fetching pages");
   let pages = await fetchPages(session.id);
   if (pages) {
     pages = JSON.parse(JSON.stringify(pages));
