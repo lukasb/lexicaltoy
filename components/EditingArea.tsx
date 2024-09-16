@@ -94,9 +94,9 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     handleDeleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, currentPages, setCurrentPages);
   }, [userId, currentPages, fetchAndSetPages]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     fetchAndSetPages();
-  }, [userId, fetchAndSetPages]);
+  }, [userId, fetchAndSetPages]);*/
 
   useEffect(() => {
     if (!setupDoneRef.current) {
