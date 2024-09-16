@@ -20,6 +20,7 @@ interface PageProps {
 export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, res}) => {
   const session = await getSessionServer(req, res);
   if (!session || !session.id) {
+    console.log("Problem with session in getServerSideProps", session);
     return {
       props: {
         session: null,
@@ -29,7 +30,11 @@ export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, r
   }
   
   let pages = await fetchPages(session.id);
-  if (pages) pages = JSON.parse(JSON.stringify(pages));
+  if (pages) {
+    pages = JSON.parse(JSON.stringify(pages));
+  } else {
+    console.log("Problem with pages in getServerSideProps", pages);
+  }
   
   return {
     props: {
