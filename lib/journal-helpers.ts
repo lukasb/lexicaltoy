@@ -76,7 +76,7 @@ export const getLastWeekJournalPages = (currentPages: Page[]): Page[] => {
   const today = new Date();
   const journalPages: Page[] = [];
   
-  for (let i = 0; i < currentPages.length && journalPages.length < 7; i++) {
+  for (let i = 0; currentPages.length < 7; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() - i);
     const journalPage = getJournalPageByDate(currentPages, date);
