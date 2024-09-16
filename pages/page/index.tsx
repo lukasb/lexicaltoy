@@ -18,6 +18,7 @@ interface PageProps {
 }
 
 export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, res}) => {
+  console.log("getServerSideProps");
   const session = await getSessionServer(req, res);
   if (!session || !session.id) {
     console.log("Problem with session in getServerSideProps", session);
