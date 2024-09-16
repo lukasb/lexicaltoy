@@ -30,8 +30,7 @@ import {
 } from "@/lib/pages-helpers";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
-  console.log("EditingArea");
-  
+
   const [isClient, setIsClient] = useState(false)
   const [currentPages, setCurrentPages] = useState<Page[]>(pages);
   const emptyPageMarkdownString = '- ';
@@ -94,9 +93,9 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     handleDeleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, currentPages, setCurrentPages);
   }, [userId, currentPages, fetchAndSetPages]);
 
-  /*useEffect(() => {
+  useEffect(() => {
     fetchAndSetPages();
-  }, [userId, fetchAndSetPages]);*/
+  }, [userId, fetchAndSetPages]);
 
   useEffect(() => {
     if (!setupDoneRef.current) {
