@@ -34,6 +34,7 @@ export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, r
   let pages = await fetchPages(session.id);
   if (pages) {
     pages = JSON.parse(JSON.stringify(pages));
+    console.log("Got pages");
   } else {
     console.log("Problem with pages in getServerSideProps", pages);
   }
