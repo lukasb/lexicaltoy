@@ -1,5 +1,4 @@
 import { fetchPages } from "@/lib/dbFetch";
-import EditingArea from "../../components/EditingArea";
 import { isDevelopmentEnvironment } from "@/lib/environment";
 import { SignoutButton } from "../../components/SignoutButton";
 import { getSessionServer } from "@/lib/getAuth";
@@ -9,6 +8,9 @@ import type { NextPageWithLayout } from '@/pages/_app'
 import type { InferGetServerSidePropsType, GetServerSideProps } from 'next';
 import { Session } from 'next-auth';
 import { Page as AppPage } from '@/lib/definitions';
+import dynamic from 'next/dynamic';
+
+const EditingArea = dynamic(() => import('../../components/EditingArea'), { ssr: false });
 
 export const maxDuration = 60;
 
@@ -34,7 +36,7 @@ export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, r
   let pages = await fetchPages(session.id);
   if (pages) {
     pages = JSON.parse(JSON.stringify(pages));
-    console.log("Got pages");
+    console.log("Got pages"); 
   } else {
     console.log("Problem with pages in getServerSideProps", pages);
   }
