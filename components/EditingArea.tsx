@@ -30,7 +30,8 @@ import {
 } from "@/lib/pages-helpers";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
-
+  console.log("EditingArea");
+  
   const [isClient, setIsClient] = useState(false)
   const [currentPages, setCurrentPages] = useState<Page[]>(pages);
   const emptyPageMarkdownString = '- ';
