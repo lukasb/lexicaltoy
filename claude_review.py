@@ -1,6 +1,5 @@
 import sys
 import os
-import requests
 from dotenv import load_dotenv
 import anthropic
 
@@ -21,7 +20,7 @@ def read_file_contents(file_path):
 def send_to_claude(files_content):
 
     client = anthropic.Anthropic(api_key=API_KEY)
-    prompt = """Please review the following code for bugs. If you don't see any bugs, provide a concise response saying it looks fine. If you do see bugs, provide an excerpt of the code, along with the name of thefile it comes from, and say what you think the problem is.
+    prompt = """Please review the following code for bugs. If you don't see any bugs, provide a concise response saying it looks fine. If you do see bugs, provide an excerpt of the code, along with the name of the file it comes from, and say what you think the problem is.
 
 Here's the code to review:
 
