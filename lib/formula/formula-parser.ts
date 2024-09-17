@@ -47,6 +47,9 @@ export const possibleArguments: PossibleArguments[] = [
     descriptionDisplayHelper: (input: string) => { 
       const folderName = input.length > 0 ? input : "foldername";
       return "include the contents of all pages whose titles start with " + folderName; 
+    },
+    shouldShow: (input: string) => {
+      return (input !== "journals");
     }
   },
   {
