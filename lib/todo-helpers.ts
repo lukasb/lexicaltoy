@@ -69,7 +69,7 @@ export const $unwrapTodoContents = (node: ListItemNode) => {
   todoNode.remove();
 };
 
-export const $setTodoStrikethrough = (node: ListItemNode, done: boolean) => {
+export const $setTodoStrikethrough = (node: ListItemNode, done: boolean) => {  
   for (const child of node.getChildren()) {
     if ($isFormattableTextNode(child)) {
       child.setStrikethrough(done);

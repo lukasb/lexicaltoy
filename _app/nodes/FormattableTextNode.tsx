@@ -17,6 +17,11 @@ export class FormattableTextNode extends TextNode {
 
   __strikeThrough: boolean = false;
 
+  constructor(text: string, key?: string, strikethrough: boolean = false) {
+    super(text, key);
+    this.__strikeThrough = strikethrough;
+  }
+
   static getType(): string {
     return 'formattable-text';
   }
@@ -24,6 +29,11 @@ export class FormattableTextNode extends TextNode {
   setStrikethrough(strikeThrough: boolean): void {
     const self = this.getWritable();
     self.__strikeThrough = strikeThrough;
+  }
+
+  getStrikethrough(): boolean {
+    const self = this.getLatest();
+    return self.__strikeThrough;
   }
 
   createDOM(config: EditorConfig): HTMLElement {
@@ -63,7 +73,7 @@ export class FormattableTextNode extends TextNode {
   }
 
   static clone(node: FormattableTextNode): FormattableTextNode {
-    return new FormattableTextNode(node.getTextContent(), node.__key);
+    return new FormattableTextNode(node.getTextContent(), node.__key, node.getStrikethrough());
   }
 
   // without this users can't type in the text node
@@ -87,8 +97,8 @@ export class FormattableTextNode extends TextNode {
   */
 }
 
-export function $createFormattableTextNode(text: string): FormattableTextNode {
-  return new FormattableTextNode(text);
+export function $createFormattableTextNode(text: string, strikethrough: boolean = false): FormattableTextNode {
+  return new FormattableTextNode(text, undefined, strikethrough);
 }
 
 export function $isFormattableTextNode(node: LexicalNode): node is FormattableTextNode {
