@@ -152,12 +152,7 @@ function computeFloatingWikiPageNamesPositionInternal(editor: LexicalEditor) {
 const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
   ({ editor, coords }, ref) => {
     const pages = useContext(PagesContext);
-    const [results, setResults] = useState<WikilinkResult[]>(() => {
-      const formulaArguments = possibleArguments
-        .filter(arg => arg.type === FormulaValueType.Wikilink && arg.displayName !== "wikilink")
-        .map(arg => ({ title: arg.displayName, description: arg.description }));
-      return [...formulaArguments, ...pages.map(page => ({ title: page.title }))];
-    });
+    const [results, setResults] = useState<WikilinkResult[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [cancelled, setCancelled] = useState(false);
     const [position, setPosition] = useState({top: coords?.y, left: coords?.x});
@@ -238,6 +233,44 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
       });
     }, [editor, resetSelf]);
 
+    // Extract the result updating logic into a separate function
+    const updateResults = useCallback((match: string, inFormula: boolean) => {
+      let searchResults: WikilinkResult[] = [];
+      const potentialResults: WikilinkResult[] = pages.map(page => ({title: page.title}));
+      if (inFormula) {
+        const formulaArguments = possibleArguments
+          .filter(arg => 
+            arg.type === FormulaValueType.Wikilink
+            && arg.displayName !== "wikilink"
+            && (arg.shouldShow ? arg.shouldShow(match) : true)
+          )
+          .map(arg => ({ 
+            title: arg.nameDisplayHelper ? arg.nameDisplayHelper(match) : arg.displayName,
+            description: arg.descriptionDisplayHelper ? arg.descriptionDisplayHelper(match) : arg.description,
+            showTop: true
+          }));
+        potentialResults.unshift(...formulaArguments);
+      }
+      if (match !== "") {
+        searchResults = searchPageTitles(potentialResults, match);
+      } else {
+        searchResults = potentialResults;
+      }
+      setResults(searchResults);
+    }, [pages]);
+
+    useEffect(() => {
+      if (shouldShow && editor) {
+        editor.getEditorState().read(() => {
+          const selection = $getSelection();
+          const [hasMatch, match, inFormula] = $search(selection);
+          if (hasMatch) {
+            updateResults(match, inFormula);
+          }
+        });
+      }
+    }, [shouldShow, editor, updateResults]);
+
     useEffect(() => {
       const unregisterListener = editor.registerUpdateListener(
         ({ editorState }) => {
@@ -248,33 +281,12 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
               resetSelf();
               return;
             }
-            let searchResults: WikilinkResult[] = [];
-            const potentialResults: WikilinkResult[] = pages.map(page => ({title: page.title}));
-            if (inFormula) {
-              const formulaArguments = possibleArguments
-                .filter(arg => 
-                  arg.type === FormulaValueType.Wikilink
-                  && arg.displayName !== "wikilink"
-                  && (arg.shouldShow ? arg.shouldShow(match) : true)
-                )
-                .map(arg => ({ 
-                  title: arg.nameDisplayHelper ? arg.nameDisplayHelper(match) : arg.displayName,
-                  description: arg.descriptionDisplayHelper ? arg.descriptionDisplayHelper(match) : arg.description,
-                  showTop: true
-                }));
-              potentialResults.unshift(...formulaArguments);
-            }
-            if (match !== "") {
-              searchResults = searchPageTitles(potentialResults, match);
-            } else {
-              searchResults = potentialResults;
-            }
-            setResults(searchResults);
+            updateResults(match, inFormula);
           });
         }
       );
       return unregisterListener;
-    }, [editor, pages, resetSelf]);
+    }, [editor, updateResults, resetSelf]);
 
     // we're doing this to memoize state (results, shouldShow etc)
     // component was being mounted twice and the second time it didn't have the right state
