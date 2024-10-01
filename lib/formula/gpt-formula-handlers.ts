@@ -2,7 +2,7 @@ import { getShortGPTChatResponse } from "../ai";
 import { PageAndDialogueContext } from "./FormulaOutput";
 import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 
-function getPromptWithContext(formula: string, priorMarkdown: string): string {
+function getPromptWithContextForChat(formula: string, priorMarkdown: string): string {
   return `
 The user is editing this document with an app that supports inline chats with language models. The question might or not be related to the rest of the document.
 If it's not related, ignore the document content when answering the user question, and do not mention that the document content is not relevant.
@@ -11,6 +11,18 @@ ${priorMarkdown}
 # END DOCUMENT CONTENT
 
 ${formula}
+`
+}
+
+export function getPromptWithContextForGeneration(prompt: string, priorMarkdown: string): string {
+  return `
+The user is editing this document with an app that supports inline generation with language models. The user prompt might or not be related to the rest of the document.
+If it's not related, ignore the document content.
+# DOCUMENT CONTENT
+${priorMarkdown}
+# END DOCUMENT CONTENT
+
+User prompt: ${prompt}
 `
 }
 
@@ -30,7 +42,7 @@ export async function getGPTResponse(prompt: string, context?: PageAndDialogueCo
   //  fullPrompt = formulaWithoutEqualSign;
   //} else {
     if (context.priorMarkdown.trim().length > 0) {
-      fullPrompt = getPromptWithContext(formulaWithoutEqualSign, context.priorMarkdown);
+      fullPrompt = getPromptWithContextForChat(formulaWithoutEqualSign, context.priorMarkdown);
     } else {
       fullPrompt = formulaWithoutEqualSign;
     }

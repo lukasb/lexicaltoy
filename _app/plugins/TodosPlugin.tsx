@@ -26,25 +26,10 @@ import {
   SET_TODO_STATUS_COMMAND
 } from '@/lib/todo-commands';
 import { ListItemNode } from '@lexical/list';
-import { $isRangeSelection } from 'lexical';
 import { $getSelection } from 'lexical';
 import { $isListNode } from '@lexical/list';
 import { $isFormattableTextNode } from '../nodes/FormattableTextNode';
-
-function getListItemFromSelection(selection: BaseSelection): ListItemNode | null {
-  if (
-    selection === null ||
-    !$isRangeSelection(selection) ||
-    !selection.isCollapsed()
-  ) {
-    return null;
-  }
-  const node = selection.anchor.getNode().getParent();
-  if (node instanceof ListItemNode) {
-    return node;
-  }
-  return null;
-}
+import { getListItemFromSelection } from '@/lib/list-utils';
 
 function todoAddOrChangeCommand(status: TodoStatus, done: boolean) {
   const theSelection = $getSelection();

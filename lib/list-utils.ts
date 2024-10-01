@@ -1,11 +1,17 @@
-import { BaseSelection, $isRootNode, $isRangeSelection, $isNodeSelection } from "lexical";
+import { 
+  BaseSelection, 
+  $isRootNode, 
+  $isRangeSelection, 
+  $isNodeSelection,
+  $createTextNode
+} from "lexical";
 import { 
   ListItemNode,
   $createListItemNode,
   $createListNode,
   ListNode,
   $isListItemNode,
-  $isListNode
+  $isListNode,
 } from "@lexical/list";
 import { LexicalNode } from "lexical";
 
@@ -225,6 +231,22 @@ export function $addChildListItem(parent: ListItemNode, prepend: boolean, change
   }
   if (changeSelection) newListItem.selectEnd();
 }
+
+export function $createAndAddChildren(parent: ListItemNode, childrenText: string[]) {
+  let childrenList = $getListContainingChildren(parent);
+  if (!childrenList) {
+    childrenList = $createListNode((parent.getParent() as ListNode).getListType());
+    const newSibling = $createListItemNode();
+    newSibling.append(childrenList);
+    parent.insertAfter(newSibling);
+  }
+  for (let text of childrenText) {
+    const newListItem = $createListItemNode();
+    newListItem.append($createTextNode(text));
+    childrenList.append(newListItem);
+  }
+}
+
 // return true if we're the only child of our parent
 // (if we have children they will appear as the grandchildren of a sibling of ours)
 function isOnlyChild(listItem: ListItemNode): boolean {
@@ -294,4 +316,19 @@ export function $deleteListItem(listItem: ListItemNode, fixSelection: boolean) {
       previousListItem.selectEnd();
     }
   }
+}
+
+export function getListItemFromSelection(selection: BaseSelection): ListItemNode | null {
+  if (
+    selection === null ||
+    !$isRangeSelection(selection) ||
+    !selection.isCollapsed()
+  ) {
+    return null;
+  }
+  const node = selection.anchor.getNode().getParent();
+  if (node instanceof ListItemNode) {
+    return node;
+  }
+  return null;
 }

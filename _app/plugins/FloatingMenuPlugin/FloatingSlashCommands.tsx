@@ -34,7 +34,7 @@ import {
 } from "@/lib/todo-commands";
 import { URL_REGEX } from "../AutoLinkPlugin";
 import { $isFormattableTextNode } from "@/_app/nodes/FormattableTextNode";
-
+import { AI_GENERATE_NODES } from "@/lib/ai-commands";
 // TODO figure out actual line height instead of hardcoding 30
 // this is copied from FloatingWikiPageNames.tsx should probably be shared
 const editorLineHeight = 30;
@@ -74,6 +74,12 @@ const canRemoveTodo = (selection: BaseSelection) => {
 }
 
 const slashCommands = [
+  {
+    shortName: "AI",
+    description: "Generate nodes with AI",
+    command: AI_GENERATE_NODES,
+    shouldShow: () => true
+  },
   {
     shortName: "NOW",
     description: "Create a new todo set to NOW",

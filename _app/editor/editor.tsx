@@ -54,6 +54,7 @@ import FloatingCheckmark from "../plugins/FloatingMenuPlugin/FloatingCheckmark";
 import { shouldShowFloatingCheckmark, computeFloatingCheckmarkPosition } from "../plugins/FloatingMenuPlugin/FloatingCheckmark";
 import { SearchHighlighterPlugin } from "@/_app/plugins/SearchHighlighterPlugin";
 import { useSearchTerms } from "../context/search-terms-context";
+import { AIGeneratorPlugin } from "../plugins/AIGeneratorPlugin";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -190,6 +191,7 @@ function Editor({
         <ListCommandsPlugin />
         <HistoryPlugin />
         <AutoLinkPlugin />
+        <AIGeneratorPlugin />
         <LexicalClickableLinkPlugin />
         <FormulaPlugin />
         <TodosPlugin />

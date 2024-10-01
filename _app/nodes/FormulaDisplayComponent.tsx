@@ -10,7 +10,7 @@ import { usePromises } from '../context/formula-request-context';
 import { FormulaValueType, NodeElementMarkdown, getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
 import { useSharedNodeContext, createSharedNodeKey } from '../context/shared-node-context';
 import { useFormulaResultService } from '../../lib/formula/FormulaResultService';
-import { slurpDialogueContext } from '@/lib/formula/FormulaOutput';
+import { slurpPageAndDialogueContext } from '@/lib/formula/FormulaOutput';
 import { registerFormula, unregisterFormula } from '../../lib/formula/FormulaResultService';
 import { PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY } from '@/lib/formula-commands';
 
@@ -43,7 +43,7 @@ export default function FormulaDisplayComponent(
 
   const getFormulaOutput = useCallback(async (prompt: string) => {
     if (!hasPromise(nodeKey)) {
-      const dialogueContext = slurpDialogueContext(nodeKey, editor);
+      const dialogueContext = slurpPageAndDialogueContext(nodeKey, editor);
       const promise = getFormulaResults(prompt, dialogueContext)
         .then(response => {
           if (response) {

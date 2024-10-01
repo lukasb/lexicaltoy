@@ -1,1 +1,1 @@
-export const MODEL_NAME = "gpt-4o";
+export const MODEL_NAME = "gpt-4o-2024-08-06";

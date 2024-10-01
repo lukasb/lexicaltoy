@@ -115,11 +115,16 @@ export type PageAndDialogueContext = {
 
 // return context for the current conversation (any dialogue for preceding list items)
 // and the markdown from before the current list item
-export function slurpDialogueContext(displayNodeKey: string, editor: LexicalEditor): PageAndDialogueContext {
+// this will intentionally not include immediately preceding list items with GPT dialogue as part of the prior markdown, since they will be included with the DialogueContext
+export function slurpPageAndDialogueContext(nodeKey: string, editor: LexicalEditor): PageAndDialogueContext {
   let context: DialogueElement[] = [];
   let priorMarkdown: string | undefined = undefined;
   editor.getEditorState().read(() => {
-    const listItem = $getNodeByKey(displayNodeKey)?.getParent();
+    let listItem = $getNodeByKey(nodeKey);
+    if (!listItem) return;
+    if (!$isListItemNode(listItem)) {
+      listItem = listItem.getParent();
+    }
     const root = $getRoot();
     let prevListItem = listItem?.getPreviousSibling();
     if (prevListItem) {
