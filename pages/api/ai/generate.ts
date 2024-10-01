@@ -23,7 +23,7 @@ const openai = new OpenAI({
 });
 
 const generateSystemPrompt = `The user is asking you to generate one or more list items. Depending on the user's prompt, these might be plain text, or they might be to-do list items.
-To generate to-do list items, begin a list item with one of the following: TODO, NOW, WAITING, LATER.`;
+To generate to-do list items, begin a list item with one of the following: TODO, NOW, WAITING, LATER. Example to-do: 'TODO fix drain'`;
 
 export default async function handler(
   req: NextApiRequest,
