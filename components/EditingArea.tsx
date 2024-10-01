@@ -224,29 +224,29 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
                       )
                     );
                   }}
-                  updatePageContentsLocal={(id, newValue, newRevisionNumber) => {
-                    setCurrentPages((prevPages) =>
-                      prevPages.map((page) =>
-                        page.id === id
-                          ? {
-                              ...page,
-                              value: newValue,
-                              revisionNumber: newRevisionNumber,
-                              status: PageStatus.UserEdit
-                            }
-                          : page
-                      )
-                    );
-                  }}
-                  closePage={(id) => {
-                    setOpenPageIds(prevPageIds => prevPageIds.filter(pageId => pageId !== id));
-                  }}
-                  openOrCreatePageByTitle={openOrCreatePageByTitle}
-                  deletePage={handleDeletePage}
-                  pinnedPageIds={pinnedPageIds}
-                  onPagePinToggle={handlePagePinToggle}
-                  collapsedPageIds={collapsedPageIds}
-                  onPageCollapseToggle={handlePageCollapseToggle}
+            updatePageContentsLocal={(id, newValue, newRevisionNumber) => {
+              setCurrentPages((prevPages) =>
+                prevPages.map((page) =>
+                  page.id === id
+                    ? {
+                        ...page,
+                        value: newValue,
+                        revisionNumber: newRevisionNumber,
+                        status: PageStatus.UserEdit
+                      }
+                    : page
+                )
+              );
+            }}
+            closePage={(id) => {
+              setOpenPageIds(prevPageIds => prevPageIds.filter(pageId => pageId !== id));
+            }}
+            openOrCreatePageByTitle={openOrCreatePageByTitle}
+            deletePage={handleDeletePage}
+            pinnedPageIds={pinnedPageIds}
+            onPagePinToggle={handlePagePinToggle}
+            collapsedPageIds={collapsedPageIds}
+            onPageCollapseToggle={handlePageCollapseToggle}
             />
           )}
           </SearchTermsProvider>
