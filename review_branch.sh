@@ -3,24 +3,22 @@
 # Get the current branch name
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
-# Get the list of added and modified files that would be changed if merged into main
-# We use 'git diff --diff-filter=AM' to only include added (A) and modified (M) files
-# Then filter for specific file extensions
-files_to_review=$(git diff --diff-filter=AM --name-only main..."$current_branch" | grep -E '\.(js|ts|tsx|css)$')
+# Use git-merge-preview to get the diff
+diff_output=$(git merge-tree $(git merge-base main "$current_branch") main "$current_branch")
 
-# Check if there are any files to review
-if [ -z "$files_to_review" ]; then
-    echo "No files to review. There are no additions or modifications with the specified extensions compared to main."
+# Check if there are any changes
+if [ -z "$diff_output" ]; then
+    echo "No changes to review. The current branch is up to date with main."
     exit 0
 fi
 
-# Print the files that will be reviewed
-echo "Files to be reviewed:"
-echo "$files_to_review"
+# Print a summary of the changes
+echo "Changes to be reviewed:"
+echo "$diff_output" | grep '^[+-]' | head -n 10
+echo "..."
 
-# Call claude_review.py with the list of files
-# Use process substitution to pass files as separate arguments
-python claude_review.py $(echo "$files_to_review" | tr '\n' '\0' | xargs -0 echo)
+# Call claude_review.py with the diff output
+echo "$diff_output" | python claude_review.py
 
 # Check the exit status of claude_review.py
 if [ $? -eq 0 ]; then
