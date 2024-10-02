@@ -28,6 +28,7 @@ import {
   getCollapsedPageIds,
   togglePageCollapse
 } from "@/lib/pages-helpers";
+import { SavedSelectionProvider } from "@/_app/context/saved-selection-context";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -192,6 +193,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <PagesContext.Provider value={currentPages}>
+        <SavedSelectionProvider>
         <ActiveEditorProvider>
         <SharedNodeProvider>
         <SearchTermsProvider>
@@ -252,6 +254,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
           </SearchTermsProvider>
           </SharedNodeProvider>
         </ActiveEditorProvider>
+        </SavedSelectionProvider>
       </PagesContext.Provider>
     </div>
   )  

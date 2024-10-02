@@ -207,7 +207,6 @@ export function $getOrAddListContainingChildren(parent: ListItemNode): ListNode 
   const listItemNode = new ListItemNode();
   parent.insertAfter(listItemNode, false);
   listNode = new ListNode("bullet", 0);
-  console.log("adding child list to list item", listItemNode.__key);
   listItemNode.append(listNode);
   return listNode;
 }

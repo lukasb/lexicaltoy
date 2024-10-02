@@ -308,6 +308,7 @@ const Omnibar = forwardRef(({
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={isMobile ? "Search or Create" : `Search or Create (${modifierKey} + K)`}
+        id="omnibar-input"
       />
       <div className="absolute top-full left-0 right-0 mt-1 z-50">
         {(results.length > 0 || showCreatePageOption) && (
