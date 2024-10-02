@@ -3,7 +3,7 @@ import { zodFunction, zodResponseFormat } from "openai/helpers/zod";
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getSessionServer } from '@/lib/getAuth';
 import { MODEL_NAME } from "@/lib/ai-config";
-import { ListItems } from "@/lib/ai-commands";
+import { AIGenListItems } from "@/lib/ai-commands";
 
 export const config = {
   maxDuration: 60,
@@ -15,7 +15,7 @@ type ApiResponse = {
 }
 
 const tools = [
-  zodFunction({ name: "createList", parameters: ListItems })
+  zodFunction({ name: "createList", parameters: AIGenListItems })
 ];
 
 const openai = new OpenAI({
@@ -53,7 +53,7 @@ export default async function handler(
       const chatCompletion = await openai.beta.chat.completions.parse({
         messages: openAIMessages,
         model: MODEL_NAME,
-        response_format: zodResponseFormat(ListItems, "listItems"),
+        response_format: zodResponseFormat(AIGenListItems, "listItems"),
       });
 
       response = chatCompletion.choices[0].message.content || undefined;

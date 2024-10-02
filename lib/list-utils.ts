@@ -201,12 +201,13 @@ export function getNextListItem(listItem: ListItemNode, skipChildren: boolean): 
   return null;
 }
 
-export function $getOrAddListForChildren(parent: ListItemNode): ListNode {
+export function $getOrAddListContainingChildren(parent: ListItemNode): ListNode {
   let listNode = $getListContainingChildren(parent);
   if (listNode) return listNode;
   const listItemNode = new ListItemNode();
   parent.insertAfter(listItemNode, false);
   listNode = new ListNode("bullet", 0);
+  console.log("adding child list to list item", listItemNode.__key);
   listItemNode.append(listNode);
   return listNode;
 }
@@ -230,21 +231,6 @@ export function $addChildListItem(parent: ListItemNode, prepend: boolean, change
     parent.insertAfter(newSibling);
   }
   if (changeSelection) newListItem.selectEnd();
-}
-
-export function $createAndAddChildren(parent: ListItemNode, childrenText: string[]) {
-  let childrenList = $getListContainingChildren(parent);
-  if (!childrenList) {
-    childrenList = $createListNode((parent.getParent() as ListNode).getListType());
-    const newSibling = $createListItemNode();
-    newSibling.append(childrenList);
-    parent.insertAfter(newSibling);
-  }
-  for (let text of childrenText) {
-    const newListItem = $createListItemNode();
-    newListItem.append($createTextNode(text));
-    childrenList.append(newListItem);
-  }
 }
 
 // return true if we're the only child of our parent

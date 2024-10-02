@@ -28,7 +28,7 @@ import {
   $addChildListItem,
   $deleteChildrenFromListItem,
   $getListContainingChildren,
-  $getOrAddListForChildren,
+  $getOrAddListContainingChildren,
 } from "@/lib/list-utils";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
 import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
@@ -243,7 +243,7 @@ function addChildrenRecursively(
 
   if (!children.length) return [];
 
-  const childrenList = $getOrAddListForChildren(parentListItem);
+  const childrenList = $getOrAddListContainingChildren(parentListItem);
   children.forEach((child) => {
     $appendNodes(childrenList, [child.serializedNode]);
     const childListItem = childrenList.getLastChild() as ListItemNode;
@@ -307,7 +307,7 @@ export function createFormulaOutputNodes(
       );
       $addChildListItem(parentListItem, false, false, pageNameListItem);
       currentPageListItem = pageNameListItem;
-      currentPageList = $getOrAddListForChildren(currentPageListItem);
+      currentPageList = $getOrAddListContainingChildren(currentPageListItem);
     }
 
     if (currentPageListItem && currentPageList) {
@@ -428,7 +428,7 @@ export function addFormulaOutputNodes(
         $addChildListItem(parentListItem, false, false, pageNameListItem);
       }
       currentPageListItem = pageNameListItem;
-      currentPageList = $getOrAddListForChildren(currentPageListItem);
+      currentPageList = $getOrAddListContainingChildren(currentPageListItem);
     }
 
     if (currentPageListItem && currentPageList) {

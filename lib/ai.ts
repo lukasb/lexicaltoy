@@ -1,5 +1,6 @@
 import { sanitizeText } from "./text-helpers";
-import { ListItems } from "./ai-commands";
+import { AIGenListItems, AIGenListItemType } from "./ai-commands";
+
 export type DialogueElement = {
   userQuestion: string;
   systemAnswer: string;
@@ -31,26 +32,37 @@ export async function getShortGPTChatResponse(prompt: string, dialogueContext: D
   }
 }
 
-export function parseListItems(jsonString: string): string[] {
+export function parseListItems(jsonString: string): AIGenListItemType[] {
   try {
     const parsedJson = JSON.parse(jsonString);
-    const validatedData = ListItems.parse(parsedJson);
-    return validatedData.listItems.map(item => {
+    const validatedData = AIGenListItems.parse(parsedJson);
+    
+    function processItem(item: AIGenListItemType): AIGenListItemType {
       // Trim trailing whitespace
-      let trimmedItem = item.trimEnd();
+      let trimmedContent = item.content.trimEnd();
       // Remove '- ' prefix if it exists
-      if (trimmedItem.startsWith('- ')) {
-        trimmedItem = trimmedItem.slice(2);
+      if (trimmedContent.startsWith('- ')) {
+        trimmedContent = trimmedContent.slice(2);
       }
-      return trimmedItem;
-    });
+      
+      const processedChildren = item.children 
+        ? item.children.map(processItem)
+        : undefined;
+      
+      return { 
+        content: trimmedContent, 
+        children: processedChildren 
+      };
+    }
+
+    return validatedData.listItems.map(processItem);
   } catch (error) {
     console.error("Error parsing or validating ListItems:", error);
     return [];
   }
 }
 
-export async function getGPTGeneration(prompt: string): Promise<string[] | null> {
+export async function getGPTGeneration(prompt: string): Promise<AIGenListItemType[] | null> {
   console.log("getGPTGeneration prompt", prompt);
 
   try {
