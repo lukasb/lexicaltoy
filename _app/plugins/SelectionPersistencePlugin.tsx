@@ -32,7 +32,22 @@ export function SelectionPersistencePlugin(): null {
     if (!domSelection || domSelection.rangeCount === 0) return;
 
     const range = domSelection.getRangeAt(0);
-    const rects = range.getClientRects();
+    const rects = Array.from(range.getClientRects());
+
+    // Filter to keep only the smallest rectangle when one is entirely inside another
+    const textRects = rects.filter((rect, index, self) => {
+      return !self.some((otherRect, otherIndex) => {
+        if (index === otherIndex) return false;
+        return (
+          rect.width > otherRect.width &&
+          rect.height > otherRect.height &&
+          rect.left <= otherRect.left &&
+          rect.right >= otherRect.right &&
+          rect.top <= otherRect.top &&
+          rect.bottom >= otherRect.bottom
+        );
+      });
+    });
 
     const overlay = document.createElement('div');
     overlay.style.position = 'absolute';
@@ -43,8 +58,7 @@ export function SelectionPersistencePlugin(): null {
     overlay.style.pointerEvents = 'none';
     overlay.style.zIndex = '9999';
 
-    for (let i = 0; i < rects.length; i++) {
-      const rect = rects[i];
+    for (const rect of textRects) {
       const highlight = document.createElement('div');
       highlight.style.position = 'absolute';
       highlight.style.left = `${rect.left + window.scrollX}px`;
