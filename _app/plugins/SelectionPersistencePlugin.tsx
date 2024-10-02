@@ -7,7 +7,8 @@ import {
   BLUR_COMMAND,
   FOCUS_COMMAND,
   RangeSelection,
-  $isRangeSelection
+  $isRangeSelection,
+  $getRoot
 } from "lexical";
 import { useSavedSelection } from '@/_app/context/saved-selection-context';
 
@@ -19,14 +20,13 @@ export function SelectionPersistencePlugin(): null {
 
   const removeSelectionOverlay = useCallback(() => {
     if (selectionOverlayRef.current) {
-      console.log("removing overlay");
       selectionOverlayRef.current.remove();
       selectionOverlayRef.current = null;
     }
   }, []);
 
   const createSelectionOverlay = useCallback((selection: RangeSelection) => {
-    removeSelectionOverlay(); // Remove any existing overlay
+    removeSelectionOverlay();
 
     const domSelection = window.getSelection();
     if (!domSelection || domSelection.rangeCount === 0) return;
@@ -34,11 +34,12 @@ export function SelectionPersistencePlugin(): null {
     const range = domSelection.getRangeAt(0);
     const rects = range.getClientRects();
 
-    console.log(rects);
-
     const overlay = document.createElement('div');
     overlay.style.position = 'absolute';
-    overlay.style.backgroundColor = 'rgba(0, 123, 255, 0.3)';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.right = '0';
+    overlay.style.bottom = '0';
     overlay.style.pointerEvents = 'none';
     overlay.style.zIndex = '9999';
 
@@ -46,10 +47,11 @@ export function SelectionPersistencePlugin(): null {
       const rect = rects[i];
       const highlight = document.createElement('div');
       highlight.style.position = 'absolute';
-      highlight.style.left = `${rect.left + window.pageXOffset}px`;
-      highlight.style.top = `${rect.top + window.pageYOffset}px`;
+      highlight.style.left = `${rect.left + window.scrollX}px`;
+      highlight.style.top = `${rect.top + window.scrollY}px`;
       highlight.style.width = `${rect.width}px`;
       highlight.style.height = `${rect.height}px`;
+      highlight.style.backgroundColor = 'rgba(0, 123, 255, 0.3)';
       overlay.appendChild(highlight);
     }
 
