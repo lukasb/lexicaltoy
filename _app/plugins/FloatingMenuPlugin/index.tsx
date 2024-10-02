@@ -1,7 +1,7 @@
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { useRef, useState, useCallback, useEffect, useContext } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { $getSelection, BLUR_COMMAND, COMMAND_PRIORITY_NORMAL, FOCUS_COMMAND, LexicalEditor } from 'lexical';
+import { $getSelection, COMMAND_PRIORITY_NORMAL, FOCUS_COMMAND, LexicalEditor } from 'lexical';
 import { BaseSelection } from "lexical";
 import { mergeRegister } from '@lexical/utils';
 import { useActiveEditorContext } from "@/_app/context/active-editor-context";

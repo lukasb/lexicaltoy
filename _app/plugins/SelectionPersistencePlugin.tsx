@@ -72,25 +72,10 @@ export function SelectionPersistencePlugin(): null {
   const restoreSelection = useCallback(() => {
     if (savedSelection) {
       editor.update(() => {
-        $setSelection(savedSelection);
+        $setSelection(savedSelection.clone());
       });
     }
   }, [editor, savedSelection]);
-
-  useEffect(() => {
-    const handleFocus = (event: FocusEvent) => {
-      const isOmnibar = (event.target as HTMLElement).id === 'omnibar-input';
-      setIsEditorFocused(!isOmnibar);
-      
-      if (!isOmnibar) {
-        restoreSelection();
-        removeSelectionOverlay();
-      }
-    };
-
-    document.addEventListener('focusin', handleFocus);
-    return () => document.removeEventListener('focusin', handleFocus);
-  }, [restoreSelection, removeSelectionOverlay]);
 
   useEffect(() => {
     return editor.registerCommand(
@@ -107,15 +92,21 @@ export function SelectionPersistencePlugin(): null {
     return editor.registerCommand(
       FOCUS_COMMAND,
       () => {
-        if (isEditorFocused) {
-          restoreSelection();
-          removeSelectionOverlay();
+        if (
+          editor.isComposing() ||
+          editor.getRootElement() !== document.activeElement
+        ) {
+          return false;
         }
+        
+        restoreSelection();
+        removeSelectionOverlay();
+
         return false;
       },
       COMMAND_PRIORITY_EDITOR
     );
-  }, [editor, restoreSelection, removeSelectionOverlay, isEditorFocused]);
+  }, [editor, restoreSelection, removeSelectionOverlay]);
 
   return null;
 }

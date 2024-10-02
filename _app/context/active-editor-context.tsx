@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState } from 'react';
 import { ReactNode } from 'react';
 
+// this gives the last focused editor (which might not actually be active if eg the omnibar is focused)
+// currently set by the FloatingMenuPlugin
+
 type ActiveEditorContextType = {
   activeEditorKey: string;
   setActiveEditorKey: (value: string) => void;
