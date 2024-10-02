@@ -76,7 +76,7 @@ const canRemoveTodo = (selection: BaseSelection) => {
 const slashCommands = [
   {
     shortName: "AI",
-    description: "Generate nodes with AI",
+    description: "Ask AI to generate sub-bullets based on the current bullet point",
     command: AI_GENERATE_NODES,
     shouldShow: () => true
   },
