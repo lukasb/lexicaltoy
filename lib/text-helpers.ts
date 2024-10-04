@@ -60,5 +60,5 @@ export function convertToUnorderedList(markdown: string): string {
   }
 
   // Trim any leading or trailing whitespace and ensure only single newline at the end
-  return result.trim() + '\n';
+  return result.trim();
 }
