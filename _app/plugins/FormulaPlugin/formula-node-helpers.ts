@@ -287,7 +287,7 @@ export function createFormulaOutputPlainNodes(
   const parentListNode = $getOrAddListContainingChildren(parentListItem);
   const headlessEditor = myCreateHeadlessEditor();
 
-  const unescapedMarkdown = markdown.replace(/‣/g, "-");
+  const unescapedMarkdown = markdown.replace(/‣/g, "-").replace(/▵/g, "    ");
 
   let serializedNodes: SerializedListItemNode[] = [];
   headlessEditor.update(() => {
