@@ -264,7 +264,44 @@ function addChildrenRecursively(
   return addedNodes;
 }
 
-export function createFormulaOutputNodes(
+export function createFormulaOutputPlainNodes(
+  editor: LexicalEditor,
+  displayNode: FormulaDisplayNode,
+  markdown: string
+) {
+
+  const parentListItem = getListItemParentNode(displayNode);
+  if (!parentListItem) return;
+  
+  // prevent this editor from stealing focus
+  // we make it editable again in an update listener in PageListenerPlugin
+  if (
+    !editor.isComposing() &&
+    editor.getRootElement() !== document.activeElement
+  ) {
+    editor.setEditable(false);
+  }
+
+  // TODO maybe warn the user that any existing children will be deleted?
+  $deleteFormulaDisplayNodeChildren(displayNode);
+  const parentListNode = $getOrAddListContainingChildren(parentListItem);
+  const headlessEditor = myCreateHeadlessEditor();
+
+  let serializedNodes: SerializedListItemNode[] = [];
+  headlessEditor.update(() => {
+    const headlessRoot = $getRoot();
+    $myConvertFromMarkdownString(markdown, false, headlessRoot);
+    const firstChild = headlessRoot.getFirstChild();
+    if ($isListNode(firstChild)) {
+      $appendNodesToJSON(headlessEditor, firstChild, serializedNodes);
+    }
+  });
+
+  $appendNodes(parentListNode, serializedNodes);
+}
+
+
+export function createFormulaOutputSharedNodes(
   editor: LexicalEditor,
   displayNode: FormulaDisplayNode,
   nodesMarkdown: NodeElementMarkdown[],

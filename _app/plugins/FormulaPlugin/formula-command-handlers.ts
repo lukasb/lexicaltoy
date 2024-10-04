@@ -44,13 +44,15 @@ import {
   STORE_FORMULA_OUTPUT,
   CREATE_FORMULA_NODES,
   ADD_FORMULA_NODES,
-  PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY
+  PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY,
+  CREATE_AND_STORE_FORMULA_OUTPUT
 } from "@/lib/formula-commands";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
 import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
 import {
   $replaceWithFormulaDisplayNode,
-  createFormulaOutputNodes,
+  createFormulaOutputSharedNodes,
+  createFormulaOutputPlainNodes,
   haveExistingFormulaEditorNode,
   $replaceExistingFormulaEditorNode,
   $replaceDisplayNodeWithEditor,
@@ -283,13 +285,25 @@ export function registerFormulaCommandHandlers(
           }
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
-            createFormulaOutputNodes(
+            createFormulaOutputSharedNodes(
               editor,
               displayNode,
               nodesMarkdown,
               setLocalSharedNodeMap,
               setLocalChildNodeMap
             );
+          }
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+      editor.registerCommand(
+        CREATE_AND_STORE_FORMULA_OUTPUT,
+        ({ displayNodeKey, output }) => {
+          const displayNode = $getNodeByKey(displayNodeKey);
+          if (displayNode && $isFormulaDisplayNode(displayNode)) {
+            displayNode.setOutput(output);
+            createFormulaOutputPlainNodes(editor, displayNode, output);
           }
           return true;
         },

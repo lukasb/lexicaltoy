@@ -5,5 +5,6 @@ export const SWAP_FORMULA_DISPLAY_FOR_EDITOR: LexicalCommand <{displayNodeKey: s
 export const PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY: LexicalCommand <{displayNodeKey: string}> = createCommand('PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY');
 export const SWAP_FORMULA_EDITOR_FOR_DISPLAY: LexicalCommand <void> = createCommand('SWAP_FORMULA_EDITOR_FOR_DISPLAY');
 export const STORE_FORMULA_OUTPUT: LexicalCommand <{displayNodeKey: string, output: string}> = createCommand('STORE_FORMULA_OUTPUT');
+export const CREATE_AND_STORE_FORMULA_OUTPUT: LexicalCommand <{displayNodeKey: string, output: string}> = createCommand('CREATE_AND_STORE_FORMULA_OUTPUT');
 export const CREATE_FORMULA_NODES: LexicalCommand <{displayNodeKey: string, nodesMarkdown: NodeElementMarkdown[]}> = createCommand('CREATE_FORMULA_NODES');
 export const ADD_FORMULA_NODES: LexicalCommand <{displayNodeKey: string, nodesMarkdown: NodeElementMarkdown[]}> = createCommand('ADD_FORMULA_NODES');

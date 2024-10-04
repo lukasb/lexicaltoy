@@ -3,8 +3,7 @@ import {
   FormulaValueType
 } from './formula-definitions';
 import { 
-  DialogueElement,
-  getShortGPTChatResponse,
+  DialogueElement
  } from '@/lib/ai';
 import { Page } from '@/lib/definitions';
 import { functionDefinitions } from './formula-parser';
@@ -17,7 +16,7 @@ import { FormulaLexer, FormulaParser, FunctionDefinition } from './formula-parse
 import { IToken } from 'chevrotain';
 import { $getRoot } from 'lexical';
 import { getMarkdownUpTo } from './formula-context-helpers';
-import { getGPTResponse } from './gpt-formula-handlers';
+import { getShortGPTResponse } from './gpt-formula-handlers';
 
 const partialFormulaRegex = /=\s?[a-zA-z]+\(/;
 
@@ -31,7 +30,7 @@ export async function getFormulaOutput(
     const lexingResult = FormulaLexer.tokenize(formulaWithEqualSign);
     
     if (lexingResult.errors.length > 0) {
-      return getGPTResponse(formula, context);
+      return getShortGPTResponse(formula, context);
     }
 
     const parser = new FormulaParser();
@@ -40,7 +39,7 @@ export async function getFormulaOutput(
 
     if (parser.errors.length > 0) {
       if (!partialFormulaRegex.test(formulaWithEqualSign) && context) {
-        return getGPTResponse(formula, context);
+        return getShortGPTResponse(formula, context);
       } else {
         return null;
       }

@@ -24,3 +24,41 @@ export function sanitizeText(result: string): string {
     .join('\n')
     .trim();
 }
+
+export function convertToUnorderedList(markdown: string): string {
+  // First, replace multiple newlines with a single newline
+  const normalizedMarkdown = markdown.replace(/\n{2,}/g, '\n');
+  
+  const lines = normalizedMarkdown.split('\n');
+  let result = '';
+  let inList = false;
+  let listLevel = 0;
+
+  for (const line of lines) {
+    if (line.trim() === '') {
+      // Empty line, reset list state
+      if (inList) {
+        result += '\n';
+      }
+      inList = false;
+      listLevel = 0;
+    } else if (/^\s*(\d+\.|-|\*|\+)\s/.test(line)) {
+      // Existing list item
+      const match = line.match(/^(\s*)/);
+      const indent = match ? Math.floor(match[1].length / 2) : 0;
+      const content = line.replace(/^\s*(\d+\.|-|\*|\+)\s/, '');
+      result += `${'  '.repeat(indent + listLevel)}- ${content}\n`;
+      inList = true;
+    } else {
+      // Paragraph
+      if (inList) {
+        listLevel++;
+      }
+      result += `${'  '.repeat(listLevel)}- ${line.trim()}\n`;
+      inList = false;
+    }
+  }
+
+  // Trim any leading or trailing whitespace and ensure only single newline at the end
+  return result.trim() + '\n';
+}

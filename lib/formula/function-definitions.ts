@@ -16,7 +16,7 @@ import { stripBrackets } from "../transform-helpers";
 import { getOutputAsString } from "./formula-helpers";
 import { getUrl } from "../getUrl";
 import { sanitizeText } from "../text-helpers";
-import { getGPTResponse } from "./gpt-formula-handlers";
+import { getGPTResponseForList } from "./gpt-formula-handlers";
 
 const instructionsWithContext = `
 You will receive user questions or instructions, and content from one or more pages. Pages will look like this:
@@ -131,7 +131,7 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
     }
   }
 
-  const gptResponse = await getGPTResponse(prompt, defaultArgs.context);
+  const gptResponse = await getGPTResponseForList(prompt, defaultArgs.context);
   if (!gptResponse) return null;
 
   return gptResponse;

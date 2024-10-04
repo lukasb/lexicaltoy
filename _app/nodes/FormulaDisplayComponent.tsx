@@ -4,7 +4,8 @@ import {
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
   STORE_FORMULA_OUTPUT,
   CREATE_FORMULA_NODES,
-  ADD_FORMULA_NODES
+  ADD_FORMULA_NODES,
+  CREATE_AND_STORE_FORMULA_OUTPUT
 } from '@/lib/formula-commands';
 import { usePromises } from '../context/formula-request-context';
 import { FormulaValueType, NodeElementMarkdown, getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
@@ -48,11 +49,19 @@ export default function FormulaDisplayComponent(
         .then(response => {
           if (response) {
             if (response.type === FormulaValueType.Text) {
-              setOutput(response.output as string);
-              editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
-                displayNodeKey: nodeKey,
-                output: response.output as string,
-              });
+              if (!formula.startsWith("ask(")) {
+                setOutput(response.output as string);
+                editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
+                  displayNodeKey: nodeKey,
+                  output: response.output as string,
+                });
+              } else {
+                setOutput("@@childnodesplain");
+                editor.dispatchCommand(CREATE_AND_STORE_FORMULA_OUTPUT, {
+                  displayNodeKey: nodeKey,
+                  output: response.output as string,
+                });
+              }
             } else if (response.type === FormulaValueType.NodeMarkdown) {
               setOutput("@@childnodes");
               // TODO store the nodeMarkdowns locally so we can check when updates happen
@@ -92,7 +101,7 @@ export default function FormulaDisplayComponent(
         });
         if (promise) addPromise(nodeKey, promise);
       }
-  }, [addPromise, removePromise, hasPromise, editor, nodeKey, getFormulaResults]);
+  }, [addPromise, removePromise, hasPromise, editor, nodeKey, getFormulaResults, formula]);
 
   useEffect(() => {
 
@@ -184,15 +193,15 @@ export default function FormulaDisplayComponent(
     <div 
       className="inline items-baseline border-l-4 border-formulaBorderColor pl-1 -ml-1"
       style={{ WebkitUserSelect: 'text', userSelect: 'text', WebkitTouchCallout: 'default' }}
-      onMouseUp={handleInteractionEnd}
-      onTouchEnd={handleInteractionEnd}
+      //onMouseUp={handleInteractionEnd}
+      //onTouchEnd={handleInteractionEnd}
     >
       <span className="font-semibold bg-bgFormula">{formula}:
         <button className="inline-flex items-center justify-center p-1 text-xs hover:bg-gray-200 rounded" onClick={() => replaceSelfWithEditorNode()}>
           <span role="img" aria-label="Edit" className="transform scale-x-[-1] filter grayscale-[70%]">✏️</span>
         </button>
       </span>
-      {!output.startsWith("@@") && <span>{output}</span>}
+      {!output.startsWith("@@") && !formula.startsWith("ask(") && <span>{output}</span>}
     </div>
   );
 }
