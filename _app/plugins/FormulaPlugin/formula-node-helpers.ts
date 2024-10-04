@@ -296,8 +296,9 @@ export function createFormulaOutputPlainNodes(
       $appendNodesToJSON(headlessEditor, firstChild, serializedNodes);
     }
   });
-
-  $appendNodes(parentListNode, serializedNodes);
+  if (serializedNodes[0].type === "list") {
+    $appendNodes(parentListNode, serializedNodes[0].children);
+  }
 }
 
 

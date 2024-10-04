@@ -28,10 +28,8 @@ export function sanitizeText(result: string): string {
 export function convertToUnorderedList(markdown: string): string {
   // First, replace multiple newlines with a single newline
   const normalizedMarkdown = markdown.replace(/\n{2,}/g, '\n');
-  console.log("normalizedMarkdown", normalizedMarkdown);
   const lines = normalizedMarkdown.split('\n');
   let result = '';
-  let listLevel = 0;
 
   for (const line of lines) {
     if (/^\s*(\d+\.|-|\*|\+)\s/.test(line)) {
@@ -39,12 +37,11 @@ export function convertToUnorderedList(markdown: string): string {
       const match = line.match(/^(\s*)/);
       const indent = match ? Math.floor(match[1].length / 2) : 0;
       const content = line.replace(/^\s*(\d+\.|-|\*|\+)\s/, '');
-      result += `${'  '.repeat(indent + 1)}- ${content}\n`;
+      result += `${'    '.repeat(indent + 1)}- ${content}\n`;
     } else {
       result += `- ${line.trim()}\n`;
     }
   }
 
-  console.log("result", result);
   return result.trim();
 }
