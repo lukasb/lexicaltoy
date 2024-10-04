@@ -87,21 +87,20 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
         if (matches.length > 0) {
           processedLines.push(fullFormula);
           const [, indent, question, result] = matches[0];
-          if (question.startsWith("ask")) console.log("askmatch");
+          // TODO this is terrible
           if (question.startsWith('find(') || question.startsWith('ask(')) {
             // Skip child list items
             while (i + 1 < lines.length) {
               const nextLine = lines[i + 1];
               const nextMatch = nextLine.match(/^(\s*)-/);
-              console.log("nextLine", nextLine, nextMatch, nextMatch && nextMatch[1].length > formulaIndent.length);
+  
               if (
                 (nextMatch && nextMatch[1].length > formulaIndent.length) // skip any list item indented further than the formula
                 || (!nextMatch && line.trim())) { // or any multiline continuation of one of those list items
-                  console.log("skipping child list item");
+  
                   i++;
 
               } else {
-                console.log("breaking");
                 break;
               }
             }
