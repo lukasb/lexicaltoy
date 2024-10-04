@@ -137,6 +137,11 @@ export function registerFormulaCommandHandlers(
         const textContents = parentNode.getTextContent();
         const { formula: formulaText, result: resultString } =
           parseFormulaMarkdown(textContents);
+        if (textContents.includes("bang theory")) {
+          console.log("textContents", textContents);
+          console.log("formulaText", formulaText);
+          console.log("resultString", resultString);
+        }
         if (formulaText && resultString) {
           const formulaDisplayNode = $createFormulaDisplayNode(
             formulaText,

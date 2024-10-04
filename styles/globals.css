@@ -258,6 +258,9 @@ body {
   padding-left: 2px;
   padding-right: 2px;
 }
+li:has(> div#formula-display) + li > ul > li {
+  border-left: 4px solid gray;
+}
 .PlaygroundEditorTheme__mark {
   background: rgba(255, 212, 0, 0.14);
   border-bottom: 2px solid rgba(255, 212, 0, 0.3);

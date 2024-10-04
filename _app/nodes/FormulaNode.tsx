@@ -71,7 +71,7 @@ export type SerializedFormulaDisplayNode = Spread<
   SerializedLexicalNode
 >;
 
-export type FormulaDisplayNodeType = "nodeFormula" | "gptFormula";
+export type FormulaDisplayNodeType = "nodeFormula" | "simpleGptFormula" | "complexGptFormula";
 
 export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   
@@ -162,8 +162,10 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   getFormulaDisplayNodeType(): FormulaDisplayNodeType {
     if (this.getOutput() === "@@childnodes") {
       return "nodeFormula";
+    } else if (this.getFormula().startsWith("ask(")) {
+      return "complexGptFormula";
     } else {
-      return "gptFormula";
+      return "simpleGptFormula";
     }
   }
 }

@@ -287,10 +287,12 @@ export function createFormulaOutputPlainNodes(
   const parentListNode = $getOrAddListContainingChildren(parentListItem);
   const headlessEditor = myCreateHeadlessEditor();
 
+  const unescapedMarkdown = markdown.replace(/‣/g, "-");
+
   let serializedNodes: SerializedListItemNode[] = [];
   headlessEditor.update(() => {
     const headlessRoot = $getRoot();
-    $myConvertFromMarkdownString(markdown, false, headlessRoot);
+    $myConvertFromMarkdownString(unescapedMarkdown, false, headlessRoot);
     const firstChild = headlessRoot.getFirstChild();
     if ($isListNode(firstChild)) {
       $appendNodesToJSON(headlessEditor, firstChild, serializedNodes);

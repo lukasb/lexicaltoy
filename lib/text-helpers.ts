@@ -31,15 +31,17 @@ export function convertToUnorderedList(markdown: string): string {
   const lines = normalizedMarkdown.split('\n');
   let result = '';
 
+  // replace bullets with emoji because actually bullets will break markdown parsing of formulas
+  // (because our formula parsing happens after markdown parsing, which will see list items and doesn't know about formulas)
   for (const line of lines) {
     if (/^\s*(\d+\.|-|\*|\+)\s/.test(line)) {
       // Existing list item
       const match = line.match(/^(\s*)/);
       const indent = match ? Math.floor(match[1].length / 2) : 0;
       const content = line.replace(/^\s*(\d+\.|-|\*|\+)\s/, '');
-      result += `${'    '.repeat(indent + 1)}- ${content}\n`;
+      result += `${'    '.repeat(indent + 1)}‣ ${content}\n`;
     } else {
-      result += `- ${line.trim()}\n`;
+      result += `‣ ${line.trim()}\n`;
     }
   }
 

@@ -99,11 +99,14 @@ function $getGPTPair(listItem: ListItemNode): DialogueElement | undefined {
   const child = listItem.getFirstChild();
   if (
     child && 
-    $isFormulaDisplayNode(child) &&
-    child.getFormulaDisplayNodeType() === "gptFormula"
+    $isFormulaDisplayNode(child)
   ) {
+    if (child.getFormulaDisplayNodeType() === "simpleGptFormula") {
+      return { userQuestion: child.getFormula(), systemAnswer: child.getOutput() };
+    } else if (child.getFormulaDisplayNodeType() === "complexGptFormula") {
       return { userQuestion: child.getFormula(), systemAnswer: child.getOutput() };
     }
+  }
   return undefined;
 }
 

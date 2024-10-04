@@ -34,6 +34,7 @@ export default function FormulaDisplayComponent(
   const { getFormulaResults } = useFormulaResultService();
   const pageLineMarkdownMapRef = useRef<Map<string, string>>(new Map<string, string>());
   const fetchedNodes = useRef<boolean>(false);
+  const createdChildNodes = useRef<boolean>(false);
 
   useEffect(() => {
     registerFormula(formula);
@@ -164,6 +165,12 @@ export default function FormulaDisplayComponent(
           nodesMarkdown: nodesToAdd,
         });
       }
+    } else if (formula.startsWith("ask(") && !createdChildNodes.current) {
+      createdChildNodes.current = true;
+      editor.dispatchCommand(CREATE_AND_STORE_FORMULA_OUTPUT, {
+        displayNodeKey: nodeKey,
+        output: output,
+      });
     }
   }, [formula, output, sharedNodeMap, editor, nodeKey, getFormulaOutput]);
 
@@ -190,7 +197,8 @@ export default function FormulaDisplayComponent(
   }, [editor, nodeKey]);
 
   return (
-    <div 
+    <div
+      id="formula-display" 
       className="inline items-baseline border-l-4 border-formulaBorderColor pl-1 -ml-1"
       style={{ WebkitUserSelect: 'text', userSelect: 'text', WebkitTouchCallout: 'default' }}
       //onMouseUp={handleInteractionEnd}
