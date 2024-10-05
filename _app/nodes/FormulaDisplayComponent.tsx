@@ -5,7 +5,8 @@ import {
   STORE_FORMULA_OUTPUT,
   CREATE_FORMULA_NODES,
   ADD_FORMULA_NODES,
-  CREATE_AND_STORE_FORMULA_OUTPUT
+  CREATE_AND_STORE_FORMULA_OUTPUT,
+  FLATTEN_FORMULA_OUTPUT
 } from '@/lib/formula-commands';
 import { usePromises } from '../context/formula-request-context';
 import { FormulaValueType, NodeElementMarkdown, getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
@@ -35,6 +36,9 @@ export default function FormulaDisplayComponent(
   const pageLineMarkdownMapRef = useRef<Map<string, string>>(new Map<string, string>());
   const fetchedNodes = useRef<boolean>(false);
   const createdChildNodes = useRef<boolean>(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     registerFormula(formula);
@@ -185,6 +189,37 @@ export default function FormulaDisplayComponent(
     );
   };
 
+  const flattenOutput = () => {
+    editor.dispatchCommand(FLATTEN_FORMULA_OUTPUT, {
+      displayNodeKey: nodeKey
+    });
+  };
+
+  const handlePencilClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (formula.startsWith("ask(")) {
+      setShowMenu(!showMenu);
+    } else {
+      replaceSelfWithEditorNode();
+    }
+  };
+
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    if (menuRef.current && !menuRef.current.contains(event.target as Node) &&
+        buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
+      setShowMenu(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showMenu) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showMenu, handleClickOutside]);
+
   const handleInteractionEnd = useCallback(() => {
     const selection = window.getSelection();
     const text = selection?.toString();
@@ -199,15 +234,36 @@ export default function FormulaDisplayComponent(
   return (
     <div
       id="formula-display" 
-      className="inline items-baseline pl-1 -ml-1 bg-bgFormula"
+      className="inline items-baseline pl-1 -ml-1 bg-bgFormula relative"
       style={{ WebkitUserSelect: 'text', userSelect: 'text', WebkitTouchCallout: 'default' }}
-      //onMouseUp={handleInteractionEnd}
-      //onTouchEnd={handleInteractionEnd}
     >
       <span className="font-semibold">{formula}:
-        <button className="inline-flex items-center justify-center p-1 text-xs hover:bg-gray-200 rounded" onClick={() => replaceSelfWithEditorNode()}>
+        <button 
+          ref={buttonRef}
+          className="inline-flex items-center justify-center p-1 text-xs hover:bg-gray-200 rounded" 
+          onClick={handlePencilClick}
+        >
           <span role="img" aria-label="Edit" className="transform scale-x-[-1] filter grayscale-[70%]">✏️</span>
         </button>
+        {showMenu && formula.startsWith("ask(") && (
+          <div 
+            ref={menuRef}
+            className="absolute z-10 bg-white border border-gray-300 rounded shadow-lg"
+            style={{
+              top: buttonRef.current ? buttonRef.current.offsetHeight + 5 : 0,
+              left: buttonRef.current ? buttonRef.current.offsetLeft : 0,
+              minWidth: '150px',
+              width: 'max-content'
+            }}
+          >
+            <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-normal text-sm" onClick={replaceSelfWithEditorNode}>
+              Edit formula
+            </button>
+            <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-normal text-sm" onClick={flattenOutput}>
+              Merge into document
+            </button>
+          </div>
+        )}
       </span>
       {!output.startsWith("@@") && !formula.startsWith("ask(") && <span>{output}</span>}
     </div>

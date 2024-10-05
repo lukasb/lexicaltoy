@@ -8,12 +8,10 @@ import {
 } from "@/_app/nodes/FormulaNode";
 import { 
   LexicalEditor,
-  SELECTION_CHANGE_COMMAND,
   COMMAND_PRIORITY_EDITOR,
   $getSelection,
   $isRangeSelection,
   $getNodeByKey,
-  $isNodeSelection,
   DELETE_CHARACTER_COMMAND,
   $isElementNode,
   COMMAND_PRIORITY_HIGH,
@@ -23,8 +21,8 @@ import {
   OUTDENT_CONTENT_COMMAND,
   INSERT_PARAGRAPH_COMMAND,
   COPY_COMMAND,
-  $isTextNode,
   PASTE_COMMAND,
+  $createTextNode
 } from "lexical";
 import {
   ListItemNode,
@@ -45,7 +43,8 @@ import {
   CREATE_FORMULA_NODES,
   ADD_FORMULA_NODES,
   PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY,
-  CREATE_AND_STORE_FORMULA_OUTPUT
+  CREATE_AND_STORE_FORMULA_OUTPUT,
+  FLATTEN_FORMULA_OUTPUT
 } from "@/lib/formula-commands";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
 import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
@@ -242,6 +241,23 @@ export function registerFormulaCommandHandlers(
               parentNode.selectEnd();
             }
             displayNode.selectEnd();
+          }
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+      editor.registerCommand(
+        FLATTEN_FORMULA_OUTPUT,
+        ({ displayNodeKey }) => {
+          const displayNode = $getNodeByKey(displayNodeKey);
+          if (displayNode && $isFormulaDisplayNode(displayNode)) {
+            const nodeFormula = displayNode.getFormula();
+            if (nodeFormula.startsWith('ask(') && nodeFormula.endsWith(')')) {
+              const askArguments = nodeFormula.slice(4, -1).trim();
+              const textNode = $createTextNode(askArguments);
+              displayNode.replace(textNode);
+              textNode.selectEnd();
+            }
           }
           return true;
         },
