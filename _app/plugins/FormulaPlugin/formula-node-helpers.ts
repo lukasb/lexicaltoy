@@ -13,6 +13,8 @@ import {
   RootNode,
   ParagraphNode,
   $createParagraphNode,
+  $getSelection,
+  $isRangeSelection
 } from "lexical";
 import {
   ListItemNode,
@@ -29,6 +31,7 @@ import {
   $deleteChildrenFromListItem,
   $getListContainingChildren,
   $getOrAddListContainingChildren,
+  $getListItemContainingNode
 } from "@/lib/list-utils";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
 import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
@@ -56,7 +59,7 @@ export function haveExistingFormulaEditorNode(): boolean {
   return __formulaEditorNodeKey !== "";
 }
 
-export function $replaceExistingFormulaEditorNode() {
+export function $replaceExistingFormulaEditorNodeWithDisplayNode() {
   const formulaEditorNode = $getNodeByKey(__formulaEditorNodeKey);
   if (formulaEditorNode instanceof FormulaEditorNode) {
     $replaceWithFormulaDisplayNode(formulaEditorNode);
@@ -67,7 +70,7 @@ export function $replaceExistingFormulaEditorNode() {
 export function $replaceDisplayNodeWithEditor(node: FormulaDisplayNode) {
 
   // TODO there's probably a better way
-  if (node.getOutput() === "@@childnodes") {
+  if (node.hasResultNodes()) {
     $deleteFormulaDisplayNodeChildren(node);
   }
 
@@ -78,6 +81,12 @@ export function $replaceDisplayNodeWithEditor(node: FormulaDisplayNode) {
   const formulaEditorNode = $createFormulaEditorNode(node.getFormula());
   node.replace(formulaEditorNode);
   formulaEditorNode.selectEnd();
+  const selection = $getSelection();
+  if (selection && $isRangeSelection(selection)) {
+  const activeNode = selection.anchor.getNode();
+  const activeListItem = $getListItemContainingNode(activeNode);
+  console.log("activeListItem", activeListItem?.__key);
+  }
   __formulaEditorNodeKey = formulaEditorNode.getKey();
 }
 

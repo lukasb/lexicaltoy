@@ -159,6 +159,10 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
     return text;
   }
 
+  hasResultNodes(): boolean {
+    return this.getFormulaDisplayNodeType() === "nodeFormula" || this.getFormulaDisplayNodeType() === "complexGptFormula";
+  }
+
   getFormulaDisplayNodeType(): FormulaDisplayNodeType {
     if (this.getOutput() === "@@childnodes") {
       return "nodeFormula";

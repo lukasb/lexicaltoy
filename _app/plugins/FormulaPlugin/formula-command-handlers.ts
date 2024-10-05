@@ -54,7 +54,7 @@ import {
   createFormulaOutputSharedNodes,
   createFormulaOutputPlainNodes,
   haveExistingFormulaEditorNode,
-  $replaceExistingFormulaEditorNode,
+  $replaceExistingFormulaEditorNodeWithDisplayNode,
   $replaceDisplayNodeWithEditor,
   $replaceTextNodeWithEditor,
   $replaceEditorWithTextNode,
@@ -143,6 +143,7 @@ export function registerFormulaCommandHandlers(
           console.log("resultString", resultString);
         }
         if (formulaText && resultString) {
+          console.log("5");
           const formulaDisplayNode = $createFormulaDisplayNode(
             formulaText,
             resultString
@@ -172,6 +173,7 @@ export function registerFormulaCommandHandlers(
             !$isRangeSelection(selection) ||
             !selection.isCollapsed()
           ) {
+            console.log("2");
             $replaceWithFormulaDisplayNode(node);
           }
           const selectionListItemNode =
@@ -182,12 +184,13 @@ export function registerFormulaCommandHandlers(
               editorListItemNode && 
               selectionListItemNode.getKey() !== editorListItemNode.getKey()
             ) {
+              console.log("1");
               $replaceWithFormulaDisplayNode(node);
             }
           }
         }
       }),
-      editor.registerCommand(
+      /*editor.registerCommand(
         SELECTION_CHANGE_COMMAND,
         () => {
           if (!haveExistingFormulaEditorNode()) return false;
@@ -198,7 +201,8 @@ export function registerFormulaCommandHandlers(
           if ($isNodeSelection(selection)) {
             const node = selection.getNodes()[0];
             if (node.getKey() !== getFormulaEditorNodeKey()) {
-              $replaceExistingFormulaEditorNode();
+              console.log("6");
+              $replaceExistingFormulaEditorNodeWithDisplayNode();
             }
             return false;
           }
@@ -219,7 +223,12 @@ export function registerFormulaCommandHandlers(
             if ($isTextNode(activeNode)) {
               anchorOffset = selection.anchor.offset;
             }
-            $replaceExistingFormulaEditorNode();
+            console.log("activeNode", activeNode?.__key);
+            console.log("activeListItem", activeListItem?.__key);
+            console.log("activeListItemFirstChild", activeListItemFirstChild?.__key);
+            console.log("getFormulaEditorNodeKey()", getFormulaEditorNodeKey());
+            return false;
+            $replaceExistingFormulaEditorNodeWithDisplayNode();
             if (anchorOffset) {
               activeNode.select(anchorOffset);
             } else {
@@ -230,7 +239,7 @@ export function registerFormulaCommandHandlers(
           return false;
         },
         COMMAND_PRIORITY_EDITOR
-      ),
+      ),*/
       editor.registerCommand(
         PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY,
         ({ displayNodeKey }) => {
@@ -262,7 +271,8 @@ export function registerFormulaCommandHandlers(
         () => {
           const editorNode = $getNodeByKey(getFormulaEditorNodeKey());
           if (editorNode && $isFormulaEditorNode(editorNode)) {
-            $replaceExistingFormulaEditorNode();
+            console.log("8");
+            $replaceExistingFormulaEditorNodeWithDisplayNode();
           }
           return true;
         },
@@ -389,9 +399,10 @@ export function registerFormulaCommandHandlers(
           const selection = $getSelection();
           if (selection === null || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
           const anchorNode = selection.anchor.getNode();
-          if ($isFormulaEditorNode(anchorNode) && selection.anchor.offset !== anchorNode.getTextContentSize()){
+          if ($isFormulaEditorNode(anchorNode)){
+            console.log("3");
             $replaceWithFormulaDisplayNode(anchorNode);
-            return true;
+            return false;
           }
           if ($isListItemNode(anchorNode) 
             && $isFormulaDisplayNode(anchorNode.getFirstChild())
