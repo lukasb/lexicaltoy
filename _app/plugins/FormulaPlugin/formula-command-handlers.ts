@@ -137,13 +137,7 @@ export function registerFormulaCommandHandlers(
         const textContents = parentNode.getTextContent();
         const { formula: formulaText, result: resultString } =
           parseFormulaMarkdown(textContents);
-        if (textContents.includes("bang theory")) {
-          console.log("textContents", textContents);
-          console.log("formulaText", formulaText);
-          console.log("resultString", resultString);
-        }
         if (formulaText && resultString) {
-          console.log("5");
           const formulaDisplayNode = $createFormulaDisplayNode(
             formulaText,
             resultString
@@ -173,7 +167,6 @@ export function registerFormulaCommandHandlers(
             !$isRangeSelection(selection) ||
             !selection.isCollapsed()
           ) {
-            console.log("2");
             $replaceWithFormulaDisplayNode(node);
           }
           const selectionListItemNode =
@@ -184,7 +177,6 @@ export function registerFormulaCommandHandlers(
               editorListItemNode && 
               selectionListItemNode.getKey() !== editorListItemNode.getKey()
             ) {
-              console.log("1");
               $replaceWithFormulaDisplayNode(node);
             }
           }
@@ -271,7 +263,6 @@ export function registerFormulaCommandHandlers(
         () => {
           const editorNode = $getNodeByKey(getFormulaEditorNodeKey());
           if (editorNode && $isFormulaEditorNode(editorNode)) {
-            console.log("8");
             $replaceExistingFormulaEditorNodeWithDisplayNode();
           }
           return true;
@@ -400,7 +391,6 @@ export function registerFormulaCommandHandlers(
           if (selection === null || !$isRangeSelection(selection) || !selection.isCollapsed()) return false;
           const anchorNode = selection.anchor.getNode();
           if ($isFormulaEditorNode(anchorNode)){
-            console.log("3");
             $replaceWithFormulaDisplayNode(anchorNode);
             return false;
           }

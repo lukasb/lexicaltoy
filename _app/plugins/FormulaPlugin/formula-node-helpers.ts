@@ -81,12 +81,6 @@ export function $replaceDisplayNodeWithEditor(node: FormulaDisplayNode) {
   const formulaEditorNode = $createFormulaEditorNode(node.getFormula());
   node.replace(formulaEditorNode);
   formulaEditorNode.selectEnd();
-  const selection = $getSelection();
-  if (selection && $isRangeSelection(selection)) {
-  const activeNode = selection.anchor.getNode();
-  const activeListItem = $getListItemContainingNode(activeNode);
-  console.log("activeListItem", activeListItem?.__key);
-  }
   __formulaEditorNodeKey = formulaEditorNode.getKey();
 }
 
