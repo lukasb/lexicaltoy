@@ -199,12 +199,12 @@ export default function FormulaDisplayComponent(
   return (
     <div
       id="formula-display" 
-      className="inline items-baseline border-l-4 border-formulaBorderColor pl-1 -ml-1"
+      className="inline items-baseline pl-1 -ml-1 bg-bgFormula"
       style={{ WebkitUserSelect: 'text', userSelect: 'text', WebkitTouchCallout: 'default' }}
       //onMouseUp={handleInteractionEnd}
       //onTouchEnd={handleInteractionEnd}
     >
-      <span className="font-semibold bg-bgFormula">{formula}:
+      <span className="font-semibold">{formula}:
         <button className="inline-flex items-center justify-center p-1 text-xs hover:bg-gray-200 rounded" onClick={() => replaceSelfWithEditorNode()}>
           <span role="img" aria-label="Edit" className="transform scale-x-[-1] filter grayscale-[70%]">✏️</span>
         </button>

@@ -6,7 +6,8 @@
   --foreground-rgb: 50 50 50;
   --background-rgb: 255 255 255;
   --border-formula-rgb: 200 200 200;
-  --background-formula-rgb: 240 238 237;
+  --background-formula-rgb: 250 248 247;
+  --background-formula-results-rgb: 250 248 247;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -14,7 +15,8 @@
     --foreground-rgb: 245 245 245;
     --background-rgb: 30 30 30;
     --border-formula-rgb: 70 70 70;
-    --background-formula-rgb: 70 70 70;
+    --background-formula-rgb: 50 50 50;
+    --background-formula-results-rgb: 50 50 50;
   }
 }
 
@@ -259,9 +261,9 @@ body {
   padding-right: 2px;
 }
 li:has(> div > div#formula-display) + li:has(> ul) {
-  border-left: 4px solid rgb(var(--border-formula-rgb));
+  background-color: rgb(var(--background-formula-results-rgb));
   margin-left: .95rem;
-  padding-left: 1rem;
+  padding-left: calc(1rem + 4px);
 }
 
 .PlaygroundEditorTheme__mark {
