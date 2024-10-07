@@ -14,7 +14,8 @@ import {
   ParagraphNode,
   $createParagraphNode,
   $getSelection,
-  $isRangeSelection
+  $isRangeSelection,
+  $isParagraphNode
 } from "lexical";
 import {
   ListItemNode,
@@ -23,7 +24,8 @@ import {
   $isListNode,
   $createListItemNode,
   SerializedListItemNode,
-  SerializedListNode
+  SerializedListNode,
+  $createListNode
 } from "@lexical/list";
 import { 
   getListItemParentNode,
@@ -297,12 +299,27 @@ export function createFormulaOutputPlainNodes(
     const headlessRoot = $getRoot();
     $myConvertFromMarkdownString(unescapedMarkdown, false, headlessRoot);
     const firstChild = headlessRoot.getFirstChild();
+    if (markdown.includes("meditation practice") && firstChild) {
+      console.log("first child", firstChild?.getTextContent());
+    } else if (markdown.includes("meditation practice")) {
+      console.log("no first child");
+    }
     if ($isListNode(firstChild)) {
       $appendNodesToJSON(headlessEditor, firstChild, serializedNodes);
+    } else if ($isParagraphNode(firstChild)) {
+      const listNode = $createListNode("bullet");
+      const listItemNode = $createListItemNode();
+      firstChild.remove();
+      listItemNode.append(firstChild);
+      listNode.append(listItemNode);
+      headlessRoot.append(listNode);
+      $appendNodesToJSON(headlessEditor, listNode, serializedNodes);
     }
   });
-  if (serializedNodes[0].type === "list") {
+  if (serializedNodes && serializedNodes.length > 0 && serializedNodes[0].type === "list") {
     $appendNodes(parentListNode, serializedNodes[0].children);
+  } else {
+    console.log("error with serializedNodes", markdown, serializedNodes);
   }
 }
 
