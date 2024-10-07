@@ -229,7 +229,7 @@ const Omnibar = forwardRef(({
       });
       event.preventDefault();
     } else if (event.key === "Enter") {
-      if (selectedIndex > -1 && results.length > 0) {
+      if (((selectedIndex === 0 && !showCreatePageOption) || (selectedIndex > 0) && results.length > 0)) {
         handleOpenExistingPage(results[showCreatePageOption? selectedIndex - 1 : selectedIndex]);
         resetSelf();
       } else {
