@@ -299,11 +299,6 @@ export function createFormulaOutputPlainNodes(
     const headlessRoot = $getRoot();
     $myConvertFromMarkdownString(unescapedMarkdown, false, headlessRoot);
     const firstChild = headlessRoot.getFirstChild();
-    if (markdown.includes("meditation practice") && firstChild) {
-      console.log("first child", firstChild?.getTextContent());
-    } else if (markdown.includes("meditation practice")) {
-      console.log("no first child");
-    }
     if ($isListNode(firstChild)) {
       $appendNodesToJSON(headlessEditor, firstChild, serializedNodes);
     } else if ($isParagraphNode(firstChild)) {
