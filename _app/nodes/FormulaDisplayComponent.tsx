@@ -248,7 +248,7 @@ export default function FormulaDisplayComponent(
         {showMenu && formula.startsWith("ask(") && (
           <div 
             ref={menuRef}
-            className="absolute z-10 bg-white border border-gray-300 rounded shadow-lg"
+            className="absolute z-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg"
             style={{
               top: buttonRef.current ? buttonRef.current.offsetHeight + 5 : 0,
               left: buttonRef.current ? buttonRef.current.offsetLeft : 0,
@@ -256,10 +256,10 @@ export default function FormulaDisplayComponent(
               width: 'max-content'
             }}
           >
-            <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-normal text-sm" onClick={replaceSelfWithEditorNode}>
+            <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 font-normal text-sm text-gray-800 dark:text-gray-200" onClick={replaceSelfWithEditorNode}>
               Edit formula
             </button>
-            <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-normal text-sm" onClick={flattenOutput}>
+            <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 font-normal text-sm text-gray-800 dark:text-gray-200" onClick={flattenOutput}>
               Merge into document
             </button>
           </div>
