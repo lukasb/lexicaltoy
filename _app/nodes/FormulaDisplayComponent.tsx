@@ -61,6 +61,7 @@ export default function FormulaDisplayComponent(
                   output: response.output as string,
                 });
               } else {
+                createdChildNodes.current = true;
                 setOutput("@@childnodesplain");
                 editor.dispatchCommand(CREATE_AND_STORE_FORMULA_OUTPUT, {
                   displayNodeKey: nodeKey,
@@ -110,7 +111,8 @@ export default function FormulaDisplayComponent(
 
   useEffect(() => {
 
-    if (output === "" || (output === "@@childnodes" && !fetchedNodes.current)) {
+    if (formula.includes("scope")) console.log("useEffect");
+    if (output === "" || (output === "@@childnodes" && !fetchedNodes.current && !createdChildNodes.current)) {
       fetchedNodes.current = true;
       if (output === "") setOutput("(getting response...)");
       getFormulaOutput(formula);
@@ -170,13 +172,14 @@ export default function FormulaDisplayComponent(
         });
       }
     } else if (formula.startsWith("ask(") && !createdChildNodes.current) {
+      if (formula.includes("scope")) console.log("that");
       createdChildNodes.current = true;
       editor.dispatchCommand(CREATE_AND_STORE_FORMULA_OUTPUT, {
         displayNodeKey: nodeKey,
         output: output,
       });
     }
-  }, [formula, output, sharedNodeMap, editor, nodeKey, getFormulaOutput]);
+  }, [formula, output, sharedNodeMap, editor, nodeKey, getFormulaOutput, createdChildNodes]);
 
   const replaceSelfWithEditorNode = () => {
     // TODO this will create an entry in the undo history which we don't necessarily want

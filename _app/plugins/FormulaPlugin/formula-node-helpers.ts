@@ -275,9 +275,12 @@ export function createFormulaOutputPlainNodes(
   markdown: string
 ) {
 
+  if (markdown.includes("scope")) console.log("createFormulaOutputPlainNodes", markdown);
+
   const parentListItem = getListItemParentNode(displayNode);
   if (!parentListItem) return;
   
+  if (markdown.includes("scope")) console.log("createFormulaOutputPlainNodes 2");
   // prevent this editor from stealing focus
   // we make it editable again in an update listener in PageListenerPlugin
   if (
@@ -312,6 +315,7 @@ export function createFormulaOutputPlainNodes(
     }
   });
   if (serializedNodes && serializedNodes.length > 0 && serializedNodes[0].type === "list") {
+    if (markdown.includes("scope")) console.log("createFormulaOutputPlainNodes 3", serializedNodes);
     $appendNodes(parentListNode, serializedNodes[0].children);
   } else {
     console.log("error with serializedNodes", markdown, serializedNodes);
