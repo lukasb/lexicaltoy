@@ -272,7 +272,7 @@ function getChildrenToRemove(listItem: ListItemNode): ListItemNode[] {
 export function $deleteChildrenFromListItem(listItem: ListItemNode) { 
   const nodesToRemove = getChildrenToRemove(listItem);
   for (let node of nodesToRemove) {
-    node.remove();
+    if (node) node.remove();
   }
 }
 

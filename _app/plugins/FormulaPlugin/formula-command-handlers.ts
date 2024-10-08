@@ -51,7 +51,7 @@ import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-def
 import {
   $replaceWithFormulaDisplayNode,
   createFormulaOutputSharedNodes,
-  createFormulaOutputPlainNodes,
+  $createFormulaOutputPlainNodes,
   haveExistingFormulaEditorNode,
   $replaceExistingFormulaEditorNodeWithDisplayNode,
   $replaceDisplayNodeWithEditor,
@@ -327,7 +327,7 @@ export function registerFormulaCommandHandlers(
             if (displayNode.getOutput() !== output) {
               displayNode.setOutput(output);
             }
-            createFormulaOutputPlainNodes(editor, displayNode, output);
+            $createFormulaOutputPlainNodes(editor, displayNode, output);
           }
           return true;
         },

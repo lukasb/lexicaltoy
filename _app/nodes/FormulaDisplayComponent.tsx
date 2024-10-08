@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { 
   SWAP_FORMULA_DISPLAY_FOR_EDITOR,
@@ -35,10 +35,12 @@ export default function FormulaDisplayComponent(
   const { getFormulaResults } = useFormulaResultService();
   const pageLineMarkdownMapRef = useRef<Map<string, string>>(new Map<string, string>());
   const fetchedNodes = useRef<boolean>(false);
-  const createdChildNodes = useRef<boolean>(false);
+  const [createdChildNodes, setCreatedChildNodes] = useState<boolean>(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const isAskFormula = formula.startsWith("ask(");
 
   useEffect(() => {
     registerFormula(formula);
@@ -47,6 +49,16 @@ export default function FormulaDisplayComponent(
     }
   }, [formula]);
 
+  const createAskResultNodes = useCallback(async (outputMarkdown: string) => {
+    // avoid some synchronization issue with editor updates
+    setTimeout(() => {
+      editor.dispatchCommand(CREATE_AND_STORE_FORMULA_OUTPUT, {
+        displayNodeKey: nodeKey,
+        output: outputMarkdown,
+      });
+    }, 0);
+  }, [editor, nodeKey]);
+
   const getFormulaOutput = useCallback(async (prompt: string) => {
     if (!hasPromise(nodeKey)) {
       const dialogueContext = slurpPageAndDialogueContext(nodeKey, editor);
@@ -54,14 +66,14 @@ export default function FormulaDisplayComponent(
         .then(response => {
           if (response) {
             if (response.type === FormulaValueType.Text) {
-              if (!formula.startsWith("ask(")) {
+              if (!isAskFormula) {
                 setOutput(response.output as string);
                 editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
                   displayNodeKey: nodeKey,
                   output: response.output as string,
                 });
               } else {
-                createdChildNodes.current = true;
+                setCreatedChildNodes(true);
                 setOutput(response.output as string);
                 editor.dispatchCommand(CREATE_AND_STORE_FORMULA_OUTPUT, {
                   displayNodeKey: nodeKey,
@@ -107,11 +119,10 @@ export default function FormulaDisplayComponent(
         });
         if (promise) addPromise(nodeKey, promise);
       }
-  }, [addPromise, removePromise, hasPromise, editor, nodeKey, getFormulaResults, formula]);
+  }, [addPromise, removePromise, hasPromise, editor, nodeKey, getFormulaResults, isAskFormula]);
 
   useEffect(() => {
 
-    if (formula.includes("scope")) console.log("useEffect");
     if ((output === "" || (output === "@@childnodes" && !fetchedNodes.current))
     ) {
       fetchedNodes.current = true;
@@ -172,15 +183,11 @@ export default function FormulaDisplayComponent(
           nodesMarkdown: nodesToAdd,
         });
       }
-    } else if (formula.startsWith("ask(") && !createdChildNodes.current) {
-      if (formula.includes("scope")) console.log("that");
-      createdChildNodes.current = true;
-      editor.dispatchCommand(CREATE_AND_STORE_FORMULA_OUTPUT, {
-        displayNodeKey: nodeKey,
-        output: output,
-      });
+    } else if (isAskFormula && !createdChildNodes) {
+      setCreatedChildNodes(true);
+      createAskResultNodes(output);
     }
-  }, [formula, output, sharedNodeMap, editor, nodeKey, getFormulaOutput]);
+  }, [formula, output, sharedNodeMap, editor, nodeKey, getFormulaOutput, isAskFormula, createdChildNodes, createAskResultNodes]);
 
   const replaceSelfWithEditorNode = () => {
     // TODO this will create an entry in the undo history which we don't necessarily want
@@ -201,7 +208,7 @@ export default function FormulaDisplayComponent(
 
   const handlePencilClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (formula.startsWith("ask(")) {
+    if (isAskFormula) {
       setShowMenu(!showMenu);
     } else {
       replaceSelfWithEditorNode();
@@ -249,7 +256,7 @@ export default function FormulaDisplayComponent(
         >
           <span role="img" aria-label="Edit" className="transform scale-x-[-1] filter grayscale-[70%]">✏️</span>
         </button>
-        {showMenu && formula.startsWith("ask(") && (
+        {showMenu && isAskFormula && (
           <div 
             ref={menuRef}
             className="absolute z-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg"
@@ -269,7 +276,7 @@ export default function FormulaDisplayComponent(
           </div>
         )}
       </span>
-      {!output.startsWith("@@") && !formula.startsWith("ask(") && <span>{output}</span>}
+      {!output.startsWith("@@") && !isAskFormula && <span>{output}</span>}
     </div>
   );
 }

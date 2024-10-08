@@ -63,7 +63,6 @@ export function $replaceExistingFormulaEditorNodeWithDisplayNode() {
 }
 
 export function $replaceDisplayNodeWithEditor(node: FormulaDisplayNode) {
-
   // TODO there's probably a better way
   if (node.hasResultNodes()) {
     $deleteFormulaDisplayNodeChildren(node);
@@ -170,6 +169,7 @@ export function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
     formulaDisplayNode = $createFormulaDisplayNode(formulaText);
   }
   node.replace(formulaDisplayNode);
+  formulaDisplayNode.selectNext();
 }
 
 function sortNodeMarkdownByPageName(nodes: NodeElementMarkdown[]): NodeElementMarkdown[] {
@@ -262,7 +262,7 @@ function addChildrenRecursively(
   return addedNodes;
 }
 
-export function createFormulaOutputPlainNodes(
+export function $createFormulaOutputPlainNodes(
   editor: LexicalEditor,
   displayNode: FormulaDisplayNode,
   markdown: string
