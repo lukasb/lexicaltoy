@@ -247,7 +247,7 @@ function EditorContainer({
                 <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${backlinksCollapsed ? '' : 'transform rotate-180'}`} />
               </div>
               {!backlinksCollapsed && 
-                <div className="pl-1">
+                <div className="pl-1 bg-bgFormula">
                   <BacklinksViewer backlinks={backlinks} />
                 </div>
               }

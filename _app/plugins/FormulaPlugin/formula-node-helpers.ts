@@ -324,6 +324,7 @@ export function $createFormulaOutputSharedNodes({editor, displayNode, rootNode, 
 
   let parentList: ListNode | null = null;
   if (displayNode) {
+    $deleteFormulaDisplayNodeChildren(displayNode)
     const parentListItem = getListItemParentNode(displayNode);
     if (!parentListItem) return;
     parentList = $getOrAddListContainingChildren(parentListItem);
@@ -343,9 +344,6 @@ export function $createFormulaOutputSharedNodes({editor, displayNode, rootNode, 
   ) {
     editor.setEditable(false);
   }
-
-  // TODO maybe warn the user that any existing children will be deleted?
-  if (displayNode) $deleteFormulaDisplayNodeChildren(displayNode);
 
   let currentPageName = "";
   let currentPageListItem: ListItemNode | null = null;
@@ -386,7 +384,7 @@ export function $createFormulaOutputSharedNodes({editor, displayNode, rootNode, 
       if (serializedNode) {
         $appendNodes(currentPageList, serializedNode);
         const listItemNode = currentPageList.getLastChild() as ListItemNode;
-        
+
         if (setLocalSharedNodeMap) {
           setLocalSharedNodeMap((prevMap) => {
             const updatedMap = new Map(prevMap);
