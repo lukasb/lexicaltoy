@@ -117,7 +117,7 @@ function EditorContainer({
   // TODO maybe render a headless editor on the server to enable server-side rendering?
   return (
     <div className="flex flex-col items-start md:mb-4">
-      <div className={`relative border-solid shadow-md dark:shadow-gray-500/50 md:shadow-none md:border-4 md:rounded-lg m-0 pt-2 pr-2.5 md:pr-7 ${backlinks.length > 0 ? 'pb-3' : 'pb-7'} pl-0 w-full max-w-7xl ${
+      <div className={`relative border-solid shadow-md dark:shadow-gray-500/50 md:shadow-none md:border-4 md:rounded-lg m-0 pt-2 pr-2.5 md:pr-7 ${backlinks.length > 0 && !localIsCollapsed ? 'pb-3' : 'pb-5'} pl-0 w-full max-w-7xl ${
         localIsCollapsed ? 'md:border-indigo-200' : 'md:border-indigo-300'
       }`}>
         {!isMobile && !touchDevice && (
@@ -227,7 +227,7 @@ function EditorContainer({
           </div>
         </div>
         <NoSSRWrapper>
-          <div className={`pl-[22px] pr-1 md:pl-[29px] mt-4 ${localIsCollapsed ? 'hidden' : ''}`}>
+          <div className={`pl-[22px] pr-1 md:pl-[29px] mt-4 ${localIsCollapsed ? 'hidden' : 'pb-1'}`}>
             <Editor
               page={page}
               showDebugInfo={showDebug}
