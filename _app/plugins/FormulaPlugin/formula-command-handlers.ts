@@ -50,7 +50,7 @@ import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters"
 import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
 import {
   $replaceWithFormulaDisplayNode,
-  createFormulaOutputSharedNodes,
+  $createFormulaOutputSharedNodes,
   $createFormulaOutputPlainNodes,
   haveExistingFormulaEditorNode,
   $replaceExistingFormulaEditorNodeWithDisplayNode,
@@ -307,13 +307,14 @@ export function registerFormulaCommandHandlers(
           }
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
-            createFormulaOutputSharedNodes(
-              editor,
-              displayNode,
-              nodesMarkdown,
-              setLocalSharedNodeMap,
-              setLocalChildNodeMap
-            );
+            $createFormulaOutputSharedNodes({
+              editor: editor,
+              displayNode: displayNode as FormulaDisplayNode,
+              rootNode: undefined,
+              nodesMarkdown: nodesMarkdown,
+              setLocalSharedNodeMap: setLocalSharedNodeMap,
+              setLocalChildNodeMap: setLocalChildNodeMap
+            });
           }
           return true;
         },

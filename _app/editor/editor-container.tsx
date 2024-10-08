@@ -13,7 +13,9 @@ import { useBreakpoint } from "@/lib/window-helpers";
 import { getModifierKey } from "@/lib/utils";
 import { updatePageTitle } from '@/lib/db';
 import { PagesContext } from '@/_app/context/pages-context';
-
+import { findCallback } from "@/lib/formula/function-definitions";
+import { FormulaValueType, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
+import BacklinksViewer from "./backlinks-viewer";
 function EditorContainer({
   page,
   requestFocus,
@@ -48,6 +50,8 @@ function EditorContainer({
   const [modifierKey, setModifierKey] = useState("");
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const pages = useContext(PagesContext);
+  const [backlinks, setBacklinks] = useState<NodeElementMarkdown[]>([]);
+  const [backlinksCollapsed, setBacklinksCollapsed] = useState(true);
 
   useEffect(() => {
     setModifierKey(getModifierKey());
@@ -92,6 +96,22 @@ function EditorContainer({
       alert("Failed to update title");
     }
     setIsRenameDialogOpen(false);
+  };
+
+  useEffect(() => {
+    async function fetchBacklinks() {
+      const newBacklinks = await findCallback({ pages: pages }, [{ type: FormulaValueType.Text, output: `[[${page.title}]]` }]);
+      if (newBacklinks && newBacklinks.output.length > 0 && newBacklinks.type === FormulaValueType.NodeMarkdown) {
+        setBacklinks(newBacklinks.output as NodeElementMarkdown[]);
+      } else {
+        setBacklinks([]);
+      }
+    }
+    fetchBacklinks();
+  }, [page.title, pages]);
+
+  const toggleBacklinks = () => {
+    setBacklinksCollapsed(!backlinksCollapsed);
   };
 
   // TODO maybe render a headless editor on the server to enable server-side rendering?
@@ -217,6 +237,18 @@ function EditorContainer({
               closePage={closePage}
             />
           </div>
+          {backlinks.length > 0 && (
+            <div className="col-start-2 pl-6">
+              <div 
+                className="mt-4 mb-2 font-semibold text-md text-gray-400 dark:text-gray-200 cursor-pointer flex items-center"
+                onClick={toggleBacklinks}
+              >
+                <span>Backlinks</span>
+                <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${backlinksCollapsed ? '' : 'transform rotate-180'}`} />
+              </div>
+              {!backlinksCollapsed && <BacklinksViewer backlinks={backlinks} />}
+            </div>
+          )}
         </NoSSRWrapper>
       </div>
       <RenameDialog

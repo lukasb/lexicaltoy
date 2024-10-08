@@ -56,6 +56,7 @@ import { SearchHighlighterPlugin } from "@/_app/plugins/SearchHighlighterPlugin"
 import { useSearchTerms } from "../context/search-terms-context";
 import { AIGeneratorPlugin } from "../plugins/AIGeneratorPlugin";
 import { SelectionPersistencePlugin } from "../plugins/SelectionPersistencePlugin";
+import { editorNodes } from "./shared-editor-config";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -83,22 +84,7 @@ function Editor({
     editorState: () => $myConvertFromMarkdownString(page.value, false),
     namespace: "orangetask",
     theme,
-    nodes: [
-      LinkNode,
-      ListNode,
-      ListItemNode,
-      AutoLinkNode,
-      WikilinkNode,
-      WikilinkInternalNode,
-      TodoCheckboxStatusNode,
-      FormulaEditorNode,
-      FormulaDisplayNode,
-      FormattableTextNode,
-      {
-        replace: TextNode,
-        with: (node: TextNode) => new FormattableTextNode(node.__text)
-      }
-    ],
+    nodes: editorNodes,
     onError,
   };
 

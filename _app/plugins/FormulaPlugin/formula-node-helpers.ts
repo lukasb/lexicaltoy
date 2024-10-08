@@ -10,7 +10,8 @@ import {
   LexicalNode,
   $getNodeByKey,
   $isTextNode,
-  $isParagraphNode
+  $isParagraphNode,
+  RootNode
 } from "lexical";
 import {
   ListItemNode,
@@ -312,17 +313,26 @@ export function $createFormulaOutputPlainNodes(
 }
 
 
-export function createFormulaOutputSharedNodes(
+export function $createFormulaOutputSharedNodes({editor, displayNode, rootNode, nodesMarkdown, setLocalSharedNodeMap, setLocalChildNodeMap}: {
   editor: LexicalEditor,
-  displayNode: FormulaDisplayNode,
+  displayNode: FormulaDisplayNode | undefined,
+  rootNode: RootNode | undefined,
   nodesMarkdown: NodeElementMarkdown[],
-  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeElementMarkdown>>>,
-  setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>>
-) {
+  setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeElementMarkdown>>> | undefined,
+  setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>> | undefined
+}) {
 
-  const parentListItem = getListItemParentNode(displayNode);
-  if (!parentListItem) return;
+  let parentList: ListNode | null = null;
+  if (displayNode) {
+    const parentListItem = getListItemParentNode(displayNode);
+    if (!parentListItem) return;
+    parentList = $getOrAddListContainingChildren(parentListItem);
+  } else if (rootNode) {
+    parentList = $createListNode("bullet");
+    rootNode.append(parentList);
+  }
 
+  if (!parentList) return;
   const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
   
   // prevent this editor from stealing focus
@@ -335,7 +345,7 @@ export function createFormulaOutputSharedNodes(
   }
 
   // TODO maybe warn the user that any existing children will be deleted?
-  $deleteFormulaDisplayNodeChildren(displayNode);
+  if (displayNode) $deleteFormulaDisplayNodeChildren(displayNode);
 
   let currentPageName = "";
   let currentPageListItem: ListItemNode | null = null;
@@ -353,7 +363,7 @@ export function createFormulaOutputSharedNodes(
       pageNameListItem.append(
         $createFormattableTextNode("[[" + currentPageName + "]]")
       );
-      $addChildListItem(parentListItem, false, false, pageNameListItem);
+      parentList.append(pageNameListItem);
       currentPageListItem = pageNameListItem;
       currentPageList = $getOrAddListContainingChildren(currentPageListItem);
     }
@@ -377,11 +387,13 @@ export function createFormulaOutputSharedNodes(
         $appendNodes(currentPageList, serializedNode);
         const listItemNode = currentPageList.getLastChild() as ListItemNode;
         
-        setLocalSharedNodeMap((prevMap) => {
-          const updatedMap = new Map(prevMap);
-          updatedMap.set(listItemNode.getKey(), node);
-          return updatedMap;
-        });
+        if (setLocalSharedNodeMap) {
+          setLocalSharedNodeMap((prevMap) => {
+            const updatedMap = new Map(prevMap);
+            updatedMap.set(listItemNode.getKey(), node);
+            return updatedMap;
+          });
+        }
 
         const addedChildNodes = addChildren(
           headlessEditor,
@@ -396,16 +408,18 @@ export function createFormulaOutputSharedNodes(
           });
     
         // make sure we can map any children/grandchildren back to the global shared node map
-        setLocalChildNodeMap((prevMap) => {
-          const updatedMap = new Map(prevMap);
-          addedChildNodes.forEach((childNode) => {
-            updatedMap.set(childNode.key, {
-              parentLexicalNodeKey: listItemNode.getKey(),
+        if (setLocalChildNodeMap) {
+          setLocalChildNodeMap((prevMap) => {
+            const updatedMap = new Map(prevMap);
+            addedChildNodes.forEach((childNode) => {
+              updatedMap.set(childNode.key, {
+                parentLexicalNodeKey: listItemNode.getKey(),
               baseNodeMarkdown: childNode.baseNodeMarkdown,
+              });
             });
+            return updatedMap;
           });
-          return updatedMap;
-        });
+        }
       }
     }
   }
