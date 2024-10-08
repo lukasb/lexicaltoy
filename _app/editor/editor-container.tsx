@@ -237,7 +237,7 @@ function EditorContainer({
               closePage={closePage}
             />
           </div>
-          {backlinks.length > 0 && (
+          {backlinks.length > 0 && !localIsCollapsed && (
             <div className="col-start-2 pl-6">
               <div 
                 className="mt-4 mb-2 font-semibold text-md text-gray-400 dark:text-gray-200 cursor-pointer flex items-center"
