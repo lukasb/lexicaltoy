@@ -46,13 +46,8 @@ function EditorContainer({
   const touchDevice = isTouchDevice();
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [modifierKey, setModifierKey] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const pages = useContext(PagesContext);
-
-  const getPage = useCallback((id: string) => {
-    return pages.find((page) => page.id === id);
-  }, [pages]);
 
   useEffect(() => {
     setModifierKey(getModifierKey());
@@ -84,16 +79,7 @@ function EditorContainer({
     handleCollapsedToggle();
   };
 
-  const handleRename = (newTitle: string) => {
-    const trimmedTitle = newTitle.trim();
-    if (trimmedTitle && trimmedTitle !== page.title) {
-      updatePageTitleLocal(page.id, trimmedTitle, page.revisionNumber, new Date());
-    }
-    setIsRenameDialogOpen(false);
-  };
-
-  // TODO this assumes that the page won't be renamed elsewhere in the same PagesContext
-  const storePageTitle = async (newTitle: string) => {
+  const handleRename = async (newTitle: string) => {
     if (!page) return;
     try {
       const { revisionNumber, lastModified, error } = await updatePageTitle(page.id, newTitle, page.revisionNumber);
@@ -105,6 +91,7 @@ function EditorContainer({
     } catch (error) {
       alert("Failed to update title");
     }
+    setIsRenameDialogOpen(false);
   };
 
   // TODO maybe render a headless editor on the server to enable server-side rendering?
