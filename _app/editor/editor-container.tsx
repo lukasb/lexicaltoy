@@ -248,7 +248,10 @@ function EditorContainer({
               </div>
               {!backlinksCollapsed && 
                 <div className="pl-1 bg-bgFormula">
-                  <BacklinksViewer backlinks={backlinks} />
+                  <BacklinksViewer 
+                    backlinks={backlinks} 
+                    openOrCreatePageByTitle={openOrCreatePageByTitle}
+                  />
                 </div>
               }
             </div>

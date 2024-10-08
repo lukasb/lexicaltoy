@@ -27,6 +27,7 @@ import { SelectionPersistencePlugin } from "../plugins/SelectionPersistencePlugi
 import { NodeElementMarkdown } from "@/lib/formula/formula-definitions";
 import { editorNodes } from "./shared-editor-config";
 import { BacklinksViewerPlugin } from "../plugins/BacklinksViewerPlugin";
+import WikilinkEventListenerPlugin from "@/_app/plugins/WikilinkEventListenerPlugin";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -34,9 +35,10 @@ function onError(error: Error) {
 
 type BacklinksViewerProps = {
   backlinks: NodeElementMarkdown[];
+  openOrCreatePageByTitle: (title: string) => void;
 };
 
-function BacklinksViewer({ backlinks }: BacklinksViewerProps) {
+function BacklinksViewer({ backlinks, openOrCreatePageByTitle }: BacklinksViewerProps) {
 
   const initialConfig = {
     namespace: "orangetask-backlinks",
@@ -76,6 +78,9 @@ function BacklinksViewer({ backlinks }: BacklinksViewerProps) {
         <TodosPlugin />
         <WikilinkPlugin />
         <BacklinksViewerPlugin backlinks={backlinks} />
+        <WikilinkEventListenerPlugin
+          openOrCreatePageByTitle={openOrCreatePageByTitle}
+        />
       </LexicalComposer>
     </PromisesProvider>
   );
