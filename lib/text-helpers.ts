@@ -50,3 +50,7 @@ export function convertToUnorderedList(markdown: string): string {
 
   return result.trim();
 }
+
+export function unescapeMarkdown(markdown: string): string {
+  return markdown.replace(/‣/g, "-").replace(/▵/g, "    ");
+}

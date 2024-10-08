@@ -87,6 +87,5 @@ export function $appendNodesToJSON(
 
 export function $appendNodes(parent: ElementNode, serializedNodes: BaseSerializedNode[]) {
   const nodes = $generateNodesFromSerializedNodes(serializedNodes);
-  console.log("nodes", nodes);
   parent.append(...nodes);
 }

@@ -324,7 +324,9 @@ export function registerFormulaCommandHandlers(
         ({ displayNodeKey, output }) => {
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
-            displayNode.setOutput(output);
+            if (displayNode.getOutput() !== output) {
+              displayNode.setOutput(output);
+            }
             createFormulaOutputPlainNodes(editor, displayNode, output);
           }
           return true;

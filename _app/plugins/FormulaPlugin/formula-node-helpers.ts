@@ -10,11 +10,6 @@ import {
   LexicalNode,
   $getNodeByKey,
   $isTextNode,
-  RootNode,
-  ParagraphNode,
-  $createParagraphNode,
-  $getSelection,
-  $isRangeSelection,
   $isParagraphNode
 } from "lexical";
 import {
@@ -24,7 +19,6 @@ import {
   $isListNode,
   $createListItemNode,
   SerializedListItemNode,
-  SerializedListNode,
   $createListNode
 } from "@lexical/list";
 import { 
@@ -33,7 +27,6 @@ import {
   $deleteChildrenFromListItem,
   $getListContainingChildren,
   $getOrAddListContainingChildren,
-  $getListItemContainingNode
 } from "@/lib/list-utils";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
 import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
@@ -47,7 +40,7 @@ import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
 import { myCreateHeadlessEditor } from "@/lib/editor-utils";
 import { $getRoot } from "lexical";
 import { $appendNodes, $appendNodesToJSON } from "@/lib/json-helpers";
-
+import { unescapeMarkdown } from "@/lib/text-helpers";
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
 // TODO maybe this should be a ref?
@@ -275,12 +268,9 @@ export function createFormulaOutputPlainNodes(
   markdown: string
 ) {
 
-  if (markdown.includes("scope")) console.log("createFormulaOutputPlainNodes", markdown);
-
   const parentListItem = getListItemParentNode(displayNode);
   if (!parentListItem) return;
-  
-  if (markdown.includes("scope")) console.log("createFormulaOutputPlainNodes 2");
+
   // prevent this editor from stealing focus
   // we make it editable again in an update listener in PageListenerPlugin
   if (
@@ -295,7 +285,7 @@ export function createFormulaOutputPlainNodes(
   const parentListNode = $getOrAddListContainingChildren(parentListItem);
   const headlessEditor = myCreateHeadlessEditor();
 
-  const unescapedMarkdown = markdown.replace(/‣/g, "-").replace(/▵/g, "    ");
+  const unescapedMarkdown = unescapeMarkdown(markdown);
 
   let serializedNodes: SerializedListItemNode[] = [];
   headlessEditor.update(() => {
@@ -315,7 +305,6 @@ export function createFormulaOutputPlainNodes(
     }
   });
   if (serializedNodes && serializedNodes.length > 0 && serializedNodes[0].type === "list") {
-    if (markdown.includes("scope")) console.log("createFormulaOutputPlainNodes 3", serializedNodes);
     $appendNodes(parentListNode, serializedNodes[0].children);
   } else {
     console.log("error with serializedNodes", markdown, serializedNodes);
