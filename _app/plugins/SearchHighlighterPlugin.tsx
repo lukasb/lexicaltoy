@@ -67,8 +67,14 @@ export function SearchHighlighterPlugin({
     }
   }, [pageId, getSearchTerms, editor]);
 
+  // clear highlights on unmount
   useEffect(() => {
-    
+    return () => {
+      CSS.highlights?.clear();
+    };
+  }, []);
+
+  useEffect(() => {
     highlightSearchTerms();
 
     editor.registerCommand(
