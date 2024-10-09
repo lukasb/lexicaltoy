@@ -1,7 +1,7 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useEffect, useRef, useCallback } from 'react';
 import { useSearchTerms } from '../context/search-terms-context';
-import { COMMAND_PRIORITY_EDITOR, KEY_ESCAPE_COMMAND } from 'lexical';
+import { COMMAND_PRIORITY_EDITOR, COMMAND_PRIORITY_HIGH, KEY_ESCAPE_COMMAND } from 'lexical';
 
 export function SearchHighlighterPlugin({
   pageId
@@ -81,7 +81,7 @@ export function SearchHighlighterPlugin({
         }
         return false;
       },
-      COMMAND_PRIORITY_EDITOR
+      COMMAND_PRIORITY_HIGH
     );
 
     return () => {
