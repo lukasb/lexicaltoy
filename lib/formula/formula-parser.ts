@@ -21,8 +21,8 @@ interface PossibleArguments {
   shouldShow?: (input: string) => boolean;
 }
 
-const TODO_STATUS_REGEX_LEXER = /(now|later|doing|waiting|done|todo)(\|(now|later|doing|waiting|done|todo))*/i;
-export const TODO_STATUS_REGEX_EXTERNAL = /^(now|later|doing|waiting|done|todo)(\|(now|later|doing|waiting|done|todo))*$/i;
+const TODO_STATUS_REGEX_LEXER = /(now|later|doing|waiting|done|todos|todo)(\|(now|later|doing|waiting|done|todos|todo))*/i;
+export const TODO_STATUS_REGEX_EXTERNAL = /^(now|later|doing|waiting|done|todos|todo)(\|(now|later|doing|waiting|done|todos|todo))*$/i;
 
 // the order of these is important - it will take the first match
 export const possibleArguments: PossibleArguments[] = [
@@ -67,7 +67,7 @@ export const possibleArguments: PossibleArguments[] = [
   {
     displayName: "todos by status",
     type: FormulaValueType.NodeTypeOrTypes,
-    description: "todo, done, now, waiting, or doing. separate with | to search for multiple",
+    description: "todo, done, now, waiting, or doing. separate with | to search for multiple, or enter 'todos' to search for any todo status",
     regex: TODO_STATUS_REGEX_EXTERNAL
   },
   {
@@ -140,7 +140,7 @@ export const functionDefinitions: FunctionDefinition[] = [
           FormulaValueType.NodeTypeOrTypes
       ],
       description: "Find text or todos in your notes",
-      example: 'find("#taxes",now|waiting)',
+      example: 'find("#taxes",todos)',
       callback: findCallback,
       formulaOutputType: FormulaValueType.NodeMarkdown
   },

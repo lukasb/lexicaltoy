@@ -9,7 +9,7 @@ import {
   FORMULA_LIST_ITEM_WITH_RESULTS_REGEX,
   IS_FORMULA_REGEX
 } from "./formula-markdown-converters";
-import { DefaultArguments, possibleArguments } from "./formula-parser";
+import { DefaultArguments, possibleArguments, nodeTypes } from "./formula-parser";
 import { Page } from "../definitions";
 import { getLastSixWeeksJournalPages } from "../journal-helpers";
 import { stripBrackets } from "../transform-helpers";
@@ -155,7 +155,12 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
     if (arg.type !== FormulaValueType.Text && arg.type !== FormulaValueType.NodeTypeOrTypes) return;
     const text = arg.output as string;
     if (arg.type === FormulaValueType.NodeTypeOrTypes) {
-      orStatuses = orStatuses.concat(text.split("|").map(s => s.toUpperCase().trim()));
+      if (text === "todos") {
+        // "todos" is shorthand for "any todo type"
+        orStatuses = nodeTypes.map(nodeType => nodeType.name.toUpperCase());
+      } else {
+        orStatuses = orStatuses.concat(text.split("|").map(s => s.toUpperCase().trim()));
+      }
     } else if (arg.type === FormulaValueType.Text) {
       substrings.push(text.trim().toLowerCase().replace(/^"(.*)"$/, '$1'));
     }

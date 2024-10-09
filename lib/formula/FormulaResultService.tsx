@@ -89,8 +89,8 @@ export const useFormulaResultService = () => {
     context?: PageAndDialogueContext
   ): Promise<FormulaOutput | null> => {
     // Perform the query and fetch the results
+    
     const output = await getFormulaOutput(query, pages, context);
-
     if (!output) return null;
 
     if (output.type === FormulaValueType.NodeMarkdown) {

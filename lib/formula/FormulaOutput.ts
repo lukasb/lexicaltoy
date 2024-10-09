@@ -32,7 +32,6 @@ export async function getFormulaOutput(
     if (lexingResult.errors.length > 0) {
       return getShortGPTResponse(formula, context);
     }
-
     const parser = new FormulaParser();
     parser.input = lexingResult.tokens;
     const cst = parser.formula() as CstNodeWithChildren;
