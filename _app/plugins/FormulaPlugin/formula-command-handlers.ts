@@ -53,7 +53,7 @@ import {
   $createFormulaOutputSharedNodes,
   $createFormulaOutputPlainNodes,
   haveExistingFormulaEditorNode,
-  $replaceExistingFormulaEditorNodeWithDisplayNode,
+  $replaceEditorNodeWithDisplayNode,
   $replaceDisplayNodeWithEditor,
   $replaceTextNodeWithEditor,
   $replaceEditorWithTextNode,
@@ -151,86 +151,11 @@ export function registerFormulaCommandHandlers(
         }
       }),
       editor.registerNodeTransform(FormulaEditorNode, (node) => {
-        // this logic is mostly around making sure if we serialize a FormulaEditorNode
-        // that it is turned back into a FormulaDisplayNode when the editor is reloaded
-        // TODO maybe handle this in FormulaEditorNode.importJSON instead?
-        
         const textContents = node.getTextContent();
-
         if (!textContents.startsWith("=")) {
           $replaceEditorWithTextNode(node);
-        } else {
-          const selection = $getSelection();
-          if (
-            selection === null ||
-            !$isRangeSelection(selection) ||
-            !selection.isCollapsed()
-          ) {
-            $replaceWithFormulaDisplayNode(node);
-          }
-          const selectionListItemNode =
-            $getActiveListItemFromSelection(selection);
-          if (selectionListItemNode) {
-            const editorListItemNode = node.getParent();
-            if (
-              editorListItemNode && 
-              selectionListItemNode.getKey() !== editorListItemNode.getKey()
-            ) {
-              $replaceWithFormulaDisplayNode(node);
-            }
-          }
-        }
+        } 
       }),
-      /*editor.registerCommand(
-        SELECTION_CHANGE_COMMAND,
-        () => {
-          if (!haveExistingFormulaEditorNode()) return false;
-
-          const selection = $getSelection();
-          if (selection === null) return false;
-
-          if ($isNodeSelection(selection)) {
-            const node = selection.getNodes()[0];
-            if (node.getKey() !== getFormulaEditorNodeKey()) {
-              console.log("6");
-              $replaceExistingFormulaEditorNodeWithDisplayNode();
-            }
-            return false;
-          }
-
-          if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
-            return false;
-          }
-
-          const activeNode = selection.anchor.getNode();
-          const activeListItem = $getListItemContainingNode(activeNode);
-          const activeListItemFirstChild = activeListItem?.getFirstChild();
-
-          if (activeListItemFirstChild?.getKey() !== getFormulaEditorNodeKey()) {
-            // we're about to get rid of the node that has (had) the selection
-            // before the selection change handler has completed, so we have to
-            // fix the selection here
-            let anchorOffset = undefined;
-            if ($isTextNode(activeNode)) {
-              anchorOffset = selection.anchor.offset;
-            }
-            console.log("activeNode", activeNode?.__key);
-            console.log("activeListItem", activeListItem?.__key);
-            console.log("activeListItemFirstChild", activeListItemFirstChild?.__key);
-            console.log("getFormulaEditorNodeKey()", getFormulaEditorNodeKey());
-            return false;
-            $replaceExistingFormulaEditorNodeWithDisplayNode();
-            if (anchorOffset) {
-              activeNode.select(anchorOffset);
-            } else {
-              activeNode.selectEnd();
-            }
-          }
-
-          return false;
-        },
-        COMMAND_PRIORITY_EDITOR
-      ),*/
       editor.registerCommand(
         PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY,
         ({ displayNodeKey }) => {
@@ -276,10 +201,10 @@ export function registerFormulaCommandHandlers(
       ),
       editor.registerCommand(
         SWAP_FORMULA_EDITOR_FOR_DISPLAY,
-        () => {
-          const editorNode = $getNodeByKey(getFormulaEditorNodeKey());
+        ({ editorNodeKey }) => {
+          const editorNode = $getNodeByKey(editorNodeKey);
           if (editorNode && $isFormulaEditorNode(editorNode)) {
-            $replaceExistingFormulaEditorNodeWithDisplayNode();
+            $replaceEditorNodeWithDisplayNode(editorNode);
           }
           return true;
         },

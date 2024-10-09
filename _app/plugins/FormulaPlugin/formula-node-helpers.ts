@@ -55,12 +55,8 @@ export function haveExistingFormulaEditorNode(): boolean {
   return __formulaEditorNodeKey !== "";
 }
 
-export function $replaceExistingFormulaEditorNodeWithDisplayNode() {
-  const formulaEditorNode = $getNodeByKey(__formulaEditorNodeKey);
-  if (formulaEditorNode instanceof FormulaEditorNode) {
-    $replaceWithFormulaDisplayNode(formulaEditorNode);
-  }
-  __formulaEditorNodeKey = "";
+export function $replaceEditorNodeWithDisplayNode(editorNode: FormulaEditorNode) {
+  $replaceWithFormulaDisplayNode(editorNode);
 }
 
 export function $replaceDisplayNodeWithEditor(node: FormulaDisplayNode) {
