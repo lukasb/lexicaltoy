@@ -34,7 +34,10 @@ export function computeFloatingCheckmarkPosition(
   ref: React.RefObject<HTMLElement> | null
 ): FloatingMenuCoords {
   const position = computeFloatingCheckmarkPositionInternal(editor);
-  if (!position) return { x: 0, y: 0 };
+  if (!position) {
+    console.log("no position");
+    return { x: 0, y: 0 };
+  }
   const {cursorLeft, cursorTop, rootX, rootY} = position;
   let newX = cursorLeft - rootX;
   if (newX + checkmarkWidth > window.innerWidth) {
