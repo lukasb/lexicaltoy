@@ -53,7 +53,7 @@ import {
   $createFormulaOutputSharedNodes,
   $createFormulaOutputPlainNodes,
   haveExistingFormulaEditorNode,
-  $replaceExistingFormulaEditorNodeWithDisplayNode,
+  $replaceEditorNodeWithDisplayNode,
   $replaceDisplayNodeWithEditor,
   $replaceTextNodeWithEditor,
   $replaceEditorWithTextNode,
@@ -276,10 +276,10 @@ export function registerFormulaCommandHandlers(
       ),
       editor.registerCommand(
         SWAP_FORMULA_EDITOR_FOR_DISPLAY,
-        () => {
-          const editorNode = $getNodeByKey(getFormulaEditorNodeKey());
+        ({ editorNodeKey }) => {
+          const editorNode = $getNodeByKey(editorNodeKey);
           if (editorNode && $isFormulaEditorNode(editorNode)) {
-            $replaceExistingFormulaEditorNodeWithDisplayNode();
+            $replaceEditorNodeWithDisplayNode(editorNode);
           }
           return true;
         },
