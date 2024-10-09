@@ -58,10 +58,13 @@ export function SearchHighlighterPlugin({
         const firstElement = ranges[0].startContainer.parentElement;
         firstElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
+        // disabled the selection because it was breaking certain formula nodes (ask)
+        // if we re-enable, need to make sure we disable the AutoFocusPlugin if there are search results
+
         // Select the first result
-        const selection = window.getSelection();
-        selection?.removeAllRanges();
-        selection?.addRange(ranges[0]);
+        //const selection = window.getSelection();
+        //selection?.removeAllRanges();
+        //selection?.addRange(ranges[0]);
         alreadyMovedSelection.current = true;
       }
     }

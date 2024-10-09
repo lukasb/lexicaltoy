@@ -250,7 +250,7 @@ function Editor({
           </>
         )}
         {showDebugInfo && <TreeViewPlugin />}
-        {requestFocus && !shouldHighlight && <AutoFocusPlugin/>}
+        {requestFocus && <AutoFocusPlugin/>}
       </LexicalComposer>
     </PromisesProvider>
   );
