@@ -1,6 +1,6 @@
 import { 
   splitMarkdownByNodes,
-  removeFindNodes,
+  removeInvalidNodesForFind,
 } from "./function-definitions";
 import { NodeElementMarkdown } from "./formula-definitions";
 import { FormulaOutput, FormulaValueType } from "./formula-definitions";
@@ -176,7 +176,7 @@ describe('removeFindNodes', () => {
         { baseNode: createBaseNodeMarkdown('TestPage', 4, 4, 'child 3'), children: [] },
       ]
     };
-    removeFindNodes(root);
+    removeInvalidNodesForFind(root);
     expect(root.children).toHaveLength(1);
     expect(root.children[0].baseNode.nodeMarkdown).toBe('child 1');
   });
@@ -195,7 +195,7 @@ describe('removeFindNodes', () => {
         },
       ]
     };
-    removeFindNodes(root);
+    removeInvalidNodesForFind(root);
     expect(root.children[0].children).toHaveLength(1);
     expect(root.children[0].children[0].baseNode.nodeMarkdown).toBe('child 1');
   });
@@ -209,7 +209,7 @@ describe('removeFindNodes', () => {
         { baseNode: createBaseNodeMarkdown('TestPage', 4, 4, 'child 3'), children: [] },
       ]
     };
-    removeFindNodes(root);
+    removeInvalidNodesForFind(root);
     expect(root.children).toHaveLength(3);
   });
 
@@ -218,7 +218,7 @@ describe('removeFindNodes', () => {
       baseNode: createBaseNodeMarkdown('TestPage', 1, 1, 'root'),
       children: []
     };
-    removeFindNodes(root);
+    removeInvalidNodesForFind(root);
     expect(root.children).toHaveLength(0);
   });
 
@@ -242,7 +242,7 @@ describe('removeFindNodes', () => {
         },
       ]
     };
-    removeFindNodes(root);
+    removeInvalidNodesForFind(root);
     expect(root.children[0].children[1].children).toHaveLength(0);
     expect(root.children[0].children).toHaveLength(3);
   });
@@ -261,7 +261,7 @@ describe('removeFindNodes', () => {
         },
       ]
     };
-    removeFindNodes(root);
+    removeInvalidNodesForFind(root);
     expect(root.children).toHaveLength(0);
     expect(root.baseNode).toEqual({
       nodeMarkdown: 'root',

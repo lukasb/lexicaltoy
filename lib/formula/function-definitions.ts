@@ -192,11 +192,8 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
           );
 
           if (matchesAllSubstrings && matchesStatus) {
-            // Avoid circular references by excluding lines with find() formulas
-            if (!FIND_FORMULA_START_REGEX.test(nodeMarkdown)
-              // if it's a non-find formula, it has to have results for us to include it
-              && (!IS_FORMULA_REGEX.test(nodeMarkdown) || FORMULA_LIST_ITEM_WITH_RESULTS_REGEX.test(nodeMarkdown))) {
-              removeFindNodes(node);
+            if (!invalidFindResult(nodeMarkdown)) {
+              removeInvalidNodesForFind(node);
               output.push(node);
             }
           } else {
@@ -223,6 +220,13 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
     type: FormulaValueType.NodeMarkdown,
   };  
 };
+
+// Avoid circular references by excluding lines with find() formulas
+// also exclude formulas without results
+function invalidFindResult(markdown: string): boolean {
+  return FIND_FORMULA_START_REGEX.test(markdown) || 
+    (IS_FORMULA_REGEX.test(markdown) && !FORMULA_LIST_ITEM_WITH_RESULTS_REGEX.test(markdown));
+}
 
 export function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMarkdown[] {
   const lines = markdown.split("\n");
@@ -300,16 +304,16 @@ export function splitMarkdownByNodes(markdown: string, pageName: string): NodeEl
   return rootNode.children;
 }
 
-// for now, if we hit a find() node, just remove it, any children, and any
+// for now, if we hit a find() node, or a formula without results, just remove it, any children, and any
 // subsequent siblings from the search results
-export function removeFindNodes(node: NodeElementMarkdown): void {
+export function removeInvalidNodesForFind(node: NodeElementMarkdown): void {
   for (let i = 0; i < node.children.length; i++) {
     const child = node.children[i];
-    if (FIND_FORMULA_START_REGEX.test(child.baseNode.nodeMarkdown)) {
+    if (invalidFindResult(child.baseNode.nodeMarkdown)) {
       node.children.splice(i);
       return;
     }
-    removeFindNodes(child);
+    removeInvalidNodesForFind(child);
   }
 }
 
