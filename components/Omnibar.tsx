@@ -84,6 +84,7 @@ const Omnibar = forwardRef(({
   // see the next useEffect for some remaining display logic
   useEffect(() => {
     const searchPagesAsync = async () => {
+      //console.log("searchPagesAsync", term);
       if (skipTermResolutionRef.current === true) {
         skipTermResolutionRef.current = false;
         return;
@@ -97,8 +98,10 @@ const Omnibar = forwardRef(({
         );
   
         if (startMatch && inputRef.current) {
+          //console.log("setting displayValue to startMatch.title", startMatch.title);
           setDisplayValue(startMatch.title);
         } else {
+          //console.log("setting displayValue to term", term);
           setDisplayValue(term);
         }
   
@@ -117,6 +120,7 @@ const Omnibar = forwardRef(({
   // we also set the selected index for the results list
   useEffect(() => {
     const searchPagesAsync = async () => {
+      console.log("searchPagesAsync", term);
       if (skipDisplayValueResolutionRef.current === true) {
         skipDisplayValueResolutionRef.current = false;
         return;
@@ -136,12 +140,16 @@ const Omnibar = forwardRef(({
           if (!isTouchDevice()) {
             setShowPageContent(true);
           }
+        } else if (displayValue === term) {
+          setShowCreatePageOption(false);
         }
       } else {        
         if (exactMatchIndex === -1 && term.trim() !== "") {
+          console.log("setting showCreatePageOption to true");
           setShowCreatePageOption(true);
           setSelectedIndex(0);
         } else {
+          console.log("setting showCreatePageOption to false");
           setShowCreatePageOption(false);
           setSelectedIndex(-1);
         }
@@ -185,9 +193,14 @@ const Omnibar = forwardRef(({
     }
   }, [selectedIndex]);
  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
+  const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleChange(e.target);
+  };
+
+  const handleChange = (inputElement: HTMLInputElement) => {
+    const newValue = inputElement.value;
     if (newValue === "") skipTermResolutionRef.current = false;
+    console.log("term, displayValue, newValue", term, displayValue, newValue);
     setTerm(newValue);
     setDisplayValue(newValue);
     storedTermRef.current = newValue;
@@ -254,6 +267,11 @@ const Omnibar = forwardRef(({
     }
   };
 
+  const handleOnInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("typed something", e.target.value);
+    handleChange(e.target);
+  };
+
   const handleSearchResultsClick = (result: Page) => {
     handleOpenExistingPage(result);
     resetSelf();
@@ -305,8 +323,9 @@ const Omnibar = forwardRef(({
         type="text"
         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
         value={displayValue}
-        onChange={handleChange}
+        //onChange={onChangeHandler}
         onKeyDown={handleKeyDown}
+        onInput={handleOnInput}
         placeholder={isMobile ? "Search or Create" : `Search or Create (${modifierKey} + K)`}
         id="omnibar-input"
       />
