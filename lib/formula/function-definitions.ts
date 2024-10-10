@@ -193,7 +193,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
             nodeMarkdown.toLowerCase().includes(substring)
           );
           const matchesStatus = orStatuses.length === 0 || orStatuses.some((status) =>
-            new RegExp(`^\s*- ${status}`).test(nodeMarkdown)
+            new RegExp(`^\\s*- ${status}`).test(nodeMarkdown)
           );
 
           if (matchesAllSubstrings && matchesStatus) {
