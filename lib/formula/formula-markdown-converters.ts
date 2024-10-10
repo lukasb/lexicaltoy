@@ -69,7 +69,7 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
     const line = lines[i];
 
     if (!inFormula) {
-      const formulaStart = line.match(/^(\s*)- =/);
+      const formulaStart = line.match(/^(\s*)- =.*\|\|\|result:/);
       if (formulaStart) {
         inFormula = true;
         formulaIndent = formulaStart[1];

@@ -32,7 +32,6 @@ function getEditorNodeFromSelection(selection: BaseSelection | null): FormulaEdi
 export function shouldShowFloatingCheckmark(selection: BaseSelection) {
   const editorNode = getEditorNodeFromSelection(selection);
   if (!editorNode) {
-    console.log("no editor node");
     return false;
   }
   return true;

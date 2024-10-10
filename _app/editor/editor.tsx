@@ -127,7 +127,7 @@ function Editor({
     editorState.read(() => {
       const editorStateMarkdown = $convertToMarkdownString(TRANSFORMERS);
       const pageContentsWithoutSharedNodes = stripSharedNodesFromMarkdown(editorStateMarkdown);
-      //console.log("pageContentsWithoutSharedNodes", pageContentsWithoutSharedNodes);
+      console.log("pageContentsWithoutSharedNodes", pageContentsWithoutSharedNodes);
       const trimmedPageContents = pageContentsWithoutSharedNodes.replace(/\s$/, '');
       const trimmedPageValue = page.value.replace(/\s$/, '');
       if (trimmedPageContents !== trimmedPageValue) {
