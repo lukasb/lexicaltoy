@@ -23,7 +23,6 @@ import { TodosPlugin } from "@/_app/plugins/TodosPlugin";
 import { FormulaPlugin } from "@/_app/plugins/FormulaPlugin";
 import { PromisesProvider } from "@/_app/context/formula-request-context";
 import { AIGeneratorPlugin } from "../plugins/AIGeneratorPlugin";
-import { SelectionPersistencePlugin } from "../plugins/SelectionPersistencePlugin";
 import { NodeElementMarkdown } from "@/lib/formula/formula-definitions";
 import { editorNodes } from "./shared-editor-config";
 import { BacklinksViewerPlugin } from "../plugins/BacklinksViewerPlugin";
@@ -72,7 +71,6 @@ function BacklinksViewer({ backlinks, openOrCreatePageByTitle }: BacklinksViewer
         <HistoryPlugin />
         <AutoLinkPlugin />
         <AIGeneratorPlugin />
-        <SelectionPersistencePlugin />
         <LexicalClickableLinkPlugin />
         <FormulaPlugin />
         <TodosPlugin />
