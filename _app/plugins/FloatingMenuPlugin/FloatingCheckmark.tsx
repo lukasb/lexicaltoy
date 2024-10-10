@@ -46,10 +46,10 @@ export function computeFloatingCheckmarkPosition(
 ): FloatingMenuCoords {
   const position = computeFloatingCheckmarkPositionInternal(editor);
   if (!position) {
-    console.log("no position");
+    //console.log("no position");
     return { x: 0, y: 0 };
   } else {
-    console.log("position", position);
+    //console.log("position", position);
   }
   const {cursorLeft, cursorTop, rootX, rootY} = position;
   let newX = cursorLeft - rootX;
