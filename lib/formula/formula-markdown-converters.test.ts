@@ -93,8 +93,7 @@ describe('parseFormulaMarkdown', () => {
 describe('stripSharedNodesFromMarkdown', () => {
   test('strips shared nodes from find formula', () => {
     const markdown = `
-- =find(something)
-  |||result:
+- =find(something) |||result:
   @@childnodes
   |||
   - Child node 1
@@ -102,8 +101,7 @@ describe('stripSharedNodesFromMarkdown', () => {
 - Next item
 `;
     const expected = `
-- =find(something)
-  |||result:
+- =find(something) |||result:
   @@childnodes
   |||
 - Next item
@@ -113,8 +111,7 @@ describe('stripSharedNodesFromMarkdown', () => {
 
   test('keeps non-find formulas intact', () => {
     const markdown = `
-- =calculate(1 + 1)
-  |||result:
+- =calculate(1 + 1) |||result:
   2
   |||
 - Next item
@@ -124,18 +121,15 @@ describe('stripSharedNodesFromMarkdown', () => {
 
   test('handles multiple formulas', () => {
     const markdown = `
-- =find(something)
-  |||result:
+- =find(something) |||result:
   @@childnodes
   |||
   - Child node 1
   - Child node 2
-- =calculate(2 + 2)
-  |||result:
+- =calculate(2 + 2) |||result:
   4
   |||
-- =find(another thing)
-  |||result:
+- =find(another thing) |||result:
   @@childnodes
   |||
   - Child node 3
@@ -143,16 +137,13 @@ describe('stripSharedNodesFromMarkdown', () => {
 - Final item
 `;
     const expected = `
-- =find(something)
-  |||result:
+- =find(something) |||result:
   @@childnodes
   |||
-- =calculate(2 + 2)
-  |||result:
+- =calculate(2 + 2) |||result:
   4
   |||
-- =find(another thing)
-  |||result:
+- =find(another thing) |||result:
   @@childnodes
   |||
 - Final item
@@ -162,8 +153,7 @@ describe('stripSharedNodesFromMarkdown', () => {
 
   test('handles nested list items', () => {
     const markdown = `
-- =find(something)
-  |||result:
+- =find(something) |||result:
   @@childnodes
   |||
   - Child node 1
@@ -174,8 +164,7 @@ describe('stripSharedNodesFromMarkdown', () => {
 - Next item
 `;
     const expected = `
-- =find(something)
-  |||result:
+- =find(something) |||result:
   @@childnodes
   |||
 - Next item
@@ -185,8 +174,7 @@ describe('stripSharedNodesFromMarkdown', () => {
 
   test('preserves indentation', () => {
     const markdown = `
-  - =find(something)
-    |||result:
+  - =find(something) |||result:
     @@childnodes
     |||
     - Child node 1
@@ -194,8 +182,7 @@ describe('stripSharedNodesFromMarkdown', () => {
   - Next item
 `;
     const expected = `
-  - =find(something)
-    |||result:
+  - =find(something) |||result:
     @@childnodes
     |||
   - Next item
@@ -219,8 +206,7 @@ describe('stripSharedNodesFromMarkdown', () => {
 
   test('handles formulas with multiline results', () => {
     const markdown = `
-- =calculate(complex stuff)
-  |||result:
+- =calculate(complex stuff) |||result:
   Line 1 of result
   Line 2 of result
   Line 3 of result
