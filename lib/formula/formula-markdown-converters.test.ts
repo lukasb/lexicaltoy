@@ -129,6 +129,9 @@ describe('stripSharedNodesFromMarkdown', () => {
 - =calculate(2 + 2) |||result:
   4
   |||
+- this is another node
+  - =this is a formula without results
+  - this is a node without a formula
 - =find(another thing) |||result:
   @@childnodes
   |||
@@ -143,6 +146,9 @@ describe('stripSharedNodesFromMarkdown', () => {
 - =calculate(2 + 2) |||result:
   4
   |||
+- this is another node
+  - =this is a formula without results
+  - this is a node without a formula
 - =find(another thing) |||result:
   @@childnodes
   |||
