@@ -1,6 +1,7 @@
 import { getShortGPTChatResponse, getGPTChatResponseForList } from "../ai";
 import { PageAndDialogueContext } from "./FormulaOutput";
 import { FormulaOutput, FormulaValueType } from "./formula-definitions";
+import { BLOCK_ID_REGEX } from '../blockref';
 
 function getPromptWithContextForChat(formula: string, priorMarkdown: string): string {
   return `
@@ -26,8 +27,18 @@ User prompt: ${prompt}
 `
 }
 
+function cleanFormulaForPrompt(formula: string): string {
+  let cleanedFormula = formula;
+  if (cleanedFormula.startsWith("=")) cleanedFormula = cleanedFormula.slice(1);
+  const match = cleanedFormula.match(BLOCK_ID_REGEX);
+  if (match) {
+    cleanedFormula = cleanedFormula.slice(0, match.index);
+  }
+  return cleanedFormula;
+}
+
 export async function getGPTResponseForList(prompt: string, context?: PageAndDialogueContext): Promise<FormulaOutput | null> {
-  const formulaWithoutEqualSign = prompt.startsWith("=") ? prompt.slice(1) : prompt;
+  const formulaWithoutEqualSign = cleanFormulaForPrompt(prompt);
   if (!context) return null;
   let fullPrompt = "";
 
@@ -55,7 +66,7 @@ export async function getGPTResponseForList(prompt: string, context?: PageAndDia
 }
 
 export async function getShortGPTResponse(prompt: string, context?: PageAndDialogueContext): Promise<FormulaOutput | null> {
-  const formulaWithoutEqualSign = prompt.startsWith("=") ? prompt.slice(1) : prompt;
+  const formulaWithoutEqualSign = cleanFormulaForPrompt(prompt);
   if (!context) return null;
   let fullPrompt = "";
 

@@ -7,7 +7,8 @@ import {
 import { 
   FIND_FORMULA_START_REGEX,
   FORMULA_LIST_ITEM_WITH_RESULTS_REGEX,
-  IS_FORMULA_REGEX
+  IS_FORMULA_REGEX,
+  FORMULA_RESULTS_END_REGEX
 } from "./formula-markdown-converters";
 import { DefaultArguments, possibleArguments, nodeTypes } from "./formula-parser";
 import { Page } from "../definitions";
@@ -17,6 +18,8 @@ import { getOutputAsString } from "./formula-helpers";
 import { getUrl } from "../getUrl";
 import { sanitizeText } from "../text-helpers";
 import { getGPTResponseForList } from "./gpt-formula-handlers";
+import { BLOCK_ID_REGEX, BLOCK_REFERENCE_REGEX } from "../blockref";
+import { nodeToString } from "./formula-helpers";
 
 const instructionsWithContext = `
 You will receive user questions or instructions, and content from one or more pages. Pages will look like this:
@@ -47,6 +50,24 @@ function getPageContext(page: Page): string {
   return "## " + page.title + "\n" + page.value + "\n## END OF PAGE CONTENTS\n";
 }
 
+function getBlockContext(page: Page, blockId: string): string {
+  const nodes = splitMarkdownByNodes(page.value, page.title);
+
+  function findBlock(nodes: NodeElementMarkdown[], blockId: string): NodeElementMarkdown | null {
+    for (const node of nodes) {
+      const match = node.baseNode.nodeMarkdown.match(BLOCK_ID_REGEX);
+      if (match && match[1] === blockId) return node;
+      const result = findBlock(node.children, blockId);
+      if (result) return result;
+    }
+    return null;
+  }
+
+  const blockNode = findBlock(nodes, blockId);
+  if (!blockNode) return "";
+  return nodeToString(blockNode);
+}
+
 function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
   let pagesContext: string[] = [];
 
@@ -63,6 +84,14 @@ function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
         pages
           .filter(p => p.title.startsWith(pageTitle.slice(0, -1)))
           .forEach(page => pagesContext.push(getPageContext(page)));
+      }
+    } else if (BLOCK_REFERENCE_REGEX.test(pageTitle)) {
+      const match = pageTitle.match(BLOCK_REFERENCE_REGEX);
+      const cleanPageTitle = pageTitle.replace(BLOCK_REFERENCE_REGEX, "");
+      const page = pages.find(p => p.title === cleanPageTitle);
+      if (match && page) {
+        const blockContext = getBlockContext(page, match[1]);
+        if (blockContext) pagesContext.push(blockContext);
       }
     } else {
       const page = pages.find(p => p.title === pageTitle);
@@ -293,7 +322,7 @@ export function splitMarkdownByNodes(markdown: string, pageName: string): NodeEl
         const currentNode = stack[stack.length - 1].children[stack[stack.length - 1].children.length - 1] || stack[stack.length - 1];
         currentNode.baseNode.nodeMarkdown += (currentNode.baseNode.nodeMarkdown ? "\n" : "") + line;
         currentNode.baseNode.lineNumberEnd = i + 1;
-        if (isProcessingFormula && trimmedLine.startsWith("|||")) {
+        if (isProcessingFormula && trimmedLine.match(FORMULA_RESULTS_END_REGEX)) {
           isProcessingFormula = false;
         }
       } else {

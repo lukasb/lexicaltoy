@@ -1,3 +1,5 @@
+import { BLOCK_ID_REGEX } from "../blockref";
+
 /*
   * This file contains functions to convert formulas to and from markdown.
   * Formulas are represented in markdown as follows:
@@ -8,22 +10,36 @@
   * 
   * The formula is required and the output is optional.
   * 
+  * Like other nodes, formula nodes can have block references at the end.
+  * =formula |||result:
+  * result text
+  * ||| ^block-id
+  * 
   * We (will eventually) escape any pipe symbols in the formula and output to avoid conflicts with our custom markdown.
   */
 
 
 const FORMULA_START_REGEX = /^=(.*?)(?:\s*\|\|\|result:|$)/;
-const FORMULA_LIST_ITEM_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?$/gm;
-export const FORMULA_LIST_ITEM_WITH_RESULTS_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)$/gm;
+const FORMULA_LIST_ITEM_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?(\^[a-zA-Z0-9-]+)?$/gm;
+const FORMULA_LIST_ITEM_START_WITH_RESULTS_REGEX = /^(\s*)- =.*\|\|\|result:/;
+export const FORMULA_LIST_ITEM_WITH_RESULTS_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)(\^[a-zA-Z0-9-]+)?$/gm;
 export const FIND_FORMULA_START_REGEX = /^\s*- =(find\(|[^,]*,\s*find\()/;
 export const IS_FORMULA_REGEX = /^\s*- =/;
+export const FORMULA_RESULTS_END_REGEX = /^\s*\|\|\|(\^[a-zA-Z0-9-]+)?$/;
 
 // formula as stored by the nodes has the = sign at the front, maybe should change that
 export function getFormulaMarkdown(formula: string, output?: string): string {
+  const match = formula.match(BLOCK_ID_REGEX);
+  if (match) {
+    formula = formula.slice(0, match.index);
+  }
   let markdown = `=${formula}`;
   if (output) {
     output = output.replace(/\n+/g, '\n');
     markdown += ` |||result:\n ${output}\n|||`;
+    if (match) {
+      markdown += ` ${match[0]}`;
+    }
   }
   return markdown;
 }
@@ -45,7 +61,11 @@ export function parseFormulaMarkdown(markdownString: string): ParseResult {
     if (resultStart !== -1) {
       const resultEnd = markdownString.indexOf('|||', resultStart + resultMarkerLength);
       if (resultEnd !== -1) {
-        const result = markdownString.slice(resultStart + 10, resultEnd).trim();
+        let result = markdownString.slice(resultStart + 10, resultEnd).trim();
+        const match = markdownString.match(BLOCK_ID_REGEX);
+        if (match) {
+          result += ` ${match[0]}`;
+        }
         return { formula, result };
       } else {
         console.log("no result end");
@@ -69,7 +89,7 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
     const line = lines[i];
 
     if (!inFormula) {
-      const formulaStart = line.match(/^(\s*)- =.*\|\|\|result:/);
+      const formulaStart = line.match(FORMULA_LIST_ITEM_START_WITH_RESULTS_REGEX);
       if (formulaStart) {
         inFormula = true;
         formulaIndent = formulaStart[1];
@@ -79,7 +99,7 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
       }
     } else {
       formulaLines.push(line);
-      if (line.trim() === '|||' || !line.trim()) {
+      if (line.match(FORMULA_RESULTS_END_REGEX) || !line.trim()) {
         inFormula = false;
         const fullFormula = formulaLines.join('\n');
         const matches = Array.from(fullFormula.matchAll(FORMULA_LIST_ITEM_REGEX));
