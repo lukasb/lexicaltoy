@@ -17,6 +17,7 @@ import { slurpPageAndDialogueContext } from '@/lib/formula/FormulaOutput';
 import { registerFormula, unregisterFormula } from '../../lib/formula/FormulaResultService';
 import { PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY } from '@/lib/formula-commands';
 import { EditDialog } from '../ui/edit-dialog';
+import { validateBlockId } from '@/lib/blockref';
 
 export default function FormulaDisplayComponent(
   { formula: initialFormula,
@@ -248,12 +249,16 @@ export default function FormulaDisplayComponent(
   }, [editor, nodeKey]);
 
   const handleEditDialogSubmit = (newValue: string) => {
-    editor.dispatchCommand(EDIT_FORMULA_NODE_BLOCK_ID, {
-      displayNodeKey: nodeKey,
-      blockId: newValue
-    });
-    setBlockId(newValue);
-    setIsEditDialogOpen(false);
+    if (validateBlockId(newValue)) {
+      editor.dispatchCommand(EDIT_FORMULA_NODE_BLOCK_ID, {
+        displayNodeKey: nodeKey,
+        blockId: newValue
+      });
+      setBlockId(newValue);
+      setIsEditDialogOpen(false);
+    } else {
+      alert("Invalid block ID");
+    }
   };
 
   const handleEditBlockId = () => {

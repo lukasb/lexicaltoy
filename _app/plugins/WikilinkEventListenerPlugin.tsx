@@ -15,17 +15,14 @@ import {
   $isElementNode,
   $isRangeSelection,
   COMMAND_PRIORITY_NORMAL,
-  getNearestEditorFromDOMNode,
-  $getRoot,
+  getNearestEditorFromDOMNode
 } from "lexical";
 import { useEffect, useCallback } from "react";
 import { mergeRegister } from "@lexical/utils";
 import { KEY_DOWN_COMMAND } from "lexical";
 import { useWikilinkWithBlockId } from "../context/wikilink-blockid-context";
 import { 
-  getBlockIdFromMarkdown,
   getBlockReferenceFromMarkdown,
-  stripBlockId,
   stripBlockReference,
   $findNodeByBlockId,
  } from "../../lib/blockref";

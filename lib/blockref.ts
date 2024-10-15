@@ -1,4 +1,4 @@
-import { LexicalEditor, LexicalNode, $nodesOfType } from "lexical";
+import { $nodesOfType } from "lexical";
 import { ListItemNode } from "@lexical/list";
 
 /*
@@ -36,4 +36,8 @@ export function $findNodeByBlockId(blockId: string): ListItemNode | null {
     }
   }
   return null;
+}
+
+export function validateBlockId(blockId: string): boolean {
+  return BLOCK_ID_REGEX.test(blockId);
 }
