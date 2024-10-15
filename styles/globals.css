@@ -265,7 +265,9 @@ li:has(> div > div#formula-display) + li:has(> ul) {
   margin-left: .95rem;
   padding-left: calc(1rem + 4px);
 }
-
+.block-id {
+  color: gray;
+}
 .PlaygroundEditorTheme__mark {
   background: rgba(255, 212, 0, 0.14);
   border-bottom: 2px solid rgba(255, 212, 0, 0.3);

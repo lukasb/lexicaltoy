@@ -69,7 +69,11 @@ export function $replaceDisplayNodeWithEditor(node: FormulaDisplayNode) {
   if (textSibling && $isTextNode(textSibling)) {
     textSibling.remove();
   }
-  const formulaEditorNode = $createFormulaEditorNode(node.getFormula());
+  let formula = node.getFormula();
+  if (node.getBlockId()) {
+    formula += ' ' + node.getBlockId();
+  }
+  const formulaEditorNode = $createFormulaEditorNode(formula);
   node.replace(formulaEditorNode);
   formulaEditorNode.selectEnd();
   __formulaEditorNodeKey = formulaEditorNode.getKey();
@@ -157,14 +161,9 @@ export function $deleteFormulaDisplayNodeChildren(node: FormulaDisplayNode) {
 
 export function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   const textContents = node.getTextContent();
-  const { formula: formulaText, result: resultString } = parseFormulaMarkdown(textContents);
-  if (!formulaText) return;
-  let formulaDisplayNode = null;
-  if (resultString) {
-    formulaDisplayNode = $createFormulaDisplayNode(formulaText, resultString);
-  } else {
-    formulaDisplayNode = $createFormulaDisplayNode(formulaText);
-  }
+  const { formula, result, blockId } = parseFormulaMarkdown(textContents);
+  if (!formula) return;
+  let formulaDisplayNode = $createFormulaDisplayNode(formula, result, blockId);
   node.replace(formulaDisplayNode);
   formulaDisplayNode.selectNext();
 }

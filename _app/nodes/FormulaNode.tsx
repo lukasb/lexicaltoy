@@ -10,6 +10,7 @@ import {
 import { TextNode } from 'lexical';
 import FormulaDisplayComponent from './FormulaDisplayComponent';
 import { getFormulaMarkdown } from '@/lib/formula/formula-markdown-converters';
+import { BLOCK_ID_REGEX } from '@/lib/blockref';
 
 export class FormulaEditorNode extends TextNode {
   static getType(): string {
@@ -67,6 +68,7 @@ export type SerializedFormulaDisplayNode = Spread<
   {
     formula: string
     output: string;
+    blockId: string;
   },
   SerializedLexicalNode
 >;
@@ -77,6 +79,7 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   
   __formula: string;
   __output: string;
+  __blockId: string;
 
   getFormula(): string {
     const self = this.getLatest();
@@ -98,19 +101,29 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
     self.__output = output;
   }
 
+  getBlockId(): string | undefined {
+    const self = this.getLatest();
+    return self.__blockId;
+  }
+
+  setBlockId(blockId: string): void {
+    const self = this.getWritable();
+    self.__blockId = blockId;
+  }
 
   static getType(): string {
     return 'formula-display';
   }
 
   static clone(node: FormulaDisplayNode): FormulaDisplayNode {
-    return new FormulaDisplayNode(node.getFormula(), node.getOutput(), node.__key);
+    return new FormulaDisplayNode(node.getFormula(), node.getOutput(), node.getBlockId(), node.__key);
   }
 
-  constructor(formula: string, output?: string, key?: NodeKey) {
+  constructor(formula: string, output?: string, blockId?: string, key?: NodeKey) {
     super(key);
     this.__formula = formula;
     this.__output = output ? output : "";
+    this.__blockId = blockId ? blockId : "";
   }
 
   createDOM(config: EditorConfig): HTMLElement {
@@ -124,7 +137,7 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   }
 
   static importJSON(serializedNode: SerializedFormulaDisplayNode): FormulaDisplayNode {
-    return $createFormulaDisplayNode(serializedNode.formula, serializedNode.output);
+    return $createFormulaDisplayNode(serializedNode.formula, serializedNode.output, serializedNode.blockId);
   }
 
   exportJSON(): SerializedFormulaDisplayNode {
@@ -132,7 +145,8 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
       type: 'formula-display',
       version: 1,
       formula: this.__formula,
-      output: this.__output
+      output: this.__output,
+      blockId: this.__blockId
     };
   }
 
@@ -141,6 +155,7 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
       <FormulaDisplayComponent
         formula={this.__formula}
         output={this.__output}
+        blockId={this.__blockId}
         nodeKey={this.getKey()}
       />
     );
@@ -155,7 +170,7 @@ export class FormulaDisplayNode extends DecoratorNode<JSX.Element> {
   }
 
   getTextContent(): string {
-    const text = getFormulaMarkdown(this.getFormula(), this.getOutput());
+    const text = getFormulaMarkdown(this.getFormula(), this.getOutput(), this.getBlockId());
     return text;
   }
 
@@ -179,7 +194,7 @@ export function $isFormulaDisplayNode(node: LexicalNode | null | undefined): nod
 }
 
 export function $createFormulaDisplayNode(
-  formula: string, output?: string
+  formula: string, output?: string, blockId?: string
 ): FormulaDisplayNode {
-  return new FormulaDisplayNode(formula, output);
+  return new FormulaDisplayNode(formula, output, blockId);
 }

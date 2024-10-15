@@ -20,15 +20,15 @@ import { BLOCK_ID_REGEX } from "../blockref";
 
 
 const FORMULA_START_REGEX = /^=(.*?)(?:\s*\|\|\|result:|$)/;
-const FORMULA_LIST_ITEM_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?(\^[a-zA-Z0-9-]+)?$/gm;
+export const FORMULA_LIST_ITEM_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?(\^[a-zA-Z0-9-]+)?$/gm; // something is broken with capture groups here
 const FORMULA_LIST_ITEM_START_WITH_RESULTS_REGEX = /^(\s*)- =.*\|\|\|result:/;
-export const FORMULA_LIST_ITEM_WITH_RESULTS_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)(\^[a-zA-Z0-9-]+)?$/gm;
+export const FORMULA_LIST_ITEM_WITH_RESULTS_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)(\s)?(\^[a-zA-Z0-9-]+)?$/gm; // something is broken with capture groups here
 export const FIND_FORMULA_START_REGEX = /^\s*- =(find\(|[^,]*,\s*find\()/;
 export const IS_FORMULA_REGEX = /^\s*- =/;
-export const FORMULA_RESULTS_END_REGEX = /^\s*\|\|\|(\^[a-zA-Z0-9-]+)?$/;
+export const FORMULA_RESULTS_END_REGEX = /^\s*\|\|\|(\s)?(\^[a-zA-Z0-9-]+)?$/;
 
 // formula as stored by the nodes has the = sign at the front, maybe should change that
-export function getFormulaMarkdown(formula: string, output?: string): string {
+export function getFormulaMarkdown(formula: string, output?: string, blockId?: string): string {
   const match = formula.match(BLOCK_ID_REGEX);
   if (match) {
     formula = formula.slice(0, match.index);
@@ -41,18 +41,25 @@ export function getFormulaMarkdown(formula: string, output?: string): string {
       markdown += ` ${match[0]}`;
     }
   }
+  if (blockId) {
+    markdown += ` ${blockId}`;
+  }
   return markdown;
 }
 
 export interface ParseResult {
-  formula: string | null;
-  result: string | null;
+  formula: string | undefined;
+  result: string | undefined;
+  blockId: string | undefined;
 }
 
+// expects to get a formula without bullet point at the start
 export function parseFormulaMarkdown(markdownString: string): ParseResult {
   const match = markdownString.match(FORMULA_START_REGEX);
   const resultMarker = '|||result:';
   const resultMarkerLength = resultMarker.length;
+  let result = undefined;
+  let blockId = undefined;
 
   if (match) {
     const formula = match[1].trim();
@@ -61,21 +68,25 @@ export function parseFormulaMarkdown(markdownString: string): ParseResult {
     if (resultStart !== -1) {
       const resultEnd = markdownString.indexOf('|||', resultStart + resultMarkerLength);
       if (resultEnd !== -1) {
-        let result = markdownString.slice(resultStart + 10, resultEnd).trim();
+        result = markdownString.slice(resultStart + 10, resultEnd).trim();
         const match = markdownString.match(BLOCK_ID_REGEX);
         if (match) {
-          result += ` ${match[0]}`;
+          blockId = match[0];
         }
-        return { formula, result };
+        return { formula, result, blockId };
       } else {
         console.log("no result end");
       }
+    } else {
+      const match = markdownString.match(BLOCK_ID_REGEX);
+      if (match) {
+        blockId = match[0];
+      }
+      return { formula, result, blockId };
     }
-    
-    return { formula, result: null };
   }
   
-  return { formula: null, result: null };
+  return { formula: undefined, result: undefined, blockId: undefined };
 }
 
 export function stripSharedNodesFromMarkdown(markdown: string): string {

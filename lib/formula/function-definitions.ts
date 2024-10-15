@@ -19,9 +19,14 @@ import { getUrl } from "../getUrl";
 import { sanitizeText } from "../text-helpers";
 import { getGPTResponseForList } from "./gpt-formula-handlers";
 import { BLOCK_ID_REGEX, BLOCK_REFERENCE_REGEX } from "../blockref";
-import { nodeToString } from "./formula-helpers";
+import { 
+  nodeToString,
+  nodeValueForFormula,
+  getListItemContentsFromMarkdown
+} from "./formula-helpers";
 
 const instructionsWithContext = `
+# INSTRUCTIONS AND EXAMPLES
 You will receive user questions or instructions, and content from one or more pages. Pages will look like this:
 
 ## Today's agenda
@@ -44,6 +49,7 @@ The most common answer is 42.
 
 Items that start with TODO, DOING, NOW, LATER, DONE, or WAITING are todos. Bullet points that start with = are formulas.
 Formulas that start with ask(), or don't have an explicit function, trigger a chat with GPT.
+# END OF INSTRUCTIONS AND EXAMPLES
 `;
 
 function getPageContext(page: Page): string {
@@ -55,6 +61,7 @@ function getBlockContext(page: Page, blockId: string): string {
 
   function findBlock(nodes: NodeElementMarkdown[], blockId: string): NodeElementMarkdown | null {
     for (const node of nodes) {
+      console.log("node", node.baseNode.nodeMarkdown);
       const match = node.baseNode.nodeMarkdown.match(BLOCK_ID_REGEX);
       if (match && match[1] === blockId) return node;
       const result = findBlock(node.children, blockId);
@@ -65,7 +72,10 @@ function getBlockContext(page: Page, blockId: string): string {
 
   const blockNode = findBlock(nodes, blockId);
   if (!blockNode) return "";
-  return nodeToString(blockNode);
+  const blockNodeMarkdown = nodeToString(blockNode);
+  const blockNodeContents = getListItemContentsFromMarkdown(blockNodeMarkdown);
+  const blockNodeValue = nodeValueForFormula(blockNodeContents);
+  return blockNodeValue;
 }
 
 function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {

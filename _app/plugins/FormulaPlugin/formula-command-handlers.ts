@@ -44,7 +44,8 @@ import {
   ADD_FORMULA_NODES,
   PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY,
   CREATE_AND_STORE_FORMULA_OUTPUT,
-  FLATTEN_FORMULA_OUTPUT
+  FLATTEN_FORMULA_OUTPUT,
+  EDIT_FORMULA_NODE_BLOCK_ID
 } from "@/lib/formula-commands";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
 import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
@@ -134,12 +135,12 @@ export function registerFormulaCommandHandlers(
           return;
         }
         const textContents = parentNode.getTextContent();
-        const { formula: formulaText, result: resultString } =
-          parseFormulaMarkdown(textContents);
-        if (formulaText && resultString) {
+        const { formula, result, blockId } = parseFormulaMarkdown(textContents);
+        if (formula && result) {
           const formulaDisplayNode = $createFormulaDisplayNode(
-            formulaText,
-            resultString
+            formula,
+            result,
+            blockId
           );
           parentNode.splice(
             0,
@@ -178,8 +179,11 @@ export function registerFormulaCommandHandlers(
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
             const nodeFormula = displayNode.getFormula();
             if (nodeFormula.startsWith('ask(') && nodeFormula.endsWith(')')) {
-              const askArguments = nodeFormula.slice(4, -1).trim();
-              const textNode = $createTextNode(askArguments);
+              let newNodeText = nodeFormula.slice(4, -1).trim(); // use ask arguments as text
+              if (displayNode.getBlockId()) {
+                newNodeText += ' ' + displayNode.getBlockId();
+              }
+              const textNode = $createTextNode(newNodeText);
               displayNode.replace(textNode);
               textNode.selectEnd();
             }
@@ -253,6 +257,18 @@ export function registerFormulaCommandHandlers(
               displayNode.setOutput(output);
             }
             $createFormulaOutputPlainNodes(editor, displayNode, output);
+          }
+          return true;
+        },
+        COMMAND_PRIORITY_EDITOR
+      ),
+      editor.registerCommand(
+        EDIT_FORMULA_NODE_BLOCK_ID,
+        ({ displayNodeKey, blockId }) => {
+          const displayNode = $getNodeByKey(displayNodeKey);
+          if (displayNode && $isFormulaDisplayNode(displayNode)) {
+            console.log("setting blockId", blockId);
+            displayNode.setBlockId(blockId);
           }
           return true;
         },

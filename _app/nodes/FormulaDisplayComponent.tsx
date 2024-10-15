@@ -6,7 +6,8 @@ import {
   CREATE_FORMULA_NODES,
   ADD_FORMULA_NODES,
   CREATE_AND_STORE_FORMULA_OUTPUT,
-  FLATTEN_FORMULA_OUTPUT
+  FLATTEN_FORMULA_OUTPUT,
+  EDIT_FORMULA_NODE_BLOCK_ID
 } from '@/lib/formula-commands';
 import { usePromises } from '../context/formula-request-context';
 import { FormulaValueType, NodeElementMarkdown, getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
@@ -15,20 +16,24 @@ import { useFormulaResultService } from '../../lib/formula/FormulaResultService'
 import { slurpPageAndDialogueContext } from '@/lib/formula/FormulaOutput';
 import { registerFormula, unregisterFormula } from '../../lib/formula/FormulaResultService';
 import { PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY } from '@/lib/formula-commands';
+import { EditDialog } from '../ui/edit-dialog';
 
 export default function FormulaDisplayComponent(
   { formula: initialFormula,
     output: initialOutput,
+    blockId: initialBlockId,
     nodeKey
   }: 
   {
     formula: string,
     output: string,
+    blockId: string,
     nodeKey: string
   }
 ): JSX.Element {
   const [formula, setFormula] = useState<string>(initialFormula);
   const [output, setOutput] = useState<string>(initialOutput);
+  const [blockId, setBlockId] = useState<string>(initialBlockId);
   const [editor] = useLexicalComposerContext();
   const { promisesMap, addPromise, removePromise, hasPromise } = usePromises();
   const { sharedNodeMap } = useSharedNodeContext();
@@ -39,7 +44,7 @@ export default function FormulaDisplayComponent(
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const isAskFormula = formula.startsWith("ask(");
 
   useEffect(() => {
@@ -242,6 +247,19 @@ export default function FormulaDisplayComponent(
     }
   }, [editor, nodeKey]);
 
+  const handleEditDialogSubmit = (newValue: string) => {
+    editor.dispatchCommand(EDIT_FORMULA_NODE_BLOCK_ID, {
+      displayNodeKey: nodeKey,
+      blockId: newValue
+    });
+    setBlockId(newValue);
+    setIsEditDialogOpen(false);
+  };
+
+  const handleEditBlockId = () => {
+    setIsEditDialogOpen(true);
+  };
+
   return (
     <div
       id="formula-display" 
@@ -273,10 +291,21 @@ export default function FormulaDisplayComponent(
             <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 font-normal text-sm text-gray-800 dark:text-gray-200" onClick={flattenOutput}>
               Merge into document
             </button>
+            <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 font-normal text-sm text-gray-800 dark:text-gray-200" onClick={handleEditBlockId}>
+              Edit block ID
+            </button>
           </div>
         )}
       </span>
+      {blockId && <span className="block-id">{blockId}</span>}
       {!output.startsWith("@@") && !isAskFormula && <span>{output}</span>}
+      <EditDialog
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onSubmit={handleEditDialogSubmit}
+        initialValue={blockId}
+        title="Edit block ID"
+      />
     </div>
   );
 }
