@@ -9,6 +9,7 @@ import type { NextPageWithLayout } from '@/pages/_app'
 import type { InferGetServerSidePropsType, GetServerSideProps } from 'next';
 import { Session } from 'next-auth';
 import { Page as AppPage } from '@/lib/definitions';
+import { BlockIdsIndexProvider } from "@/_app/context/page-blockids-index-context";
 
 export const maxDuration = 60;
 
@@ -68,7 +69,9 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
             dev
           </div>
         )}
-        <EditingArea pages={pages} userId={session.id} />
+        <BlockIdsIndexProvider>
+          <EditingArea pages={pages} userId={session.id} />
+        </BlockIdsIndexProvider>
         <SignoutButton />
       </div>
     </div>

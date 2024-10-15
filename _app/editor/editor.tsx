@@ -6,20 +6,16 @@ import { useContext, useCallback } from "react";
 import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import type { EditorState } from "lexical";
-import { TextNode } from 'lexical';
 import { AutoFocusPlugin } from "@/_app/plugins/MyAutoFocusPlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
-import { ListNode, ListItemNode } from "@lexical/list";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { 
   UNORDERED_LIST,
   $convertToMarkdownString,
   TRANSFORMERS
 } from "@lexical/markdown";
-import { LinkNode, AutoLinkNode } from "@lexical/link";
 import { KeyboardShortcutsPlugin } from "@/_app/plugins/KeyboardShortcutsPlugin";
-import DraggableBlockPlugin from "@/_app/plugins/DraggableBlockPlugin";
 import { useDebouncedCallback } from "use-debounce";
 import { theme } from "./editor-theme";
 import { FloatingMenuPlugin } from "@/_app/plugins/FloatingMenuPlugin";
@@ -29,7 +25,6 @@ import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import TreeViewPlugin from "@/_app/plugins/TreeViewPlugin/TreeViewPlugin";
 import { AutoLinkPlugin } from "@/_app/plugins/AutoLinkPlugin";
 import LexicalClickableLinkPlugin from "@lexical/react/LexicalClickableLinkPlugin";
-import { WikilinkNode, WikilinkInternalNode } from "@/_app/nodes/WikilinkNode";
 import { WikilinkPlugin } from "@/_app/plugins/WikilinkPlugin";
 import WikilinkEventListenerPlugin from "@/_app/plugins/WikilinkEventListenerPlugin";
 import FloatingIndentButtons from '@/_app/plugins/FloatingMenuPlugin/FloatingIndentButtons';
@@ -39,16 +34,13 @@ import { shouldShowFloatingWikiPageNames, computeFloatingWikiPageNamesPosition }
 import { Page } from "@/lib/definitions";
 import { PagesContext } from "@/_app/context/pages-context";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { TodoCheckboxStatusNode } from "@/_app/nodes/TodoNode";
 import { TodosPlugin } from "@/_app/plugins/TodosPlugin";
 import FloatingSlashCommands from '@/_app/plugins/FloatingMenuPlugin/FloatingSlashCommands';
 import { shouldShowFloatingSlashCommands, computeFloatingSlashCommandsPosition } from "@/_app/plugins/FloatingMenuPlugin/FloatingSlashCommands";
-import { FormulaEditorNode, FormulaDisplayNode } from "@/_app/nodes/FormulaNode";
 import { FormulaPlugin } from "@/_app/plugins/FormulaPlugin";
 import { PromisesProvider } from "@/_app/context/formula-request-context";
 import { stripSharedNodesFromMarkdown } from "@/lib/formula/formula-markdown-converters";
 import { PageListenerPlugin } from "@/_app/plugins/PageListenerPlugin";
-import { FormattableTextNode } from "@/_app/nodes/FormattableTextNode";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
 import FloatingCheckmark from "../plugins/FloatingMenuPlugin/FloatingCheckmark";
 import { shouldShowFloatingCheckmark, computeFloatingCheckmarkPosition } from "../plugins/FloatingMenuPlugin/FloatingCheckmark";
@@ -56,6 +48,7 @@ import { SearchHighlighterPlugin } from "@/_app/plugins/SearchHighlighterPlugin"
 import { useSearchTerms } from "../context/search-terms-context";
 import { AIGeneratorPlugin } from "../plugins/AIGeneratorPlugin";
 import { editorNodes } from "./shared-editor-config";
+import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blockids-index-context";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -94,6 +87,7 @@ function Editor({
   const localVersionRef = useRef<number>(page.revisionNumber);
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
   const [shouldHighlight, setShouldHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
+  const { setBlockIdsForPage } = useBlockIdsIndex();
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
@@ -115,10 +109,11 @@ function Editor({
         return;
       }
       updatePageContentsLocal(page.id, newContent, currentPage.revisionNumber);
+      ingestPageBlockIds(page.title, newContent, setBlockIdsForPage);
       localVersionRef.current = currentPage.revisionNumber + 1;
       pendingChangeRef.current = null;
     }
-  }, [page.id, getPage, updatePageContentsLocal]);
+  }, [page.id, getPage, updatePageContentsLocal, setBlockIdsForPage, page.title]);
 
   const debouncedSave = useDebouncedCallback(saveChange, 500);
 

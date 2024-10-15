@@ -1,6 +1,11 @@
 import { $nodesOfType } from "lexical";
 import { ListItemNode } from "@lexical/list";
 
+export interface WikilinkWithBlockId {
+  pageName: string;
+  blockId: string;
+}
+
 /*
   * A block reference is a string that looks like this:
   * "Some text ^some-block-id"
@@ -19,9 +24,7 @@ export function getBlockReferenceFromMarkdown(markdown: string): string | null {
 }
 
 export function stripBlockId(markdown: string): string {
-  console.log("stripBlockId", markdown);
   const result = markdown.replace(BLOCK_ID_REGEX, "");
-  console.log("stripBlockId result", result);
   return result;
 }
 

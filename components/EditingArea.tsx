@@ -29,7 +29,8 @@ import {
   togglePageCollapse
 } from "@/lib/pages-helpers";
 import { SavedSelectionProvider } from "@/_app/context/saved-selection-context";
-import { WikilinkWithBlockIdProvider } from "@/_app/context/wikilink-blockid-context";
+import { OpenWikilinkWithBlockIdProvider } from "@/_app/context/wikilink-blockid-context";
+import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blockids-index-context";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -39,7 +40,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
   const [pinnedPageIds, setPinnedPageIds] = useState<string[]>([]);
   const [collapsedPageIds, setCollapsedPageIds] = useState<string[]>([]);
-
+  const { setBlockIdsForPage } = useBlockIdsIndex();
   useEffect(() => {
     const pnnedPageIds = getPinnedPageIds();
     setPinnedPageIds(pnnedPageIds);
@@ -49,6 +50,12 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     const collapsedPageIds = getCollapsedPageIds();
     setCollapsedPageIds(collapsedPageIds);
   }, []);
+
+  useEffect(() => {
+    for (const page of pages) {
+      setTimeout(() => ingestPageBlockIds(page.title, page.value, setBlockIdsForPage), 0);
+    }
+  }, [pages, setBlockIdsForPage]);
 
   const initialPageId = findMostRecentlyEditedPage(currentPages)?.id;
   const lastWeekJournalPageIds = getLastWeekJournalPages(currentPages).map(page => page.id);
@@ -194,7 +201,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <PagesContext.Provider value={currentPages}>
-        <WikilinkWithBlockIdProvider>
+        <OpenWikilinkWithBlockIdProvider>
         <SavedSelectionProvider>
         <ActiveEditorProvider>
         <SharedNodeProvider>
@@ -257,7 +264,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
           </SharedNodeProvider>
         </ActiveEditorProvider>
         </SavedSelectionProvider>
-        </WikilinkWithBlockIdProvider>
+        </OpenWikilinkWithBlockIdProvider>
       </PagesContext.Provider>
     </div>
   )  

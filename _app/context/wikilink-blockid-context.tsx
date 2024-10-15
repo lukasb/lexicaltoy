@@ -1,31 +1,27 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
+import { WikilinkWithBlockId } from '@/lib/blockref';
 
-interface WikilinkWithBlockId {
-  pageName: string;
-  blockId: string;
+interface OpenWikilinkWithBlockIdContextType {
+  wikilinkWithBlockIdToOpen: WikilinkWithBlockId | null;
+  setWikilinkWithBlockIdToOpen: (wikilinkWithBlockId: WikilinkWithBlockId | null) => void;
 }
 
-interface WikilinkWithBlockIdContextType {
-  wikilinkWithBlockId: WikilinkWithBlockId | null;
-  setWikilinkWithBlockId: (wikilinkWithBlockId: WikilinkWithBlockId | null) => void;
-}
+const OpenWikilinkWithBlockIdContext = createContext<OpenWikilinkWithBlockIdContextType | undefined>(undefined);
 
-const WikilinkWithBlockIdContext = createContext<WikilinkWithBlockIdContextType | undefined>(undefined);
-
-export function WikilinkWithBlockIdProvider({ children }: { children: ReactNode }) {
-  const [wikilinkWithBlockId, setWikilinkWithBlockId] = useState<WikilinkWithBlockId | null>(null);
+export function OpenWikilinkWithBlockIdProvider({ children }: { children: ReactNode }) {
+  const [wikilinkWithBlockIdToOpen, setWikilinkWithBlockIdToOpen] = useState<WikilinkWithBlockId | null>(null);
 
   return (
-    <WikilinkWithBlockIdContext.Provider value={{ wikilinkWithBlockId, setWikilinkWithBlockId }}>
+    <OpenWikilinkWithBlockIdContext.Provider value={{ wikilinkWithBlockIdToOpen, setWikilinkWithBlockIdToOpen }}>
       {children}
-    </WikilinkWithBlockIdContext.Provider>
+    </OpenWikilinkWithBlockIdContext.Provider>
   );
 }
 
-export function useWikilinkWithBlockId() {
-  const context = useContext(WikilinkWithBlockIdContext);
+export function useOpenWikilinkWithBlockId() {
+  const context = useContext(OpenWikilinkWithBlockIdContext);
   if (context === undefined) {
-    throw new Error('useWikilinkWithBlockId must be used within a WikilinkWithBlockIdProvider');
+    throw new Error('useOpenWikilinkWithBlockId must be used within a OpenWikilinkWithBlockIdProvider');
   }
   return context;
 }

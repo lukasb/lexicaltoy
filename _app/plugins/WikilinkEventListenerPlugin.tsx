@@ -20,7 +20,7 @@ import {
 import { useEffect, useCallback } from "react";
 import { mergeRegister } from "@lexical/utils";
 import { KEY_DOWN_COMMAND } from "lexical";
-import { useWikilinkWithBlockId } from "../context/wikilink-blockid-context";
+import { useOpenWikilinkWithBlockId } from "../context/wikilink-blockid-context";
 import { 
   getBlockReferenceFromMarkdown,
   stripBlockReference,
@@ -41,7 +41,7 @@ export default function WikilinkEventListenerPlugin({
   thisPageTitle: string;
 }): null {
   const [editor] = useLexicalComposerContext();
-  const { wikilinkWithBlockId, setWikilinkWithBlockId } = useWikilinkWithBlockId();
+  const { wikilinkWithBlockIdToOpen: wikilinkWithBlockId, setWikilinkWithBlockIdToOpen: setWikilinkWithBlockId } = useOpenWikilinkWithBlockId();
 
   const handleOpenWikilink = useCallback((pageTitle: string) => {
     const blockId = getBlockReferenceFromMarkdown(pageTitle);

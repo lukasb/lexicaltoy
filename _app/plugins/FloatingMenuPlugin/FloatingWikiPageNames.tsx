@@ -27,6 +27,7 @@ import { $isFormulaEditorNode } from "@/_app/nodes/FormulaNode";
 import { $isFormattableTextNode } from "@/_app/nodes/FormattableTextNode";
 import { possibleArguments } from "@/lib/formula/formula-parser";
 import { FormulaValueType } from "@/lib/formula/formula-definitions";
+import { useBlockIdsIndex } from "@/_app/context/page-blockids-index-context";
 
 // TODO figure out actual line height instead of hardcoding 30
 const editorLineHeight = 30;
@@ -156,6 +157,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [cancelled, setCancelled] = useState(false);
     const [position, setPosition] = useState({top: coords?.y, left: coords?.x});
+    const { getPagesWithBlockIds, getBlockIdsForPage } = useBlockIdsIndex();
 
     const shouldShow = coords !== undefined;
 
@@ -237,6 +239,21 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
     const updateResults = useCallback((match: string, inFormula: boolean) => {
       let searchResults: WikilinkResult[] = [];
       const potentialResults: WikilinkResult[] = pages.map(page => ({title: page.title}));
+
+      // get the list of pages that have block ids
+      for (const pageWithBlockIds of getPagesWithBlockIds()) {
+        const blockIds = getBlockIdsForPage(pageWithBlockIds);
+        if (!blockIds) continue;
+        const index = potentialResults.findIndex(page => page.title === pageWithBlockIds);
+        if (index !== -1) {
+          for (let i = 1; i <= blockIds.length; i++) {
+            potentialResults.splice(index + i, 0, {
+              title: pageWithBlockIds + "#" + blockIds[i - 1]
+            });
+          }
+        }
+      }
+
       if (inFormula) {
         const formulaArguments = possibleArguments
           .filter(arg => 
@@ -257,7 +274,7 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
         searchResults = potentialResults;
       }
       setResults(searchResults);
-    }, [pages]);
+    }, [pages, getBlockIdsForPage, getPagesWithBlockIds]);
 
     useEffect(() => {
       if (shouldShow && editor) {
