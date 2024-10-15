@@ -35,9 +35,10 @@ function onError(error: Error) {
 type BacklinksViewerProps = {
   backlinks: NodeElementMarkdown[];
   openOrCreatePageByTitle: (title: string) => void;
+  thisPageTitle: string;
 };
 
-function BacklinksViewer({ backlinks, openOrCreatePageByTitle }: BacklinksViewerProps) {
+function BacklinksViewer({ backlinks, openOrCreatePageByTitle, thisPageTitle }: BacklinksViewerProps) {
 
   const initialConfig = {
     namespace: "orangetask-backlinks",
@@ -78,6 +79,7 @@ function BacklinksViewer({ backlinks, openOrCreatePageByTitle }: BacklinksViewer
         <BacklinksViewerPlugin backlinks={backlinks} />
         <WikilinkEventListenerPlugin
           openOrCreatePageByTitle={openOrCreatePageByTitle}
+          thisPageTitle={thisPageTitle}
         />
       </LexicalComposer>
     </PromisesProvider>

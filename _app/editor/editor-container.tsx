@@ -253,6 +253,7 @@ function EditorContainer({
                   <BacklinksViewer 
                     backlinks={backlinks} 
                     openOrCreatePageByTitle={openOrCreatePageByTitle}
+                    thisPageTitle={page.title}
                   />
                 </div>
               }
