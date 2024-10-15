@@ -16,10 +16,19 @@ import {
   $isRangeSelection,
   COMMAND_PRIORITY_NORMAL,
   getNearestEditorFromDOMNode,
+  $getRoot,
 } from "lexical";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { mergeRegister } from "@lexical/utils";
 import { KEY_DOWN_COMMAND } from "lexical";
+import { useWikilinkWithBlockId } from "../context/wikilink-blockid-context";
+import { 
+  getBlockIdFromMarkdown,
+  getBlockReferenceFromMarkdown,
+  stripBlockId,
+  stripBlockReference,
+  $findNodeByBlockId,
+ } from "../../lib/blockref";
 
 function getPageTitleFromWikiLinkNode(node: any) {
   return node.getTextContent().slice(2, -2);
@@ -28,11 +37,43 @@ function getPageTitleFromWikiLinkNode(node: any) {
 export default function WikilinkEventListenerPlugin({
   newTab = true,
   openOrCreatePageByTitle,
+  thisPageTitle,
 }: {
   newTab?: boolean;
   openOrCreatePageByTitle?: (title: string) => void;
+  thisPageTitle: string;
 }): null {
   const [editor] = useLexicalComposerContext();
+  const { wikilinkWithBlockId, setWikilinkWithBlockId } = useWikilinkWithBlockId();
+
+  const handleOpenWikilink = useCallback((pageTitle: string) => {
+    const blockId = getBlockReferenceFromMarkdown(pageTitle);
+    if (blockId) {
+      openOrCreatePageByTitle?.(stripBlockReference(pageTitle));
+      setWikilinkWithBlockId({
+        pageName: stripBlockReference(pageTitle),
+        blockId: blockId,
+      });
+    } else {
+      openOrCreatePageByTitle?.(pageTitle);
+    }
+  }, [openOrCreatePageByTitle, setWikilinkWithBlockId]);
+
+  useEffect(() => {
+    if (wikilinkWithBlockId && wikilinkWithBlockId.pageName === thisPageTitle) {
+      setWikilinkWithBlockId(null);
+      const editorState = editor.getEditorState();
+      editorState.read(() => {
+        const blockNode = $findNodeByBlockId(wikilinkWithBlockId.blockId);
+        if (blockNode) {
+          const domNode = editor.getElementByKey(blockNode.getKey());
+          if (domNode) {
+            domNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } 
+        }
+      });
+    }
+  }, [wikilinkWithBlockId, thisPageTitle, setWikilinkWithBlockId, editor]);
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
@@ -75,7 +116,7 @@ export default function WikilinkEventListenerPlugin({
         return;
       }
 
-      openOrCreatePageByTitle?.(pageTitle);
+      handleOpenWikilink(pageTitle);
       event.preventDefault();
     };
 
@@ -120,7 +161,7 @@ export default function WikilinkEventListenerPlugin({
           return false;
         }
 
-        openOrCreatePageByTitle?.(pageTitle);
+        handleOpenWikilink(pageTitle);
       }
       return true;
     };
@@ -147,7 +188,7 @@ export default function WikilinkEventListenerPlugin({
         COMMAND_PRIORITY_NORMAL
       )
     );
-  }, [editor, newTab, openOrCreatePageByTitle]);
+  }, [editor, newTab, openOrCreatePageByTitle, setWikilinkWithBlockId, handleOpenWikilink]);
 
   return null;
 }

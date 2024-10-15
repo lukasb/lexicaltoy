@@ -185,6 +185,7 @@ function Editor({
         <WikilinkPlugin />
         <WikilinkEventListenerPlugin
           openOrCreatePageByTitle={openOrCreatePageByTitle}
+          thisPageTitle={page.title}
         />
         {shouldHighlight && <SearchHighlighterPlugin pageId={page.id} />}
         {floatingAnchorElem && !isSmallWidthViewport && (

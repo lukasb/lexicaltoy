@@ -29,6 +29,7 @@ import {
   togglePageCollapse
 } from "@/lib/pages-helpers";
 import { SavedSelectionProvider } from "@/_app/context/saved-selection-context";
+import { WikilinkWithBlockIdProvider } from "@/_app/context/wikilink-blockid-context";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -193,6 +194,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <PagesContext.Provider value={currentPages}>
+        <WikilinkWithBlockIdProvider>
         <SavedSelectionProvider>
         <ActiveEditorProvider>
         <SharedNodeProvider>
@@ -255,6 +257,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
           </SharedNodeProvider>
         </ActiveEditorProvider>
         </SavedSelectionProvider>
+        </WikilinkWithBlockIdProvider>
       </PagesContext.Provider>
     </div>
   )  
