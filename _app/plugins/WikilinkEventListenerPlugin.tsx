@@ -68,7 +68,7 @@ export default function WikilinkEventListenerPlugin({
         if (blockNode) {
           const domNode = editor.getElementByKey(blockNode.getKey());
           if (domNode) {
-            domNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            domNode.scrollIntoView({ behavior: 'instant', block: 'center' });
           } 
         }
       });
