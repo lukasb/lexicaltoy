@@ -182,6 +182,23 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
   return gptResponse;
 };
 
+function sortFindOutput(output: NodeElementMarkdown[], pages: Page[]): NodeElementMarkdown[] {
+  return output.sort((a, b) => {
+    const pageA = pages.find(p => p.title === a.baseNode.pageName);
+    const pageB = pages.find(p => p.title === b.baseNode.pageName);
+    
+    const getTime = (lastModified: any): number => {
+      if (lastModified instanceof Date) return lastModified.getTime();
+      if (typeof lastModified === 'string' || typeof lastModified === 'number') {
+        return new Date(lastModified).getTime();
+      }
+      return 0;
+    };
+
+    return getTime(pageB?.lastModified) - getTime(pageA?.lastModified);
+  });
+}
+
 export const findCallback = async (defaultArgs: DefaultArguments, userArgs: FormulaOutput[]): Promise<FormulaOutput | null> => {
     
   // we also check the title when matching, so if one substring is in the title and another
@@ -286,7 +303,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
     }
 
   return {
-    output: output,
+    output: sortFindOutput(output, defaultArgs.pages),
     type: FormulaValueType.NodeMarkdown,
   };  
 };
@@ -419,3 +436,4 @@ export const getUrlCallback = async (defaultArgs: DefaultArguments, userArgs: Fo
   };
 }
     
+

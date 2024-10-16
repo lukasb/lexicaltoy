@@ -168,10 +168,6 @@ export function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   formulaDisplayNode.selectNext();
 }
 
-function sortNodeMarkdownByPageName(nodes: NodeElementMarkdown[]): NodeElementMarkdown[] {
-  return nodes.slice().sort((a, b) => a.baseNode.pageName.localeCompare(b.baseNode.pageName));
-}
-
 // currently we only support showing results that are list items
 const listItemRegex = /^(\s*)(-\s*.+(?:\n(?!\s*-).*)*)/;
 
@@ -329,7 +325,6 @@ export function $createFormulaOutputSharedNodes({editor, displayNode, rootNode, 
   }
 
   if (!parentList) return;
-  const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
   
   // prevent this editor from stealing focus
   // we make it editable again in an update listener in PageListenerPlugin
@@ -346,7 +341,7 @@ export function $createFormulaOutputSharedNodes({editor, displayNode, rootNode, 
 
   const headlessEditor = myCreateHeadlessEditor();
 
-  for (const node of sortedNodes) {
+  for (const node of nodesMarkdown) {
     const match = node.baseNode.nodeMarkdown.match(listItemRegex);
     if (!match) continue;
 
@@ -447,8 +442,6 @@ export function addFormulaOutputNodes(
 
   const parentListItem = getListItemParentNode(displayNode);
   if (!parentListItem) return;
-
-  const sortedNodes = sortNodeMarkdownByPageName(nodesMarkdown);
   
   // prevent this editor from stealing focus if it doesn't already have it
   // we make it editable again in an update listener in PageListenerPlugin
@@ -469,7 +462,7 @@ export function addFormulaOutputNodes(
 
   const headlessEditor = myCreateHeadlessEditor();
 
-  for (const node of sortedNodes) {
+  for (const node of nodesMarkdown) {
     const match = node.baseNode.nodeMarkdown.match(listItemRegex);
     if (!match) continue;
 
