@@ -18,7 +18,13 @@ import { getOutputAsString } from "./formula-helpers";
 import { getUrl } from "../getUrl";
 import { sanitizeText } from "../text-helpers";
 import { getGPTResponseForList } from "./gpt-formula-handlers";
-import { BLOCK_ID_REGEX, BLOCK_REFERENCE_REGEX } from "../blockref";
+import { 
+  BLOCK_ID_REGEX,
+  BLOCK_REFERENCE_REGEX,
+  getBlockReferenceFromMarkdown,
+  stripBlockReference,
+  markdownHasBlockId
+} from "../blockref";
 import { 
   nodeToString,
   nodeValueForFormula,
@@ -223,8 +229,15 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
     });
 
     let unmatchedWikilinks = [...wikilinks];
+    let blockId: string | undefined = undefined;
     unmatchedWikilinks = unmatchedWikilinks.filter((wikilink) => {
-      if (page.title.toLowerCase().includes(stripBrackets(wikilink))) {
+      let strippedWikilink = stripBrackets(wikilink);
+      const pageBlockId = getBlockReferenceFromMarkdown(strippedWikilink);
+      if (pageBlockId) {
+        strippedWikilink = stripBlockReference(strippedWikilink);
+      }
+      if (page.title.toLowerCase() === strippedWikilink) {
+        blockId = pageBlockId || undefined;
         return false;
       }
       return true;
@@ -247,7 +260,8 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
           const matchesAllWikilinks = unmatchedWikilinks.every((wikilink) =>
             nodeMarkdown.toLowerCase().includes(wikilink)
           );
-          if (matchesAllSubstrings && matchesStatus && matchesAllWikilinks) {
+          const matchesBlockId = blockId ? markdownHasBlockId(nodeMarkdown, blockId) : true;
+          if (matchesAllSubstrings && matchesStatus && matchesAllWikilinks && matchesBlockId) {
             if (!invalidFindResult(nodeMarkdown)) {
               removeInvalidNodesForFind(node);
               output.push(node);

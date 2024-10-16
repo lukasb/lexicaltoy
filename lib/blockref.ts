@@ -13,14 +13,14 @@ export interface WikilinkWithBlockId {
 export const BLOCK_ID_REGEX = /(\^[a-zA-Z0-9-]+)\s*$/;
 export const BLOCK_REFERENCE_REGEX = /#(\^[a-zA-Z0-9-]+)$/;
 
-export function getBlockIdFromMarkdown(markdown: string): string | null {
+export function getBlockIdFromMarkdown(markdown: string): string | undefined {
   const match = markdown.match(BLOCK_ID_REGEX);
-  return match ? match[1] : null;
+  return match ? match[1] : undefined;
 }
 
-export function getBlockReferenceFromMarkdown(markdown: string): string | null {
+export function getBlockReferenceFromMarkdown(markdown: string): string | undefined {
   const match = markdown.match(BLOCK_REFERENCE_REGEX);
-  return match ? match[1] : null;
+  return match ? match[1] : undefined;
 }
 
 export function stripBlockId(markdown: string): string {
@@ -43,4 +43,8 @@ export function $findNodeByBlockId(blockId: string): ListItemNode | null {
 
 export function validateBlockId(blockId: string): boolean {
   return BLOCK_ID_REGEX.test(blockId);
+}
+
+export function markdownHasBlockId(markdown: string, blockId: string): boolean {
+  return markdown.endsWith(blockId);
 }

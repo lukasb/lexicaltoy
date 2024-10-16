@@ -12,14 +12,14 @@ describe('Block ID and Reference Functions', () => {
   describe('getBlockIdFromMarkdown', () => {
     it('should extract block ID from markdown', () => {
       expect(getBlockIdFromMarkdown('Some text ^block-123')).toBe('^block-123');
-      expect(getBlockIdFromMarkdown('No block ID')).toBeNull();
+      expect(getBlockIdFromMarkdown('No block ID')).toBeUndefined();
     });
   });
 
   describe('getBlockReferenceFromMarkdown', () => {
     it('should extract block reference from markdown', () => {
       expect(getBlockReferenceFromMarkdown('Some text #^block-123')).toBe('^block-123');
-      expect(getBlockReferenceFromMarkdown('No block reference')).toBeNull();
+      expect(getBlockReferenceFromMarkdown('No block reference')).toBeUndefined();
     });
   });
 

@@ -365,9 +365,20 @@ describe('find() function in regexCallbacks', () => {
     },
     {
       id: '9',
-      value: '- [[Page 1]] some stuff\n- [[Page 2]] some more stuff',
+      value: '- [[Page 1]] some stuff\n- [[Page 2]] some more stuff\n- more text ^block-id',
       userId: 'user1',
       title: 'Page 9',
+      lastModified: new Date('2023-01-02'),
+      revisionNumber: 1,
+      isJournal: false,
+      deleted: false,
+      status: PageStatus.Quiescent,
+    },
+    {
+      id: '10',
+      value: '- more text [[Page 9#^block-id]]',
+      userId: 'user1',
+      title: 'Page 10',
       lastModified: new Date('2023-01-02'),
       revisionNumber: 1,
       isJournal: false,
@@ -514,5 +525,15 @@ describe('find() function in regexCallbacks', () => {
     expect(result?.output).toHaveLength(1);
     expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
     expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- [[Page 2]] some more stuff');
+  });
+
+  test('find() matches block references', async () => {
+    const result = await testFindFunction([], [],['Page 9#^block-id']);
+    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
+    expect(result?.output).toHaveLength(2);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- more text ^block-id');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 10');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- more text [[Page 9#^block-id]]');
   });
 });
