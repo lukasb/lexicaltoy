@@ -189,6 +189,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
 
   const substrings: string[] = [];
   let orStatuses: string[] = [];
+  const wikilinks: string[] = [];
 
   userArgs.forEach(arg => {
     const text = arg.output as string;
@@ -202,7 +203,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
     } else if (arg.type === FormulaValueType.Text) {
       substrings.push(text.trim().toLowerCase().replace(/^"(.*)"$/, '$1'));
     } else if (arg.type === FormulaValueType.Wikilink) {
-      substrings.push(text.toLowerCase());
+      wikilinks.push(text.toLowerCase());
     }
   });
   
@@ -215,8 +216,15 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
 
     // search terms can appear in the title or the content of the page
     unmatchedSubstringRegexps = unmatchedSubstringRegexps.filter((substring) => {
-      const strippedSubstring = stripBrackets(substring); // in case it's a wikilink
-      if (page.title.toLowerCase().includes(strippedSubstring)) {
+      if (page.title.toLowerCase().includes(substring)) {
+        return false;
+      }
+      return true;
+    });
+
+    let unmatchedWikilinks = [...wikilinks];
+    unmatchedWikilinks = unmatchedWikilinks.filter((wikilink) => {
+      if (page.title.toLowerCase().includes(stripBrackets(wikilink))) {
         return false;
       }
       return true;
@@ -236,8 +244,10 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
           const matchesStatus = orStatuses.length === 0 || orStatuses.some((status) =>
             new RegExp(`^\\s*- ${status}`).test(nodeMarkdown)
           );
-
-          if (matchesAllSubstrings && matchesStatus) {
+          const matchesAllWikilinks = unmatchedWikilinks.every((wikilink) =>
+            nodeMarkdown.toLowerCase().includes(wikilink)
+          );
+          if (matchesAllSubstrings && matchesStatus && matchesAllWikilinks) {
             if (!invalidFindResult(nodeMarkdown)) {
               removeInvalidNodesForFind(node);
               output.push(node);
