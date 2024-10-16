@@ -190,7 +190,17 @@ function sortFindOutput(output: NodeElementMarkdown[], pages: Page[]): NodeEleme
     const getTime = (lastModified: any): number => {
       if (lastModified instanceof Date) return lastModified.getTime();
       if (typeof lastModified === 'string' || typeof lastModified === 'number') {
-        return new Date(lastModified).getTime();
+        try {
+          const date = new Date(lastModified);
+          if (isNaN(date.getTime())) {
+            console.warn(`Invalid date: ${lastModified}`);
+            return 0;
+          }
+          return date.getTime();
+        } catch (error) {
+          console.error(`Error parsing date: ${lastModified}`, error);
+          return 0;
+        }
       }
       return 0;
     };
@@ -436,4 +446,5 @@ export const getUrlCallback = async (defaultArgs: DefaultArguments, userArgs: Fo
   };
 }
     
+
 
