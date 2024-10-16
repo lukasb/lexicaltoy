@@ -207,7 +207,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
     }
   });
   
-  if (substrings.length === 0 && orStatuses.length === 0) return null;
+  if (substrings.length === 0 && orStatuses.length === 0 && wikilinks.length === 0) return null;
 
   const output: NodeElementMarkdown[] = [];
 

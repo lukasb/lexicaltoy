@@ -363,9 +363,20 @@ describe('find() function in regexCallbacks', () => {
       deleted: false,
       status: PageStatus.Quiescent,
     },
+    {
+      id: '9',
+      value: '- [[Page 1]] some stuff\n- [[Page 2]] some more stuff',
+      userId: 'user1',
+      title: 'Page 9',
+      lastModified: new Date('2023-01-02'),
+      revisionNumber: 1,
+      isJournal: false,
+      deleted: false,
+      status: PageStatus.Quiescent,
+    },
   ];
 
-  async function testFindFunction(terms: string[], statuses?: string[]): Promise<FormulaOutput | null> {
+  async function testFindFunction(terms: string[], statuses?: string[], wikilinks?: string[]): Promise<FormulaOutput | null> {
     const defaultArguments: DefaultArguments = {
       pages: mockPages
     };
@@ -377,6 +388,14 @@ describe('find() function in regexCallbacks', () => {
       userArguments.push({
         type: FormulaValueType.NodeTypeOrTypes,
         output: statuses.join('|')
+      });
+    }
+    if (wikilinks) {
+      wikilinks.map(wikilink => {
+        userArguments.push({
+          type: FormulaValueType.Wikilink,
+          output: wikilink
+        });
       });
     }
     return await findCallback(defaultArguments, userArguments);
@@ -473,5 +492,27 @@ describe('find() function in regexCallbacks', () => {
     const result = await testFindFunction(['"nonexistent"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(0);
+  });
+
+  test('find() matches wikilinks passed as wikilinks', async () => {
+    const result = await testFindFunction([], [], ['Page 1']);
+    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
+    expect(result?.output).toHaveLength(4);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- This is content for page 1.');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- It contains some keywords.\nla la la');
+    expect((result?.output[2] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- More text content with keywords here.');
+    expect((result?.output[3] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
+    expect((result?.output[3] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- [[Page 1]] some stuff');
+  });
+
+  test('find() matches wikilinks passed as text', async () => {
+    const result = await testFindFunction(['[[Page 2]]']);
+    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
+    expect(result?.output).toHaveLength(1);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- [[Page 2]] some more stuff');
   });
 });
