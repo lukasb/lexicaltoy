@@ -191,7 +191,6 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
   let orStatuses: string[] = [];
 
   userArgs.forEach(arg => {
-    if (arg.type !== FormulaValueType.Text && arg.type !== FormulaValueType.NodeTypeOrTypes) return;
     const text = arg.output as string;
     if (arg.type === FormulaValueType.NodeTypeOrTypes) {
       if (text === "todos") {
@@ -202,6 +201,8 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
       }
     } else if (arg.type === FormulaValueType.Text) {
       substrings.push(text.trim().toLowerCase().replace(/^"(.*)"$/, '$1'));
+    } else if (arg.type === FormulaValueType.Wikilink) {
+      substrings.push(text.toLowerCase());
     }
   });
   
@@ -214,7 +215,8 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
 
     // search terms can appear in the title or the content of the page
     unmatchedSubstringRegexps = unmatchedSubstringRegexps.filter((substring) => {
-      if (page.title.toLowerCase().includes(substring)) {
+      const strippedSubstring = stripBrackets(substring); // in case it's a wikilink
+      if (page.title.toLowerCase().includes(strippedSubstring)) {
         return false;
       }
       return true;
