@@ -302,7 +302,7 @@ describe('find() function in regexCallbacks', () => {
       value: 'This should not show up in any of our tests',
       userId: 'user1',
       title: 'Page 3',
-      lastModified: new Date('2023-01-02'),
+      lastModified: new Date('2023-01-03'),
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
@@ -313,7 +313,7 @@ describe('find() function in regexCallbacks', () => {
       value: '- Carolina shuffle\n    - boogie',
       userId: 'user1',
       title: 'Page 4',
-      lastModified: new Date('2023-01-02'),
+      lastModified: new Date('2023-01-04'),
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
@@ -324,7 +324,7 @@ describe('find() function in regexCallbacks', () => {
       value: '- This is whatever for page 5.\n- It contains some amazing keywords.\nThis is a multiline continuation',
       userId: 'user1',
       title: 'Page 5',
-      lastModified: new Date('2023-01-02'),
+      lastModified: new Date('2023-01-05'),
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
@@ -335,7 +335,7 @@ describe('find() function in regexCallbacks', () => {
       value: '- NOW this is a todo.\n- LATER Another todo.\nThis is a multiline continuation',
       userId: 'user1',
       title: 'Page 6',
-      lastModified: new Date('2023-01-02'),
+      lastModified: new Date('2023-01-06'),
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
@@ -346,7 +346,7 @@ describe('find() function in regexCallbacks', () => {
       value: '- this has a #hashtag\n- this is another line\nThis is a multiline continuation',
       userId: 'user1',
       title: 'Page 7',
-      lastModified: new Date('2023-01-02'),
+      lastModified: new Date('2023-01-07'),
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
@@ -357,7 +357,7 @@ describe('find() function in regexCallbacks', () => {
       value: '- #starttag \n- this is another line\nThis is a multiline continuation',
       userId: 'user1',
       title: 'Page 8',
-      lastModified: new Date('2023-01-02'),
+      lastModified: new Date('2023-01-08'),
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
@@ -368,7 +368,7 @@ describe('find() function in regexCallbacks', () => {
       value: '- [[Page 1]] some stuff\n- [[Page 2]] some more stuff\n- more text ^block-id',
       userId: 'user1',
       title: 'Page 9',
-      lastModified: new Date('2023-01-02'),
+      lastModified: new Date('2023-01-09'),
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
@@ -379,7 +379,7 @@ describe('find() function in regexCallbacks', () => {
       value: '- more text [[Page 9#^block-id]]',
       userId: 'user1',
       title: 'Page 10',
-      lastModified: new Date('2023-01-02'),
+      lastModified: new Date('2023-01-10'),
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
@@ -416,10 +416,10 @@ describe('find() function in regexCallbacks', () => {
     const result = await testFindFunction(['"content"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(4);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[2] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
-    expect((result?.output[3] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
+    expect((result?.output[2] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[3] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
     expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
     expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
     expect((result?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
@@ -509,14 +509,14 @@ describe('find() function in regexCallbacks', () => {
     const result = await testFindFunction([], [], ['Page 1']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(4);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- This is content for page 1.');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- [[Page 1]] some stuff');
     expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- It contains some keywords.\nla la la');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- This is content for page 1.');
     expect((result?.output[2] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- More text content with keywords here.');
-    expect((result?.output[3] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
-    expect((result?.output[3] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- [[Page 1]] some stuff');
+    expect((result?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- It contains some keywords.\nla la la');
+    expect((result?.output[3] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[3] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- More text content with keywords here.');
   });
 
   test('find() matches wikilinks passed as text', async () => {
@@ -531,9 +531,9 @@ describe('find() function in regexCallbacks', () => {
     const result = await testFindFunction([], [],['Page 9#^block-id']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(2);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- more text ^block-id');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 10');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- more text [[Page 9#^block-id]]');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 10');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- more text [[Page 9#^block-id]]');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- more text ^block-id');
   });
 });
