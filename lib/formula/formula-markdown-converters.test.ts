@@ -38,19 +38,34 @@ describe('getFormulaMarkdown', () => {
     const result = getFormulaMarkdown(formula, output);
     expect(result).toBe("=COUNT(E1:E20) |||result:\n Line 1\nLine 2\nLine 3\n|||");
   });
+
+  test('adds blockId to formula', () => {
+    const formula = "SUM(A1:A10)";
+    const blockId = "^block-id";
+    const result = getFormulaMarkdown(formula, undefined, blockId);
+    expect(result).toBe("=SUM(A1:A10) ^block-id");
+  });
+
+  test('adds blockId to formula with result', () => {
+    const formula = "SUM(A1:A10)";
+    const output = "100";
+    const blockId = "^block-id";
+    const result = getFormulaMarkdown(formula, output, blockId);
+    expect(result).toBe("=SUM(A1:A10) |||result:\n 100\n||| ^block-id");
+  });
 });
 
 describe('parseFormulaMarkdown', () => {
   test('parses formula without result', () => {
-    const markdown = '=find(orangetask,#mvp)';
+    const markdown = '=find("orangetask","#mvp")';
     const result = parseFormulaMarkdown(markdown);
-    expect(result).toEqual({ formula: 'find(orangetask,#mvp)', result: null });
+    expect(result).toEqual({ formula: 'find("orangetask","#mvp")', result: undefined, blockId: undefined });
   });
 
   test('parses formula with single-line result', () => {
     const markdown = '=AVERAGE(B1:B5) |||result:\n 15.5\n|||';
     const result = parseFormulaMarkdown(markdown);
-    expect(result).toEqual({ formula: 'AVERAGE(B1:B5)', result: '15.5' });
+    expect(result).toEqual({ formula: 'AVERAGE(B1:B5)', result: '15.5', blockId: undefined });
   });
 
   test('parses formula with multi-line result', () => {
@@ -58,35 +73,73 @@ describe('parseFormulaMarkdown', () => {
     const result = parseFormulaMarkdown(markdown);
     expect(result).toEqual({ 
       formula: 'VLOOKUP(C1, A1:B10, 2, FALSE)', 
-      result: 'First line\nSecond line\nThird line'
+      result: 'First line\nSecond line\nThird line',
+      blockId: undefined
     });
   });
 
   test('handles empty result', () => {
     const markdown = "=IF(D1>100, 'High', 'Low') |||result:\n \n|||";
     const result = parseFormulaMarkdown(markdown);
-    expect(result).toEqual({ formula: "IF(D1>100, 'High', 'Low')", result: '' });
+    expect(result).toEqual({ formula: "IF(D1>100, 'High', 'Low')", result: '', blockId: undefined });
   });
 
-  test('returns null for both formula and result when no match', () => {
+  test('returns undefined for formula, result and blockId when no match', () => {
     const markdown = 'This is not a formula';
     const result = parseFormulaMarkdown(markdown);
-    expect(result).toEqual({ formula: null, result: null });
+    expect(result).toEqual({ formula: undefined, result: undefined, blockId: undefined });
   });
 
   test('handles result with leading/trailing spaces', () => {
     const markdown = '=TRIM(A1) |||result:\n    Trimmed String    \n|||';
     const result = parseFormulaMarkdown(markdown);
-    expect(result).toEqual({ formula: 'TRIM(A1)', result: 'Trimmed String' });
+    expect(result).toEqual({ formula: 'TRIM(A1)', result: 'Trimmed String', blockId: undefined });
   });
 
   test('handles complex nested formulas', () => {
-    const markdown = '=IF(AND(A1>10, B1<5), SUM(C1:C5), AVERAGE(D1:D10))';
+    const markdown = '=IF(AND("A1>10","B1<5"),SUM("C1:C5"),AVERAGE("D1:D10"))';
     const result = parseFormulaMarkdown(markdown);
     expect(result).toEqual({ 
-      formula: 'IF(AND(A1>10, B1<5), SUM(C1:C5), AVERAGE(D1:D10))', 
-      result: null 
+      formula: 'IF(AND("A1>10","B1<5"),SUM("C1:C5"),AVERAGE("D1:D10"))', 
+      result: undefined,
+      blockId: undefined
     });
+  });
+
+  test('handles blockId without result', () => {
+    const markdown = '=SUM(A1:A10) ^block-id';
+    const result = parseFormulaMarkdown(markdown);
+    expect(result).toEqual({ formula: 'SUM(A1:A10)', result: undefined, blockId: '^block-id' });
+  });
+
+  test('handles blockId with result', () => {
+    const markdown = '=SUM(A1:A10) |||result:\n 100\n||| ^block-id';
+    const result = parseFormulaMarkdown(markdown);
+    expect(result).toEqual({ formula: 'SUM(A1:A10)', result: '100', blockId: '^block-id' });
+  });
+
+  test('handle unstructured formula', () => {
+    const markdown = '=hey ChatGPT I have a question about oranges';
+    const result = parseFormulaMarkdown(markdown);
+    expect(result).toEqual({ formula: "hey ChatGPT I have a question about oranges", result: undefined, blockId: undefined });
+  });
+
+  test('handle unstructured formula with result', () => {
+    const markdown = '=hey ChatGPT I have a question about oranges |||result:\n I want to know if oranges are on sale\n|||';
+    const result = parseFormulaMarkdown(markdown);
+    expect(result).toEqual({ formula: "hey ChatGPT I have a question about oranges", result: "I want to know if oranges are on sale", blockId: undefined });
+  });
+
+  test('handle unstructured formula with blockId', () => {
+    const markdown = '=hey ChatGPT I have a question about oranges ^block-id';
+    const result = parseFormulaMarkdown(markdown);
+    expect(result).toEqual({ formula: "hey ChatGPT I have a question about oranges", result: undefined, blockId: '^block-id' });
+  });
+
+  test('handle unstructured formula with blockId and result', () => {
+    const markdown = '=hey ChatGPT I have a question about oranges |||result:\n I want to know if oranges are on sale\n||| ^block-id';
+    const result = parseFormulaMarkdown(markdown);
+    expect(result).toEqual({ formula: "hey ChatGPT I have a question about oranges", result: "I want to know if oranges are on sale", blockId: '^block-id' });
   });
 });
 

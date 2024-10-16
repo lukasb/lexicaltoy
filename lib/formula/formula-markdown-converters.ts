@@ -62,7 +62,7 @@ export function parseFormulaMarkdown(markdownString: string): ParseResult {
   let blockId = undefined;
 
   if (match) {
-    const formula = match[1].trim();
+    let formula = match[1].trim();
     const resultStart = markdownString.indexOf(resultMarker);
     
     if (resultStart !== -1) {
@@ -80,6 +80,7 @@ export function parseFormulaMarkdown(markdownString: string): ParseResult {
     } else {
       const match = markdownString.match(BLOCK_ID_REGEX);
       if (match) {
+        formula = formula.replace(match[0], '').trim();
         blockId = match[0];
       }
       return { formula, result, blockId };
