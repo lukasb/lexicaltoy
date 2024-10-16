@@ -69,6 +69,7 @@ import {
   OUTDENT_LISTITEM_COMMAND
 } from "@/lib/list-commands";
 import { ChildSharedNodeReference } from ".";
+import { $flattenFormulaDisplayNodeResults } from "./flatteners";
 
 function getAncestorFormulaDisplayNode(listItem: ListItemNode | null): FormulaDisplayNode | null {
   if (!listItem) return null;
@@ -177,16 +178,7 @@ export function registerFormulaCommandHandlers(
         ({ displayNodeKey }) => {
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
-            const nodeFormula = displayNode.getFormula();
-            if (nodeFormula.startsWith('ask(') && nodeFormula.endsWith(')')) {
-              let newNodeText = nodeFormula.slice(4, -1).trim(); // use ask arguments as text
-              if (displayNode.getBlockId()) {
-                newNodeText += ' ' + displayNode.getBlockId();
-              }
-              const textNode = $createTextNode(newNodeText);
-              displayNode.replace(textNode);
-              textNode.selectEnd();
-            }
+            $flattenFormulaDisplayNodeResults(displayNode, setLocalSharedNodeMap, setLocalChildNodeMap);
           }
           return true;
         },

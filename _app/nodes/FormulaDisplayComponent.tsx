@@ -46,7 +46,7 @@ export default function FormulaDisplayComponent(
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const isAskFormula = formula.startsWith("ask(");
+  const isFlattenableFormula = formula.startsWith("ask(") || formula.startsWith("find(");
 
   useEffect(() => {
     registerFormula(formula);
@@ -72,7 +72,7 @@ export default function FormulaDisplayComponent(
         .then(response => {
           if (response) {
             if (response.type === FormulaValueType.Text) {
-              if (!isAskFormula) {
+              if (!isFlattenableFormula) {
                 setOutput(response.output as string);
                 editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
                   displayNodeKey: nodeKey,
@@ -125,7 +125,7 @@ export default function FormulaDisplayComponent(
         });
         if (promise) addPromise(nodeKey, promise);
       }
-  }, [addPromise, removePromise, hasPromise, editor, nodeKey, getFormulaResults, isAskFormula]);
+  }, [addPromise, removePromise, hasPromise, editor, nodeKey, getFormulaResults, isFlattenableFormula]);
 
   useEffect(() => {
 
@@ -189,11 +189,11 @@ export default function FormulaDisplayComponent(
           nodesMarkdown: nodesToAdd,
         });
       }
-    } else if (isAskFormula && !createdChildNodes) {
+    } else if (isFlattenableFormula && !createdChildNodes) {
       setCreatedChildNodes(true);
       createAskResultNodes(output);
     }
-  }, [formula, output, sharedNodeMap, editor, nodeKey, getFormulaOutput, isAskFormula, createdChildNodes, createAskResultNodes]);
+  }, [formula, output, sharedNodeMap, editor, nodeKey, getFormulaOutput, isFlattenableFormula, createdChildNodes, createAskResultNodes]);
 
   const replaceSelfWithEditorNode = () => {
     // TODO this will create an entry in the undo history which we don't necessarily want
@@ -214,7 +214,7 @@ export default function FormulaDisplayComponent(
 
   const handlePencilClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isAskFormula) {
+    if (isFlattenableFormula) {
       setShowMenu(!showMenu);
     } else {
       replaceSelfWithEditorNode();
@@ -279,7 +279,7 @@ export default function FormulaDisplayComponent(
         >
           <span role="img" aria-label="Edit" className="transform scale-x-[-1] filter grayscale-[70%]">✏️</span>
         </button>
-        {showMenu && isAskFormula && (
+        {showMenu && isFlattenableFormula && (
           <div 
             ref={menuRef}
             className="absolute z-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg"
@@ -294,7 +294,7 @@ export default function FormulaDisplayComponent(
               Edit formula
             </button>
             <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 font-normal text-sm text-gray-800 dark:text-gray-200" onClick={flattenOutput}>
-              Merge into document
+              Merge copy of results into document
             </button>
             <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 font-normal text-sm text-gray-800 dark:text-gray-200" onClick={handleEditBlockId}>
               Edit block ID
@@ -303,7 +303,7 @@ export default function FormulaDisplayComponent(
         )}
       </span>
       {blockId && <span className="block-id">{blockId}</span>}
-      {!output.startsWith("@@") && !isAskFormula && <span>{output}</span>}
+      {!output.startsWith("@@") && !isFlattenableFormula && <span>{output}</span>}
       <EditDialog
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
