@@ -75,6 +75,7 @@ export function $flattenFormulaDisplayNodeResults(
     setLocalSharedNodeMap((prevMap: Map<string, NodeElementMarkdown>) => {
       const updatedMap = new Map(prevMap);
       for (const sharedNode of sharedNodeIds) {
+        console.log("removing from map", sharedNode.sharedNodeListItemId);
         updatedMap.delete(sharedNode.sharedNodeListItemId);
       }
       return updatedMap;
@@ -83,7 +84,9 @@ export function $flattenFormulaDisplayNodeResults(
     setLocalChildNodeMap((prevMap: Map<string, ChildSharedNodeReference>) => {
       const updatedMap = new Map(prevMap);
       for (const sharedNode of sharedNodeIds) {
+        updatedMap.delete(sharedNode.sharedNodeListItemId);
         for (const childId of sharedNode.childrenListItemIds) {
+          console.log("removing from child map", childId);
           updatedMap.delete(childId);
         }
       }
