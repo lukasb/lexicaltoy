@@ -20,8 +20,16 @@ export type ChildSharedNodeReference = {
 export function FormulaPlugin(): null {
 
   const [editor] = useLexicalComposerContext();
+
+  // maps from ListItemNode keys to NodeElementMarkdown
+  // these are the "main" shared nodes - that appear right below the wikilinks
   const [localSharedNodeMap, setLocalSharedNodeMap] = useState(new Map<string, NodeElementMarkdown>());
+
+  // maps from ListItemNode keys to ChildSharedNodeReference
+  // these are the children of the main shared nodes
+  // AND this includes the main shared nodes themselves
   const [localChildNodeMap, setLocalChildNodeMap] = useState(new Map<string, ChildSharedNodeReference>());
+  
   const { sharedNodeMap: globalSharedNodeMap, setSharedNodeMap, updateNodeMarkdown } = useSharedNodeContext();
   const updatingNodeKey = useRef<string | null>(null);
 

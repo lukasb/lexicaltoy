@@ -394,6 +394,7 @@ export function $createFormulaOutputSharedNodes({editor, displayNode, rootNode, 
           node.children
         );
 
+        // list of child nodes should include the parent node
         addedChildNodes.unshift(
           {
             key: listItemNode.getKey(),
