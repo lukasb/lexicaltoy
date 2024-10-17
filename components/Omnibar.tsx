@@ -44,14 +44,16 @@ const Omnibar = forwardRef(({
   const filteredPagesRef = useRef<Page[]>([]);
   const { miniSearch } = useMiniSearch();
 
+  type SearchResult = { id: string; [key: string]: any };
+
   // TODO logic should match searchPages in pages-helpers
   const handleSearch = useCallback(async (term: string): Promise<Page[]> => {
     if (miniSearch) {
       const results = miniSearch.search(term, { prefix: true, boost: { title: 2 }});
-      return results.map((result) => {
+      return results.map((result: SearchResult) => {
         const page = pages.find((page) => page.id === result.id);
         return page;
-      }).filter((page) => page !== null) as Page[];
+      }).filter((page): page is Page => page !== null) as Page[];
     }
     return [];
   }, [pages, miniSearch]);
