@@ -18,6 +18,7 @@ import { useBreakpoint } from "@/lib/window-helpers";
 import { highlightText } from "@/lib/text-helpers";
 import { useSearchTerms } from "@/_app/context/search-terms-context";
 import { useMiniSearch } from "@/_app/context/minisearch-context";
+import { FixedSizeList as List } from 'react-window';
 
 const Omnibar = forwardRef(({
   openOrCreatePageByTitle
@@ -49,16 +50,12 @@ const Omnibar = forwardRef(({
   // TODO logic should match searchPages in pages-helpers
   const handleSearch = useCallback(async (term: string): Promise<Page[]> => {
     if (miniSearch) {
-      console.time('miniSearch');
       const results = miniSearch.search(term, { prefix: true, boost: { title: 2 }});
-      console.timeEnd('miniSearch');
 
-      console.time('mapAndFilterResults');
       const pagesMap = new Map(pages.map(page => [page.id, page]));
       const filteredResults = results
         .map((result: SearchResult) => pagesMap.get(result.id))
         .filter((page): page is Page => page !== undefined);
-      console.timeEnd('mapAndFilterResults');
 
       return filteredResults;
     }
@@ -130,9 +127,7 @@ const Omnibar = forwardRef(({
       }
     };
   
-    console.time('term useEffect');
     searchPagesAsync();
-    console.timeEnd('term useEffect');
   }, [term, pages, handleSearch]);
 
   // this useEffect checks to see if the search term the user typed (term) and the actual text in the omnibar (displayValue) are different
@@ -174,9 +169,7 @@ const Omnibar = forwardRef(({
       }
     };
   
-    console.time('displayValue useEffect');
     searchPagesAsync();
-    console.timeEnd('displayValue useEffect');
   }, [displayValue, term, pages]);
 
   // this is used for when the user uses the arrow keys to navigate the results list
@@ -214,13 +207,11 @@ const Omnibar = forwardRef(({
   }, [selectedIndex]);
 
   const handleChange = (inputElement: HTMLInputElement) => {
-    console.time('handleChange');
     const newValue = inputElement.value;
     if (newValue === "") skipTermResolutionRef.current = false;
     setTerm(newValue);
     setDisplayValue(newValue);
     storedTermRef.current = newValue;
-    console.timeEnd('handleChange');
   };
 
   const resetSelf = () => {
@@ -332,6 +323,53 @@ const Omnibar = forwardRef(({
     }
   }, [showPageContent, results, selectedIndex]);
 
+  const ITEM_HEIGHT = 36; // Adjust based on your li height
+  const LIST_HEIGHT = 300; // Match this with your max-h-[300px]
+
+  const ResultItem = ({ index, style }: { index: number, style: React.CSSProperties }) => {
+    const result = results[showCreatePageOption ? index - 1 : index];
+    const isCreateOption = showCreatePageOption && index === 0;
+    const isSelected = selectedIndex === index;
+
+    return (
+      <div
+        style={{
+          ...style,
+          listStyle: 'none',  // Remove bullet points
+        }}
+        className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
+          isSelected ? "selected-item bg-gray-200 dark:bg-gray-700" : ""
+        } dark:text-white`}
+        onMouseEnter={() => handleMouseEnter(index)}
+        onMouseLeave={handleMouseLeave}
+        onClick={() => isCreateOption ? openOrCreatePageByTitle(term) : handleSearchResultsClick(result)}
+        data-testid={isCreateOption ? "create-page-option" : "search-result"}
+      >
+        {isCreateOption ? (
+          <>
+            <span className="inline-flex items-center justify-center p-1 bg-indigo-300 text-white font-bold rounded">Create page</span> {term}
+          </>
+        ) : (
+          <div className="flex items-center">
+            <div className="flex-shrink-0 whitespace-nowrap overflow-hidden text-ellipsis mr-2 flex items-center">
+              {result.title === todayJournalTitle ? (
+                <span className="font-medium">{result.title}</span>
+              ) : (
+                result.title
+              )}
+              {result.isJournal && (
+                <span className="inline-flex items-center justify-center w-5 h-5 ml-2 bg-indigo-300 text-white text-xs font-bold rounded">
+                  J
+                </span>
+              )}
+            </div>
+            <span className="text-gray-400 truncate flex-grow">{result.value}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="relative my-4 max-w-7xl w-full">
       <input
@@ -346,54 +384,15 @@ const Omnibar = forwardRef(({
       />
       <div className="absolute top-full left-0 right-0 mt-1 z-50">
         {(results.length > 0 || showCreatePageOption) && (
-          <ul
-            ref={ulRef}
-            className="w-full bg-white shadow-md max-h-[300px] md:max-h-[300px] lg:max-h-[300px] overflow-auto rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          <List
+            height={LIST_HEIGHT}
+            itemCount={showCreatePageOption ? results.length + 1 : results.length}
+            itemSize={ITEM_HEIGHT}
+            width="100%"
+            className="w-full bg-white shadow-md rounded-md border border-gray-200 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
           >
-            {showCreatePageOption && (
-              <li
-                className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
-                  selectedIndex === 0
-                    ? "selected-item bg-gray-200 dark:bg-gray-700"
-                    : ""
-                } dark:text-white`}
-                onClick={() => openOrCreatePageByTitle(term)}
-                data-testid="create-page-option"
-              >
-                <span className="inline-flex items-center justify-center p-1 bg-indigo-300 text-white font-bold rounded">Create page</span> {term}
-              </li>
-            )}
-            {results.map((result, index) => (
-              <li
-                key={result.id}
-                className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
-                  selectedIndex === (showCreatePageOption ? index + 1 : index)
-                    ? "selected-item bg-gray-200 dark:bg-gray-700"
-                    : ""
-                } dark:text-white`}
-                onMouseEnter={() => handleMouseEnter(index)}
-                onMouseLeave={handleMouseLeave}
-                onClick={() => handleSearchResultsClick(result)}
-                data-testid="search-result"
-              >
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 whitespace-nowrap overflow-hidden text-ellipsis mr-2 flex items-center">
-                    {result.title === todayJournalTitle ? (
-                      <span className="font-medium">{result.title}</span>
-                    ) : (
-                      result.title
-                    )}
-                    {result.isJournal && (
-                      <span className="inline-flex items-center justify-center w-5 h-5 ml-2 bg-indigo-300 text-white text-xs font-bold rounded">
-                        J
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-gray-400 truncate flex-grow">{result.value}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
+            {ResultItem}
+          </List>
         )}
         {showPageContent &&
           (!showCreatePageOption || (showCreatePageOption && selectedIndex > 0)) &&
