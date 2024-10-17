@@ -335,7 +335,9 @@ const Omnibar = forwardRef(({
       <div
         style={{
           ...style,
-          listStyle: 'none',  // Remove bullet points
+          listStyle: 'none',
+          display: 'flex',
+          alignItems: 'center', // Vertically center the content
         }}
         className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
           isSelected ? "selected-item bg-gray-200 dark:bg-gray-700" : ""
@@ -346,11 +348,12 @@ const Omnibar = forwardRef(({
         data-testid={isCreateOption ? "create-page-option" : "search-result"}
       >
         {isCreateOption ? (
-          <>
-            <span className="inline-flex items-center justify-center p-1 bg-indigo-300 text-white font-bold rounded">Create page</span> {term}
-          </>
-        ) : (
           <div className="flex items-center">
+            <span className="inline-flex items-center justify-center px-2 py-1 mr-2 bg-indigo-300 text-white text-xs font-bold rounded">Create page</span>
+            <span>{term}</span>
+          </div>
+        ) : (
+          <div className="flex items-center w-full">
             <div className="flex-shrink-0 whitespace-nowrap overflow-hidden text-ellipsis mr-2 flex items-center">
               {result.title === todayJournalTitle ? (
                 <span className="font-medium">{result.title}</span>
