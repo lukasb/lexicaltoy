@@ -10,6 +10,7 @@ import type { InferGetServerSidePropsType, GetServerSideProps } from 'next';
 import { Session } from 'next-auth';
 import { Page as AppPage } from '@/lib/definitions';
 import { BlockIdsIndexProvider } from "@/_app/context/page-blockids-index-context";
+import { MiniSearchProvider } from "@/_app/context/minisearch-context";
 
 export const maxDuration = 60;
 
@@ -70,7 +71,9 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
           </div>
         )}
         <BlockIdsIndexProvider>
-          <EditingArea pages={pages} userId={session.id} />
+          <MiniSearchProvider pages={pages}>
+            <EditingArea pages={pages} userId={session.id} />
+          </MiniSearchProvider>
         </BlockIdsIndexProvider>
         <SignoutButton />
       </div>

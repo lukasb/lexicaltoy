@@ -31,7 +31,6 @@ import {
 import { SavedSelectionProvider } from "@/_app/context/saved-selection-context";
 import { OpenWikilinkWithBlockIdProvider } from "@/_app/context/wikilink-blockid-context";
 import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blockids-index-context";
-import { MiniSearchProvider } from "@/_app/context/minisearch-context";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -204,7 +203,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
       <PagesContext.Provider value={currentPages}>
         <OpenWikilinkWithBlockIdProvider>
         <SavedSelectionProvider>
-        <MiniSearchProvider>
         <ActiveEditorProvider>
         <SharedNodeProvider>
         <SearchTermsProvider>
@@ -265,7 +263,6 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
           </SearchTermsProvider>
           </SharedNodeProvider>
         </ActiveEditorProvider>
-        </MiniSearchProvider>
         </SavedSelectionProvider>
         </OpenWikilinkWithBlockIdProvider>
       </PagesContext.Provider>

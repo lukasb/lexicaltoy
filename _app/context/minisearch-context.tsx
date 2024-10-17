@@ -20,9 +20,8 @@ export const useMiniSearch = () => {
   return context;
 };
 
-export const MiniSearchProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const MiniSearchProvider: React.FC<{ children: React.ReactNode, pages: Page[] }> = ({ children, pages }) => {
   const [miniSearch, setMiniSearch] = useState<MiniSearch<Page> | null>(null);
-  const pages = useContext(PagesContext);
   const indexedRef = useRef(false);
 
   useEffect(() => {
