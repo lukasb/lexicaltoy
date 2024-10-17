@@ -72,7 +72,11 @@ const Omnibar = forwardRef(({
   // TODO Escape sets focus back to last active editor
 
   const showReverseChronologicalList = useCallback(() => {
-    setResults(pages.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime()));
+    setResults(pages.sort((a, b) => {
+      const dateA = new Date(a.lastModified);
+      const dateB = new Date(b.lastModified);
+      return dateB.getTime() - dateA.getTime();
+    }));
   }, [pages]);
 
   useImperativeHandle(ref, () => ({
