@@ -35,6 +35,7 @@ export const MiniSearchProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     if (pages) {
       const pageArray = Object.values(pages);
+      console.log("minisearch indexing");
       ms.addAll(pageArray);
       indexedRef.current = true;
     }

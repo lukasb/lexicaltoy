@@ -49,11 +49,18 @@ const Omnibar = forwardRef(({
   // TODO logic should match searchPages in pages-helpers
   const handleSearch = useCallback(async (term: string): Promise<Page[]> => {
     if (miniSearch) {
+      console.time('miniSearch');
       const results = miniSearch.search(term, { prefix: true, boost: { title: 2 }});
-      return results.map((result: SearchResult) => {
-        const page = pages.find((page) => page.id === result.id);
-        return page;
-      }).filter((page): page is Page => page !== null) as Page[];
+      console.timeEnd('miniSearch');
+
+      console.time('mapAndFilterResults');
+      const pagesMap = new Map(pages.map(page => [page.id, page]));
+      const filteredResults = results
+        .map((result: SearchResult) => pagesMap.get(result.id))
+        .filter((page): page is Page => page !== undefined);
+      console.timeEnd('mapAndFilterResults');
+
+      return filteredResults;
     }
     return [];
   }, [pages, miniSearch]);
@@ -110,20 +117,22 @@ const Omnibar = forwardRef(({
         const startMatch = filteredPages.find((page) =>
           page.title.toLowerCase().startsWith(term.toLowerCase())
         );
-  
+        
         if (startMatch && inputRef.current) {
           setDisplayValue(startMatch.title);
         } else {
           setDisplayValue(term);
         }
-  
+        
         setResults(filteredPages);
       } else {
         resetSelf();
       }
     };
   
+    console.time('term useEffect');
     searchPagesAsync();
+    console.timeEnd('term useEffect');
   }, [term, pages, handleSearch]);
 
   // this useEffect checks to see if the search term the user typed (term) and the actual text in the omnibar (displayValue) are different
@@ -165,7 +174,9 @@ const Omnibar = forwardRef(({
       }
     };
   
+    console.time('displayValue useEffect');
     searchPagesAsync();
+    console.timeEnd('displayValue useEffect');
   }, [displayValue, term, pages]);
 
   // this is used for when the user uses the arrow keys to navigate the results list
@@ -203,11 +214,13 @@ const Omnibar = forwardRef(({
   }, [selectedIndex]);
 
   const handleChange = (inputElement: HTMLInputElement) => {
+    console.time('handleChange');
     const newValue = inputElement.value;
     if (newValue === "") skipTermResolutionRef.current = false;
     setTerm(newValue);
     setDisplayValue(newValue);
     storedTermRef.current = newValue;
+    console.timeEnd('handleChange');
   };
 
   const resetSelf = () => {
