@@ -31,6 +31,7 @@ import {
 import { SavedSelectionProvider } from "@/_app/context/saved-selection-context";
 import { OpenWikilinkWithBlockIdProvider } from "@/_app/context/wikilink-blockid-context";
 import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blockids-index-context";
+import { useMiniSearch } from "@/_app/context/minisearch-context";
 
 function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
@@ -41,6 +42,8 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   const [pinnedPageIds, setPinnedPageIds] = useState<string[]>([]);
   const [collapsedPageIds, setCollapsedPageIds] = useState<string[]>([]);
   const { setBlockIdsForPage } = useBlockIdsIndex();
+  const { msAddPage, msDiscardPage } = useMiniSearch();
+
   useEffect(() => {
     const pnnedPageIds = getPinnedPageIds();
     setPinnedPageIds(pnnedPageIds);
@@ -169,6 +172,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     } else if (isPage(result)) {
       console.log("got a page");
       setCurrentPages((prevPages) => [result, ...prevPages]);
+      msAddPage(result);
       openPage(result);
     } else {
       console.error("expected page, got something else", result);
@@ -184,6 +188,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
       return;
     }
     setCurrentPages((prevPages) => prevPages.filter((p) => p.id !== id));
+    msDiscardPage(id);
     setOpenPageIds((prevPageIds) => prevPageIds.filter((pId) => pId !== id));
   }
 

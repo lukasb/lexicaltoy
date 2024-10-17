@@ -5,9 +5,9 @@ import { Page } from '@/lib/definitions';
 
 interface MiniSearchContextType {
   miniSearch: MiniSearch<Page> | null;
-  discardPage: (id: string) => void;
-  replacePage: (page: Page) => void;
-  addPage: (page: Page) => void;
+  msDiscardPage: (id: string) => void;
+  msReplacePage: (page: Page) => void;
+  msAddPage: (page: Page) => void;
 }
 
 const MiniSearchContext = createContext<MiniSearchContextType | null>(null);
@@ -61,9 +61,9 @@ export const MiniSearchProvider: React.FC<{ children: React.ReactNode, pages: Pa
 
   const contextValue: MiniSearchContextType = {
     miniSearch,
-    discardPage,
-    replacePage,
-    addPage,
+    msDiscardPage: discardPage,
+    msReplacePage: replacePage,
+    msAddPage: addPage,
   };
 
   return (

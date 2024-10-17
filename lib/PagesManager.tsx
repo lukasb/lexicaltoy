@@ -11,12 +11,14 @@ import { useFormulaResultService } from './formula/FormulaResultService';
 import { isDevelopmentEnvironment } from "@/lib/environment";
 import { useCallback } from "react";
 import { getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
+import { useMiniSearch } from '@/_app/context/minisearch-context';
 
 // TODO maybe use Redux so we don't have an O(n) operation here every time
 function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAction<Page[]>> }) {
   const pages = useContext(PagesContext);
   const { sharedNodeMap } = useSharedNodeContext();
   const { updatePagesResults, addPagesResults } = useFormulaResultService();
+  const { msReplacePage } = useMiniSearch();
   
   // Create a ref to store the save queue
   const saveQueue = useRef<Map<string, { page: Page, timestamp: number }>>(new Map());
@@ -41,6 +43,7 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
               p.id === page.id ? { ...p, status: PageStatus.Quiescent, revisionNumber: revisionNumber, lastModified: lastModified } : p
             )
           );
+          msReplacePage(page);
         }
       } catch (error) {
         alert(`Failed to save page ${page.title} - ${error}`);
@@ -49,7 +52,7 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
         saveQueue.current.delete(pageId);
       }
     }
-  }, [setPages]);
+  }, [setPages, msReplacePage]);
 
   useEffect(() => {
     const interval = setInterval(() => {
