@@ -431,7 +431,7 @@ const TEXT_FORMAT_TRANSFORMERS: Array<TextFormatTransformer> = [
 
 const TEXT_MATCH_TRANSFORMERS: Array<TextMatchTransformer> = [LINK];
 
-const TRANSFORMERS: Array<Transformer> = [
+export const TRANSFORMERS: Array<Transformer> = [
   ...ELEMENT_TRANSFORMERS,
  // ...TEXT_FORMAT_TRANSFORMERS,
   ...TEXT_MATCH_TRANSFORMERS,

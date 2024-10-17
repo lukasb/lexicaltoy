@@ -12,9 +12,9 @@ import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { 
   UNORDERED_LIST,
-  $convertToMarkdownString,
   TRANSFORMERS
 } from "@lexical/markdown";
+import { $myConvertToMarkdownString } from "@/lib/markdown/markdown-export";
 import { KeyboardShortcutsPlugin } from "@/_app/plugins/KeyboardShortcutsPlugin";
 import { useDebouncedCallback } from "use-debounce";
 import { theme } from "./editor-theme";
@@ -120,7 +120,7 @@ function Editor({
   const onChange = useCallback((editorState: EditorState) => {
     if (!editorState) return;
     editorState.read(() => {
-      const editorStateMarkdown = $convertToMarkdownString(TRANSFORMERS);
+      const editorStateMarkdown = $myConvertToMarkdownString(TRANSFORMERS, undefined, true);
       const pageContentsWithoutSharedNodes = stripSharedNodesFromMarkdown(editorStateMarkdown);
       //console.log("pageContentsWithoutSharedNodes", pageContentsWithoutSharedNodes);
       const trimmedPageContents = pageContentsWithoutSharedNodes.replace(/\s$/, '');
