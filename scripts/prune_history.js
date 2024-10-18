@@ -3,6 +3,9 @@ require('dotenv').config({ path: envfile });
 const { db } = require('@vercel/postgres');
 
 async function main() {
+
+  console.log("pruning page history using env file: ", envfile);
+  
   const client = await db.connect();
 
   await prunePageHistory(client);
