@@ -44,6 +44,7 @@ const Omnibar = forwardRef(({
   const { searchTermsMap, setSearchTerms, getSearchTerms } = useSearchTerms();
   const filteredPagesRef = useRef<Page[]>([]);
   const { miniSearch } = useMiniSearch();
+  const listRef = useRef<List>(null);
 
   type SearchResult = { id: string; [key: string]: any };
 
@@ -243,6 +244,7 @@ const Omnibar = forwardRef(({
       setSelectedIndex((prevIndex) => {
         const newIndex = Math.min(prevIndex + 1, showCreatePageOption ? results.length : results.length - 1);
         handleUpdatedSelectedIndex(newIndex);
+        listRef.current?.scrollToItem(newIndex, "smart");
         return newIndex;
       });
       event.preventDefault();
@@ -250,6 +252,7 @@ const Omnibar = forwardRef(({
       setSelectedIndex((prevIndex) => {
         const newIndex = Math.max(prevIndex - 1, 0);
         handleUpdatedSelectedIndex(newIndex);
+        listRef.current?.scrollToItem(newIndex, "smart");
         return newIndex;
       });
       event.preventDefault();
@@ -392,6 +395,7 @@ const Omnibar = forwardRef(({
       <div className="absolute top-full left-0 right-0 mt-1 z-50">
         {(results.length > 0 || showCreatePageOption) && (
           <List
+            ref={listRef}
             height={LIST_HEIGHT}
             itemCount={showCreatePageOption ? results.length + 1 : results.length}
             itemSize={ITEM_HEIGHT}
