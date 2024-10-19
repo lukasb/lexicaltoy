@@ -41,7 +41,6 @@ export function FormulaPlugin(): null {
     if (!editor.hasNodes([FormulaEditorNode, FormulaDisplayNode])) {
       throw new Error('FormulaPlugin: FormulaEditorNode and/or FormulaDisplayNode not registered on editor');
     }
-    console.log("registerFormulaCommandHandlers");
     return registerFormulaCommandHandlers(
       editor, updatingNodeKey, setUpdatingNodeKey, setLocalSharedNodeMap, setLocalChildNodeMap);
   }, [editor, setLocalSharedNodeMap, updatingNodeKey]);

@@ -163,6 +163,7 @@ export default function FormulaDisplayComponent(
       }
 
       if (nodeRemoved || nodeChanged) {
+        console.log("node removed or changed");
         const newPageLineMarkdownMap = new Map<string, string>();
         for (const node of sharedNodes) {
           newPageLineMarkdownMap.set(
@@ -176,6 +177,7 @@ export default function FormulaDisplayComponent(
           nodesMarkdown: sharedNodes,
         });
       } else if (nodeAdded) {
+        console.log("node added");
         const nodesToAdd: NodeElementMarkdown[] = sharedNodes.filter(node => !pageLineMarkdownMapRef.current.has(createSharedNodeKey(node)));
         editor.dispatchCommand(ADD_FORMULA_NODES, {
           displayNodeKey: nodeKey,
