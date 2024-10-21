@@ -22,10 +22,23 @@ import { BLOCK_ID_REGEX } from "../blockref";
 const FORMULA_START_REGEX = /^=(.*?)(?:\s*\|\|\|result:|$)/;
 export const FORMULA_LIST_ITEM_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)?(\^[a-zA-Z0-9-]+)?$/gm; // something is broken with capture groups here
 const FORMULA_LIST_ITEM_START_WITH_RESULTS_REGEX = /^(\s*)- =.*\|\|\|result:/;
-export const FORMULA_LIST_ITEM_WITH_RESULTS_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)(\s)?(\^[a-zA-Z0-9-]+)?$/gm; // something is broken with capture groups here
+export const FORMULA_LIST_ITEM_WITH_RESULTS_REGEX = /^(\s*)- =(.+?)(?:\s*\|\|\|result:[\n]?([\s\S]*?)\|\|\|)(\s)?(\^[a-zA-Z0-9-]+)?$/m; // something is broken with capture groups here
 export const FIND_FORMULA_START_REGEX = /^\s*- =(find\(|[^,]*,\s*find\()/;
 export const IS_FORMULA_REGEX = /^\s*- =/;
 export const FORMULA_RESULTS_END_REGEX = /^\s*\|\|\|(\s)?(\^[a-zA-Z0-9-]+)?$/;
+
+export function isFindFormula(markdown: string): boolean {
+  return FIND_FORMULA_START_REGEX.test(markdown);
+}
+
+export function isFormula(markdown: string): boolean {
+  return IS_FORMULA_REGEX.test(markdown);
+}
+
+export function isFormulaWithResults(markdown: string): boolean {
+  const match = FORMULA_LIST_ITEM_WITH_RESULTS_REGEX.exec(markdown);
+  return match !== null;
+}
 
 // formula as stored by the nodes has the = sign at the front, maybe should change that
 export function getFormulaMarkdown(formula: string, output?: string, blockId?: string): string {

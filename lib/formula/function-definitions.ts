@@ -6,9 +6,11 @@ import {
 } from "./formula-definitions";
 import { 
   FIND_FORMULA_START_REGEX,
-  FORMULA_LIST_ITEM_WITH_RESULTS_REGEX,
   IS_FORMULA_REGEX,
-  FORMULA_RESULTS_END_REGEX
+  FORMULA_RESULTS_END_REGEX,
+  isFindFormula,
+  isFormula,
+  isFormulaWithResults
 } from "./formula-markdown-converters";
 import { DefaultArguments, possibleArguments, nodeTypes } from "./formula-parser";
 import { Page } from "../definitions";
@@ -321,8 +323,8 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
 // Avoid circular references by excluding lines with find() formulas
 // also exclude formulas without results
 function invalidFindResult(markdown: string): boolean {
-  return FIND_FORMULA_START_REGEX.test(markdown) || 
-    (IS_FORMULA_REGEX.test(markdown) && !FORMULA_LIST_ITEM_WITH_RESULTS_REGEX.test(markdown));
+  return isFindFormula(markdown) || 
+    (isFormula(markdown) && !isFormulaWithResults(markdown));
 }
 
 export function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMarkdown[] {
