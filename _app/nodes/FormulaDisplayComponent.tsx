@@ -46,7 +46,7 @@ export default function FormulaDisplayComponent(
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const isFlattenableFormula = formula.startsWith("ask(") || formula.startsWith("find(");
+  const isAskFormula = formula.startsWith("ask(");
 
   useEffect(() => {
     registerFormula(formula);
@@ -72,7 +72,7 @@ export default function FormulaDisplayComponent(
         .then(response => {
           if (response) {
             if (response.type === FormulaValueType.Text) {
-              if (!isFlattenableFormula) {
+              if (!isAskFormula) {
                 editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
                   displayNodeKey: nodeKey,
                   output: response.output as string,
@@ -96,6 +96,12 @@ export default function FormulaDisplayComponent(
                   getNodeElementFullMarkdown(node));
               });
               pageLineMarkdownMapRef.current = markdownMap;
+              if (response.output.length > 0) {
+                editor.dispatchCommand(CREATE_FORMULA_NODES, {
+                  displayNodeKey: nodeKey,
+                  nodesMarkdown: response.output as NodeElementMarkdown[],
+                });
+              }
               //editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
               //  displayNodeKey: nodeKey,
               //  output: "@@childnodes",
@@ -119,7 +125,7 @@ export default function FormulaDisplayComponent(
         });
         if (promise) addPromise(nodeKey, promise);
       }
-  }, [addPromise, removePromise, hasPromise, editor, nodeKey, getFormulaResults, isFlattenableFormula]);
+  }, [addPromise, removePromise, hasPromise, editor, nodeKey, getFormulaResults, isAskFormula]);
 
   useEffect(() => {
     if (formula.includes("zelazny")) console.log("FDC useEffect 1", output);
@@ -157,7 +163,12 @@ export default function FormulaDisplayComponent(
         nodeAdded = true;
       } else if (sharedNodes.length < pageLineMarkdownMapRef.current.size) {
         nodeRemoved = true;
-      } 
+      } else {
+        if (formula.includes("zelazny")) {
+          console.log("no change");
+          console.log(sharedNodes.length, pageLineMarkdownMapRef.current.size);
+        }
+      }
       
       for (const node of sharedNodes) {
         if (
@@ -197,12 +208,12 @@ export default function FormulaDisplayComponent(
 
   useEffect(() => {
     //console.log("FDC useEffect 3", output);
-    if (isFlattenableFormula && !createdChildNodes) {
-      //console.log("FDC useEffect 3 - creating child nodes");
+    if (isAskFormula && !createdChildNodes) {
+      if (formula.includes("zelazny")) console.log("FDC useEffect 3 - creating child nodes", output);
       setCreatedChildNodes(true);
       createAskResultNodes(output);
     }
-  }, [output, isFlattenableFormula, createdChildNodes, createAskResultNodes]);
+  }, [output, isAskFormula, createdChildNodes, createAskResultNodes, formula]);
 
   const replaceSelfWithEditorNode = () => {
     // TODO this will create an entry in the undo history which we don't necessarily want
@@ -223,7 +234,7 @@ export default function FormulaDisplayComponent(
 
   const handlePencilClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isFlattenableFormula) {
+    if (isAskFormula) {
       setShowMenu(!showMenu);
     } else {
       replaceSelfWithEditorNode();
@@ -288,7 +299,7 @@ export default function FormulaDisplayComponent(
         >
           <span role="img" aria-label="Edit" className="transform scale-x-[-1] filter grayscale-[70%]">✏️</span>
         </button>
-        {showMenu && isFlattenableFormula && (
+        {showMenu && isAskFormula && (
           <div 
             ref={menuRef}
             className="absolute z-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg"
@@ -312,7 +323,7 @@ export default function FormulaDisplayComponent(
         )}
       </span>
       {blockId && <span className="block-id">{blockId}</span>}
-      {!output.startsWith("@@") && !isFlattenableFormula && <span>{output}</span>}
+      {!output.startsWith("@@") && !isAskFormula && <span>{output}</span>}
       <EditDialog
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}

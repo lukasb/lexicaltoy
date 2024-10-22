@@ -325,7 +325,7 @@ export function $createFormulaOutputSharedNodes({editor, displayNode, rootNode, 
   }
 
   if (!parentList) return;
-  
+  console.log("creating formula result nodes");
   // prevent this editor from stealing focus
   // we make it editable again in an update listener in PageListenerPlugin
   if (

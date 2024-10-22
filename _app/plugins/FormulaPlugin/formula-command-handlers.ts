@@ -220,6 +220,7 @@ export function registerFormulaCommandHandlers(
       editor.registerCommand(
         CREATE_FORMULA_NODES,
         ({ displayNodeKey, nodesMarkdown }) => {
+          console.log("CREATE_FORMULA_NODES", displayNodeKey, nodesMarkdown);
           // don't recreate the nodes if the given display node is the source of the update
           if (displayNodeKey === updatingNodeKey.current) {
             setUpdatingNodeKey(null);
