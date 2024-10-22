@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.41.2",
+    "@simbathesailor/use-what-changed": "^2.0.0",
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",
     "@types/bcryptjs": "^2.4.6",

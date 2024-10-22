@@ -42,6 +42,9 @@ import { myCreateHeadlessEditor } from "@/lib/editor-utils";
 import { $getRoot } from "lexical";
 import { $appendNodes, $appendNodesToJSON } from "@/lib/json-helpers";
 import { unescapeMarkdown } from "@/lib/text-helpers";
+import { getFormulaOutputType } from "@/lib/formula/formula-parser";
+import { FormulaValueType } from "@/lib/formula/formula-definitions";
+
 // if the selection is in a FormulaEditorEditorNode, we track its node key here
 // then when selection changes, if it's no longer in this node, we replace it with a FormulaDisplayNode
 // TODO maybe this should be a ref?
@@ -161,8 +164,11 @@ export function $deleteFormulaDisplayNodeChildren(node: FormulaDisplayNode) {
 
 export function $replaceWithFormulaDisplayNode(node: FormulaEditorNode) {
   const textContents = node.getTextContent();
-  const { formula, result, blockId } = parseFormulaMarkdown(textContents);
+  let { formula, result, blockId } = parseFormulaMarkdown(textContents);
   if (!formula) return;
+  if (getFormulaOutputType(formula) === FormulaValueType.NodeMarkdown) {
+    result = "@@childnodes";
+  }
   let formulaDisplayNode = $createFormulaDisplayNode(formula, result, blockId);
   node.replace(formulaDisplayNode);
   formulaDisplayNode.selectNext();
@@ -312,7 +318,6 @@ export function $createFormulaOutputSharedNodes({editor, displayNode, rootNode, 
   setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeElementMarkdown>>> | undefined,
   setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>> | undefined
 }) {
-
   let parentList: ListNode | null = null;
   if (displayNode) {
     $deleteFormulaDisplayNodeChildren(displayNode)

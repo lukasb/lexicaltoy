@@ -18,6 +18,9 @@ import { registerFormula, unregisterFormula } from '../../lib/formula/FormulaRes
 import { PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY } from '@/lib/formula-commands';
 import { EditDialog } from '../ui/edit-dialog';
 import { validateBlockId } from '@/lib/blockref';
+import {
+  useWhatChanged,
+} from '@simbathesailor/use-what-changed';
 
 export default function FormulaDisplayComponent(
   { formula: initialFormula,
@@ -46,7 +49,7 @@ export default function FormulaDisplayComponent(
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const isFlattenableFormula = formula.startsWith("ask(") || formula.startsWith("find(");
+  const isAskFormula = formula.startsWith("ask(");
 
   useEffect(() => {
     registerFormula(formula);
@@ -65,29 +68,28 @@ export default function FormulaDisplayComponent(
     }, 0);
   }, [editor, nodeKey]);
 
-  const getFormulaOutput = useCallback(async (prompt: string) => {
+  const getFormulaOutput = useCallback(async (_formula: string) => {
     if (!hasPromise(nodeKey)) {
       const dialogueContext = slurpPageAndDialogueContext(nodeKey, editor);
-      const promise = getFormulaResults(prompt, dialogueContext)
+      const promise = getFormulaResults(_formula, dialogueContext)
         .then(response => {
           if (response) {
             if (response.type === FormulaValueType.Text) {
-              if (!isFlattenableFormula) {
-                setOutput(response.output as string);
+              if (!isAskFormula) {
                 editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
                   displayNodeKey: nodeKey,
                   output: response.output as string,
                 });
+                setOutput(response.output as string);
               } else {
                 setCreatedChildNodes(true);
-                setOutput(response.output as string);
                 editor.dispatchCommand(CREATE_AND_STORE_FORMULA_OUTPUT, {
                   displayNodeKey: nodeKey,
                   output: response.output as string,
                 });
+                setOutput(response.output as string);
               }
             } else if (response.type === FormulaValueType.NodeMarkdown) {
-              setOutput("@@childnodes");
               // TODO store the nodeMarkdowns locally so we can check when updates happen
               // TODO what if there are no results?
               const markdownMap = new Map<string, string>();
@@ -97,10 +99,12 @@ export default function FormulaDisplayComponent(
                   getNodeElementFullMarkdown(node));
               });
               pageLineMarkdownMapRef.current = markdownMap;
-              editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
-                displayNodeKey: nodeKey,
-                output: "@@childnodes",
-              });
+              if (response.output.length > 0) {
+                editor.dispatchCommand(CREATE_FORMULA_NODES, {
+                  displayNodeKey: nodeKey,
+                  nodesMarkdown: response.output as NodeElementMarkdown[],
+                });
+              }
             }
             return response;
           } else {
@@ -119,15 +123,21 @@ export default function FormulaDisplayComponent(
         });
         if (promise) addPromise(nodeKey, promise);
       }
-  }, [addPromise, removePromise, hasPromise, editor, nodeKey, getFormulaResults, isFlattenableFormula]);
+  }, [addPromise, removePromise, hasPromise, editor, nodeKey, getFormulaResults, isAskFormula]);
 
+  //useWhatChanged([formula, output, getFormulaOutput]);
   useEffect(() => {
     if ((output === "" || (output === "@@childnodes" && !fetchedNodes.current))
     ) {
       fetchedNodes.current = true;
-      if (output === "") setOutput("(getting response...)");
+      //if (output === "") setOutput("(getting response...)");
       getFormulaOutput(formula);
-    } else if (output === "@@childnodes") {
+    }
+  }, []);
+
+  //useWhatChanged([formula, output, sharedNodeMap, editor, nodeKey]);
+  useEffect(() => {
+    if (output === "@@childnodes" && fetchedNodes.current) {
       const sharedNodes: NodeElementMarkdown[] = [];
     
       // TODO this might be triggered by a change to our own nodes, in which case we don't need to do anything
@@ -149,7 +159,7 @@ export default function FormulaDisplayComponent(
         nodeAdded = true;
       } else if (sharedNodes.length < pageLineMarkdownMapRef.current.size) {
         nodeRemoved = true;
-      } 
+      }
       
       for (const node of sharedNodes) {
         if (
@@ -163,7 +173,6 @@ export default function FormulaDisplayComponent(
       }
 
       if (nodeRemoved || nodeChanged) {
-        console.log("node removed or changed");
         const newPageLineMarkdownMap = new Map<string, string>();
         for (const node of sharedNodes) {
           newPageLineMarkdownMap.set(
@@ -175,20 +184,23 @@ export default function FormulaDisplayComponent(
         editor.dispatchCommand(CREATE_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: sharedNodes,
-        });
+          });
       } else if (nodeAdded) {
-        console.log("node added");
         const nodesToAdd: NodeElementMarkdown[] = sharedNodes.filter(node => !pageLineMarkdownMapRef.current.has(createSharedNodeKey(node)));
         editor.dispatchCommand(ADD_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: nodesToAdd,
         });
       }
-    } else if (isFlattenableFormula && !createdChildNodes) {
+    }
+  }, [formula, output, sharedNodeMap, editor, nodeKey]);
+
+  useEffect(() => {
+    if (isAskFormula && !createdChildNodes) {
       setCreatedChildNodes(true);
       createAskResultNodes(output);
     }
-  }, [formula, output, sharedNodeMap, editor, nodeKey, getFormulaOutput, isFlattenableFormula, createdChildNodes, createAskResultNodes]);
+  }, [output, isAskFormula, createdChildNodes, createAskResultNodes, formula]);
 
   const replaceSelfWithEditorNode = () => {
     // TODO this will create an entry in the undo history which we don't necessarily want
@@ -209,7 +221,7 @@ export default function FormulaDisplayComponent(
 
   const handlePencilClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isFlattenableFormula) {
+    if (isAskFormula) {
       setShowMenu(!showMenu);
     } else {
       replaceSelfWithEditorNode();
@@ -274,7 +286,7 @@ export default function FormulaDisplayComponent(
         >
           <span role="img" aria-label="Edit" className="transform scale-x-[-1] filter grayscale-[70%]">✏️</span>
         </button>
-        {showMenu && isFlattenableFormula && (
+        {showMenu && isAskFormula && (
           <div 
             ref={menuRef}
             className="absolute z-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg"
@@ -298,7 +310,7 @@ export default function FormulaDisplayComponent(
         )}
       </span>
       {blockId && <span className="block-id">{blockId}</span>}
-      {!output.startsWith("@@") && !isFlattenableFormula && <span>{output}</span>}
+      {!output.startsWith("@@") && !isAskFormula && <span>{output}</span>}
       <EditDialog
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}

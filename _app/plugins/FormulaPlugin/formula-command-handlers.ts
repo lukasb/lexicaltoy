@@ -259,7 +259,6 @@ export function registerFormulaCommandHandlers(
         ({ displayNodeKey, blockId }) => {
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
-            console.log("setting blockId", blockId);
             displayNode.setBlockId(blockId);
           }
           return true;
