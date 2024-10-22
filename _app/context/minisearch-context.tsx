@@ -43,19 +43,31 @@ export const MiniSearchProvider: React.FC<{ children: React.ReactNode, pages: Pa
 
   const discardPage = useCallback((id: string) => {
     if (miniSearch) {
-      miniSearch.discard(id);
+      try {
+        miniSearch.discard(id);
+      } catch (error) {
+        console.error("Error discarding page from MiniSearch", error);
+      }
     }
   }, [miniSearch]);
 
   const replacePage = useCallback((page: Page) => {
     if (miniSearch) {
-      miniSearch.replace(page);
+      try {
+        miniSearch.replace(page);
+      } catch (error) {
+        console.error("Error replacing page in MiniSearch", error);
+      }
     }
   }, [miniSearch]);
 
   const addPage = useCallback((page: Page) => {
     if (miniSearch) {
-      miniSearch.add(page);
+      try {
+        miniSearch.add(page);
+      } catch (error) {
+        console.error("Error adding page to MiniSearch", error);
+      }
     }
   }, [miniSearch]);
 
