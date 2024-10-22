@@ -18,6 +18,9 @@ import { registerFormula, unregisterFormula } from '../../lib/formula/FormulaRes
 import { PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY } from '@/lib/formula-commands';
 import { EditDialog } from '../ui/edit-dialog';
 import { validateBlockId } from '@/lib/blockref';
+import {
+  useWhatChanged,
+} from '@simbathesailor/use-what-changed';
 
 export default function FormulaDisplayComponent(
   { formula: initialFormula,
@@ -65,10 +68,10 @@ export default function FormulaDisplayComponent(
     }, 0);
   }, [editor, nodeKey]);
 
-  const getFormulaOutput = useCallback(async (prompt: string) => {
+  const getFormulaOutput = useCallback(async (_formula: string) => {
     if (!hasPromise(nodeKey)) {
       const dialogueContext = slurpPageAndDialogueContext(nodeKey, editor);
-      const promise = getFormulaResults(prompt, dialogueContext)
+      const promise = getFormulaResults(_formula, dialogueContext)
         .then(response => {
           if (response) {
             if (response.type === FormulaValueType.Text) {
@@ -102,11 +105,6 @@ export default function FormulaDisplayComponent(
                   nodesMarkdown: response.output as NodeElementMarkdown[],
                 });
               }
-              //editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
-              //  displayNodeKey: nodeKey,
-              //  output: "@@childnodes",
-              //});
-              setOutput("@@childnodes");
             }
             return response;
           } else {
@@ -127,21 +125,19 @@ export default function FormulaDisplayComponent(
       }
   }, [addPromise, removePromise, hasPromise, editor, nodeKey, getFormulaResults, isAskFormula]);
 
+  //useWhatChanged([formula, output, getFormulaOutput]);
   useEffect(() => {
-    if (formula.includes("fruit-fact") && formula.includes("find")) console.log("FDC useEffect 1", output);
     if ((output === "" || (output === "@@childnodes" && !fetchedNodes.current))
     ) {
-      if (formula.includes("fruit-fact") && formula.includes("find")) console.log("FDC useEffect 1 - fetching output");
       fetchedNodes.current = true;
       //if (output === "") setOutput("(getting response...)");
       getFormulaOutput(formula);
     }
-  }, [formula, output, getFormulaOutput]);
+  }, []);
 
+  //useWhatChanged([formula, output, sharedNodeMap, editor, nodeKey]);
   useEffect(() => {
-    if (formula.includes("fruit-fact") && formula.includes("find")) console.log("FDC useEffect 2", output);
     if (output === "@@childnodes" && fetchedNodes.current) {
-      if (formula.includes("fruit-fact") && formula.includes("find")) console.log("FDC useEffect 2 - checking for changes");
       const sharedNodes: NodeElementMarkdown[] = [];
     
       // TODO this might be triggered by a change to our own nodes, in which case we don't need to do anything
@@ -163,11 +159,6 @@ export default function FormulaDisplayComponent(
         nodeAdded = true;
       } else if (sharedNodes.length < pageLineMarkdownMapRef.current.size) {
         nodeRemoved = true;
-      } else {
-        if (formula.includes("fruit-fact") && formula.includes("find")) {
-          console.log("no change");
-          console.log(sharedNodes.length, pageLineMarkdownMapRef.current.size);
-        }
       }
       
       for (const node of sharedNodes) {
@@ -182,7 +173,6 @@ export default function FormulaDisplayComponent(
       }
 
       if (nodeRemoved || nodeChanged) {
-        if (formula.includes("fruit-fact") && formula.includes("find"))console.log("FDC useEffect 2 - updating nodes - removed or changed");
         const newPageLineMarkdownMap = new Map<string, string>();
         for (const node of sharedNodes) {
           newPageLineMarkdownMap.set(
@@ -196,7 +186,6 @@ export default function FormulaDisplayComponent(
           nodesMarkdown: sharedNodes,
           });
       } else if (nodeAdded) {
-        if (formula.includes("fruit-fact") && formula.includes("find"))console.log("FDC useEffect 2 - updating nodes - added");
         const nodesToAdd: NodeElementMarkdown[] = sharedNodes.filter(node => !pageLineMarkdownMapRef.current.has(createSharedNodeKey(node)));
         editor.dispatchCommand(ADD_FORMULA_NODES, {
           displayNodeKey: nodeKey,
@@ -207,9 +196,7 @@ export default function FormulaDisplayComponent(
   }, [formula, output, sharedNodeMap, editor, nodeKey]);
 
   useEffect(() => {
-    //console.log("FDC useEffect 3", output);
     if (isAskFormula && !createdChildNodes) {
-      if (formula.includes("fruit-fact") && formula.includes("find")) console.log("FDC useEffect 3 - creating child nodes", output);
       setCreatedChildNodes(true);
       createAskResultNodes(output);
     }

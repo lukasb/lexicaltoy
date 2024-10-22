@@ -84,6 +84,37 @@ export const useFormulaResultService = () => {
     return updatedMap;
   };
 
+  const checkforChanges = (query: string, results: NodeElementMarkdown[]) => {
+    const compareNodes = (existingNode: NodeElementMarkdown, newNode: NodeElementMarkdown): boolean => {
+      if (existingNode.baseNode.nodeMarkdown !== newNode.baseNode.nodeMarkdown) return true;
+      if (existingNode.baseNode.pageName !== newNode.baseNode.pageName) return true;
+      if (existingNode.baseNode.lineNumberStart !== newNode.baseNode.lineNumberStart) return true;
+      if (existingNode.baseNode.lineNumberEnd !== newNode.baseNode.lineNumberEnd) return true;
+
+      const existingChildren = existingNode.children || [];
+      const newChildren = newNode.children || [];
+
+      if (existingChildren.length !== newChildren.length) return true;
+
+      for (let i = 0; i < existingChildren.length; i++) {
+        if (compareNodes(existingChildren[i], newChildren[i])) return true;
+      }
+
+      return false;
+    };
+
+    for (const result of results) {
+      const key = createSharedNodeKey(result);
+      const existingNode = sharedNodeMap.get(key);
+
+      if (!existingNode) return true;
+      if (!existingNode.queries.includes(query)) return true;
+      if (compareNodes(existingNode.output, result)) return true;
+    }
+
+    return false;
+  }
+
   const getFormulaResults = async (
     query: string,
     context?: PageAndDialogueContext
@@ -96,11 +127,11 @@ export const useFormulaResultService = () => {
     if (output.type === FormulaValueType.NodeMarkdown) {
       const resultNodes = output.output as NodeElementMarkdown[];
 
-      // TODO maybe only update the map if things have actually changed
-
-      setSharedNodeMap((prevMap) => {
-        return mergeResults(resultNodes, query, prevMap, false, true);
-      });
+      if ( checkforChanges(query, resultNodes)) {
+        setSharedNodeMap((prevMap) => {
+          return mergeResults(resultNodes, query, prevMap, false, true);
+        });
+      }
     }
 
     return output;

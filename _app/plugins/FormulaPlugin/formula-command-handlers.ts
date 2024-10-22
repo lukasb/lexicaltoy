@@ -220,7 +220,6 @@ export function registerFormulaCommandHandlers(
       editor.registerCommand(
         CREATE_FORMULA_NODES,
         ({ displayNodeKey, nodesMarkdown }) => {
-          console.log("CREATE_FORMULA_NODES", displayNodeKey, nodesMarkdown);
           // don't recreate the nodes if the given display node is the source of the update
           if (displayNodeKey === updatingNodeKey.current) {
             setUpdatingNodeKey(null);
@@ -260,7 +259,6 @@ export function registerFormulaCommandHandlers(
         ({ displayNodeKey, blockId }) => {
           const displayNode = $getNodeByKey(displayNodeKey);
           if (displayNode && $isFormulaDisplayNode(displayNode)) {
-            console.log("setting blockId", blockId);
             displayNode.setBlockId(blockId);
           }
           return true;

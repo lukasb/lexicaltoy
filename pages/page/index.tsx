@@ -11,6 +11,14 @@ import { Session } from 'next-auth';
 import { Page as AppPage } from '@/lib/definitions';
 import { BlockIdsIndexProvider } from "@/_app/context/page-blockids-index-context";
 import { MiniSearchProvider } from "@/_app/context/minisearch-context";
+import {
+  setUseWhatChange,
+} from '@simbathesailor/use-what-changed';
+
+// Only Once in your app you can set whether to enable hooks tracking or not.
+// In CRA(create-react-app) e.g. this can be done in src/index.js
+
+setUseWhatChange(process.env.NODE_ENV === 'development');
 
 export const maxDuration = 60;
 

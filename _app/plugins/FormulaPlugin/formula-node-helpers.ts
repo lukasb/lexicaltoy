@@ -318,7 +318,6 @@ export function $createFormulaOutputSharedNodes({editor, displayNode, rootNode, 
   setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeElementMarkdown>>> | undefined,
   setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>> | undefined
 }) {
-
   let parentList: ListNode | null = null;
   if (displayNode) {
     $deleteFormulaDisplayNodeChildren(displayNode)
@@ -331,7 +330,7 @@ export function $createFormulaOutputSharedNodes({editor, displayNode, rootNode, 
   }
 
   if (!parentList) return;
-  console.log("creating formula result nodes");
+  
   // prevent this editor from stealing focus
   // we make it editable again in an update listener in PageListenerPlugin
   if (
