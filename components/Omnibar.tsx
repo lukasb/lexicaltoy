@@ -19,6 +19,7 @@ import { highlightText } from "@/lib/text-helpers";
 import { useSearchTerms } from "@/_app/context/search-terms-context";
 import { useMiniSearch } from "@/_app/context/minisearch-context";
 import { FixedSizeList as List } from 'react-window';
+import { useClickOutside } from "@/lib/window-helpers";
 
 const Omnibar = forwardRef(({
   openOrCreatePageByTitle
@@ -26,6 +27,7 @@ const Omnibar = forwardRef(({
   openOrCreatePageByTitle: (title: string) => void;
 }, ref) => {
 
+  const omnibarRef = useRef<HTMLDivElement>(null);
   const [term, setTerm] = useState(""); // the actual user input
   const [results, setResults] = useState<Page[]>([]);
   const [displayValue, setDisplayValue] = useState(""); // the displayed value
@@ -310,6 +312,8 @@ const Omnibar = forwardRef(({
     }
   };
 
+  useClickOutside(omnibarRef, resetSelf);
+
   useEffect(() => {
     const intervalId = setInterval(() => {
       const newTodayJournalTitle = getTodayJournalTitle();
@@ -388,7 +392,7 @@ const Omnibar = forwardRef(({
   };
 
   return (
-    <div className="relative my-4 max-w-7xl w-full">
+    <div ref={omnibarRef} className="relative my-4 max-w-7xl w-full">
       <input
         ref={inputRef}
         type="text"

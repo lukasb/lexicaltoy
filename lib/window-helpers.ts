@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, RefObject } from 'react';
 
 const CAN_USE_DOM: boolean =
   typeof window !== 'undefined' &&
@@ -31,4 +31,19 @@ export function useBreakpoint(
       window.removeEventListener('resize', updateViewPortWidth);
     };
   }, [breakpoint, isCurrentSmallWidthViewport, setIsSmallWidthViewport]);
+}
+
+export function useClickOutside(ref: RefObject<HTMLElement>, handler: () => void) {
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        handler();
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [ref, handler]);
 }
