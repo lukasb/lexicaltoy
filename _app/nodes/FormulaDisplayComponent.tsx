@@ -50,6 +50,7 @@ export default function FormulaDisplayComponent(
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const isAskFormula = formula.startsWith("ask(");
+  const isFlattenable = formula.startsWith("ask(") || formula.startsWith("find(");
 
   useEffect(() => {
     registerFormula(formula);
@@ -221,7 +222,7 @@ export default function FormulaDisplayComponent(
 
   const handlePencilClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isAskFormula) {
+    if (isFlattenable) {
       setShowMenu(!showMenu);
     } else {
       replaceSelfWithEditorNode();
@@ -286,7 +287,7 @@ export default function FormulaDisplayComponent(
         >
           <span role="img" aria-label="Edit" className="transform scale-x-[-1] filter grayscale-[70%]">✏️</span>
         </button>
-        {showMenu && isAskFormula && (
+        {showMenu && isFlattenable && (
           <div 
             ref={menuRef}
             className="absolute z-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg"
@@ -310,7 +311,7 @@ export default function FormulaDisplayComponent(
         )}
       </span>
       {blockId && <span className="block-id">{blockId}</span>}
-      {!output.startsWith("@@") && !isAskFormula && <span>{output}</span>}
+      {!output.startsWith("@@") && !isFlattenable && <span>{output}</span>}
       <EditDialog
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
