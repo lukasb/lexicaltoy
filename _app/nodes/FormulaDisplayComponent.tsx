@@ -73,21 +73,20 @@ export default function FormulaDisplayComponent(
           if (response) {
             if (response.type === FormulaValueType.Text) {
               if (!isFlattenableFormula) {
-                setOutput(response.output as string);
                 editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
                   displayNodeKey: nodeKey,
                   output: response.output as string,
                 });
+                setOutput(response.output as string);
               } else {
                 setCreatedChildNodes(true);
-                setOutput(response.output as string);
                 editor.dispatchCommand(CREATE_AND_STORE_FORMULA_OUTPUT, {
                   displayNodeKey: nodeKey,
                   output: response.output as string,
                 });
+                setOutput(response.output as string);
               }
             } else if (response.type === FormulaValueType.NodeMarkdown) {
-              setOutput("@@childnodes");
               // TODO store the nodeMarkdowns locally so we can check when updates happen
               // TODO what if there are no results?
               const markdownMap = new Map<string, string>();
@@ -97,10 +96,11 @@ export default function FormulaDisplayComponent(
                   getNodeElementFullMarkdown(node));
               });
               pageLineMarkdownMapRef.current = markdownMap;
-              editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
-                displayNodeKey: nodeKey,
-                output: "@@childnodes",
-              });
+              //editor.dispatchCommand(STORE_FORMULA_OUTPUT, {
+              //  displayNodeKey: nodeKey,
+              //  output: "@@childnodes",
+              //});
+              setOutput("@@childnodes");
             }
             return response;
           } else {
@@ -122,12 +122,20 @@ export default function FormulaDisplayComponent(
   }, [addPromise, removePromise, hasPromise, editor, nodeKey, getFormulaResults, isFlattenableFormula]);
 
   useEffect(() => {
+    if (formula.includes("zelazny")) console.log("FDC useEffect 1", output);
     if ((output === "" || (output === "@@childnodes" && !fetchedNodes.current))
     ) {
+      if (formula.includes("zelazny")) console.log("FDC useEffect 1 - fetching output");
       fetchedNodes.current = true;
-      if (output === "") setOutput("(getting response...)");
+      //if (output === "") setOutput("(getting response...)");
       getFormulaOutput(formula);
-    } else if (output === "@@childnodes") {
+    }
+  }, [formula, output, getFormulaOutput]);
+
+  useEffect(() => {
+    if (formula.includes("zelazny")) console.log("FDC useEffect 2", output);
+    if (output === "@@childnodes" && fetchedNodes.current) {
+      if (formula.includes("zelazny")) console.log("FDC useEffect 2 - checking for changes");
       const sharedNodes: NodeElementMarkdown[] = [];
     
       // TODO this might be triggered by a change to our own nodes, in which case we don't need to do anything
@@ -163,7 +171,7 @@ export default function FormulaDisplayComponent(
       }
 
       if (nodeRemoved || nodeChanged) {
-        console.log("node removed or changed");
+        console.log("FDC useEffect 2 - updating nodes - removed or changed");
         const newPageLineMarkdownMap = new Map<string, string>();
         for (const node of sharedNodes) {
           newPageLineMarkdownMap.set(
@@ -175,20 +183,26 @@ export default function FormulaDisplayComponent(
         editor.dispatchCommand(CREATE_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: sharedNodes,
-        });
+          });
       } else if (nodeAdded) {
-        console.log("node added");
+        console.log("FDC useEffect 2 - updating nodes - added");
         const nodesToAdd: NodeElementMarkdown[] = sharedNodes.filter(node => !pageLineMarkdownMapRef.current.has(createSharedNodeKey(node)));
         editor.dispatchCommand(ADD_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: nodesToAdd,
         });
       }
-    } else if (isFlattenableFormula && !createdChildNodes) {
+    }
+  }, [formula, output, sharedNodeMap, editor, nodeKey]);
+
+  useEffect(() => {
+    //console.log("FDC useEffect 3", output);
+    if (isFlattenableFormula && !createdChildNodes) {
+      //console.log("FDC useEffect 3 - creating child nodes");
       setCreatedChildNodes(true);
       createAskResultNodes(output);
     }
-  }, [formula, output, sharedNodeMap, editor, nodeKey, getFormulaOutput, isFlattenableFormula, createdChildNodes, createAskResultNodes]);
+  }, [output, isFlattenableFormula, createdChildNodes, createAskResultNodes]);
 
   const replaceSelfWithEditorNode = () => {
     // TODO this will create an entry in the undo history which we don't necessarily want
