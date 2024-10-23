@@ -119,7 +119,6 @@ export const useFormulaResultService = () => {
       if (!resultKeys.has(key)) {
         const otherQueries = value.queries.filter((q) => q !== query);
         if (otherQueries.length === 0) {
-          console.log("removing", value.output.baseNode.nodeMarkdown)
           needToRemove = true;
         }
       }
