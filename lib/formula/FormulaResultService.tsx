@@ -103,14 +103,22 @@ export const useFormulaResultService = () => {
       return false;
     };
 
+    const resultKeys = new Set<string>();
     for (const result of results) {
       const key = createSharedNodeKey(result);
+      resultKeys.add(key);
       const existingNode = sharedNodeMap.get(key);
 
       if (!existingNode) return true;
       if (!existingNode.queries.includes(query)) return true;
       if (compareNodes(existingNode.output, result)) return true;
     }
+
+    sharedNodeMap.forEach((value, key) => {
+      if (!resultKeys.has(key)) {
+        return true;
+      }
+    });
 
     return false;
   }
