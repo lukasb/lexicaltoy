@@ -51,6 +51,7 @@ export default function FormulaDisplayComponent(
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const isAskFormula = formula.startsWith("ask(");
   const isFlattenable = formula.startsWith("ask(") || formula.startsWith("find(");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     registerFormula(formula);
@@ -72,8 +73,10 @@ export default function FormulaDisplayComponent(
   const getFormulaOutput = useCallback(async (_formula: string) => {
     if (!hasPromise(nodeKey)) {
       const dialogueContext = slurpPageAndDialogueContext(nodeKey, editor);
+      setIsLoading(true);
       const promise = getFormulaResults(_formula, dialogueContext)
         .then(response => {
+          setIsLoading(false);
           if (response) {
             if (response.type === FormulaValueType.Text) {
               if (!isAskFormula) {
@@ -312,6 +315,7 @@ export default function FormulaDisplayComponent(
       </span>
       {blockId && <span className="block-id">{blockId}</span>}
       {!output.startsWith("@@") && !isFlattenable && <span>{output}</span>}
+      {isLoading && <div className="spinner" />}
       <EditDialog
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
