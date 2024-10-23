@@ -117,8 +117,7 @@ export const useFormulaResultService = () => {
     let needToRemove = false;
     sharedNodeMap.forEach((value, key) => {
       if (!resultKeys.has(key)) {
-        const otherQueries = value.queries.filter((q) => q !== query);
-        if (otherQueries.length === 0) {
+        if (value.queries.includes(query)) {
           needToRemove = true;
         }
       }
