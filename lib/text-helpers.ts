@@ -32,22 +32,31 @@ export function convertToUnorderedList(markdown: string): string {
   let result = '';
   let indent = 0;
 
-  // replace bullets with emoji because actually bullets will break markdown parsing of formulas
-  // (because our formula parsing happens after markdown parsing, which will see list items and doesn't know about formulas)
-
-  // we also replace spaces with ▵ because it seems that the markdown parser ignores leading spaces in this case
+  let inOrderedSublist = false;
+  let orderedIndent = 0;
 
   for (const line of lines) {
-    if (/^\s*(\d+\.|-|\*|\+)\s/.test(line)) {
-      // Existing list item
+    if (/^\s*\d+\.\s/.test(line)) {
+      // Ordered list item
+      const match = line.match(/^(\s*)/);
+      orderedIndent = match ? Math.floor(match[1].length / 2) : 0;
+      const content = line.replace(/^\s*\d+\.\s/, '');
+      result += `${'▵'.repeat(indent + orderedIndent)}‣ ${content}\n`;
+      inOrderedSublist = true;
+    } else if (/^\s*(-|\*|\+)\s/.test(line)) {
+      // Unordered list item
       const match = line.match(/^(\s*)/);
       const lineIndent = match ? Math.floor(match[1].length / 2) : 0;
-      const content = line.replace(/^\s*(\d+\.|-|\*|\+)\s/, '');
-      result += `${'▵'.repeat(indent + lineIndent)}‣ ${content}\n`;
+      const content = line.replace(/^\s*(-|\*|\+)\s/, '');
+      const totalIndent = inOrderedSublist ? 
+        Math.max(indent + orderedIndent + 1, lineIndent) : 
+        indent + lineIndent;
+      result += `${'▵'.repeat(totalIndent)}‣ ${content}\n`;
     } else {
       // turn paragraphs into list items
       result += `‣ ${line.trim()}\n`;
       indent = 1; // make sure that actual list items are indented below paragraphs
+      inOrderedSublist = false;
     }
   }
 
