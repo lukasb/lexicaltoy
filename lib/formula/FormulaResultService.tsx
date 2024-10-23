@@ -117,7 +117,11 @@ export const useFormulaResultService = () => {
     let needToRemove = false;
     sharedNodeMap.forEach((value, key) => {
       if (!resultKeys.has(key)) {
-        needToRemove = true;
+        const otherQueries = value.queries.filter((q) => q !== query);
+        if (otherQueries.length === 0) {
+          console.log("removing", value.output.baseNode.nodeMarkdown)
+          needToRemove = true;
+        }
       }
     });
 
