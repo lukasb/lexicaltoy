@@ -114,13 +114,14 @@ export const useFormulaResultService = () => {
       if (compareNodes(existingNode.output, result)) return true;
     }
 
+    let needToRemove = false;
     sharedNodeMap.forEach((value, key) => {
       if (!resultKeys.has(key)) {
-        return true;
+        needToRemove = true;
       }
     });
 
-    return false;
+    return needToRemove;
   }
 
   const getFormulaResults = async (
