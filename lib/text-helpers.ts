@@ -30,6 +30,7 @@ export function convertToUnorderedList(markdown: string): string {
   const normalizedMarkdown = markdown.replace(/\n{2,}/g, '\n');
   const lines = normalizedMarkdown.split('\n');
   let result = '';
+  let indent = 0;
 
   // replace bullets with emoji because actually bullets will break markdown parsing of formulas
   // (because our formula parsing happens after markdown parsing, which will see list items and doesn't know about formulas)
@@ -40,11 +41,13 @@ export function convertToUnorderedList(markdown: string): string {
     if (/^\s*(\d+\.|-|\*|\+)\s/.test(line)) {
       // Existing list item
       const match = line.match(/^(\s*)/);
-      const indent = match ? Math.floor(match[1].length / 2) : 0;
+      const lineIndent = match ? Math.floor(match[1].length / 2) : 0;
       const content = line.replace(/^\s*(\d+\.|-|\*|\+)\s/, '');
-      result += `${'▵'.repeat(indent + 1)}‣ ${content}\n`;
+      result += `${'▵'.repeat(indent + lineIndent)}‣ ${content}\n`;
     } else {
+      // turn paragraphs into list items
       result += `‣ ${line.trim()}\n`;
+      indent = 1; // make sure that actual list items are indented below paragraphs
     }
   }
 
