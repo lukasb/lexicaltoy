@@ -19,7 +19,7 @@ Here's the diff to review:
 """
     try:
         message = client.messages.create(
-            model="claude-3-5-sonnet-20240620",
+            model="claude-3-5-sonnet-latest",
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt.format(diff_content=diff_content)}]
         ) 
