@@ -315,7 +315,7 @@ export default function FormulaDisplayComponent(
       </span>
       {blockId && <span className="block-id">{blockId}</span>}
       {!output.startsWith("@@") && !isFlattenable && <span>{output}</span>}
-      {isLoading && <div className="spinner" />}
+      {isLoading && <div><div className="spinner" /></div>}
       <EditDialog
         isOpen={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
