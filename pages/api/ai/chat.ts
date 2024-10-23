@@ -64,7 +64,7 @@ export default async function handler(
         const message = await anthropic.messages.create({
           max_tokens: 1024,
           messages: anthropicMessages,
-          model: 'claude-3-5-sonnet-20240620',
+          model: 'claude-3-5-sonnet-latest',
           system: shortChatResponseSystemPrompt,
         });
 
