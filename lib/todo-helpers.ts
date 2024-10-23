@@ -27,7 +27,7 @@ export const hasTodo = (node: ListItemNode): boolean => {
 }
 
 export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus, done: boolean) => {
-
+  console.log("wrapLIContentsWithTodo", status, done);
   if (hasTodo(node)) {
     return;
   }
@@ -53,7 +53,8 @@ export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus, 
     selection.isCollapsed() &&
     ($isTextNode(selectedNode) || $isElementNode(selectedNode))
   ) {
-    selectedNode.select(start, start);
+    console.log("selecting collapsed selection", start, start);
+    //selectedNode.select(start, start);
   }
 };
 

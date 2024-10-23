@@ -314,6 +314,8 @@ export function getListItemFromSelection(selection: BaseSelection): ListItemNode
   const node = selection.anchor.getNode().getParent();
   if (node instanceof ListItemNode) {
     return node;
+  } else if (node instanceof ListNode) {
+    return selection.anchor.getNode() as ListItemNode;
   }
   return null;
 }
