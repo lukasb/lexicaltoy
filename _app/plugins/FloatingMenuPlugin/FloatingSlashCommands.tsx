@@ -284,7 +284,6 @@ const FloatingSlashCommands = forwardRef<HTMLDivElement, FloatingMenuProps>(
         if (!selection || !$isRangeSelection(selection) || !selection.isCollapsed()) return;
         const [hasMatch, match] = $search(selection);
         if (!hasMatch) return;
-        console.log("handleSelectCommand", command.shortName, hasMatch, match);
 
         const {anchor, focus} = selection;
         // TODO handle case where beginning of wiki page name is before the node the selection is in

@@ -11,7 +11,10 @@ import {
   $createTodoCheckboxStatusNode, TodoCheckboxStatusNode,
   TodoStatus
 } from '@/_app/nodes/TodoNode';
-import { $isFormattableTextNode } from "@/_app/nodes/FormattableTextNode";
+import { 
+  $isFormattableTextNode,
+  $createFormattableTextNode
+} from "@/_app/nodes/FormattableTextNode";
 
 export const TodoDoneTextClass = "PlaygroundEditorTheme__todoDoneText";
 
@@ -27,7 +30,7 @@ export const hasTodo = (node: ListItemNode): boolean => {
 }
 
 export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus, done: boolean) => {
-  console.log("wrapLIContentsWithTodo", status, done);
+
   if (hasTodo(node)) {
     return;
   }
@@ -47,15 +50,16 @@ export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus, 
   const todoNode = $createTodoCheckboxStatusNode(status, done);
   node.splice(0, 0, [todoNode]);
   
-  // TODO if the todonode is the only node in the listnode probably create a TextNode to select
-
-  if (
+  if (node.getChildrenSize() === 1) {
+    const textNode = $createFormattableTextNode("");
+    node.splice(node.getChildrenSize(), 0, [textNode]);
+    textNode.select(0, 0);
+  } else if (
     selection && 
     $isRangeSelection(selection) &&
     selection.isCollapsed() &&
     ($isTextNode(selectedNode) || $isElementNode(selectedNode))
   ) {
-    console.log("selecting collapsed selection", start, start);
     selectedNode.select(start, start);
   }
 };

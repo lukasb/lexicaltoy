@@ -34,18 +34,13 @@ import { getListItemFromSelection } from '@/lib/list-utils';
 function todoAddOrChangeCommand(status: TodoStatus, done: boolean) {
   const theSelection = $getSelection();
   if (!theSelection)  return;
-  console.log("todoAddOrChangeCommand", status, done);
   const listItem = getListItemFromSelection(theSelection);
   if (listItem) {
     if (!hasTodo(listItem)) {
-      console.log("no todo, wrapping");
       $wrapLIContentsWithTodo(listItem, status, done);
     } else {
-      console.log("changing todo status");
       $changeTodoStatus(listItem, status);
     }
-  } else {
-    console.log("no list item");
   }
 }
 
@@ -77,7 +72,6 @@ function registerTodoHandlers(editor: LexicalEditor) {
     editor.registerCommand(
       INSERT_NOW_TODO_COMMAND,
       () => {
-        console.log("INSERT_NOW_TODO_COMMAND");
         todoAddOrChangeCommand(TodoStatus.NOW, false);
         return true;
       },
