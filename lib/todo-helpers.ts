@@ -47,6 +47,8 @@ export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus, 
   const todoNode = $createTodoCheckboxStatusNode(status, done);
   node.splice(0, 0, [todoNode]);
   
+  // TODO if the todonode is the only node in the listnode probably create a TextNode to select
+
   if (
     selection && 
     $isRangeSelection(selection) &&
@@ -54,7 +56,7 @@ export const $wrapLIContentsWithTodo = (node: ListItemNode, status: TodoStatus, 
     ($isTextNode(selectedNode) || $isElementNode(selectedNode))
   ) {
     console.log("selecting collapsed selection", start, start);
-    //selectedNode.select(start, start);
+    selectedNode.select(start, start);
   }
 };
 
