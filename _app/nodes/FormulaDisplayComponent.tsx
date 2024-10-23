@@ -273,6 +273,7 @@ export default function FormulaDisplayComponent(
   };
 
   const handleEditBlockId = () => {
+    setShowMenu(false);
     setIsEditDialogOpen(true);
   };
 

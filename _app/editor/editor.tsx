@@ -108,6 +108,7 @@ function Editor({
         console.log("Local version is newer than current page version, not saving.");
         return;
       }
+      console.log("saving change", newContent);
       updatePageContentsLocal(page.id, newContent, currentPage.revisionNumber);
       ingestPageBlockIds(page.title, newContent, setBlockIdsForPage);
       localVersionRef.current = currentPage.revisionNumber + 1;
