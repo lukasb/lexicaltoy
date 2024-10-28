@@ -28,12 +28,16 @@ import { $isFormattableTextNode } from "@/_app/nodes/FormattableTextNode";
 import { possibleArguments } from "@/lib/formula/formula-parser";
 import { FormulaValueType } from "@/lib/formula/formula-definitions";
 import { useBlockIdsIndex } from "@/_app/context/page-blockids-index-context";
+import { List, AutoSizer, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 
 // TODO figure out actual line height instead of hardcoding 30
 const editorLineHeight = 30;
 const menuLineHeight = 40;
 const mobileMaxHeight = 100;
 const desktopMaxHeight = 400;
+
+const ITEM_HEIGHT = 50; // Increased from 40
+const LIST_WIDTH = 250; // Matches minWidth from the component style
 
 type WikilinkResult = {
   title: string;
@@ -349,7 +353,64 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
       );
     }, [editor, command]);
 
-    // TODO don't hardcode max heights below
+    // Add cache for cell measurements
+    const cache = useRef(
+      new CellMeasurerCache({
+        fixedWidth: true,
+        minHeight: 50,
+      })
+    );
+
+    // Reset cache when results change
+    useEffect(() => {
+      cache.current.clearAll();
+    }, [results]);
+
+    const rowRenderer = ({ index, key, parent, style }: any) => {
+      const result = results[index];
+      
+      return (
+        <CellMeasurer
+          cache={cache.current}
+          columnIndex={0}
+          key={key}
+          parent={parent}
+          rowIndex={index}
+        >
+          {({ measure, registerChild }) => (
+            <li
+              ref={(el) => {
+                if (typeof registerChild === 'function') {
+                  registerChild(el as Element | undefined);
+                }
+                if (itemRefs.current) {
+                  itemRefs.current[index] = { current: el };
+                }
+              }}
+              style={{
+                ...style,
+                listStyle: 'none',
+                padding: '8px 16px', // Consistent padding
+              }}
+              className={`cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
+                selectedIndex === index ? "selected-item bg-gray-200 dark:bg-gray-700" : ""
+              }`}
+              onClick={() => handleSelectSuggestion(result)}
+            >
+              <div className="flex flex-col justify-center min-h-[36px]">
+                <div className="text-base">{result.title}</div>
+                {result.description && (
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {result.description}
+                  </div>
+                )}
+              </div>
+            </li>
+          )}
+        </CellMeasurer>
+      );
+    };
+
     return (
       <div
         ref={ref}
@@ -361,30 +422,21 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
           left: position.left ? position.left: coords?.x,
           visibility: shouldShow ? "visible" : "hidden",
           opacity: shouldShow ? 1 : 0,
-          minWidth: "250px"
+          minWidth: LIST_WIDTH
         }}
       >
-        <ul className="max-h-[200px] md:max-h-[400px] overflow-auto">
-          {results.map((result, index) => (
-            <li
-              key={index}
-              ref={itemRefs.current[index]}
-              className={`px-4 py-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
-                selectedIndex === index
-                  ? "selected-item bg-gray-200 dark:bg-gray-700"
-                  : ""
-              }`}
-              onClick={() => handleSelectSuggestion(result)}
-            >
-              <span>{result.title}</span>
-              {result.description && (
-                <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                  {result.description}
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
+        <div style={{ height: Math.min(results.length * 50, isSmallWidthViewport(768) ? mobileMaxHeight : desktopMaxHeight) }}>
+          <List
+            height={Math.min(results.length * 50, isSmallWidthViewport(768) ? mobileMaxHeight : desktopMaxHeight)}
+            width={LIST_WIDTH}
+            rowCount={results.length}
+            rowHeight={cache.current.rowHeight}
+            deferredMeasurementCache={cache.current}
+            rowRenderer={rowRenderer}
+            scrollToIndex={selectedIndex}
+            className="overflow-auto"
+          />
+        </div>
       </div>
     );
   }
