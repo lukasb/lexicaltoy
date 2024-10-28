@@ -131,14 +131,13 @@ export const useFormulaResultService = () => {
     context?: PageAndDialogueContext
   ): Promise<FormulaOutput | null> => {
     // Perform the query and fetch the results
-    
     const output = await getFormulaOutput(query, pages, context);
     if (!output) return null;
 
     if (output.type === FormulaValueType.NodeMarkdown) {
       const resultNodes = output.output as NodeElementMarkdown[];
 
-      if ( checkforChanges(query, resultNodes)) {
+      if (checkforChanges(query, resultNodes)) {
         setSharedNodeMap((prevMap) => {
           return mergeResults(resultNodes, query, prevMap, false, true);
         });
@@ -161,33 +160,53 @@ export const useFormulaResultService = () => {
     return new Map(results);
   }
 
-  const updatePagesResults = async (pagesToQuery: Page[]): Promise<void> => {
-    let updatedMap = new Map(sharedNodeMap);
-
-    // Delete current results for the page
-    for (const [key] of updatedMap.entries()) {
-      const keyElements: SharedNodeKeyElements = getSharedNodeKeyElements(key);
-      if (pagesToQuery.some((page) => page.title === keyElements.pageName))
-        updatedMap.delete(key);
+  // check if the results for any queries have changed
+  const compareSharedNodesToResults = (newResults: Map<string, FormulaOutput>) => {
+    // get the set of formulas from the new results
+    const newFormulas = new Set(newResults.keys());
+    for (const formula of newFormulas) {
+      const result = newResults.get(formula);
+      if (result?.type === FormulaValueType.NodeMarkdown) {
+        const resultNodes = result.output as NodeElementMarkdown[];
+        if (checkforChanges(formula, resultNodes)) {
+          return true;
+        }
+      }
     }
+    return false;
+  }
+  
+  const updatePagesResults = async (pagesToQuery: Page[]): Promise<void> => {
 
-    // run all the formulas over the updated pages and add to the shared node map
     getFormulaOutputs(nodeQueries.getUniqueQueries(), pagesToQuery)
       .then((outputMap) => {
-        outputMap.forEach((formulaOutput, formula) => {
-          if (
-            formulaOutput &&
-            formulaOutput.type === FormulaValueType.NodeMarkdown
-          ) {
-            const resultNodes = formulaOutput.output as NodeElementMarkdown[];
-            updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
+        if (compareSharedNodesToResults(outputMap)) {
+          let updatedMap = new Map(sharedNodeMap);
+
+          // Delete current results for pages we're querying
+          // TODO maybe just check which pages have changed
+          for (const [key] of updatedMap.entries()) {
+            const keyElements: SharedNodeKeyElements = getSharedNodeKeyElements(key);
+            if (pagesToQuery.some((page) => page.title === keyElements.pageName))
+              updatedMap.delete(key);
           }
-        });
-        setSharedNodeMap(updatedMap);
+
+          outputMap.forEach((formulaOutput, formula) => {
+            if (
+              formulaOutput &&
+              formulaOutput.type === FormulaValueType.NodeMarkdown
+            ) {
+              const resultNodes = formulaOutput.output as NodeElementMarkdown[];
+              updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
+            }
+          });
+          setSharedNodeMap(updatedMap);
+        }
       })
       .catch((error) => {
         console.error("Error:", error);
       });
+      
   };
 
   // we call this when we're updating from shared nodes
@@ -195,21 +214,23 @@ export const useFormulaResultService = () => {
   // we can be sure this won't affect the selection
 
   const addPagesResults = async (pagesToQuery: Page[]): Promise<void> => {
-    let updatedMap = new Map(sharedNodeMap);
 
     // run all the formulas over the updated pages and add to the shared node map
     getFormulaOutputs(nodeQueries.getUniqueQueries(), pagesToQuery)
       .then((outputMap) => {
-        outputMap.forEach((formulaOutput, formula) => {
-          if (
-            formulaOutput &&
-            formulaOutput.type === FormulaValueType.NodeMarkdown
-          ) {
-            const resultNodes = formulaOutput.output as NodeElementMarkdown[];
-            updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
-          }
-        });
-        setSharedNodeMap(updatedMap);
+        if (compareSharedNodesToResults(outputMap)) {
+          let updatedMap = new Map(sharedNodeMap);
+          outputMap.forEach((formulaOutput, formula) => {
+            if (
+              formulaOutput &&
+              formulaOutput.type === FormulaValueType.NodeMarkdown
+            ) {
+              const resultNodes = formulaOutput.output as NodeElementMarkdown[];
+              updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
+            }
+          });
+          setSharedNodeMap(updatedMap);
+        }
       })
       .catch((error) => {
         console.error("Error:", error);
