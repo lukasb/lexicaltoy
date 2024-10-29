@@ -109,15 +109,25 @@ export const useFormulaResultService = () => {
       resultKeys.add(key);
       const existingNode = sharedNodeMap.get(key);
 
-      if (!existingNode) return true;
-      if (!existingNode.queries.includes(query)) return true;
-      if (compareNodes(existingNode.output, result)) return true;
+      if (!existingNode) {
+        //console.log("existingNode is undefined");
+        return true;
+      } 
+      if (!existingNode.queries.includes(query)) {
+        //console.log("existingNode.queries does not include query");
+        return true;
+      }
+      if (compareNodes(existingNode.output, result)) {
+        //console.log("compareNodes returned true");
+        return true;
+      }
     }
 
     let needToRemove = false;
     sharedNodeMap.forEach((value, key) => {
       if (!resultKeys.has(key)) {
         if (value.queries.includes(query)) {
+          //console.log("query needs to be removed from sharedNodeMap");
           needToRemove = true;
         }
       }
@@ -138,6 +148,7 @@ export const useFormulaResultService = () => {
       const resultNodes = output.output as NodeElementMarkdown[];
 
       if (checkforChanges(query, resultNodes)) {
+        console.log("updating sharedNodeMap - getFormulaResults");
         setSharedNodeMap((prevMap) => {
           return mergeResults(resultNodes, query, prevMap, false, true);
         });
@@ -197,7 +208,7 @@ export const useFormulaResultService = () => {
               formulaOutput.type === FormulaValueType.NodeMarkdown
             ) {
               const resultNodes = formulaOutput.output as NodeElementMarkdown[];
-              updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
+              updatedMap = mergeResults(resultNodes, formula, updatedMap, true);
             }
           });
           setSharedNodeMap(updatedMap);
@@ -229,6 +240,7 @@ export const useFormulaResultService = () => {
               updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
             }
           });
+          console.log("updating sharedNodeMap - addPagesResults");
           setSharedNodeMap(updatedMap);
         }
       })
