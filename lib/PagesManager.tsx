@@ -115,7 +115,6 @@ function PagesManager({ setPages }: { setPages: React.Dispatch<React.SetStateAct
       const updatedPages = pages.map(p => {
         const updatedPage = pagesToUpdate.get(p.title);
         if (updatedPage) {
-          console.log("updating page value - PagesManager", p.title);
           return { ...p, value: updatedPage, status: PageStatus.EditFromSharedNodes };
         }
         return p;

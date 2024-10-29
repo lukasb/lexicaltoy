@@ -150,7 +150,6 @@ export const useFormulaResultService = () => {
       const resultNodes = output.output as NodeElementMarkdown[];
 
       if (checkforChanges(query, resultNodes, true)) {
-        console.log("updating sharedNodeMap - getFormulaResults");
         setSharedNodeMap((prevMap) => {
           return mergeResults(resultNodes, query, prevMap, false, true);
         });
@@ -242,7 +241,6 @@ export const useFormulaResultService = () => {
               updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
             }
           });
-          console.log("updating sharedNodeMap - addPagesResults");
           setSharedNodeMap(updatedMap);
         }
       })
