@@ -110,6 +110,11 @@ export const nodeTypes: NodeType[] = [
     description: "Todo with status DOING",
     regex: /^DOING/
   },
+  {
+    name: "later",
+    description: "Todo with status LATER",
+    regex: /^LATER/
+  },
 ];
 
 export interface FunctionDefinition {
