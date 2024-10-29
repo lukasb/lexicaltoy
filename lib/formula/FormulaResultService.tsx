@@ -84,7 +84,7 @@ export const useFormulaResultService = () => {
     return updatedMap;
   };
 
-  const checkforChanges = (query: string, results: NodeElementMarkdown[]) => {
+  const checkforChanges = (query: string, results: NodeElementMarkdown[], checkShouldRemove: boolean = false) => {
     const compareNodes = (existingNode: NodeElementMarkdown, newNode: NodeElementMarkdown): boolean => {
       if (existingNode.baseNode.nodeMarkdown !== newNode.baseNode.nodeMarkdown) return true;
       if (existingNode.baseNode.pageName !== newNode.baseNode.pageName) return true;
@@ -123,6 +123,8 @@ export const useFormulaResultService = () => {
       }
     }
 
+    if (!checkShouldRemove) return false;
+    
     let needToRemove = false;
     sharedNodeMap.forEach((value, key) => {
       if (!resultKeys.has(key)) {
@@ -147,7 +149,7 @@ export const useFormulaResultService = () => {
     if (output.type === FormulaValueType.NodeMarkdown) {
       const resultNodes = output.output as NodeElementMarkdown[];
 
-      if (checkforChanges(query, resultNodes)) {
+      if (checkforChanges(query, resultNodes, true)) {
         console.log("updating sharedNodeMap - getFormulaResults");
         setSharedNodeMap((prevMap) => {
           return mergeResults(resultNodes, query, prevMap, false, true);
@@ -172,14 +174,14 @@ export const useFormulaResultService = () => {
   }
 
   // check if the results for any queries have changed
-  const compareSharedNodesToResults = (newResults: Map<string, FormulaOutput>) => {
+  const compareSharedNodesToResults = (newResults: Map<string, FormulaOutput>, checkShouldRemove: boolean = false) => {
     // get the set of formulas from the new results
     const newFormulas = new Set(newResults.keys());
     for (const formula of newFormulas) {
       const result = newResults.get(formula);
       if (result?.type === FormulaValueType.NodeMarkdown) {
         const resultNodes = result.output as NodeElementMarkdown[];
-        if (checkforChanges(formula, resultNodes)) {
+        if (checkforChanges(formula, resultNodes, checkShouldRemove)) {
           return true;
         }
       }
@@ -208,7 +210,7 @@ export const useFormulaResultService = () => {
               formulaOutput.type === FormulaValueType.NodeMarkdown
             ) {
               const resultNodes = formulaOutput.output as NodeElementMarkdown[];
-              updatedMap = mergeResults(resultNodes, formula, updatedMap, true);
+              updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
             }
           });
           setSharedNodeMap(updatedMap);
