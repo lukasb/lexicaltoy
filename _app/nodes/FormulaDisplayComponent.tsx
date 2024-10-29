@@ -200,7 +200,8 @@ export default function FormulaDisplayComponent(
   }, [formula, output, sharedNodeMap, editor, nodeKey]);
 
   useEffect(() => {
-    if (isAskFormula && !createdChildNodes && output !== "") {
+    if (isAskFormula && !createdChildNodes && !fetchedNodes.current && output !== "") {
+      fetchedNodes.current = true;
       setCreatedChildNodes(true);
       createAskResultNodes(output);
     }

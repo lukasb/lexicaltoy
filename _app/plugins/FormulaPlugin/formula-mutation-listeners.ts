@@ -99,7 +99,7 @@ export function registerFormulaMutationListeners(
                       nodeMarkdown: updatedChildNodeMarkdown
                     }
                   });
-
+    
                   updateNodeMarkdownGlobal(
                     newParent,
                     true // set needsSyncToPage to true
@@ -137,7 +137,6 @@ export function registerFormulaMutationListeners(
                 listItemNode &&
                 $getFormulaNodeFromSharedNode(listItemNode) === null
               ) {
-                console.log("adding to list items to delete", listItemKey);
                 localSharedNodeMap.delete(listItemKey);
                 listItems.add(listItemNode);
                 const wikilink = $getWikilinkNodeFromSharedNode(listItemNode);
@@ -155,7 +154,6 @@ export function registerFormulaMutationListeners(
                 listItemNode &&
                 $getFormulaNodeFromSharedNode(listItemNode) === null
               ) {
-                console.log("adding to child list items to delete", listItemKey);
                 childSharedNodeMap.delete(listItemKey);
                 listItems.add(listItemNode);
               }
