@@ -232,7 +232,6 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
       if (text === "todos") {
         // "todos" is shorthand for "any todo type"
         orStatuses = nodeTypes.map(nodeType => nodeType.name.toUpperCase());
-        console.log("orStatuses", orStatuses);
       } else {
         orStatuses = orStatuses.concat(text.split("|").map(s => s.toUpperCase().trim()));
       }
