@@ -29,18 +29,62 @@ import { OpenWikilinkWithBlockIdProvider } from "@/_app/context/wikilink-blockid
 import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blockids-index-context";
 import { useMiniSearch } from "@/_app/context/minisearch-context";
 import { 
-  usePages, 
   insertPage,
   updatePage,
   fetchUpdatedPages,
   PageSyncResult
 } from "@/_app/context/storage/storage-context";
 import { PageStatusProvider } from "@/_app/context/page-status-context";
+import { useLiveQuery } from "dexie-react-hooks";
+import { localDb } from "@/_app/context/storage/db";
 
 function EditingArea({ userId }: { userId: string }) {
 
   const [isClient, setIsClient] = useState(false)
-  const pages = usePages(userId);
+  
+  const pages = useLiveQuery(async () => {
+
+    const localPages = await localDb.pages
+      .where("userId")
+      .equals(userId)
+      .toArray();
+    const queuedUpdates = await localDb.queuedUpdates
+      .where("userId")
+      .equals(userId)
+      .toArray();
+
+    const mergedPages = [
+      ...localPages
+        // remove deleted pages
+        .filter((page) => !page.deleted)
+        // remove pages with queued updates marking them as deleted
+        .filter((page) => {
+          const queuedUpdate = queuedUpdates.find(
+            (update) => update.id === page.id
+          );
+          return !queuedUpdate?.deleted;
+        })
+        // replace with queued updates if they exist
+        .map((page) => {
+          const queuedUpdate = queuedUpdates.find(
+            (update) => update.id === page.id
+          );
+          return queuedUpdate || page;
+        }),
+      // add queued updates that aren't in the main table
+      ...queuedUpdates.filter(
+        (update) =>
+          !localPages.some((page) => page.id === update.id) && !update.deleted
+      ),
+    ];
+    console.log("mergedPages", mergedPages.length, mergedPages[0]);
+    return mergedPages;
+  }, [userId]);
+
+  useEffect(() => {
+    console.log("pages", pages?.length, pages?.[0]);
+  }, [pages]);
+
   const emptyPageMarkdownString = '- ';
 
   const [pinnedPageIds, setPinnedPageIds] = useState<string[]>([]);
@@ -54,7 +98,7 @@ function EditingArea({ userId }: { userId: string }) {
     if (!hasInitializedSearch.current) {
       initCount++;
       if (initCount > 1) console.error("MiniSearch initialized more than once, count:", initCount);
-      msSlurpPages(pages);
+      msSlurpPages(pages || []);
       hasInitializedSearch.current = true;
     }
   }, [pages, msSlurpPages]);
@@ -70,13 +114,13 @@ function EditingArea({ userId }: { userId: string }) {
   }, []);
 
   useEffect(() => {
-    for (const page of pages) {
+    for (const page of pages || []) {
       setTimeout(() => ingestPageBlockIds(page.title, page.value, setBlockIdsForPage), 0);
     }
   }, [pages, setBlockIdsForPage]);
 
-  const initialPageId = findMostRecentlyEditedPage(pages)?.id;
-  const lastWeekJournalPageIds = getLastWeekJournalPages(pages).map(page => page.id);
+  const initialPageId = findMostRecentlyEditedPage(pages || [])?.id;
+  const lastWeekJournalPageIds = getLastWeekJournalPages(pages || []).map(page => page.id);
   const [openPageIds, setOpenPageIds] = useState<string[]>(() => {
     const initialIds: string[] = [];
     if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) initialIds.push(initialPageId);
@@ -98,15 +142,14 @@ function EditingArea({ userId }: { userId: string }) {
   const executeJournalLogic = useCallback(async () => {
     const today = new Date();
     const todayJournalTitle = getJournalTitle(today);
-    if (!pages.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
+    if (!pages?.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
       const result = await handleNewJournalPage(todayJournalTitle, userId, today);
     }
-    handleDeleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, pages);
+    handleDeleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, pages || []);
   }, [userId, pages]);
 
   useEffect(() => {
     fetchUpdatedPages(userId);
-    console.log("fetched updated pages", pages[0])
   }, [userId]);
 
   useEffect(() => {
@@ -135,7 +178,7 @@ function EditingArea({ userId }: { userId: string }) {
   }, []);
 
   const openOrCreatePageByTitle = (title: string) => {
-    const page = pages.find((p) => p.title.toLowerCase() === title.toLowerCase());
+    const page = pages?.find((p) => p.title.toLowerCase() === title.toLowerCase());
     if (page) {
       openPage(page);
     } else {
@@ -186,7 +229,7 @@ function EditingArea({ userId }: { userId: string }) {
   };
 
   const handleDeletePage = async (id: string) => {
-    const page = pages.find((p) => p.id === id);
+    const page = pages?.find((p) => p.id === id);
     if (!page) return;
     const result = await updatePage(page, page.value, page.title, true);
     if (result === PageSyncResult.Conflict) {
@@ -210,7 +253,7 @@ function EditingArea({ userId }: { userId: string }) {
 
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
-      <PagesContext.Provider value={pages}>
+      <PagesContext.Provider value={pages || []}>
         <OpenWikilinkWithBlockIdProvider>
         <SavedSelectionProvider>
         <ActiveEditorProvider>
@@ -231,7 +274,7 @@ function EditingArea({ userId }: { userId: string }) {
         ) : (
           <FlexibleEditorLayout
             openPageIds={openPageIds}
-            currentPages={pages}
+            currentPages={pages || []}
             closePage={(id) => {
               setOpenPageIds(prevPageIds => prevPageIds.filter(pageId => pageId !== id));
             }}

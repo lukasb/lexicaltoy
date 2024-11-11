@@ -55,7 +55,15 @@ export default async function handler(
       return res.status(200).json({ page });
     } catch (error) {
       console.error('Database Error: Failed to Insert Page.', error);
-      res.status(500).json({ error: 'Database Error: Failed to Insert Page' });
+      // Check for duplicate key error
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const isDuplicateKey = errorMessage.includes('duplicate key value');
+      
+      res.status(500).json({ 
+        error: isDuplicateKey 
+          ? 'Duplicate key error' 
+          : 'Database Error: Failed to Insert Page'
+      });
     }
   } else {
     res.setHeader('Allow', ['POST']);

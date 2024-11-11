@@ -119,6 +119,9 @@ export async function processQueuedUpdates(
     } else {
       const page = await insertPageDb(queuedUpdate.title, queuedUpdate.value, userId, queuedUpdate.isJournal, queuedUpdate.id);
       if (typeof page === "string") {
+        if (page.includes("duplicate key value") && queuedUpdate.isJournal) {
+          localDb.queuedUpdates.delete(queuedUpdate.id);
+        }
         console.error("failed to insert page", queuedUpdate.title);
         result = PageSyncResult.Error;
         return;
@@ -231,55 +234,4 @@ export async function insertPage(
   }
   localDb.pages.put(result);
   return [result, PageSyncResult.Success];
-}
-
-export function usePages(userId: string) {
-  const pages = useLiveQuery(async () => {
-    /*
-      pull everything from main table except deleted pages
-      if an item has an entry in the queued updates table replace with that
-      unless the update is a deletion, in which case remove from results.
-      If there's an entry in the queued updates table that isn't in the main table, 
-      include that as well
-      */
-
-    const localPages = await localDb.pages
-      .where("userId")
-      .equals(userId)
-      .toArray();
-    const queuedUpdates = await localDb.queuedUpdates
-      .where("userId")
-      .equals(userId)
-      .toArray();
-
-    console.log("localPages", localPages.length, localPages[0]);
-    console.log("queuedUpdates", queuedUpdates.length, queuedUpdates[0]);
-    return [
-      ...localPages
-        // remove deleted pages
-        .filter((page) => !page.deleted)
-        // remove pages with queued updates marking them as deleted
-        .filter((page) => {
-          const queuedUpdate = queuedUpdates.find(
-            (update) => update.id === page.id
-          );
-          return !queuedUpdate?.deleted;
-        })
-        // replace with queued updates if they exist
-        .map((page) => {
-          const queuedUpdate = queuedUpdates.find(
-            (update) => update.id === page.id
-          );
-          return queuedUpdate || page;
-        }),
-      // add queued updates that aren't in the main table
-      ...queuedUpdates.filter(
-        (update) =>
-          !localPages.some((page) => page.id === update.id) && !update.deleted
-      ),
-    ];
-  }, [userId]);
-
-  console.log("pages", pages?.length, pages?.[0]);
-  return pages || [];
 }

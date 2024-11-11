@@ -1,4 +1,4 @@
-import { Page, toPageStatus } from '@/lib/definitions';
+import { Page } from '@/lib/definitions';
 
 export interface PageUpdateResponse {
     revisionNumber?: number;
@@ -33,8 +33,7 @@ export async function insertPageDb(
       return {
         ...result.page,
         userId: String(result.page.userId), // Ensure userId is a string
-        lastModified: new Date(result.page.lastModified), // Convert string to Date
-        status: toPageStatus(result.page.status), // Ensure status is correctly typed
+        lastModified: new Date(result.page.lastModified) // Convert string to Date
       } as Page;
     } else {
       console.error("Failed to insert page:", result.error);
