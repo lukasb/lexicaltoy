@@ -9,11 +9,8 @@ import { Page } from '@/lib/definitions';
 function FlexibleEditorLayout ({
   openPageIds,
   currentPages,
-  updatePageContentsLocal,
-  updatePageTitleLocal,
   closePage,
   openOrCreatePageByTitle,
-  deletePage,
   pinnedPageIds,
   onPagePinToggle,
   collapsedPageIds,
@@ -21,11 +18,8 @@ function FlexibleEditorLayout ({
 }: {
   openPageIds: string[];
   currentPages: Page[];
-  updatePageContentsLocal: (id: string, newValue: string, revisionNumber: number) => void;
-  updatePageTitleLocal: (id: string, newTitle: string, revisionNumber: number, lastModified: Date) => void;
   closePage: (id: string) => void;
   openOrCreatePageByTitle: (title: string) => void;
-  deletePage: (id: string) => void;
   pinnedPageIds: string[];
   onPagePinToggle: (pageId: string) => void;
   collapsedPageIds: string[];
@@ -103,11 +97,8 @@ function FlexibleEditorLayout ({
         key={page.id}
         page={page}
         requestFocus={requestFocus}
-        updatePageContentsLocal={updatePageContentsLocal}
-        updatePageTitleLocal={updatePageTitleLocal}
         closePage={closePage}
         openOrCreatePageByTitle={openOrCreatePageByTitle}
-        deletePage={deletePage}
         onPagePinToggle={onPagePinToggle}
         isPinned={pinnedPageIds.includes(page.id)}
         isCollapsed={collapsedPageIds.includes(page.id)}

@@ -20,19 +20,28 @@ export default async function handler(
   }
 
   if (req.method === 'POST') {
-    const { title, value, userId } = req.body;
+    const { title, value, userId, id, isJournal } = req.body;
     
     // Validate the incoming data
-    if (!title || !value || !userId) {
+    if (!title || !value || !userId || !isJournal) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     try {
-      const result = await sql`
-        INSERT INTO pages (title, value, userId)
-        VALUES (${title}, ${value}, ${userId})
-        RETURNING id, title, value, userId, last_modified, revision_number, is_journal, deleted
-      `;
+      let result;
+      if (id) {
+        result = await sql`
+          INSERT INTO pages (id, title, value, userId, is_journal)
+          VALUES (${id}, ${title}, ${value}, ${userId}, ${isJournal})
+          RETURNING id, title, value, userId, last_modified, revision_number, is_journal, deleted
+        `;
+      } else {
+        result = await sql`
+          INSERT INTO pages (title, value, userId, is_journal)
+          VALUES (${title}, ${value}, ${userId}, ${isJournal})
+          RETURNING id, title, value, userId, last_modified, revision_number, is_journal, deleted
+        `;
+      }
       const page: Page = {
         id: result.rows[0].id,
         title: result.rows[0].title,
@@ -41,8 +50,7 @@ export default async function handler(
         lastModified: new Date(result.rows[0].last_modified),
         revisionNumber: result.rows[0].revision_number,
         isJournal: result.rows[0].is_journal,
-        deleted: result.rows[0].deleted,
-        status: PageStatus.Quiescent
+        deleted: result.rows[0].deleted
       };
       return res.status(200).json({ page });
     } catch (error) {

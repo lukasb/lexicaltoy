@@ -139,7 +139,7 @@ async function seedPages(client, pages) {
             WHERE conname = 'unique_pages'
         ) THEN
             ALTER TABLE pages
-            ADD CONSTRAINT unique_pages UNIQUE (userId, is_journal, title);
+            ADD CONSTRAINT unique_pages UNIQUE (userId, title);
         END IF;
     END$$;
     `;

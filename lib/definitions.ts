@@ -9,11 +9,6 @@ export type User = {
     UserEdit = 'user_edit',
     EditFromSharedNodes = 'edit_from_shared_nodes',
     PendingWrite = 'pending_write',
-    Quiescent = 'quiescent'
-  }
-  
-  export function toPageStatus(statusKey: string): PageStatus {
-    return Object.values(PageStatus).includes(statusKey as PageStatus) ? statusKey as PageStatus : PageStatus.Quiescent;
   }
 
   export type Page = {
@@ -25,7 +20,6 @@ export type User = {
     revisionNumber: number;
     isJournal: boolean;
     deleted: boolean;
-    status: PageStatus;
   };
 
   export function isPage(obj: any): obj is Page {
@@ -38,7 +32,6 @@ export type User = {
       obj.lastModified instanceof Date &&
       typeof obj.revisionNumber === 'number' &&
       typeof obj.isJournal === 'boolean' &&
-      typeof obj.deleted === 'boolean' &&
-      Object.values(PageStatus).includes(obj.status)
+      typeof obj.deleted === 'boolean'
     );
   }

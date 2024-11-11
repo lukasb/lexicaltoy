@@ -18,8 +18,7 @@ export async function fetchPages(userId: string, fetchDeleted?: boolean) {
       lastModified: row.last_modified,
       revisionNumber: row.revision_number,
       isJournal: row.is_journal,
-      deleted: row.deleted,
-      status: PageStatus.Quiescent
+      deleted: row.deleted
     }));
 
     return pages;
@@ -38,8 +37,32 @@ export async function fetchPages(userId: string, fetchDeleted?: boolean) {
     lastModified: row.last_modified,
     revisionNumber: row.revision_number,
     isJournal: row.is_journal,
-    deleted: row.deleted,
-    status: PageStatus.Quiescent
+    deleted: row.deleted
+  }));
+
+  return pages;
+}
+
+export async function fetchUpdatesSince(userId: string, since: Date) {
+  noStore();
+
+  const sinceDate = new Date(since);
+
+  const result = await sql`
+    SELECT * FROM pages
+    WHERE userId = ${userId}
+    AND last_modified > ${sinceDate.toISOString()}
+  `;
+
+  const pages = result.rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    value: row.value,
+    userId: row.userId,
+    lastModified: row.last_modified,
+    revisionNumber: row.revision_number,
+    isJournal: row.is_journal,
+    deleted: row.deleted
   }));
 
   return pages;

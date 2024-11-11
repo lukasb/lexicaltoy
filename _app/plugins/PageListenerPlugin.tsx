@@ -27,6 +27,7 @@ import {
 } from "@lexical/list";
 import { $isFormulaDisplayNode } from "../nodes/FormulaNode";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
+import { usePageStatus } from "@/_app/context/page-status-context";
 
 const listItemRegex = /^(\s*)-\s*(.+)$/;
 
@@ -104,6 +105,7 @@ export function PageListenerPlugin({
 }): null {
   const [editor] = useLexicalComposerContext();
   const pages = useContext(PagesContext);
+  const { pageStatuses, getPageStatus } = usePageStatus();
 
   // make sure open editors update their contents when updates from shared nodes occur
 
@@ -116,7 +118,7 @@ export function PageListenerPlugin({
     for (const page of pages) {
       if (
         page.id === pageId &&
-        page.status === PageStatus.EditFromSharedNodes
+        getPageStatus(page.id)?.status === PageStatus.EditFromSharedNodes
       ) {
         editor.update(() => {
           if (
@@ -150,7 +152,7 @@ export function PageListenerPlugin({
         });
       }
     }
-  }, [editor, pageId, pages]);
+  }, [editor, pageId, pages, pageStatuses, getPageStatus]);
 
   useEffect(() => {
     return editor.registerUpdateListener(() => {

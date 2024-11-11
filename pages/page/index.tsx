@@ -1,4 +1,3 @@
-import { fetchPages } from "@/lib/dbFetch";
 import EditingArea from "../../components/EditingArea";
 import { isDevelopmentEnvironment } from "@/lib/environment";
 import { SignoutButton } from "../../components/SignoutButton";
@@ -8,12 +7,11 @@ import Layout from '@/components/layout'
 import type { NextPageWithLayout } from '@/pages/_app'
 import type { InferGetServerSidePropsType, GetServerSideProps } from 'next';
 import { Session } from 'next-auth';
-import { Page as AppPage } from '@/lib/definitions';
 import { BlockIdsIndexProvider } from "@/_app/context/page-blockids-index-context";
-import { MiniSearchProvider } from "@/_app/context/minisearch-context";
 import {
   setUseWhatChange,
 } from '@simbathesailor/use-what-changed';
+import { MiniSearchProvider } from "@/_app/context/minisearch-context";
 
 // Only Once in your app you can set whether to enable hooks tracking or not.
 // In CRA(create-react-app) e.g. this can be done in src/index.js
@@ -24,7 +22,6 @@ export const maxDuration = 60;
 
 interface PageProps {
   session: Session | null;
-  pages: AppPage[] | null;
 }
 
 export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, res}) => {
@@ -38,36 +35,22 @@ export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, r
     }
   }
   
-  let pages = await fetchPages(session.id);
-  if (pages) pages = JSON.parse(JSON.stringify(pages));
-  
   return {
     props: {
-      session,
-      pages
+      session
     }
   }
 });
 
-const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideProps>> = ({session, pages}) => {
-  if (!session || !session.id || !pages) {
-    if (!session || !session.id) {
-      console.log("Problem with session", session);
-      return (
-        <div className="flex justify-center items-center">
-          <h1>Problem with authentication</h1>
-          <SignoutButton />
-        </div>
-      );
-    } else if (!pages) {
-      console.log("No pages");
-      return (
-        <div className="flex justify-center items-center">
-          <h1>No pages</h1>
-          <SignoutButton />
-        </div>
-      );
-    }
+const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideProps>> = ({session}) => {
+  if (!session || !session.id) {
+    console.log("Problem with session", session);
+    return (
+      <div className="flex justify-center items-center">
+        <h1>Problem with authentication</h1>
+        <SignoutButton />
+      </div>
+    );
   }
 
   return (
@@ -79,8 +62,8 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
           </div>
         )}
         <BlockIdsIndexProvider>
-          <MiniSearchProvider pages={pages}>
-            <EditingArea pages={pages} userId={session.id} />
+          <MiniSearchProvider>
+            <EditingArea userId={session.id} />
           </MiniSearchProvider>
         </BlockIdsIndexProvider>
         <SignoutButton />

@@ -4,8 +4,6 @@ import { Page, isPage, PageStatus } from "@/lib/definitions";
 import Omnibar from "./Omnibar";
 import { findMostRecentlyEditedPage } from "@/lib/pages-helpers";
 import { useState, useCallback, useEffect, useRef } from "react";
-import { insertPage } from "@/lib/db";
-import { deletePage } from "@/lib/db";
 import { Button } from "../_app/ui/button";
 import { PagesContext } from '@/_app/context/pages-context';
 import { 
@@ -13,10 +11,8 @@ import {
   handleNewJournalPage,
   handleDeleteStaleJournalPages,
   getLastWeekJournalPages,
-  getJournalPageByDate,
   getJournalTitle
  } from "@/lib/journal-helpers";
-import { fetchPagesRemote } from "@/lib/db";
 import FlexibleEditorLayout from "./FlexibleEditorContainer";
 import PagesManager from "../lib/PagesManager";
 import { SharedNodeProvider } from "../_app/context/shared-node-context";
@@ -32,17 +28,36 @@ import { SavedSelectionProvider } from "@/_app/context/saved-selection-context";
 import { OpenWikilinkWithBlockIdProvider } from "@/_app/context/wikilink-blockid-context";
 import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blockids-index-context";
 import { useMiniSearch } from "@/_app/context/minisearch-context";
+import { 
+  usePages, 
+  insertPage,
+  updatePage,
+  fetchUpdatedPages,
+  PageSyncResult
+} from "@/_app/context/storage/storage-context";
+import { PageStatusProvider } from "@/_app/context/page-status-context";
 
-function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
+function EditingArea({ userId }: { userId: string }) {
 
   const [isClient, setIsClient] = useState(false)
-  const [currentPages, setCurrentPages] = useState<Page[]>(pages);
+  const pages = usePages(userId);
   const emptyPageMarkdownString = '- ';
 
   const [pinnedPageIds, setPinnedPageIds] = useState<string[]>([]);
   const [collapsedPageIds, setCollapsedPageIds] = useState<string[]>([]);
   const { setBlockIdsForPage } = useBlockIdsIndex();
-  const { msAddPage, msDiscardPage } = useMiniSearch();
+  const { msAddPage, msDiscardPage, msSlurpPages } = useMiniSearch();
+  const hasInitializedSearch = useRef(false);
+  let initCount = 0;
+
+  useEffect(() => {
+    if (!hasInitializedSearch.current) {
+      initCount++;
+      if (initCount > 1) console.error("MiniSearch initialized more than once, count:", initCount);
+      msSlurpPages(pages);
+      hasInitializedSearch.current = true;
+    }
+  }, [pages, msSlurpPages]);
 
   useEffect(() => {
     const pnnedPageIds = getPinnedPageIds();
@@ -60,8 +75,8 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     }
   }, [pages, setBlockIdsForPage]);
 
-  const initialPageId = findMostRecentlyEditedPage(currentPages)?.id;
-  const lastWeekJournalPageIds = getLastWeekJournalPages(currentPages).map(page => page.id);
+  const initialPageId = findMostRecentlyEditedPage(pages)?.id;
+  const lastWeekJournalPageIds = getLastWeekJournalPages(pages).map(page => page.id);
   const [openPageIds, setOpenPageIds] = useState<string[]>(() => {
     const initialIds: string[] = [];
     if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) initialIds.push(initialPageId);
@@ -80,34 +95,19 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     setIsClient(true)
   }, [])
 
-  const fetchAndSetPages = useCallback(async () => {
-    const pages = await fetchPagesRemote(userId);
-    if (!pages) return []; // TODO something better here
-    setCurrentPages(pages);
-    return pages;
-  }, [userId, setCurrentPages]);
-
   const executeJournalLogic = useCallback(async () => {
     const today = new Date();
     const todayJournalTitle = getJournalTitle(today);
-    if (!currentPages.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
-      const journalPage = await handleNewJournalPage(todayJournalTitle, userId, today);
-      if (isPage(journalPage)) {
-        setCurrentPages((prevPages: Page[]) => [journalPage, ...prevPages]);
-        openPage(journalPage);
-      } else {
-        // journal page was created elsewhere, reload so we get it
-        const freshPages = await fetchAndSetPages();
-        const todayJournalPage = getJournalPageByDate(freshPages, today);
-        if (todayJournalPage) openPage(todayJournalPage);
-      }
+    if (!pages.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
+      const result = await handleNewJournalPage(todayJournalTitle, userId, today);
     }
-    handleDeleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, currentPages, setCurrentPages);
-  }, [userId, currentPages, fetchAndSetPages]);
+    handleDeleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, pages);
+  }, [userId, pages]);
 
   useEffect(() => {
-    fetchAndSetPages();
-  }, [userId, fetchAndSetPages]);
+    fetchUpdatedPages(userId);
+    console.log("fetched updated pages", pages[0])
+  }, [userId]);
 
   useEffect(() => {
     if (!setupDoneRef.current) {
@@ -135,7 +135,7 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   }, []);
 
   const openOrCreatePageByTitle = (title: string) => {
-    const page = currentPages.find((p) => p.title.toLowerCase() === title.toLowerCase());
+    const page = pages.find((p) => p.title.toLowerCase() === title.toLowerCase());
     if (page) {
       openPage(page);
     } else {
@@ -164,14 +164,20 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
     });
   };  
 
+  const handleUpdatePageTitle = async (page: Page, newTitle: string) => {
+    const result = await updatePage(page, page.value, newTitle, page.deleted);
+    if (result === PageSyncResult.Conflict) {
+      console.error("error updating page title");
+      return;
+    }
+  }
+
   const handleNewPage = async (title: string) => {
-    const result = await insertPage(title, emptyPageMarkdownString, userId);
-    if (typeof result === "string") {
-      console.error("expected page, got string", result);
+    const [newPage, result] = await insertPage(title, emptyPageMarkdownString, userId, false);
+    if (result === PageSyncResult.Conflict) {
+      console.error("error creating page");
       return;
     } else if (isPage(result)) {
-      console.log("got a page");
-      setCurrentPages((prevPages) => [result, ...prevPages]);
       msAddPage(result);
       openPage(result);
     } else {
@@ -180,14 +186,13 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
   };
 
   const handleDeletePage = async (id: string) => {
-    const page = currentPages.find((p) => p.id === id);
+    const page = pages.find((p) => p.id === id);
     if (!page) return;
-    const result = await deletePage(id, page.revisionNumber);
-    if (result === -1) {
+    const result = await updatePage(page, page.value, page.title, true);
+    if (result === PageSyncResult.Conflict) {
       console.error("Failed to delete page");
       return;
     }
-    setCurrentPages((prevPages) => prevPages.filter((p) => p.id !== id));
     msDiscardPage(id);
     setOpenPageIds((prevPageIds) => prevPageIds.filter((pId) => pId !== id));
   }
@@ -205,13 +210,14 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
 
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
-      <PagesContext.Provider value={currentPages}>
+      <PagesContext.Provider value={pages}>
         <OpenWikilinkWithBlockIdProvider>
         <SavedSelectionProvider>
         <ActiveEditorProvider>
         <SharedNodeProvider>
         <SearchTermsProvider>
-        <PagesManager setPages={setCurrentPages} />
+        <PageStatusProvider>
+        <PagesManager />
         <Omnibar
           ref={omnibarRef}
           openOrCreatePageByTitle={openOrCreatePageByTitle}
@@ -225,46 +231,18 @@ function EditingArea({ pages, userId }: { pages: Page[]; userId: string }) {
         ) : (
           <FlexibleEditorLayout
             openPageIds={openPageIds}
-            currentPages={currentPages}
-            updatePageTitleLocal={(id, newTitle, newRevisionNumber, newLastModified) => {
-                setCurrentPages((prevPages) =>
-                      prevPages.map((page) =>
-                        page.id === id
-                          ? {
-                              ...page,
-                              title: newTitle,
-                              revisionNumber: newRevisionNumber,
-                              lastModified: newLastModified
-                            }
-                          : page
-                      )
-                    );
-                  }}
-            updatePageContentsLocal={(id, newValue, newRevisionNumber) => {
-              setCurrentPages((prevPages) =>
-                prevPages.map((page) =>
-                  page.id === id
-                    ? {
-                        ...page,
-                        value: newValue,
-                        revisionNumber: newRevisionNumber,
-                        status: PageStatus.UserEdit
-                      }
-                    : page
-                )
-              );
-            }}
+            currentPages={pages}
             closePage={(id) => {
               setOpenPageIds(prevPageIds => prevPageIds.filter(pageId => pageId !== id));
             }}
             openOrCreatePageByTitle={openOrCreatePageByTitle}
-            deletePage={handleDeletePage}
             pinnedPageIds={pinnedPageIds}
             onPagePinToggle={handlePagePinToggle}
             collapsedPageIds={collapsedPageIds}
             onPageCollapseToggle={handlePageCollapseToggle}
             />
           )}
+          </PageStatusProvider>
           </SearchTermsProvider>
           </SharedNodeProvider>
         </ActiveEditorProvider>

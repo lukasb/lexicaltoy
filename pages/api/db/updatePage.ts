@@ -14,18 +14,19 @@ export default async function handler(
   }
 
   if (req.method === 'POST') {
-    const { id, value, oldRevisionNumber } = req.body;
+    const { id, value, title, deleted, oldRevisionNumber } = req.body;
 
-    // Validate the input
-    if (!id || value === undefined || oldRevisionNumber === undefined) {
+    if (!id || value === undefined || oldRevisionNumber === undefined || 
+      title === undefined || deleted === undefined
+    ) {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
     try {
       // Insert the current page data into the history table directly from the pages table
       await sql`
-        INSERT INTO pages_history (id, title, value, userId, last_modified, revision_number)
-        SELECT id, title, value, userId, last_modified, revision_number
+        INSERT INTO pages_history (id, title, value, deleted, userId, last_modified, revision_number)
+        SELECT id, title, value, deleted, userId, last_modified, revision_number
         FROM pages
         WHERE id = ${id}
       `;
@@ -33,14 +34,14 @@ export default async function handler(
       // Then, update the page with the new value
       const result = await sql`
         UPDATE pages
-        SET value = ${value}, revision_number = ${oldRevisionNumber + 1}
+        SET value = ${value}, title = ${title}, deleted = ${deleted}, revision_number = ${oldRevisionNumber + 1}
         WHERE id = ${id}
         RETURNING revision_number, last_modified
       `;
       return res.status(200).json({ revisionNumber: result.rows[0].revision_number, lastModified: result.rows[0].last_modified });
     } catch (error) {
-      console.error("Database Error: Failed to Update Page Contents?", error, id, oldRevisionNumber);
-      res.status(500).json({ error: 'Database Error: Failed to Update Page Contents' + oldRevisionNumber });
+      console.error("Database Error: Failed to Update Page", error, id, oldRevisionNumber);
+      res.status(500).json({ error: 'Database Error: Failed to Update Page' + oldRevisionNumber });
     }
   } else {
     res.setHeader('Allow', ['POST']);

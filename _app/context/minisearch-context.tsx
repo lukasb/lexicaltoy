@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import MiniSearch from 'minisearch';
-import { PagesContext } from '@/_app/context/pages-context';
 import { Page } from '@/lib/definitions';
 
 interface MiniSearchContextType {
@@ -8,6 +7,7 @@ interface MiniSearchContextType {
   msDiscardPage: (id: string) => void;
   msReplacePage: (page: Page) => void;
   msAddPage: (page: Page) => void;
+  msSlurpPages: (pages: Page[]) => void;
 }
 
 const MiniSearchContext = createContext<MiniSearchContextType | null>(null);
@@ -20,7 +20,7 @@ export const useMiniSearch = () => {
   return context;
 };
 
-export const MiniSearchProvider: React.FC<{ children: React.ReactNode, pages: Page[] }> = ({ children, pages }) => {
+export const MiniSearchProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [miniSearch, setMiniSearch] = useState<MiniSearch<Page> | null>(null);
   const indexedRef = useRef(false);
 
@@ -32,14 +32,14 @@ export const MiniSearchProvider: React.FC<{ children: React.ReactNode, pages: Pa
       storeFields: ['title', 'value'],
     });
 
-    if (pages) {
-      const pageArray = Object.values(pages);
-      ms.addAll(pageArray);
-      indexedRef.current = true;
-    }
-
     setMiniSearch(ms);
-  }, [pages]);
+  }, []);
+
+  const slurpPages = useCallback((pages: Page[]) => {
+    if (miniSearch) {
+      miniSearch.addAll(pages);
+    }
+  }, [miniSearch]);
 
   const discardPage = useCallback((id: string) => {
     if (miniSearch) {
@@ -76,6 +76,7 @@ export const MiniSearchProvider: React.FC<{ children: React.ReactNode, pages: Pa
     msDiscardPage: discardPage,
     msReplacePage: replacePage,
     msAddPage: addPage,
+    msSlurpPages: slurpPages,
   };
 
   return (

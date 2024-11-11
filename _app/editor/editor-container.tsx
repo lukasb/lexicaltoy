@@ -11,21 +11,18 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Pin } from 'lucide-react';
 import { useBreakpoint } from "@/lib/window-helpers";
 import { getModifierKey } from "@/lib/utils";
-import { updatePageTitle } from '@/lib/db';
 import { PagesContext } from '@/_app/context/pages-context';
 import { findCallback } from "@/lib/formula/function-definitions";
 import { FormulaValueType, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
 import BacklinksViewer from "./backlinks-viewer";
 import { EditDialog } from "@/_app/ui/edit-dialog";
+import { updatePage, PageSyncResult } from "@/_app/context/storage/storage-context"
 
 function EditorContainer({
   page,
   requestFocus,
-  updatePageTitleLocal,
-  updatePageContentsLocal,
   closePage,
   openOrCreatePageByTitle,
-  deletePage,
   isPinned,
   isCollapsed,
   onPagePinToggle,
@@ -33,11 +30,8 @@ function EditorContainer({
 }: {
   page: Page;
   requestFocus: boolean;
-  updatePageTitleLocal: (id: string, newTitle: string, newRevisionNumber: number, newLastModified: Date) => void;
-  updatePageContentsLocal: (id: string, newValue: string, newRevisionNumber: number) => void;
   closePage: (id: string) => void;
   openOrCreatePageByTitle: (title: string) => void;
-  deletePage: (id: string, oldRevisionNumber: number) => void;
   isPinned: boolean;
   isCollapsed: boolean;
   onPagePinToggle: (pageId: string) => void;
@@ -85,16 +79,18 @@ function EditorContainer({
     handleCollapsedToggle();
   };
 
+  const handleDeletePage = async () => {
+    const result = await updatePage(page, page.value, page.title, true);
+    if (result === PageSyncResult.Conflict || result === PageSyncResult.Error) {
+      alert("Failed to delete page");
+    }
+    closePage(page.id);
+  }
+
   const handleRename = async (newTitle: string) => {
     if (!page) return;
-    try {
-      const { revisionNumber, lastModified, error } = await updatePageTitle(page.id, newTitle, page.revisionNumber);
-      if (!revisionNumber || !lastModified) {
-        alert("Failed to update title because you edited an old version, please relead for the latest version.");
-        return;
-      }
-      updatePageTitleLocal(page.id, newTitle, revisionNumber, lastModified);
-    } catch (error) {
+    const result = await updatePage(page, page.value, newTitle, false);
+    if (result === PageSyncResult.Conflict || result === PageSyncResult.Error) {
       alert("Failed to update title");
     }
     setIsRenameDialogOpen(false);
@@ -195,7 +191,7 @@ function EditorContainer({
                     {!page.isJournal && (
                       <DropdownMenu.Item
                         className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
-                        onClick={() => deletePage(page.id, page.revisionNumber)}
+                        onClick={handleDeletePage}
                       >
                         Delete
                       </DropdownMenu.Item>
@@ -233,7 +229,6 @@ function EditorContainer({
             <Editor
               page={page}
               showDebugInfo={showDebug}
-              updatePageContentsLocal={updatePageContentsLocal}
               openOrCreatePageByTitle={openOrCreatePageByTitle}
               requestFocus={requestFocus}
               closePage={closePage}

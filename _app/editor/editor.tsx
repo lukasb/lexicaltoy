@@ -31,7 +31,7 @@ import FloatingIndentButtons from '@/_app/plugins/FloatingMenuPlugin/FloatingInd
 import { shouldShowFloatingIndentButtons, computeFloatingIndentButtonsPosition } from "@/_app/plugins/FloatingMenuPlugin/FloatingIndentButtons";
 import FloatingWikiPageNames from "@/_app/plugins/FloatingMenuPlugin/FloatingWikiPageNames";
 import { shouldShowFloatingWikiPageNames, computeFloatingWikiPageNamesPosition } from "@/_app/plugins/FloatingMenuPlugin/FloatingWikiPageNames";
-import { Page } from "@/lib/definitions";
+import { Page, PageStatus } from "@/lib/definitions";
 import { PagesContext } from "@/_app/context/pages-context";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { TodosPlugin } from "@/_app/plugins/TodosPlugin";
@@ -49,6 +49,7 @@ import { useSearchTerms } from "../context/search-terms-context";
 import { AIGeneratorPlugin } from "../plugins/AIGeneratorPlugin";
 import { editorNodes } from "./shared-editor-config";
 import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blockids-index-context";
+import { usePageStatus } from "../context/page-status-context";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -58,7 +59,6 @@ type EditorProps = {
   page: Page;
   showDebugInfo: boolean;
   requestFocus: boolean;
-  updatePageContentsLocal: (id: string, newValue: string, revisionNumber: number) => void;
   openOrCreatePageByTitle: (title: string) => void;
   closePage: (id: string) => void;
 };
@@ -67,7 +67,6 @@ function Editor({
   page,
   showDebugInfo,
   requestFocus,
-  updatePageContentsLocal,
   openOrCreatePageByTitle,
   closePage,
 }: EditorProps) {
@@ -84,10 +83,10 @@ function Editor({
   const [floatingAnchorElem, setFloatingAnchorElem] = useState<HTMLDivElement | null>(null);
   const [isSmallWidthViewport, setIsSmallWidthViewport] = useState<boolean>(false);
   const pendingChangeRef = useRef<string | null>(null);
-  const localVersionRef = useRef<number>(page.revisionNumber);
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
   const [shouldHighlight, setShouldHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
   const { setBlockIdsForPage } = useBlockIdsIndex();
+  const { updatePageStatus } = usePageStatus();
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
@@ -101,19 +100,14 @@ function Editor({
     }
   };
 
-  const saveChange = useCallback((newContent: string) => {
+  const saveChange = useCallback(async (newContent: string) => {
     const currentPage = getPage(page.id);
     if (currentPage) {
-      if (localVersionRef.current > currentPage.revisionNumber) {
-        console.log("Local version is newer than current page version, not saving.");
-        return;
-      }
-      updatePageContentsLocal(page.id, newContent, currentPage.revisionNumber);
+      updatePageStatus(page.id, PageStatus.UserEdit);
       ingestPageBlockIds(page.title, newContent, setBlockIdsForPage);
-      localVersionRef.current = currentPage.revisionNumber + 1;
       pendingChangeRef.current = null;
     }
-  }, [page.id, getPage, updatePageContentsLocal, setBlockIdsForPage, page.title]);
+  }, [page.id, getPage, setBlockIdsForPage, page.title, updatePageStatus]);
 
   const debouncedSave = useDebouncedCallback(saveChange, 500);
 
