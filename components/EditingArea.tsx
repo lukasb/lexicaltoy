@@ -31,12 +31,9 @@ import { useMiniSearch } from "@/_app/context/minisearch-context";
 import { 
   insertPage,
   updatePage,
-  fetchUpdatedPages,
   PageSyncResult
 } from "@/_app/context/storage/storage-context";
-import { PageStatusProvider } from "@/_app/context/page-status-context";
-import { useLiveQuery } from "dexie-react-hooks";
-import { localDb } from "@/_app/context/storage/db";
+import { PageUpdateProvider } from "@/_app/context/page-update-context";
 
 function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
 
@@ -55,6 +52,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     if (!hasInitializedSearch.current) {
       initCount++;
       if (initCount > 1) console.error("MiniSearch initialized more than once, count:", initCount);
+      console.log("slurping pages", pages?.length);
       msSlurpPages(pages || []);
       hasInitializedSearch.current = true;
     }
@@ -221,7 +219,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
         <ActiveEditorProvider>
         <SharedNodeProvider>
         <SearchTermsProvider>
-        <PageStatusProvider>
+        <PageUpdateProvider>
         <PagesManager />
         <Omnibar
           ref={omnibarRef}
@@ -247,7 +245,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
             onPageCollapseToggle={handlePageCollapseToggle}
             />
           )}
-          </PageStatusProvider>
+          </PageUpdateProvider>
           </SearchTermsProvider>
           </SharedNodeProvider>
         </ActiveEditorProvider>

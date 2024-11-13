@@ -82,8 +82,7 @@ export async function fetchUpdatedPages(
       }
       for (const page of updatedPages) {
         if (!isPage(page)) { 
-          console.error("got bad page", page, "last modified", mostRecentLastModified);
-          throw new Error("expected page, got", page);
+          throw new Error(`expected page, got ${JSON.stringify(page)}`);
         }
         localDb.pages.put(page);
       }
@@ -110,6 +109,7 @@ export async function processQueuedUpdates(
         return;
       }
 
+      console.log("updating page", queuedUpdate.title, queuedUpdate.value);
       const { revisionNumber, lastModified } = await updatePageWithHistory(
         queuedUpdate.id,
         queuedUpdate.value,
@@ -168,12 +168,23 @@ export async function performSync(userId: string): Promise<PageSyncResult> {
   return await processQueuedUpdates(userId);
 }
 
+/**
+ * Queue an update to this page. Our useLiveQuery will use this new value for the global pages context.
+ * Update will be synced to the server next time we're online and performSync is called.
+ * @param page - the page to update
+ * @param value - the new value for the page
+ * @param title - the new title for the page
+ * @param deleted - the new deleted status for the page
+ * @returns PageSyncResult
+ */
 export async function updatePage(
   page: Page,
   value: string,
   title: string,
   deleted: boolean
 ): Promise<PageSyncResult> {
+  
+  console.log("adding page to queued updates", title, value);
   
   // we don't do anything to check for a conflict with queued updates
   // we rely on useLiveQuery to ensure that in-memory pages are already
@@ -192,33 +203,8 @@ export async function updatePage(
     deleted: deleted,
     lastModified: new Date(new Date().toISOString()),
   };
-  if (!navigator.onLine) {
-    localDb.queuedUpdates.put(pageLocalUpdate);
-    return PageSyncResult.Success;
-  }
-  const { revisionNumber, lastModified } = await updatePageWithHistory(
-    page.id,
-    value,
-    title,
-    deleted,
-    page.revisionNumber
-  );
   
-  if (revisionNumber === -1 || !revisionNumber || !lastModified) {
-    console.error("failed to update page", page.title);
-    return PageSyncResult.Conflict;
-  }
-
-  const pageUpdated = {
-    ...page,
-    value: value,
-    title: title,
-    deleted: deleted,
-    revisionNumber: revisionNumber,
-    lastModified: lastModified,
-  };
-  if (!isPage(pageUpdated)) throw new Error("expected page, got", pageUpdated);
-  localDb.pages.put(pageUpdated);
+  localDb.queuedUpdates.put(pageLocalUpdate);
   return PageSyncResult.Success;
 }
 
@@ -228,8 +214,6 @@ export async function insertPage(
   userId: string,
   isJournal: boolean
 ): Promise<[Page | undefined, PageSyncResult]> {
-
-  console.log("insertPage", title, value, userId, isJournal);
 
   // can't have two pages with the same title and user id
   const localPage = await localDb.pages
@@ -248,16 +232,7 @@ export async function insertPage(
     lastModified: new Date(new Date().toISOString()),
     revisionNumber: 1,
   };
-  if (!navigator.onLine) {
-    localDb.queuedUpdates.put(newPage);
-    return [newPage, PageSyncResult.Success];
-  } 
-  const result = await insertPageDb(title, value, userId, isJournal, id);
-  if (typeof result === "string") {
-    console.error("expected page, got string", result);
-    return [newPage, PageSyncResult.Error];
-  }
-  if (!isPage(result)) throw new Error("expected page, got", result);
-  localDb.pages.put(result);
-  return [result, PageSyncResult.Success];
+
+  localDb.queuedUpdates.put(newPage);
+  return [newPage, PageSyncResult.Success];
 }

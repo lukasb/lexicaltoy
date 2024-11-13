@@ -49,7 +49,7 @@ import { useSearchTerms } from "../context/search-terms-context";
 import { AIGeneratorPlugin } from "../plugins/AIGeneratorPlugin";
 import { editorNodes } from "./shared-editor-config";
 import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blockids-index-context";
-import { usePageStatus } from "../context/page-status-context";
+import { usePageUpdate } from "../context/page-update-context";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -86,7 +86,7 @@ function Editor({
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
   const [shouldHighlight, setShouldHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
   const { setBlockIdsForPage } = useBlockIdsIndex();
-  const { updatePageStatus } = usePageStatus();
+  const { addPageUpdate } = usePageUpdate();
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
@@ -103,11 +103,11 @@ function Editor({
   const saveChange = useCallback(async (newContent: string) => {
     const currentPage = getPage(page.id);
     if (currentPage) {
-      updatePageStatus(page.id, PageStatus.UserEdit);
+      addPageUpdate(page.id, PageStatus.UserEdit, new Date(), newContent);
       ingestPageBlockIds(page.title, newContent, setBlockIdsForPage);
       pendingChangeRef.current = null;
     }
-  }, [page.id, getPage, setBlockIdsForPage, page.title, updatePageStatus]);
+  }, [page.id, getPage, setBlockIdsForPage, page.title, addPageUpdate]);
 
   const debouncedSave = useDebouncedCallback(saveChange, 500);
 

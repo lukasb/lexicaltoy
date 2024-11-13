@@ -12,7 +12,7 @@ import { useCallback } from "react";
 import { getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
 import { useMiniSearch } from '@/_app/context/minisearch-context';
 import { updatePage, PageSyncResult } from '@/_app/context/storage/storage-context';
-import { usePageStatus } from '@/_app/context/page-status-context';
+import { usePageUpdate } from '@/_app/context/page-update-context';
 
 // TODO maybe use Redux so we don't have an O(n) operation here every time
 function PagesManager() {
@@ -20,26 +20,24 @@ function PagesManager() {
   const { sharedNodeMap } = useSharedNodeContext();
   const { updatePagesResults, addPagesResults } = useFormulaResultService();
   const { msReplacePage } = useMiniSearch();
-  const { getPageStatus, updatePageStatus, removePageStatus } = usePageStatus();
+  const { getPageUpdate, setPageUpdateStatus, removePageUpdate } = usePageUpdate();
   
   // Create a ref to store the save queue
-  const saveQueue = useRef<Map<string, { page: Page, timestamp: number }>>(new Map());
+  const saveQueue = useRef<Map<string, { page: Page, timestamp: number, newValue: string }>>(new Map());
   const isSaving = useRef<Set<string>>(new Set());
 
   const savePagesToDatabase = useCallback(async () => {
-    for (const [pageId, { page, timestamp }] of saveQueue.current.entries()) {
+    for (const [pageId, { page, timestamp, newValue }] of saveQueue.current.entries()) {
       if (isSaving.current.has(pageId)) continue;
 
       isSaving.current.add(pageId);
-      if (isDevelopmentEnvironment) console.time(`savePage_${pageId}`);
 
       try {
-        const result = await updatePage(page, page.value, page.title, false);
-        if (isDevelopmentEnvironment) console.timeEnd(`savePage_${pageId}`);
+        const result = await updatePage(page, newValue, page.title, false);
         if (result === PageSyncResult.Conflict || result === PageSyncResult.Error) {
           alert(`Failed to save page ${page.title} because you edited an old version, please reload for the latest version.`);
         } else {
-          removePageStatus(page.id);
+          removePageUpdate(page.id);
           msReplacePage(page);
         }
       } catch (error) {
@@ -49,7 +47,7 @@ function PagesManager() {
         saveQueue.current.delete(pageId);
       }
     }
-  }, [msReplacePage, removePageStatus]);
+  }, [msReplacePage, removePageUpdate]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -63,16 +61,19 @@ function PagesManager() {
 
   useEffect(() => {
     pages.forEach(page => {
-      if (getPageStatus(page.id)?.status === PageStatus.PendingWrite) {
+      const pageUpdate = getPageUpdate(page.id);
+      if (pageUpdate && pageUpdate.status === PageStatus.PendingWrite) console.log("pending write", page.title, pageUpdate.newValue);
+      if (pageUpdate && pageUpdate.status === PageStatus.PendingWrite && pageUpdate.newValue) {
         const currentTimestamp = Date.now();
         const existingSave = saveQueue.current.get(page.id);
 
         if (!existingSave || existingSave.timestamp < currentTimestamp) {
-          saveQueue.current.set(page.id, { page, timestamp: currentTimestamp });
+          console.log("adding to save queue", page.title, pageUpdate.newValue);
+          saveQueue.current.set(page.id, { page, timestamp: currentTimestamp, newValue: pageUpdate.newValue });
         }
       }
     });
-  }, [pages, getPageStatus]);
+  }, [pages, getPageUpdate]);
 
   // TODO maybe use Redux or some kind of message bus so we don't have an O(n) operation here every time
   // TODO make this async
@@ -89,7 +90,7 @@ function PagesManager() {
       const keyElements: SharedNodeKeyElements = getSharedNodeKeyElements(key);
       const page = pages.find((p) => p.title === keyElements.pageName);
       if (page) {
-        if (getPageStatus(page.id)?.status !== PageStatus.UserEdit && value.needsSyncToPage) {
+        if (getPageUpdate(page.id)?.status !== PageStatus.UserEdit && value.needsSyncToPage) {
           const lines = page.value.split("\n");
           const currentMarkdown = getNodeElementFullMarkdown(value.output);
           if (lines.slice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd).join("\n") !== currentMarkdown) {
@@ -97,12 +98,12 @@ function PagesManager() {
           }
           pagesToUpdate.set(keyElements.pageName, lines.join("\n"));
           sharedNodeMap.set(key, { ...value, needsSyncToPage: false });
-        } else if (getPageStatus(page.id)?.status === PageStatus.UserEdit && value.needsSyncToPage) {
+        } else if (getPageUpdate(page.id)?.status === PageStatus.UserEdit && value.needsSyncToPage) {
           console.error("Page has a user edit, but shared node also needs sync to page");
         } 
       }
     }
-    const pagesToInvalidate: Page[] = pages.filter(page => getPageStatus(page.id)?.status === PageStatus.UserEdit);
+    const pagesToInvalidate: Page[] = pages.filter(page => getPageUpdate(page.id)?.status === PageStatus.UserEdit);
     if (pagesToInvalidate.length > 0) {
       // get new formula results for pages that have changed
       updatePagesResults(pagesToInvalidate);
@@ -110,26 +111,26 @@ function PagesManager() {
     if (pagesToUpdate.size > 0) {
       // update pages that have shared nodes that have changed
       const updatedPages = pages.map(p => {
-        const updatedPage = pagesToUpdate.get(p.title);
-        if (updatedPage) {
-          updatePageStatus(p.id, PageStatus.EditFromSharedNodes);
+        const updatedPageContents = pagesToUpdate.get(p.title);
+        if (updatedPageContents) {
+          setPageUpdateStatus(p.id, PageStatus.EditFromSharedNodes);
         }
         return p;
       });
     
       // this kicks off a codepath that attempts to append newly matching nodes to existing
       // FormulaDisplayNodes with node queries, without otherwise affecting them (i.e. not removing or changing existing nodes)
-      const filteredUpdatedPages = updatedPages.filter((p) => getPageStatus(p.id)?.status === PageStatus.EditFromSharedNodes);
+      const filteredUpdatedPages = updatedPages.filter((p) => getPageUpdate(p.id)?.status === PageStatus.EditFromSharedNodes);
       addPagesResults(filteredUpdatedPages);
     }
     for (const page of pages) {
       if (!pagesToUpdate.has(page.title)) {
-        if (getPageStatus(page.id)?.status === PageStatus.UserEdit || getPageStatus(page.id)?.status === PageStatus.EditFromSharedNodes) {
-          updatePageStatus(page.id, PageStatus.PendingWrite);
+        if (getPageUpdate(page.id)?.status === PageStatus.UserEdit || getPageUpdate(page.id)?.status === PageStatus.EditFromSharedNodes) {
+          setPageUpdateStatus(page.id, PageStatus.PendingWrite);
         }
       }
     }
-  }, [sharedNodeMap, pages, updatePageStatus, updatePagesResults, addPagesResults, getPageStatus]);
+  }, [sharedNodeMap, pages, setPageUpdateStatus, updatePagesResults, addPagesResults, getPageUpdate]);
 
   return null;
 }

@@ -55,11 +55,15 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
   useEffect(() => {
     async function sync() {
       if (session && session.id) {
+        console.log("performing sync");
         const result = await performSync(session.id);
         setSyncResult(result);
       }
     }
+
     sync();
+    const intervalId = setInterval(sync, 8000); // sync every 8 seconds
+    return () => clearInterval(intervalId);
   }, [session]);
 
   const pages = useLiveQuery(async () => {
@@ -111,10 +115,6 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
         <SignoutButton />
       </div>
     );
-  }
-
-  const logError = (error: Error, info: React.ErrorInfo) => {
-    console.error("Error in EditingArea", error, info);
   }
 
   return (
