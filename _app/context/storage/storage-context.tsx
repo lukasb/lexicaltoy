@@ -132,7 +132,6 @@ export async function processQueuedUpdates(
       };
       localDb.pages.put(pageUpdated);
     } else {
-      console.log("inserting page", queuedUpdate.title, queuedUpdate.value, userId, queuedUpdate.isJournal, queuedUpdate.id);
       const page = await insertPageDb(queuedUpdate.title, queuedUpdate.value, userId, queuedUpdate.isJournal, queuedUpdate.id);
       if (typeof page === "string") {
         if (page.includes("duplicate key value") && queuedUpdate.isJournal) {
@@ -149,6 +148,7 @@ export async function processQueuedUpdates(
         if (!isPage(page)) throw new Error("expected page, got", page);
         localDb.pages.put(page);
       }).catch(err => {
+        result = PageSyncResult.Error;
         throw err;
       });
     }

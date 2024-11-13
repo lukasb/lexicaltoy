@@ -95,6 +95,10 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     setIsClient(true)
   }, [])
 
+  useEffect(() => {
+    console.log("open page ids", openPageIds);
+  }, [openPageIds]);
+
   const executeJournalLogic = useCallback(async () => {
     const today = new Date();
     const todayJournalTitle = getJournalTitle(today);
@@ -152,11 +156,14 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
       // and not in others (like when opening from the omnibar.) I have no idea why.
       const pageIndex = prevPageIds.findIndex((pId) => pId === page.id);
       if (pageIndex === -1) {
+        console.log("adding page to open page ids", page.id);
         return [page.id, ...prevPageIds];
       } else {
         if (pageIndex === 0) {
+          console.log("page is already at the front of the list", page.id);
           return prevPageIds;
         } else {
+          console.log("moving page to the front of the list", page.id);
           // Move the page to the front.
           const updatedPageIds = [...prevPageIds];
           updatedPageIds.splice(pageIndex, 1);

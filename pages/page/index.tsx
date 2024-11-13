@@ -75,10 +75,14 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
       .equals(session.id)
       .toArray();
 
+    console.log("local pages", localPages.length);
+
     const queuedUpdates = await localDb.queuedUpdates
       .where("userId")
       .equals(session.id)
       .toArray();
+
+    console.log("queued updates", queuedUpdates.length);
 
     const mergedPages = [
       ...localPages
@@ -116,6 +120,10 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
       </div>
     );
   }
+
+  useEffect(() => {
+    console.log("pages", pages?.length);
+  }, [pages]);
 
   return (
     <div className="flex justify-center items-center">

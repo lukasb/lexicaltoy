@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { sql } from "@vercel/postgres";
-import { Page } from '@/lib/definitions';
+import { isPage, Page } from '@/lib/definitions';
 import { PageStatus } from '@/lib/definitions';
 import { getSessionServer } from '@/lib/getAuth';
 
@@ -31,27 +31,28 @@ export default async function handler(
       let result;
       if (id) {
         result = await sql`
-          INSERT INTO pages (id, title, value, userId, is_journal)
+          INSERT INTO pages (id, title, value, userid, is_journal)
           VALUES (${id}, ${title}, ${value}, ${userId}, ${isJournal})
-          RETURNING id, title, value, userId, last_modified, revision_number, is_journal, deleted
+          RETURNING id, title, value, userid, last_modified, revision_number, is_journal, deleted
         `;
       } else {
         result = await sql`
-          INSERT INTO pages (title, value, userId, is_journal)
+          INSERT INTO pages (title, value, userid, is_journal)
           VALUES (${title}, ${value}, ${userId}, ${isJournal})
-          RETURNING id, title, value, userId, last_modified, revision_number, is_journal, deleted
+          RETURNING id, title, value, userid, last_modified, revision_number, is_journal, deleted
         `;
       }
       const page: Page = {
         id: result.rows[0].id,
         title: result.rows[0].title,
         value: result.rows[0].value,
-        userId: String(result.rows[0].userId),
+        userId: result.rows[0].userid,
         lastModified: new Date(result.rows[0].last_modified),
         revisionNumber: result.rows[0].revision_number,
         isJournal: result.rows[0].is_journal,
         deleted: result.rows[0].deleted
       };
+      if (!isPage(page)) throw new Error("expected page, got", page);
       return res.status(200).json({ page });
     } catch (error) {
       console.error('Database Error: Failed to Insert Page.', error);
