@@ -132,6 +132,7 @@ export async function processQueuedUpdates(
       };
       localDb.pages.put(pageUpdated);
     } else {
+      console.log("inserting page", queuedUpdate.title, queuedUpdate.value, userId, queuedUpdate.isJournal, queuedUpdate.id);
       const page = await insertPageDb(queuedUpdate.title, queuedUpdate.value, userId, queuedUpdate.isJournal, queuedUpdate.id);
       if (typeof page === "string") {
         if (page.includes("duplicate key value") && queuedUpdate.isJournal) {
@@ -185,7 +186,7 @@ export async function updatePage(
 ): Promise<PageSyncResult> {
   
   console.log("adding page to queued updates", title, value);
-  
+
   // we don't do anything to check for a conflict with queued updates
   // we rely on useLiveQuery to ensure that in-memory pages are already
   // in sync with local db / queued updates

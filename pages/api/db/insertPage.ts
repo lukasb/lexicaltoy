@@ -23,7 +23,7 @@ export default async function handler(
     const { title, value, userId, id, isJournal } = req.body;
     
     // Validate the incoming data
-    if (!title || !value || !userId || !isJournal) {
+    if (!title || !value || !userId || isJournal === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
