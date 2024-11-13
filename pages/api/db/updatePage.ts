@@ -22,8 +22,6 @@ export default async function handler(
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
-    console.log("updatePage", id, value, title, deleted, oldRevisionNumber);
-    
     try {
       // Insert the current page data into the history table directly from the pages table
       await sql`

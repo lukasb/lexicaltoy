@@ -48,7 +48,7 @@ async function getLocalJournalPageByDate(
 }
 
 export async function getJournalPagesByUserId(userId: string): Promise<Page[]> {
-  return localDb.pages.filter((page) => page.isJournal && page.userId === userId).toArray();
+  return localDb.pages.filter((page) => page.isJournal && page.userId === userId && !page.deleted).toArray();
 }
 
 export async function getJournalQueuedUpdatesByUserId(userId: string): Promise<Page[]> {
@@ -196,7 +196,6 @@ export async function updatePage(
     localDb.queuedUpdates.put(pageLocalUpdate);
     return PageSyncResult.Success;
   }
-  console.log("updatePage", page.id, "value", value, "title", title, "deleted", deleted, "revisionNumber", page.revisionNumber);
   const { revisionNumber, lastModified } = await updatePageWithHistory(
     page.id,
     value,

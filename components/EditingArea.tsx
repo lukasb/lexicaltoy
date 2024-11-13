@@ -101,7 +101,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     const today = new Date();
     const todayJournalTitle = getJournalTitle(today);
     if (!pages?.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
-      console.log("creating new journal page", todayJournalTitle, pages.length);
       try {
         const result = await insertNewJournalPage(todayJournalTitle, userId, today);
       } catch (error) {
@@ -109,16 +108,11 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
       }
     }
     try {
-      console.log("about to get an unhandled error");
       await deleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, userId);
     } catch (error) {
       console.error("error deleting stale journal pages", error);
     }
   }, [userId, pages]);
-
-  useEffect(() => {
-    fetchUpdatedPages(userId);
-  }, [userId]);
 
   useEffect(() => {
     if (!setupDoneRef.current) {

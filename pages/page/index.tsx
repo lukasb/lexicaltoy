@@ -103,10 +103,6 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
     return mergedPages;
   }, [session]);
 
-  useEffect(() => {
-    console.log("pages length", pages?.length);
-  }, [pages]);
-
   if (!session || !session.id) {
     console.log("Problem with session", session);
     return (

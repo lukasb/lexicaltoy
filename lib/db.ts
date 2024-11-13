@@ -53,9 +53,7 @@ export async function insertPageDb(
 export async function updatePageWithHistory(id: string, value: string, title: string, deleted: boolean, oldRevisionNumber: number): Promise<PageUpdateResponse> {
   const endpoint = '/api/db/updatePage';
 
-  try {
-      const body = JSON.stringify({ id, value, title, deleted, oldRevisionNumber });
-      console.log("updatePageWithHistory", body);
+  try {      
       const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
