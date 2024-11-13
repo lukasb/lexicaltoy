@@ -8,8 +8,8 @@ import { Button } from "../_app/ui/button";
 import { PagesContext } from '@/_app/context/pages-context';
 import { 
   DEFAULT_JOURNAL_CONTENTS,
-  handleNewJournalPage,
-  handleDeleteStaleJournalPages,
+  insertNewJournalPage,
+  deleteStaleJournalPages,
   getLastWeekJournalPages,
   getJournalTitle
  } from "@/lib/journal-helpers";
@@ -38,52 +38,9 @@ import { PageStatusProvider } from "@/_app/context/page-status-context";
 import { useLiveQuery } from "dexie-react-hooks";
 import { localDb } from "@/_app/context/storage/db";
 
-function EditingArea({ userId }: { userId: string }) {
+function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
 
   const [isClient, setIsClient] = useState(false)
-  
-  const pages = useLiveQuery(async () => {
-
-    const localPages = await localDb.pages
-      .where("userId")
-      .equals(userId)
-      .toArray();
-    const queuedUpdates = await localDb.queuedUpdates
-      .where("userId")
-      .equals(userId)
-      .toArray();
-
-    const mergedPages = [
-      ...localPages
-        // remove deleted pages
-        .filter((page) => !page.deleted)
-        // remove pages with queued updates marking them as deleted
-        .filter((page) => {
-          const queuedUpdate = queuedUpdates.find(
-            (update) => update.id === page.id
-          );
-          return !queuedUpdate?.deleted;
-        })
-        // replace with queued updates if they exist
-        .map((page) => {
-          const queuedUpdate = queuedUpdates.find(
-            (update) => update.id === page.id
-          );
-          return queuedUpdate || page;
-        }),
-      // add queued updates that aren't in the main table
-      ...queuedUpdates.filter(
-        (update) =>
-          !localPages.some((page) => page.id === update.id) && !update.deleted
-      ),
-    ];
-    console.log("mergedPages", mergedPages.length, mergedPages[0]);
-    return mergedPages;
-  }, [userId]);
-
-  useEffect(() => {
-    console.log("pages", pages?.length, pages?.[0]);
-  }, [pages]);
 
   const emptyPageMarkdownString = '- ';
 
@@ -122,6 +79,7 @@ function EditingArea({ userId }: { userId: string }) {
   const initialPageId = findMostRecentlyEditedPage(pages || [])?.id;
   const lastWeekJournalPageIds = getLastWeekJournalPages(pages || []).map(page => page.id);
   const [openPageIds, setOpenPageIds] = useState<string[]>(() => {
+    if (!pages) return [];
     const initialIds: string[] = [];
     if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) initialIds.push(initialPageId);
     initialIds.push(...lastWeekJournalPageIds);
@@ -143,9 +101,19 @@ function EditingArea({ userId }: { userId: string }) {
     const today = new Date();
     const todayJournalTitle = getJournalTitle(today);
     if (!pages?.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
-      const result = await handleNewJournalPage(todayJournalTitle, userId, today);
+      console.log("creating new journal page", todayJournalTitle, pages.length);
+      try {
+        const result = await insertNewJournalPage(todayJournalTitle, userId, today);
+      } catch (error) {
+        console.error("error creating new journal page", todayJournalTitle, error);
+      }
     }
-    handleDeleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, pages || []);
+    try {
+      console.log("about to get an unhandled error");
+      await deleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, userId);
+    } catch (error) {
+      console.error("error deleting stale journal pages", error);
+    }
   }, [userId, pages]);
 
   useEffect(() => {
@@ -265,7 +233,7 @@ function EditingArea({ userId }: { userId: string }) {
           ref={omnibarRef}
           openOrCreatePageByTitle={openOrCreatePageByTitle}
         />
-        {openPageIds.length === 0 ? (
+        {(!pages || pages.length === 0 || openPageIds.length === 0) ? (
           <div className="w-full h-40 flex justify-center items-center">
             <Button onClick={() => handleNewPage("New Page")}>
               Create New Page

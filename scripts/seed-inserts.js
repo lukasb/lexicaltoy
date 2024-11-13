@@ -152,7 +152,7 @@ async function seedPages(client, pages) {
       history_id SERIAL PRIMARY KEY,
       id UUID NOT NULL,
       value TEXT NOT NULL,
-      userId UUID NOT NULL,
+      userid UUID NOT NULL,
       title TEXT NOT NULL,
       last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
       history_created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

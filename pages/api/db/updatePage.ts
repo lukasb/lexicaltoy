@@ -22,11 +22,13 @@ export default async function handler(
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
+    console.log("updatePage", id, value, title, deleted, oldRevisionNumber);
+    
     try {
       // Insert the current page data into the history table directly from the pages table
       await sql`
-        INSERT INTO pages_history (id, title, value, deleted, userId, last_modified, revision_number)
-        SELECT id, title, value, deleted, userId, last_modified, revision_number
+        INSERT INTO pages_history (id, title, value, deleted, userid, last_modified, revision_number)
+        SELECT id, title, value, deleted, userid, last_modified, revision_number
         FROM pages
         WHERE id = ${id}
       `;

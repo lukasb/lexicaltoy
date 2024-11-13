@@ -32,8 +32,11 @@ function FlexibleEditorLayout ({
   useBreakpoint(1537, isSmallWidthViewport, setIsSmallWidthViewport);
 
   const sortPages = useCallback((pageIds: string[]): string[] => {
+    if (pageIds.length === 0) return [];
     const pages = pageIds.map(id => currentPages.find(p => p.id === id)).filter(p => p !== undefined) as Page[];
+    if (pages.length === 0) return [];
     const firstPage = pages[0];
+    if (!firstPage) return [];
     const pinnedPages = pages.filter(p => pinnedPageIds.includes(p.id) && p.id !== firstPage.id);
     const unpinnedPages = pages.filter(p => !pinnedPageIds.includes(p.id) && p.id !== firstPage.id);
 
@@ -51,7 +54,7 @@ function FlexibleEditorLayout ({
     setIsLoading(false);
   }, [openPageIds, currentPages, sortPages]);
 
-  if (isLoading) {
+  if (isLoading || !sortedPageIds || sortedPageIds.length === 0) {
     return <div>Loading...</div>; // Or any loading indicator you prefer
   }
 

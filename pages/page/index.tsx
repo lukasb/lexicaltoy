@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from "react";
 import EditingArea from "../../components/EditingArea";
 import { isDevelopmentEnvironment } from "@/lib/environment";
 import { SignoutButton } from "../../components/SignoutButton";
@@ -12,6 +15,9 @@ import {
   setUseWhatChange,
 } from '@simbathesailor/use-what-changed';
 import { MiniSearchProvider } from "@/_app/context/minisearch-context";
+import { PageSyncResult, performSync } from '@/_app/context/storage/storage-context';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { localDb } from '@/_app/context/storage/db';
 
 // Only Once in your app you can set whether to enable hooks tracking or not.
 // In CRA(create-react-app) e.g. this can be done in src/index.js
@@ -43,6 +49,64 @@ export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, r
 });
 
 const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideProps>> = ({session}) => {
+
+  const [syncResult, setSyncResult] = useState<PageSyncResult>(PageSyncResult.Success);
+
+  useEffect(() => {
+    async function sync() {
+      if (session && session.id) {
+        const result = await performSync(session.id);
+        setSyncResult(result);
+      }
+    }
+    sync();
+  }, [session]);
+
+  const pages = useLiveQuery(async () => {
+
+    if (!session || !session.id) return [];
+
+    const localPages = await localDb.pages
+      .where("userId")
+      .equals(session.id)
+      .toArray();
+
+    const queuedUpdates = await localDb.queuedUpdates
+      .where("userId")
+      .equals(session.id)
+      .toArray();
+
+    const mergedPages = [
+      ...localPages
+        // remove deleted pages
+        .filter((page) => !page.deleted)
+        // remove pages with queued updates marking them as deleted
+        .filter((page) => {
+          const queuedUpdate = queuedUpdates.find(
+            (update) => update.id === page.id
+          );
+          return !queuedUpdate?.deleted;
+        })
+        // replace with queued updates if they exist
+        .map((page) => {
+          const queuedUpdate = queuedUpdates.find(
+            (update) => update.id === page.id
+          );
+          return queuedUpdate || page;
+        }),
+      // add queued updates that aren't in the main table
+      ...queuedUpdates.filter(
+        (update) =>
+          !localPages.some((page) => page.id === update.id) && !update.deleted
+      ),
+    ];
+    return mergedPages;
+  }, [session]);
+
+  useEffect(() => {
+    console.log("pages length", pages?.length);
+  }, [pages]);
+
   if (!session || !session.id) {
     console.log("Problem with session", session);
     return (
@@ -53,6 +117,10 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
     );
   }
 
+  const logError = (error: Error, info: React.ErrorInfo) => {
+    console.error("Error in EditingArea", error, info);
+  }
+
   return (
     <div className="flex justify-center items-center">
       <div className="relative w-full">
@@ -61,11 +129,15 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
             dev
           </div>
         )}
-        <BlockIdsIndexProvider>
-          <MiniSearchProvider>
-            <EditingArea userId={session.id} />
-          </MiniSearchProvider>
-        </BlockIdsIndexProvider>
+        {pages === undefined || pages.length === 0 ? (
+          <div className="text-center py-4">Loading ...</div>
+        ) : (
+          <BlockIdsIndexProvider>
+            <MiniSearchProvider>
+              <EditingArea userId={session.id} pages={pages} />
+            </MiniSearchProvider>
+          </BlockIdsIndexProvider>
+        )}
         <SignoutButton />
       </div>
     </div>

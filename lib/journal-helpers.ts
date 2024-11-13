@@ -1,6 +1,7 @@
 import { parse, isBefore, startOfDay, subWeeks } from 'date-fns';
 import { Page } from "@/lib/definitions";
 import { insertPage, updatePage, PageSyncResult, performSync } from '@/_app/context/storage/storage-context';
+import { getJournalPagesByUserId, getJournalQueuedUpdatesByUserId, deleteQueuedUpdate } from '@/_app/context/storage/storage-context';
 
 export const DEFAULT_JOURNAL_CONTENTS = '- ';
 
@@ -28,7 +29,8 @@ export function getJournalTitle(date: Date) {
   return dateString.replace(new RegExp(` ${day},`), ` ${day}${ordinalSuffix},`);
 }
 
-export const handleNewJournalPage = async (title: string, userId: string, date: Date): Promise<PageSyncResult> => {
+export const insertNewJournalPage = async (title: string, userId: string, date: Date): Promise<PageSyncResult> => {
+  console.log("inserttNewJournalPage", title, userId, date);
   const [newPage, result] = await insertPage(title, DEFAULT_JOURNAL_CONTENTS, userId, true);
   if (result === PageSyncResult.Error) {
     await performSync(userId); // assume the page was created elsewhere, try to get it
@@ -36,8 +38,9 @@ export const handleNewJournalPage = async (title: string, userId: string, date: 
   return result;
 }
 
-export const handleDeleteStaleJournalPages = async (today: Date, defaultValue: string, currentPages: Page[]) => {
-  const stalePages = currentPages.filter((page) => {
+export const deleteStaleJournalPages = async (today: Date, defaultValue: string, userId: string) => {
+  const journalPages = await getJournalPagesByUserId(userId);
+  const stalePages = journalPages.filter((page) => {
     if (!page.isJournal) {
       return false;
     }
@@ -48,7 +51,20 @@ export const handleDeleteStaleJournalPages = async (today: Date, defaultValue: s
     return isBefore(pageDateStartOfDay, todayStartOfDay) && page.value === defaultValue;
   });
   for (const page of stalePages) {
-    await updatePage(page, page.title, page.value, true);
+    console.log("deleting stale journal page", page.title);
+    await updatePage(page, page.value, page.title, true);
+  }
+  const journalQueuedUpdates = await getJournalQueuedUpdatesByUserId(userId);
+  const staleQueuedUpdates = journalQueuedUpdates.filter((queuedUpdate) => {
+    const pageDateStr = queuedUpdate.title;
+    const pageDate = parse(pageDateStr, 'MMM do, yyyy', new Date());
+    const pageDateStartOfDay = startOfDay(pageDate);
+    const todayStartOfDay = startOfDay(today);
+    return isBefore(pageDateStartOfDay, todayStartOfDay) && queuedUpdate.value === defaultValue;
+  });
+  for (const queuedUpdate of staleQueuedUpdates) {
+    console.log("deleting stale journal queued update", queuedUpdate.title);
+    await deleteQueuedUpdate(queuedUpdate.id);
   }
 }
 

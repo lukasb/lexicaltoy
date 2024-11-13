@@ -6,9 +6,10 @@ const localDb = new Dexie('orangetask-local', { cache: 'immutable'}) as Dexie & 
   queuedUpdates: EntityTable<Page, 'id'>;
 };
 
+// we only declare indexed columns here
 localDb.version(1).stores({
-  pages: '++id, userId, title, lastModified, revisionNumber, isJournal, deleted, status',
-  queuedUpdates: '++id, userId, title, lastModified, revisionNumber, isJournal, deleted, status'
+  pages: 'id, userId', 
+  queuedUpdates: 'id, userId'
 });
 
 export { localDb };

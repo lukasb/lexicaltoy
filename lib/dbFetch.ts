@@ -1,6 +1,5 @@
 import { sql } from "@vercel/postgres";
 import { unstable_noStore as noStore } from "next/cache";
-import { PageStatus } from "./definitions";
 
 export async function fetchPages(userId: string, fetchDeleted?: boolean) {
   noStore();
@@ -58,7 +57,7 @@ export async function fetchUpdatesSince(userId: string, since: Date) {
     id: row.id,
     title: row.title,
     value: row.value,
-    userId: row.userId,
+    userId: row.userid,
     lastModified: row.last_modified,
     revisionNumber: row.revision_number,
     isJournal: row.is_journal,

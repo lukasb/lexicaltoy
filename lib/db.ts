@@ -54,6 +54,8 @@ export async function updatePageWithHistory(id: string, value: string, title: st
   const endpoint = '/api/db/updatePage';
 
   try {
+      const body = JSON.stringify({ id, value, title, deleted, oldRevisionNumber });
+      console.log("updatePageWithHistory", body);
       const response = await fetch(endpoint, {
           method: 'POST',
           headers: {

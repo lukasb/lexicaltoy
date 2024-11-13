@@ -1,4 +1,4 @@
-import { Page, PageStatus } from "@/lib/definitions";
+import { Page, isPage } from "@/lib/definitions";
 import { localDb } from "./db";
 import {
   fetchPagesRemote,
@@ -7,7 +7,6 @@ import {
   insertPageDb,
 } from "@/lib/db";
 import { getJournalTitle } from "@/lib/journal-helpers";
-import { useLiveQuery } from "dexie-react-hooks";
 
 // TODO also return titles of conflicted pages
 export enum PageSyncResult {
@@ -48,6 +47,18 @@ async function getLocalJournalPageByDate(
   return page;
 }
 
+export async function getJournalPagesByUserId(userId: string): Promise<Page[]> {
+  return localDb.pages.filter((page) => page.isJournal && page.userId === userId).toArray();
+}
+
+export async function getJournalQueuedUpdatesByUserId(userId: string): Promise<Page[]> {
+  return localDb.queuedUpdates.filter((page) => page.isJournal && page.userId === userId).toArray();
+}
+
+export async function deleteQueuedUpdate(id: string): Promise<void> {
+  return localDb.queuedUpdates.delete(id);
+}
+
 export async function fetchUpdatedPages(
   userId: string
 ): Promise<PageSyncResult> {
@@ -70,6 +81,10 @@ export async function fetchUpdatedPages(
         return;
       }
       for (const page of updatedPages) {
+        if (!isPage(page)) { 
+          console.error("got bad page", page, "last modified", mostRecentLastModified);
+          throw new Error("expected page, got", page);
+        }
         localDb.pages.put(page);
       }
     }
@@ -120,13 +135,16 @@ export async function processQueuedUpdates(
       const page = await insertPageDb(queuedUpdate.title, queuedUpdate.value, userId, queuedUpdate.isJournal, queuedUpdate.id);
       if (typeof page === "string") {
         if (page.includes("duplicate key value") && queuedUpdate.isJournal) {
+          console.log("duplicate journal page, deleting queued update", queuedUpdate.title);
           localDb.queuedUpdates.delete(queuedUpdate.id);
+        } else {
+          console.error("failed to insert page", queuedUpdate.title, page);
         }
-        console.error("failed to insert page", queuedUpdate.title);
         result = PageSyncResult.Error;
         return;
       }
       localDb.queuedUpdates.delete(queuedUpdate.id);
+      if (!isPage(page)) throw new Error("expected page, got", page);
       localDb.pages.put(page);
     }
   }
@@ -156,7 +174,11 @@ export async function updatePage(
   title: string,
   deleted: boolean
 ): Promise<PageSyncResult> {
-  const queuedUpdate = await getQueuedUpdateById(page.id);
+  
+  // we don't do anything to check for a conflict with queued updates
+  // we rely on useLiveQuery to ensure that in-memory pages are already
+  // in sync with local db / queued updates
+
   const localPage = await getLocalPageById(page.id);
   if (localPage && localPage.lastModified > page.lastModified) {
     // our proposed update is based on an old version of the page
@@ -174,6 +196,7 @@ export async function updatePage(
     localDb.queuedUpdates.put(pageLocalUpdate);
     return PageSyncResult.Success;
   }
+  console.log("updatePage", page.id, "value", value, "title", title, "deleted", deleted, "revisionNumber", page.revisionNumber);
   const { revisionNumber, lastModified } = await updatePageWithHistory(
     page.id,
     value,
@@ -195,6 +218,7 @@ export async function updatePage(
     revisionNumber: revisionNumber,
     lastModified: lastModified,
   };
+  if (!isPage(pageUpdated)) throw new Error("expected page, got", pageUpdated);
   localDb.pages.put(pageUpdated);
   return PageSyncResult.Success;
 }
@@ -205,6 +229,9 @@ export async function insertPage(
   userId: string,
   isJournal: boolean
 ): Promise<[Page | undefined, PageSyncResult]> {
+
+  console.log("insertPage", title, value, userId, isJournal);
+
   // can't have two pages with the same title and user id
   const localPage = await localDb.pages
     .filter((page) => page.title === title && page.userId === userId)
@@ -228,10 +255,10 @@ export async function insertPage(
   } 
   const result = await insertPageDb(title, value, userId, isJournal, id);
   if (typeof result === "string") {
-    localDb.queuedUpdates.put(newPage);
     console.error("expected page, got string", result);
     return [newPage, PageSyncResult.Error];
   }
+  if (!isPage(result)) throw new Error("expected page, got", result);
   localDb.pages.put(result);
   return [result, PageSyncResult.Success];
 }
