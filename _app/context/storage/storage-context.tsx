@@ -144,9 +144,13 @@ export async function processQueuedUpdates(
         result = PageSyncResult.Error;
         return;
       }
-      localDb.queuedUpdates.delete(queuedUpdate.id);
-      if (!isPage(page)) throw new Error("expected page, got", page);
-      localDb.pages.put(page);
+      localDb.transaction("rw", localDb.pages, localDb.queuedUpdates, async () => {
+        localDb.queuedUpdates.delete(queuedUpdate.id);
+        if (!isPage(page)) throw new Error("expected page, got", page);
+        localDb.pages.put(page);
+      }).catch(err => {
+        throw err;
+      });
     }
   }
 

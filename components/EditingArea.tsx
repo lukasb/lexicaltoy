@@ -180,9 +180,9 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     if (result === PageSyncResult.Conflict) {
       console.error("error creating page");
       return;
-    } else if (isPage(result)) {
-      msAddPage(result);
-      openPage(result);
+    } else if (isPage(newPage)) {
+      msAddPage(newPage);
+      openPage(newPage);
     } else {
       console.error("expected page, got something else", result);
     }
