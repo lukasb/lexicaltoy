@@ -114,19 +114,15 @@ function Editor({
   const onChange = useCallback((editorState: EditorState) => {
     if (!editorState) return;
     editorState.read(() => {
+
       const localPageValue = pageUpdates.get(page.id)?.newValue || page.value;
+      const trimmedPageValue = localPageValue.replace(/\s$/, '');
 
       const editorStateMarkdown = $myConvertToMarkdownString(TRANSFORMERS, undefined, true);
       const editoContentsWithoutSharedNodes = stripSharedNodesFromMarkdown(editorStateMarkdown);
-      //console.log("pageContentsWithoutSharedNodes", pageContentsWithoutSharedNodes);
       const trimmedEditorContents = editoContentsWithoutSharedNodes.replace(/\s$/, '');
-      const trimmedPageValue = localPageValue.replace(/\s$/, '');
+      
       if (trimmedEditorContents !== trimmedPageValue) {
-        console.group(`Content change in "${page.title}"`);
-        console.log("Old:", JSON.stringify(trimmedPageValue));
-        console.log("New:", JSON.stringify(trimmedEditorContents));
-        console.log("Difference in length:", trimmedEditorContents.length - trimmedPageValue.length);
-        console.groupEnd();
         pendingChangeRef.current = editoContentsWithoutSharedNodes;
         debouncedSave(editoContentsWithoutSharedNodes);
         deleteSearchTerms(page.id);
