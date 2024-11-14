@@ -17,6 +17,8 @@ import { FormulaValueType, NodeElementMarkdown } from "@/lib/formula/formula-def
 import BacklinksViewer from "./backlinks-viewer";
 import { EditDialog } from "@/_app/ui/edit-dialog";
 import { updatePage, PageSyncResult } from "@/_app/context/storage/storage-context"
+import { PageStatus } from "@/lib/definitions";
+import { usePageUpdate } from "@/_app/context/page-update-context";
 
 function EditorContainer({
   page,
@@ -48,7 +50,8 @@ function EditorContainer({
   const pages = useContext(PagesContext);
   const [backlinks, setBacklinks] = useState<NodeElementMarkdown[]>([]);
   const [backlinksCollapsed, setBacklinksCollapsed] = useState(true);
-
+  const { getPageUpdate, setPageUpdateStatus } = usePageUpdate();
+  
   useEffect(() => {
     setModifierKey(getModifierKey());
   }, []);
@@ -226,6 +229,17 @@ function EditorContainer({
         </div>
         <NoSSRWrapper>
           <div className={`pl-[22px] pr-1 md:pl-[29px] mt-4 ${localIsCollapsed ? 'hidden' : 'pb-1'}`}>
+            {getPageUpdate(page.id)?.status === PageStatus.Conflict && (
+              <div className="mb-4 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 rounded-md flex justify-between items-center">
+                <span>Your changes are based on an old version of this page. Click reload to get the latest version. Reloading will lose your changes, so copy anything you don't want to lose and paste it somewhere else.</span>
+                <button 
+                  onClick={() => setPageUpdateStatus(page.id, PageStatus.DroppingUpdate)}
+                  className="ml-4 px-4 py-2 bg-red-200 dark:bg-red-800 rounded-md hover:bg-red-300 dark:hover:bg-red-700"
+                >
+                  Reload
+                </button>
+              </div>
+            )}
             <Editor
               page={page}
               showDebugInfo={showDebug}

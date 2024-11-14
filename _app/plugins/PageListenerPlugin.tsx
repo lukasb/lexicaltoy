@@ -105,7 +105,7 @@ export function PageListenerPlugin({
 }): null {
   const [editor] = useLexicalComposerContext();
   const pages = useContext(PagesContext);
-  const { getPageUpdate } = usePageUpdate();
+  const { pageUpdates } = usePageUpdate();
 
   // make sure open editors update their contents when updates from shared nodes occur
 
@@ -115,11 +115,12 @@ export function PageListenerPlugin({
   // (works so far though...)
 
   useEffect(() => {
-    for (const page of pages) {
       if (
-        page.id === pageId &&
-        getPageUpdate(page.id)?.status === PageStatus.EditFromSharedNodes
+        pageUpdates.get(pageId)?.status === PageStatus.EditFromSharedNodes ||
+        pageUpdates.get(pageId)?.status === PageStatus.EditorUpdateRequested
       ) {
+        const page = pages?.find((page) => page.id === pageId);
+        if (!page) return;
         editor.update(() => {
           if (
             editor.isEditable() &&
@@ -151,8 +152,7 @@ export function PageListenerPlugin({
           }
         });
       }
-    }
-  }, [editor, pageId, pages, getPageUpdate]);
+  }, [editor, pageId, pages, pageUpdates]);
 
   useEffect(() => {
     return editor.registerUpdateListener(() => {

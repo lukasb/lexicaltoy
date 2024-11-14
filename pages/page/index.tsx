@@ -18,6 +18,7 @@ import { MiniSearchProvider } from "@/_app/context/minisearch-context";
 import { PageSyncResult, performSync } from '@/_app/context/storage/storage-context';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { localDb } from '@/_app/context/storage/db';
+import { PageUpdateProvider } from "@/_app/context/page-update-context";
 
 // Only Once in your app you can set whether to enable hooks tracking or not.
 // In CRA(create-react-app) e.g. this can be done in src/index.js
@@ -49,22 +50,6 @@ export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, r
 });
 
 const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideProps>> = ({session}) => {
-
-  const [syncResult, setSyncResult] = useState<PageSyncResult>(PageSyncResult.Success);
-
-  useEffect(() => {
-    async function sync() {
-      if (session && session.id) {
-        console.log("performing sync");
-        const result = await performSync(session.id);
-        setSyncResult(result);
-      }
-    }
-
-    sync();
-    const intervalId = setInterval(sync, 8000); // sync every 8 seconds
-    return () => clearInterval(intervalId);
-  }, [session]);
 
   const pages = useLiveQuery(async () => {
 
@@ -116,7 +101,7 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
       </div>
     );
   }
-  
+
   return (
     <div className="flex justify-center items-center">
       <div className="relative w-full">
@@ -130,7 +115,9 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
         ) : (
           <BlockIdsIndexProvider>
             <MiniSearchProvider>
-              <EditingArea userId={session.id} pages={pages} />
+              <PageUpdateProvider>
+                <EditingArea userId={session.id} pages={pages} />
+              </PageUpdateProvider>
             </MiniSearchProvider>
           </BlockIdsIndexProvider>
         )}

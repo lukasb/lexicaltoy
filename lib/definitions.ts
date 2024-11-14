@@ -9,6 +9,9 @@ export type User = {
     UserEdit = 'user_edit',
     EditFromSharedNodes = 'edit_from_shared_nodes',
     PendingWrite = 'pending_write',
+    EditorUpdateRequested = 'editor_update_requested',
+    Conflict = 'conflict',
+    DroppingUpdate = 'dropping_update'
   }
 
   export type Page = {

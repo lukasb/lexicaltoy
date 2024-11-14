@@ -31,10 +31,10 @@ import { useMiniSearch } from "@/_app/context/minisearch-context";
 import { 
   insertPage,
   updatePage,
-  PageSyncResult
+  PageSyncResult,
+  performSync
 } from "@/_app/context/storage/storage-context";
-import { PageUpdateProvider } from "@/_app/context/page-update-context";
-
+import { usePageUpdate } from "@/_app/context/page-update-context";
 function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
 
   const [isClient, setIsClient] = useState(false)
@@ -47,6 +47,30 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
   const { msAddPage, msDiscardPage, msSlurpPages } = useMiniSearch();
   const hasInitializedSearch = useRef(false);
   let initCount = 0;
+
+  const { getPageUpdate, addPageUpdate, setPageUpdateStatus } = usePageUpdate();
+
+  const [syncResult, setSyncResult] = useState<PageSyncResult>(PageSyncResult.Success);
+
+  useEffect(() => {
+    async function sync() {
+      if (userId) {
+        console.log("performing sync");
+        const result = await performSync(userId, (pageId) => {
+          if (getPageUpdate(pageId)) {
+            setPageUpdateStatus(pageId, PageStatus.Conflict);
+          } else {
+            addPageUpdate(pageId, PageStatus.Conflict);
+          }
+        });
+        setSyncResult(result);
+      }
+    }
+
+    sync();
+    const intervalId = setInterval(sync, 8000); // sync every 8 seconds
+    return () => clearInterval(intervalId);
+  }, [userId]);
 
   useEffect(() => {
     if (!hasInitializedSearch.current) {
@@ -94,10 +118,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
   useEffect(() => {
     setIsClient(true)
   }, [])
-
-  useEffect(() => {
-    console.log("open page ids", openPageIds);
-  }, [openPageIds]);
 
   const executeJournalLogic = useCallback(async () => {
     const today = new Date();
@@ -226,7 +246,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
         <ActiveEditorProvider>
         <SharedNodeProvider>
         <SearchTermsProvider>
-        <PageUpdateProvider>
         <PagesManager />
         <Omnibar
           ref={omnibarRef}
@@ -252,7 +271,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
             onPageCollapseToggle={handlePageCollapseToggle}
             />
           )}
-          </PageUpdateProvider>
           </SearchTermsProvider>
           </SharedNodeProvider>
         </ActiveEditorProvider>

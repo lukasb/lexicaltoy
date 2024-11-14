@@ -4,14 +4,14 @@ import { PageStatus } from '@/lib/definitions';
 // Define the type for our map values
 type PageUpdateInfo = {
   status: PageStatus;
-  lastModified: Date;
-  newValue: string;
+  lastModified?: Date;
+  newValue?: string;
 }
 
 // Create the context
 type PageUpdateContextType = {
   pageUpdates: Map<string, PageUpdateInfo>;
-  addPageUpdate: (pageId: string, status: PageStatus, lastModified: Date, newValue: string) => void;
+  addPageUpdate: (pageId: string, status: PageStatus, lastModified?: Date, newValue?: string) => void;
   getPageUpdate: (pageId: string) => PageUpdateInfo | undefined;
   removePageUpdate: (pageId: string) => void;
   setPageUpdateStatus: (pageId: string, status: PageStatus) => void;
@@ -25,7 +25,10 @@ export function PageUpdateProvider({ children }: { children: React.ReactNode }) 
     new Map()
   );
 
-  const addPageUpdate = (pageId: string, status: PageStatus, lastModified: Date, newValue: string) => {
+  const addPageUpdate = (pageId: string, status: PageStatus, lastModified?: Date, newValue?: string) => {
+    if (status !== PageStatus.DroppingUpdate && status !== PageStatus.Conflict && (!lastModified || !newValue)) {
+      throw new Error("lastModified and newValue are required for non-dropping updates");
+    }
     setPageUpdates(prevMap => {
       const newMap = new Map(prevMap);
       newMap.set(pageId, {
@@ -59,6 +62,8 @@ export function PageUpdateProvider({ children }: { children: React.ReactNode }) 
           status,
           lastModified: new Date(new Date().toISOString())
         });
+      } else {
+        throw new Error("Tried to update status for page without existing update");
       }
       return newMap;
     });

@@ -115,13 +115,13 @@ function Editor({
     if (!editorState) return;
     editorState.read(() => {
       const editorStateMarkdown = $myConvertToMarkdownString(TRANSFORMERS, undefined, true);
-      const pageContentsWithoutSharedNodes = stripSharedNodesFromMarkdown(editorStateMarkdown);
+      const editoContentsWithoutSharedNodes = stripSharedNodesFromMarkdown(editorStateMarkdown);
       //console.log("pageContentsWithoutSharedNodes", pageContentsWithoutSharedNodes);
-      const trimmedPageContents = pageContentsWithoutSharedNodes.replace(/\s$/, '');
+      const trimmedEditorContents = editoContentsWithoutSharedNodes.replace(/\s$/, '');
       const trimmedPageValue = page.value.replace(/\s$/, '');
-      if (trimmedPageContents !== trimmedPageValue) {
-        pendingChangeRef.current = pageContentsWithoutSharedNodes;
-        debouncedSave(pageContentsWithoutSharedNodes);
+      if (trimmedEditorContents !== trimmedPageValue) {
+        pendingChangeRef.current = editoContentsWithoutSharedNodes;
+        debouncedSave(editoContentsWithoutSharedNodes);
         //setShouldHighlight(false);
         deleteSearchTerms(page.id);
       } else {
@@ -146,6 +146,9 @@ function Editor({
     };
   }, [onBeforeUnload, saveChange]);
 
+  React.useEffect(() => {
+    if (page.title === "cannons") console.log("page value changed", page.value);
+  }, [page.value]);
   return (
     <PromisesProvider>
       <LexicalComposer initialConfig={initialConfig}>

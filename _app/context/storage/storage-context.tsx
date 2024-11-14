@@ -92,7 +92,8 @@ export async function fetchUpdatedPages(
 }
 
 export async function processQueuedUpdates(
-  userId: string
+  userId: string,
+  handleConflict: (pageId: string) => void
 ): Promise<PageSyncResult> {
   let result = PageSyncResult.Success;
   async function processQueuedUpdate(queuedUpdate: Page) {
@@ -106,6 +107,7 @@ export async function processQueuedUpdates(
           "our proposed update is based on an old version of the page",
           queuedUpdate.title
         );
+        handleConflict(queuedUpdate.id);
         return;
       }
 
@@ -122,6 +124,7 @@ export async function processQueuedUpdates(
       if (revisionNumber === -1 || !revisionNumber || !lastModified) {
         console.log("failed to update page", queuedUpdate.title);
         result = PageSyncResult.Conflict;
+        handleConflict(queuedUpdate.id);
         return;
       }
 
@@ -166,11 +169,11 @@ export async function processQueuedUpdates(
   return result;
 }
 
-export async function performSync(userId: string): Promise<PageSyncResult> {
+export async function performSync(userId: string, handleConflict: (pageId: string) => void): Promise<PageSyncResult> {
   if (!navigator.onLine) return PageSyncResult.Success;
   const syncResult = await fetchUpdatedPages(userId);
   if (syncResult !== PageSyncResult.Success) return syncResult;
-  return await processQueuedUpdates(userId);
+  return await processQueuedUpdates(userId, handleConflict);
 }
 
 /**
