@@ -184,7 +184,7 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
   return gptResponse;
 };
 
-function sortFindOutput(output: NodeElementMarkdown[], pages: Page[]): NodeElementMarkdown[] {
+export function sortFindOutput(output: NodeElementMarkdown[], pages: Page[]): NodeElementMarkdown[] {
 
   const sortedOutput = output.sort((a, b) => {
     const pageA = pages.find(p => p.title === a.baseNode.pageName);

@@ -114,6 +114,7 @@ function PagesManager() {
       }));
 
     if (pagesToInvalidate.length > 0) {
+      console.log("PagesManager updating pages results for pages", pagesToInvalidate.map(p => p.title));
       updatePagesResults(pagesToInvalidate);
     }
     if (pagesToUpdate.size > 0) {

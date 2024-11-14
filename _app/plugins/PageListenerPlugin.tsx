@@ -76,7 +76,10 @@ function $updateListItems(root: RootNode, markdownLines: string[]) {
           } as unknown as ElementNode);
           if (oldMarkdown === newMarkdown) skip = true;
         }
-        if (!skip) $convertFromMarkdownString(newMarkdown, TRANSFORMERS, element as ListItemNode);
+        if (!skip) {
+          console.log("updating editor from page listener", newMarkdown);
+          $convertFromMarkdownString(newMarkdown, TRANSFORMERS, element as ListItemNode);
+        }
       }
     } else if (markdownLines[i] !== "") {
       previousBlank = false;
@@ -105,7 +108,7 @@ export function PageListenerPlugin({
 }): null {
   const [editor] = useLexicalComposerContext();
   const pages = useContext(PagesContext);
-  const { pageUpdates } = usePageUpdate();
+  const { pageUpdates, getUpdatedPageValue } = usePageUpdate();
 
   // make sure open editors update their contents when updates from shared nodes occur
 
@@ -122,8 +125,9 @@ export function PageListenerPlugin({
         const page = pages?.find((page) => page.id === pageId);
         if (!page) return;
         // I am so, so sorry.
-        const newValue = pageUpdates.get(pageId)?.status === PageStatus.EditFromSharedNodes ? pageUpdates.get(pageId)?.newValue : page.value;
+        const newValue = pageUpdates.get(pageId)?.status === PageStatus.EditFromSharedNodes ? getUpdatedPageValue(page) : page.value;
         if (!newValue) return;
+        console.log("updating editor from page listener", page.title, newValue);
         editor.update(() => {
           if (
             editor.isEditable() &&
@@ -145,7 +149,7 @@ export function PageListenerPlugin({
               focusOffset = selection.focus.offset;
             }
             const root = $getRoot();
-            $updateListItems(root, page.value.split("\n"));
+            $updateListItems(root, newValue.split("\n"));
             if (anchorKey && focusKey) {
               const newSelection = $createRangeSelection();
               newSelection.anchor = $createPoint(anchorKey, anchorOffset, 'text');
@@ -155,7 +159,7 @@ export function PageListenerPlugin({
           }
         });
       }
-  }, [editor, pageId, pages, pageUpdates]);
+  }, [editor, pageId, pages, pageUpdates, getUpdatedPageValue]);
 
   useEffect(() => {
     return editor.registerUpdateListener(() => {

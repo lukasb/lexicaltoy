@@ -185,6 +185,7 @@ export default function FormulaDisplayComponent(
           );
         }
         pageLineMarkdownMapRef.current = newPageLineMarkdownMap;
+        console.log("dispatching create formula nodes for formula", formula);
         editor.dispatchCommand(CREATE_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: sharedNodes,

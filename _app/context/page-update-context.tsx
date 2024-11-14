@@ -41,9 +41,9 @@ export function PageUpdateProvider({ children }: { children: React.ReactNode }) 
     });
   };
 
-  const getPageUpdate = (pageId: string) => {
+  const getPageUpdate = useCallback((pageId: string) => {
     return pageUpdates.get(pageId);
-  };
+  }, [pageUpdates]);
 
   const removePageUpdate = (pageId: string) => {
     setPageUpdates(prevMap => {

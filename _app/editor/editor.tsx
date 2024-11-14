@@ -86,7 +86,7 @@ function Editor({
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
   const [shouldHighlight, setShouldHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
   const { setBlockIdsForPage } = useBlockIdsIndex();
-  const { addPageUpdate, getUpdatedPageValue } = usePageUpdate();
+  const { addPageUpdate, getUpdatedPageValue, getPageUpdate } = usePageUpdate();
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
@@ -103,6 +103,7 @@ function Editor({
   const saveChange = useCallback(async (newContent: string) => {
     const currentPage = getPage(page.id);
     if (currentPage) {
+      console.log("saving change for page", page.title);
       addPageUpdate(page.id, PageStatus.UserEdit, new Date(), newContent);
       ingestPageBlockIds(page.title, newContent, setBlockIdsForPage);
       pendingChangeRef.current = null;
@@ -112,7 +113,7 @@ function Editor({
   const debouncedSave = useDebouncedCallback(saveChange, 100);
 
   const onChange = useCallback((editorState: EditorState) => {
-    if (!editorState) return;
+    if (!editorState || getPageUpdate(page.id)?.status === PageStatus.EditFromSharedNodes) return;
     editorState.read(() => {
 
       const localPageValue = getUpdatedPageValue(page);
@@ -130,7 +131,7 @@ function Editor({
         pendingChangeRef.current = null; // Clear pending change if content matches current page value
       }
     });
-  }, [page.value, debouncedSave, deleteSearchTerms, page.id, getUpdatedPageValue]);
+  }, [page.value, debouncedSave, deleteSearchTerms, page.id, getUpdatedPageValue, getPageUpdate]);
 
   const onBeforeUnload = useCallback(() => {
     if (pendingChangeRef.current) {
