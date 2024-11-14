@@ -121,6 +121,9 @@ export function PageListenerPlugin({
       ) {
         const page = pages?.find((page) => page.id === pageId);
         if (!page) return;
+        // I am so, so sorry.
+        const newValue = pageUpdates.get(pageId)?.status === PageStatus.EditFromSharedNodes ? pageUpdates.get(pageId)?.newValue : page.value;
+        if (!newValue) return;
         editor.update(() => {
           if (
             editor.isEditable() &&
@@ -128,7 +131,7 @@ export function PageListenerPlugin({
             editor.getRootElement() !== document.activeElement
           ) {
             editor.setEditable(false); // prevent focus stealing
-            $myConvertFromMarkdownString(page.value, false);
+            $myConvertFromMarkdownString(newValue, false);
           } else {
             const selection = $getSelection();
             let anchorKey = undefined;

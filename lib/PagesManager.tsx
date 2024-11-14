@@ -19,7 +19,7 @@ function PagesManager() {
   const { sharedNodeMap } = useSharedNodeContext();
   const { updatePagesResults, addPagesResults } = useFormulaResultService();
   const { msReplacePage } = useMiniSearch();
-  const { setPageUpdateStatus, removePageUpdate, pageUpdates } = usePageUpdate();
+  const { setPageUpdateStatus, removePageUpdate, addPageUpdate, pageUpdates } = usePageUpdate();
   
   // Create a ref to store the save queue
   const saveQueue = useRef<Map<string, { page: Page, timestamp: number, newValue: string }>>(new Map());
@@ -116,7 +116,7 @@ function PagesManager() {
       const updatedPages = pages.map(p => {
         const updatedPageContents = pagesToUpdate.get(p.title);
         if (updatedPageContents) {
-          setPageUpdateStatus(p.id, PageStatus.EditFromSharedNodes);
+          addPageUpdate(p.id, PageStatus.EditFromSharedNodes, new Date(), updatedPageContents);
         }
         return p;
       });
