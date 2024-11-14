@@ -146,9 +146,6 @@ function Editor({
     };
   }, [onBeforeUnload, saveChange]);
 
-  React.useEffect(() => {
-    if (page.title === "cannons") console.log("page value changed", page.value);
-  }, [page.value]);
   return (
     <PromisesProvider>
       <LexicalComposer initialConfig={initialConfig}>

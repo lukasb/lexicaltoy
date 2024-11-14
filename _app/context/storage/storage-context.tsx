@@ -191,8 +191,6 @@ export async function updatePage(
   title: string,
   deleted: boolean
 ): Promise<PageSyncResult> {
-  
-  console.log("adding page to queued updates", title, value);
 
   // we don't do anything to check for a conflict with queued updates
   // we rely on useLiveQuery to ensure that in-memory pages are already
