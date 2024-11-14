@@ -106,9 +106,14 @@ function PagesManager() {
         } 
       }
     }
-    const pagesToInvalidate: Page[] = pages.filter(page => pageUpdates.get(page.id)?.status === PageStatus.UserEdit);
+    const pagesToInvalidate = pages
+      .filter(page => pageUpdates.get(page.id)?.status === PageStatus.UserEdit)
+      .map(page => ({
+        ...page,
+        value: pageUpdates.get(page.id)?.newValue || page.value
+      }));
+
     if (pagesToInvalidate.length > 0) {
-      // get new formula results for pages that have changed
       updatePagesResults(pagesToInvalidate);
     }
     if (pagesToUpdate.size > 0) {
