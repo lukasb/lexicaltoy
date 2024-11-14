@@ -76,7 +76,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     if (!hasInitializedSearch.current) {
       initCount++;
       if (initCount > 1) console.error("MiniSearch initialized more than once, count:", initCount);
-      console.log("slurping pages", pages?.length);
       msSlurpPages(pages || []);
       hasInitializedSearch.current = true;
     }

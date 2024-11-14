@@ -33,15 +33,13 @@ function PagesManager() {
 
       try {
         const result = await updatePage(page, newValue, page.title, false);
-        console.log("update page result", result, PageSyncResult.Conflict);
         if (result === PageSyncResult.Conflict) {
           console.log("conflict", page.title);
           setPageUpdateStatus(page.id, PageStatus.Conflict);
         } else if (result === PageSyncResult.Error) {
           alert(`Error saving page ${page.title}`);
         } else {
-          console.log("editor update requested", page.title);
-          setPageUpdateStatus(page.id, PageStatus.EditorUpdateRequested);
+          removePageUpdate(page.id);
           msReplacePage(page);
         }
       } catch (error) {
@@ -131,10 +129,8 @@ function PagesManager() {
     for (const page of pages) {
       if (!pagesToUpdate.has(page.title)) {
         if (pageUpdates.get(page.id)?.status === PageStatus.UserEdit || pageUpdates.get(page.id)?.status === PageStatus.EditFromSharedNodes) {
-          console.log("setting pending write", page.title);
           setPageUpdateStatus(page.id, PageStatus.PendingWrite);
         } else if (pageUpdates.get(page.id)?.status === PageStatus.EditorUpdateRequested) {
-          console.log("removing editor update requested", page.title);
           removePageUpdate(page.id);
         }
       }

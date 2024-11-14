@@ -7,6 +7,7 @@ import {
   insertPageDb,
 } from "@/lib/db";
 import { getJournalTitle } from "@/lib/journal-helpers";
+import { isDevelopmentEnvironment } from "@/lib/environment";
 
 // TODO also return titles of conflicted pages
 export enum PageSyncResult {
@@ -111,7 +112,7 @@ export async function processQueuedUpdates(
         return;
       }
 
-      console.log("updating page", queuedUpdate.title, queuedUpdate.value);
+      if (isDevelopmentEnvironment) console.time(`updatePageWithHistory ${queuedUpdate.title}`);
       const { revisionNumber, lastModified } = await updatePageWithHistory(
         queuedUpdate.id,
         queuedUpdate.value,
@@ -119,7 +120,7 @@ export async function processQueuedUpdates(
         queuedUpdate.deleted,
         queuedUpdate.revisionNumber
       );
-
+      if (isDevelopmentEnvironment) console.timeEnd(`updatePageWithHistory ${queuedUpdate.title}`);
       localDb.queuedUpdates.delete(queuedUpdate.id);
       if (revisionNumber === -1 || !revisionNumber || !lastModified) {
         console.log("failed to update page", queuedUpdate.title);

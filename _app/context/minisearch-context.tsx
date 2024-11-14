@@ -41,7 +41,6 @@ export const MiniSearchProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const slurpPages = useCallback((pages: Page[]) => {
     if (miniSearch) {
-      console.log("slurping pages");
       miniSearch.addAll(pages);
     } else {
       initializeMiniSearch(pages);
