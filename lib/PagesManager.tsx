@@ -56,7 +56,7 @@ function PagesManager() {
       if (saveQueue.current.size > 0) {
         savePagesToDatabase();
       }
-    }, 500);
+    }, 50);
 
     return () => clearInterval(interval);
   }, [savePagesToDatabase]);
