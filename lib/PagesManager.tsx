@@ -56,7 +56,7 @@ function PagesManager() {
       if (saveQueue.current.size > 0) {
         savePagesToDatabase();
       }
-    }, 50);
+    }, 10);
 
     return () => clearInterval(interval);
   }, [savePagesToDatabase]);
@@ -114,6 +114,7 @@ function PagesManager() {
       }));
 
     if (pagesToInvalidate.length > 0) {
+      console.log("updating page results for pages", pagesToInvalidate.map(p => p.title));
       updatePagesResults(pagesToInvalidate);
     }
     if (pagesToUpdate.size > 0) {

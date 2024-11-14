@@ -86,7 +86,7 @@ function Editor({
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
   const [shouldHighlight, setShouldHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
   const { setBlockIdsForPage } = useBlockIdsIndex();
-  const { addPageUpdate } = usePageUpdate();
+  const { addPageUpdate, pageUpdates } = usePageUpdate();
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
@@ -109,26 +109,32 @@ function Editor({
     }
   }, [page.id, getPage, setBlockIdsForPage, page.title, addPageUpdate]);
 
-  const debouncedSave = useDebouncedCallback(saveChange, 500);
+  const debouncedSave = useDebouncedCallback(saveChange, 100);
 
   const onChange = useCallback((editorState: EditorState) => {
     if (!editorState) return;
     editorState.read(() => {
+      const localPageValue = pageUpdates.get(page.id)?.newValue || page.value;
+
       const editorStateMarkdown = $myConvertToMarkdownString(TRANSFORMERS, undefined, true);
       const editoContentsWithoutSharedNodes = stripSharedNodesFromMarkdown(editorStateMarkdown);
       //console.log("pageContentsWithoutSharedNodes", pageContentsWithoutSharedNodes);
       const trimmedEditorContents = editoContentsWithoutSharedNodes.replace(/\s$/, '');
-      const trimmedPageValue = page.value.replace(/\s$/, '');
+      const trimmedPageValue = localPageValue.replace(/\s$/, '');
       if (trimmedEditorContents !== trimmedPageValue) {
+        console.group(`Content change in "${page.title}"`);
+        console.log("Old:", JSON.stringify(trimmedPageValue));
+        console.log("New:", JSON.stringify(trimmedEditorContents));
+        console.log("Difference in length:", trimmedEditorContents.length - trimmedPageValue.length);
+        console.groupEnd();
         pendingChangeRef.current = editoContentsWithoutSharedNodes;
         debouncedSave(editoContentsWithoutSharedNodes);
-        //setShouldHighlight(false);
         deleteSearchTerms(page.id);
       } else {
         pendingChangeRef.current = null; // Clear pending change if content matches current page value
       }
     });
-  }, [page.value, debouncedSave, deleteSearchTerms, page.id]);
+  }, [page.value, debouncedSave, deleteSearchTerms, page.id, pageUpdates]);
 
   const onBeforeUnload = useCallback(() => {
     if (pendingChangeRef.current) {
