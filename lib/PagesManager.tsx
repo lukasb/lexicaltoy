@@ -129,7 +129,9 @@ function PagesManager() {
       // this kicks off a codepath that attempts to append newly matching nodes to existing
       // FormulaDisplayNodes with node queries, without otherwise affecting them (i.e. not removing or changing existing nodes)
       const filteredUpdatedPages = updatedPages.filter((p) => pageUpdates.get(p.id)?.status === PageStatus.EditFromSharedNodes);
-      addPagesResults(filteredUpdatedPages);
+      if (filteredUpdatedPages.length > 0) {
+        addPagesResults(filteredUpdatedPages);
+      }
     }
     for (const page of pages) {
       if (!pagesToUpdate.has(page.title)) {

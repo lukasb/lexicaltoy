@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
-import { PageStatus } from '@/lib/definitions';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { Page, PageStatus } from '@/lib/definitions';
 
 // Define the type for our map values
 type PageUpdateInfo = {
@@ -15,6 +15,7 @@ type PageUpdateContextType = {
   getPageUpdate: (pageId: string) => PageUpdateInfo | undefined;
   removePageUpdate: (pageId: string) => void;
   setPageUpdateStatus: (pageId: string, status: PageStatus) => void;
+  getUpdatedPageValue: (page: Page) => string;
 }
 
 const PageUpdateContext = createContext<PageUpdateContextType | undefined>(undefined);
@@ -69,6 +70,11 @@ export function PageUpdateProvider({ children }: { children: React.ReactNode }) 
     });
   };
 
+  const getUpdatedPageValue = useCallback((page: Page) => {
+    const pageUpdate = pageUpdates.get(page.id);
+    return pageUpdate?.newValue || page.value;
+  }, [pageUpdates]);
+
   return (
     <PageUpdateContext.Provider 
       value={{ 
@@ -76,7 +82,8 @@ export function PageUpdateProvider({ children }: { children: React.ReactNode }) 
         addPageUpdate: addPageUpdate, 
         getPageUpdate: getPageUpdate, 
         removePageUpdate: removePageUpdate,
-        setPageUpdateStatus: setPageUpdateStatus 
+        setPageUpdateStatus: setPageUpdateStatus,
+        getUpdatedPageValue: getUpdatedPageValue
       }}
     >
       {children}

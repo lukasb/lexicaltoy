@@ -185,30 +185,35 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
 };
 
 function sortFindOutput(output: NodeElementMarkdown[], pages: Page[]): NodeElementMarkdown[] {
-  return output.sort((a, b) => {
+
+  const sortedOutput = output.sort((a, b) => {
     const pageA = pages.find(p => p.title === a.baseNode.pageName);
     const pageB = pages.find(p => p.title === b.baseNode.pageName);
     
-    const getTime = (lastModified: any): number => {
-      if (lastModified instanceof Date) return lastModified.getTime();
-      if (typeof lastModified === 'string' || typeof lastModified === 'number') {
-        try {
-          const date = new Date(lastModified);
-          if (isNaN(date.getTime())) {
-            console.warn(`Invalid date: ${lastModified}`);
-            return 0;
-          }
-          return date.getTime();
-        } catch (error) {
-          console.error(`Error parsing date: ${lastModified}`, error);
-          return 0;
-        }
-      }
-      return 0;
-    };
+    // If one is a journal and the other isn't, journal comes first
+    if (pageA?.isJournal !== pageB?.isJournal) {
+      return pageA?.isJournal ? -1 : 1;
+    }
 
-    return getTime(pageB?.lastModified) - getTime(pageA?.lastModified);
+    // If both are journals, sort by date (reverse chronological)
+    if (pageA?.isJournal && pageB?.isJournal) {
+      // Convert date strings like "Oct 23rd, 2024" to "2024-10-23" format
+      const parseDate = (dateStr: string) => {
+        const [month, day, year] = dateStr.replace(/(?:st|nd|rd|th)/, '').split(/[\s,]+/);
+        const monthNum = new Date(`${month} 1, 2000`).getMonth() + 1;
+        return `${year}-${monthNum.toString().padStart(2, '0')}-${day.padStart(2, '0')}`;
+      };
+      
+      const dateStrA = parseDate(pageA.title);
+      const dateStrB = parseDate(pageB.title);
+      return dateStrB.localeCompare(dateStrA);
+    }
+
+    // If neither are journals, sort alphabetically by title
+    return (pageA?.title || '').localeCompare(pageB?.title || '');
   });
+
+  return sortedOutput;
 }
 
 export const findCallback = async (defaultArgs: DefaultArguments, userArgs: FormulaOutput[]): Promise<FormulaOutput | null> => {

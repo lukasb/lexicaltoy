@@ -86,7 +86,7 @@ function Editor({
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
   const [shouldHighlight, setShouldHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
   const { setBlockIdsForPage } = useBlockIdsIndex();
-  const { addPageUpdate, pageUpdates } = usePageUpdate();
+  const { addPageUpdate, getUpdatedPageValue } = usePageUpdate();
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
@@ -115,7 +115,7 @@ function Editor({
     if (!editorState) return;
     editorState.read(() => {
 
-      const localPageValue = pageUpdates.get(page.id)?.newValue || page.value;
+      const localPageValue = getUpdatedPageValue(page);
       const trimmedPageValue = localPageValue.replace(/\s$/, '');
 
       const editorStateMarkdown = $myConvertToMarkdownString(TRANSFORMERS, undefined, true);
@@ -130,7 +130,7 @@ function Editor({
         pendingChangeRef.current = null; // Clear pending change if content matches current page value
       }
     });
-  }, [page.value, debouncedSave, deleteSearchTerms, page.id, pageUpdates]);
+  }, [page.value, debouncedSave, deleteSearchTerms, page.id, getUpdatedPageValue]);
 
   const onBeforeUnload = useCallback(() => {
     if (pendingChangeRef.current) {
