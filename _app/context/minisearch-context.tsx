@@ -24,22 +24,29 @@ export const MiniSearchProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [miniSearch, setMiniSearch] = useState<MiniSearch<Page> | null>(null);
   const indexedRef = useRef(false);
 
-  useEffect(() => {
+  const initializeMiniSearch = useCallback((pages?: Page[]) => {
     if (indexedRef.current) return;
-
     const ms = new MiniSearch<Page>({
       fields: ['title', 'value'],
       storeFields: ['title', 'value'],
     });
-
+    if (pages) ms.addAll(pages);
     setMiniSearch(ms);
+    indexedRef.current = true;
   }, []);
+
+  useEffect(() => {
+    initializeMiniSearch();
+  }, [initializeMiniSearch]);
 
   const slurpPages = useCallback((pages: Page[]) => {
     if (miniSearch) {
+      console.log("slurping pages");
       miniSearch.addAll(pages);
+    } else {
+      initializeMiniSearch(pages);
     }
-  }, [miniSearch]);
+  }, [initializeMiniSearch]);
 
   const discardPage = useCallback((id: string) => {
     if (miniSearch) {
