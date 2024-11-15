@@ -45,14 +45,16 @@ export async function fetchPages(userId: string, fetchDeleted?: boolean) {
 export async function fetchUpdatesSince(userId: string, since: Date) {
   noStore();
 
-  const sinceDate = new Date(since);
+  // truncate to milliseconds to avoid precision issues (JavaScript Date is only precise to milliseconds)
 
+  const sinceDate = new Date(since);
+  
   const result = await sql`
     SELECT * FROM pages
     WHERE userId = ${userId}
-    AND last_modified > ${sinceDate.toISOString()}
+    AND date_trunc('milliseconds', last_modified) > ${sinceDate.toISOString()}
   `;
-
+  
   const pages = result.rows.map((row) => ({
     id: row.id,
     title: row.title,
