@@ -56,22 +56,23 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     async function sync() {
       if (userId) {
         console.log("performing sync");
-        console.log("updates in flight", pageUpdates.size);
-        const result = await performSync(userId, (pageId) => {
+        const handleConflict = (pageId: string) => {
           if (getPageUpdate(pageId)) {
             setPageUpdateStatus(pageId, PageStatus.Conflict);
           } else {
             addPageUpdate(pageId, PageStatus.Conflict);
           }
-        });
+        };
+        
+        const result = await performSync(userId, handleConflict);
         setSyncResult(result);
       }
     }
 
     sync();
-    const intervalId = setInterval(sync, 8000); // sync every 8 seconds
+    const intervalId = setInterval(sync, 8000);
     return () => clearInterval(intervalId);
-  }, [userId, getPageUpdate]);
+  }, [userId]);
 
   useEffect(() => {
     if (!hasInitializedSearch.current) {

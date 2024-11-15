@@ -5,8 +5,6 @@ import {
   FormulaValueType,
 } from "./formula-definitions";
 import { 
-  FIND_FORMULA_START_REGEX,
-  IS_FORMULA_REGEX,
   FORMULA_RESULTS_END_REGEX,
   isFindFormula,
   isFormula,
@@ -315,10 +313,6 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
         return output;
       }
 
-      if (page.title === 'Oct 23rd, 2024') {
-        console.log("page value", page.value);
-        console.log("updated page value", defaultArgs.pageUpdateContext?.getUpdatedPageValue(page));
-      }
       const pageValue = defaultArgs.pageUpdateContext ? defaultArgs.pageUpdateContext.getUpdatedPageValue(page) : page.value;
       const nodesMarkdown = splitMarkdownByNodes(pageValue, page.title);
       output.push(

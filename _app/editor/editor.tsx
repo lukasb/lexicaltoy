@@ -124,6 +124,8 @@ function Editor({
       const trimmedEditorContents = editoContentsWithoutSharedNodes.replace(/\s$/, '');
       
       if (trimmedEditorContents !== trimmedPageValue) {
+        console.log("editor contents", trimmedEditorContents);
+        console.log("page value", trimmedPageValue);
         pendingChangeRef.current = editoContentsWithoutSharedNodes;
         debouncedSave(editoContentsWithoutSharedNodes);
         deleteSearchTerms(page.id);
@@ -148,10 +150,6 @@ function Editor({
       }
     };
   }, [onBeforeUnload, saveChange]);
-
-  React.useEffect(() => {
-    if (page.title === 'Oct 23rd, 2024') console.log("page value changed", page.title, page.value);
-  }, [page.value, page.title]);
 
   return (
     <PromisesProvider>

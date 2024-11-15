@@ -143,12 +143,6 @@ export const useFormulaResultService = () => {
     query: string,
     context?: PageAndDialogueContext
   ): Promise<FormulaOutput | null> => {
-    // Perform the query and fetch the results
-    const oct23 = pages.find(p => p.title === 'Oct 23rd, 2024');
-    if (oct23) { 
-      console.log("getFormulaResults page value", query, oct23.value);
-      console.log("getFormulaResults updated page update", pageUpdateContext.getUpdatedPageValue(oct23));
-    }
     const output = await getFormulaOutput(query, pages, context, pageUpdateContext);
     if (!output) return null;
 

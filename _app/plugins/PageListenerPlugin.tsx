@@ -127,7 +127,6 @@ export function PageListenerPlugin({
         // I am so, so sorry.
         const newValue = pageUpdates.get(pageId)?.status === PageStatus.EditFromSharedNodes ? getUpdatedPageValue(page) : page.value;
         if (!newValue) return;
-        console.log("updating editor from page listener", page.title, newValue);
         editor.update(() => {
           if (
             editor.isEditable() &&
