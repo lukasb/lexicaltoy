@@ -253,6 +253,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
   const output: NodeElementMarkdown[] = [];
 
   for (const page of defaultArgs.pages) {
+    //if (page.title === 'Oct 23rd, 2024') console.log("processing page", page.title, page.value);
     let unmatchedSubstringRegexps = [...substrings];
 
     // search terms can appear in the title or the content of the page
@@ -314,7 +315,12 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
         return output;
       }
 
-      const nodesMarkdown = splitMarkdownByNodes(page.value, page.title);
+      if (page.title === 'Oct 23rd, 2024') {
+        console.log("page value", page.value);
+        console.log("updated page value", defaultArgs.pageUpdateContext?.getUpdatedPageValue(page));
+      }
+      const pageValue = defaultArgs.pageUpdateContext ? defaultArgs.pageUpdateContext.getUpdatedPageValue(page) : page.value;
+      const nodesMarkdown = splitMarkdownByNodes(pageValue, page.title);
       output.push(
         ...processNodes(nodesMarkdown, unmatchedSubstringRegexps, orStatuses)
       );

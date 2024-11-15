@@ -14,9 +14,9 @@ import {
   FormulaOutput,
   FormulaValueType,
 } from "@/lib/formula/formula-definitions";
-import { DialogueElement } from "../ai";
 import { QueryCounter } from './query-counter';
 import { getFormulaOutputType } from "./formula-parser";
+import { usePageUpdate } from "@/_app/context/page-update-context";
 
 export const nodeQueries = new QueryCounter();
 
@@ -35,6 +35,7 @@ export function unregisterFormula(formula: string): void {
 export const useFormulaResultService = () => {
   const { sharedNodeMap, setSharedNodeMap } = useSharedNodeContext();
   const pages = useContext(PagesContext);
+  const pageUpdateContext = usePageUpdate();
 
   const mergeResults = (
     resultNodes: NodeElementMarkdown[],
@@ -143,7 +144,12 @@ export const useFormulaResultService = () => {
     context?: PageAndDialogueContext
   ): Promise<FormulaOutput | null> => {
     // Perform the query and fetch the results
-    const output = await getFormulaOutput(query, pages, context);
+    const oct23 = pages.find(p => p.title === 'Oct 23rd, 2024');
+    if (oct23) { 
+      console.log("getFormulaResults page value", query, oct23.value);
+      console.log("getFormulaResults updated page update", pageUpdateContext.getUpdatedPageValue(oct23));
+    }
+    const output = await getFormulaOutput(query, pages, context, pageUpdateContext);
     if (!output) return null;
 
     if (output.type === FormulaValueType.NodeMarkdown) {

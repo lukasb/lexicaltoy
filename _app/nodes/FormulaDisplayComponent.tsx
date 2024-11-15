@@ -104,6 +104,7 @@ export default function FormulaDisplayComponent(
               });
               pageLineMarkdownMapRef.current = markdownMap;
               if (response.output.length > 0) {
+                console.log("dispatching create formula nodes for formula in getFormulaOutput", formula, response.output, nodeKey);
                 editor.dispatchCommand(CREATE_FORMULA_NODES, {
                   displayNodeKey: nodeKey,
                   nodesMarkdown: response.output as NodeElementMarkdown[],
@@ -135,9 +136,11 @@ export default function FormulaDisplayComponent(
     ) {
       fetchedNodes.current = true;
       //if (output === "") setOutput("(getting response...)");
+      
       getFormulaOutput(formula);
+      
     }
-  }, []);
+  }, [getFormulaOutput]);
 
   //useWhatChanged([formula, output, sharedNodeMap, editor, nodeKey]);
   useEffect(() => {
@@ -185,7 +188,7 @@ export default function FormulaDisplayComponent(
           );
         }
         pageLineMarkdownMapRef.current = newPageLineMarkdownMap;
-        console.log("dispatching create formula nodes for formula", formula);
+        console.log("dispatching create formula nodes for formula", formula, sharedNodes);
         editor.dispatchCommand(CREATE_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: sharedNodes,

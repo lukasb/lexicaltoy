@@ -92,6 +92,13 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
     return mergedPages;
   }, [session]);
 
+  useEffect(() => {
+    const oct23 = pages?.find(p => p.title === 'Oct 23rd, 2024');
+    if (oct23) {
+      //console.log("oct23", oct23.value);
+    }
+  }, [pages]);
+
   if (!session || !session.id) {
     console.log("Problem with session", session);
     return (

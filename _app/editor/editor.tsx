@@ -149,6 +149,10 @@ function Editor({
     };
   }, [onBeforeUnload, saveChange]);
 
+  React.useEffect(() => {
+    if (page.title === 'Oct 23rd, 2024') console.log("page value changed", page.title, page.value);
+  }, [page.value, page.title]);
+
   return (
     <PromisesProvider>
       <LexicalComposer initialConfig={initialConfig}>

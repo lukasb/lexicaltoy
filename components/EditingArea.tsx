@@ -48,7 +48,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
   const hasInitializedSearch = useRef(false);
   let initCount = 0;
 
-  const { getPageUpdate, addPageUpdate, setPageUpdateStatus } = usePageUpdate();
+  const { getPageUpdate, addPageUpdate, setPageUpdateStatus, pageUpdates } = usePageUpdate();
 
   const [syncResult, setSyncResult] = useState<PageSyncResult>(PageSyncResult.Success);
 
@@ -56,6 +56,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     async function sync() {
       if (userId) {
         console.log("performing sync");
+        console.log("updates in flight", pageUpdates.size);
         const result = await performSync(userId, (pageId) => {
           if (getPageUpdate(pageId)) {
             setPageUpdateStatus(pageId, PageStatus.Conflict);
@@ -70,7 +71,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     sync();
     const intervalId = setInterval(sync, 8000); // sync every 8 seconds
     return () => clearInterval(intervalId);
-  }, [userId]);
+  }, [userId, getPageUpdate]);
 
   useEffect(() => {
     if (!hasInitializedSearch.current) {

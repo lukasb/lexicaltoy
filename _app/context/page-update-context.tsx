@@ -9,7 +9,7 @@ type PageUpdateInfo = {
 }
 
 // Create the context
-type PageUpdateContextType = {
+export type PageUpdateContextType = {
   pageUpdates: Map<string, PageUpdateInfo>;
   addPageUpdate: (pageId: string, status: PageStatus, lastModified?: Date, newValue?: string) => void;
   getPageUpdate: (pageId: string) => PageUpdateInfo | undefined;
