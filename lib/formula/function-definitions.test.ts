@@ -284,7 +284,6 @@ describe('find() function in regexCallbacks', () => {
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
-      status: PageStatus.Quiescent,
     },
     {
       id: '2',
@@ -295,7 +294,6 @@ describe('find() function in regexCallbacks', () => {
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
-      status: PageStatus.Quiescent,
     },
     {
       id: '3',
@@ -306,7 +304,6 @@ describe('find() function in regexCallbacks', () => {
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
-      status: PageStatus.Quiescent,
     },
     {
       id: '4',
@@ -317,7 +314,6 @@ describe('find() function in regexCallbacks', () => {
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
-      status: PageStatus.Quiescent,
     },
     {
       id: '5',
@@ -328,7 +324,6 @@ describe('find() function in regexCallbacks', () => {
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
-      status: PageStatus.Quiescent,
     },
     {
       id: '6',
@@ -339,7 +334,6 @@ describe('find() function in regexCallbacks', () => {
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
-      status: PageStatus.Quiescent,
     },
     {
       id: '7',
@@ -350,7 +344,6 @@ describe('find() function in regexCallbacks', () => {
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
-      status: PageStatus.Quiescent,
     },
     {
       id: '8',
@@ -361,7 +354,6 @@ describe('find() function in regexCallbacks', () => {
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
-      status: PageStatus.Quiescent,
     },
     {
       id: '9',
@@ -372,7 +364,6 @@ describe('find() function in regexCallbacks', () => {
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
-      status: PageStatus.Quiescent,
     },
     {
       id: '10',
@@ -383,7 +374,6 @@ describe('find() function in regexCallbacks', () => {
       revisionNumber: 1,
       isJournal: false,
       deleted: false,
-      status: PageStatus.Quiescent,
     },
   ];
 
@@ -416,10 +406,10 @@ describe('find() function in regexCallbacks', () => {
     const result = await testFindFunction(['"content"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(4);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
-    expect((result?.output[2] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[3] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[2] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
+    expect((result?.output[3] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
     expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
     expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
     expect((result?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
@@ -509,14 +499,14 @@ describe('find() function in regexCallbacks', () => {
     const result = await testFindFunction([], [], ['Page 1']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(4);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- [[Page 1]] some stuff');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- This is content for page 1.');
     expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- This is content for page 1.');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- It contains some keywords.\nla la la');
     expect((result?.output[2] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- It contains some keywords.\nla la la');
-    expect((result?.output[3] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[3] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- More text content with keywords here.');
+    expect((result?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- More text content with keywords here.');
+    expect((result?.output[3] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
+    expect((result?.output[3] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- [[Page 1]] some stuff');
   });
 
   test('find() matches wikilinks passed as text', async () => {

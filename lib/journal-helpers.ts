@@ -32,9 +32,6 @@ export function getJournalTitle(date: Date) {
 export const insertNewJournalPage = async (title: string, userId: string, date: Date): Promise<PageSyncResult> => {
   console.log("inserttNewJournalPage", title, userId, date);
   const [newPage, result] = await insertPage(title, DEFAULT_JOURNAL_CONTENTS, userId, true);
-  if (result === PageSyncResult.Error) {
-    await performSync(userId); // assume the page was created elsewhere, try to get it
-  }
   return result;
 }
 

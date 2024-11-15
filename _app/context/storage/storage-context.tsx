@@ -16,7 +16,7 @@ export enum PageSyncResult {
   Error,
 }
 
-async function getLocalPageById(id: string): Promise<Page | undefined> {
+export async function getLocalPageById(id: string): Promise<Page | undefined> {
   return localDb.pages.get(id);
 }
 

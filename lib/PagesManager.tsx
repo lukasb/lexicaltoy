@@ -49,7 +49,7 @@ function PagesManager() {
         saveQueue.current.delete(pageId);
       }
     }
-  }, [msReplacePage, removePageUpdate]);
+  }, [msReplacePage, removePageUpdate, setPageUpdateStatus]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -76,7 +76,7 @@ function PagesManager() {
         setTimeout(() => setPageUpdateStatus(page.id, PageStatus.EditorUpdateRequested), 0); // make sure PageListener gets the updated page
       }
     });
-  }, [pages, pageUpdates]);
+  }, [pages, pageUpdates, setPageUpdateStatus]);
 
   // TODO maybe use Redux or some kind of message bus so we don't have an O(n) operation here every time
   // TODO make this async
@@ -143,7 +143,7 @@ function PagesManager() {
         }
       }
     }
-  }, [sharedNodeMap, pages, setPageUpdateStatus, updatePagesResults, addPagesResults, pageUpdates]);
+  }, [sharedNodeMap, pages, setPageUpdateStatus, updatePagesResults, addPagesResults, pageUpdates, addPageUpdate, removePageUpdate]);
 
   return null;
 }
