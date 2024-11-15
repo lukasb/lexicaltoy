@@ -77,7 +77,6 @@ function $updateListItems(root: RootNode, markdownLines: string[]) {
           if (oldMarkdown === newMarkdown) skip = true;
         }
         if (!skip) {
-          console.log("updating editor from page listener", newMarkdown);
           $convertFromMarkdownString(newMarkdown, TRANSFORMERS, element as ListItemNode);
         }
       }
