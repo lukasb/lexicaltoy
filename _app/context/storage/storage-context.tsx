@@ -28,7 +28,7 @@ async function getLocalPagesByUserId(userId: string): Promise<Page[]> {
   return localDb.pages.filter((page) => page.userId === userId).toArray();
 }
 
-async function getQueuedUpdatesByUserId(userId: string): Promise<Page[]> {
+export async function getQueuedUpdatesByUserId(userId: string): Promise<Page[]> {
   return localDb.queuedUpdates
     .filter((page) => page.userId === userId)
     .toArray();
@@ -61,7 +61,10 @@ export async function deleteQueuedUpdate(id: string): Promise<void> {
 }
 
 export async function fetchUpdatedPages(
-  userId: string
+  userId: string,
+  _getLocalPagesByUserId: (userId: string) => Promise<Page[]>,
+  _fetchUpdatesSince: (userId: string, date: Date) => Promise<Page[] | null>,
+  _fetchPagesRemote: (userId: string) => Promise<Page[] | null>
 ): Promise<PageSyncResult> {
   if (!navigator.onLine) return PageSyncResult.Success;
 
@@ -69,14 +72,14 @@ export async function fetchUpdatedPages(
   await navigator.locks.request(
     "orangetask_main_table_sync",
     async (lock: Lock | null) => {
-      const localPages = await getLocalPagesByUserId(userId);
-      const mostRecentLastModified = localPages.reduce((max, page) => {
+      const localPages = await _getLocalPagesByUserId(userId);
+      const mostRecentLastModified = (localPages || []).reduce((max, page) => {
         return Math.max(max, page.lastModified.getTime());
       }, 0);
       const updatedPages =
         mostRecentLastModified > 0
-          ? await fetchUpdatesSince(userId, new Date(mostRecentLastModified))
-          : await fetchPagesRemote(userId);
+          ? await _fetchUpdatesSince(userId, new Date(mostRecentLastModified)) ?? undefined
+          : await _fetchPagesRemote(userId);
       if (!updatedPages) {
         result = PageSyncResult.Error;
         return;
@@ -94,13 +97,16 @@ export async function fetchUpdatedPages(
 
 export async function processQueuedUpdates(
   userId: string,
-  handleConflict: (pageId: string) => void
+  handleConflict: (pageId: string) => void,
+  _getQueuedUpdatesByUserId: (userId: string) => Promise<Page[]>,
+  _getLocalPageById: (id: string) => Promise<Page | undefined>
 ): Promise<PageSyncResult> {
   let result = PageSyncResult.Success;
   async function processQueuedUpdate(queuedUpdate: Page) {
+    
     if (!navigator.onLine) return;
-
-    const localPage = await getLocalPageById(queuedUpdate.id);
+    
+    const localPage = await _getLocalPageById(queuedUpdate.id);
     if (localPage) {
       if (localPage.lastModified > queuedUpdate.lastModified) {
         result = PageSyncResult.Conflict;
@@ -110,9 +116,12 @@ export async function processQueuedUpdates(
         );
         handleConflict(queuedUpdate.id);
         return;
+      } else {
+        console.log("yeah it's fine");
       }
 
-      if (isDevelopmentEnvironment) console.time(`updatePageWithHistory ${queuedUpdate.title}`);
+      if (isDevelopmentEnvironment)
+        console.time(`updatePageWithHistory ${queuedUpdate.title}`);
       const { revisionNumber, lastModified } = await updatePageWithHistory(
         queuedUpdate.id,
         queuedUpdate.value,
@@ -120,7 +129,8 @@ export async function processQueuedUpdates(
         queuedUpdate.deleted,
         queuedUpdate.revisionNumber
       );
-      if (isDevelopmentEnvironment) console.timeEnd(`updatePageWithHistory ${queuedUpdate.title}`);
+      if (isDevelopmentEnvironment)
+        console.timeEnd(`updatePageWithHistory ${queuedUpdate.title}`);
       localDb.queuedUpdates.delete(queuedUpdate.id);
       if (revisionNumber === -1 || !revisionNumber || !lastModified) {
         console.log("failed to update page", queuedUpdate.title);
@@ -136,10 +146,19 @@ export async function processQueuedUpdates(
       };
       localDb.pages.put(pageUpdated);
     } else {
-      const page = await insertPageDb(queuedUpdate.title, queuedUpdate.value, userId, queuedUpdate.isJournal, queuedUpdate.id);
+      const page = await insertPageDb(
+        queuedUpdate.title,
+        queuedUpdate.value,
+        userId,
+        queuedUpdate.isJournal,
+        queuedUpdate.id
+      );
       if (typeof page === "string") {
         if (page.includes("duplicate key value") && queuedUpdate.isJournal) {
-          console.log("duplicate journal page, deleting queued update", queuedUpdate.title);
+          console.log(
+            "duplicate journal page, deleting queued update",
+            queuedUpdate.title
+          );
           localDb.queuedUpdates.delete(queuedUpdate.id);
         } else {
           console.error("failed to insert page", queuedUpdate.title, page);
@@ -147,21 +166,22 @@ export async function processQueuedUpdates(
         result = PageSyncResult.Error;
         return;
       }
-      localDb.transaction("rw", localDb.pages, localDb.queuedUpdates, async () => {
-        localDb.queuedUpdates.delete(queuedUpdate.id);
-        if (!isPage(page)) throw new Error("expected page, got", page);
-        localDb.pages.put(page);
-      }).catch(err => {
-        result = PageSyncResult.Error;
-        throw err;
-      });
+      localDb
+        .transaction("rw", localDb.pages, localDb.queuedUpdates, async () => {
+          localDb.queuedUpdates.delete(queuedUpdate.id);
+          if (!isPage(page)) throw new Error("expected page, got", page);
+          localDb.pages.put(page);
+        })
+        .catch((err) => {
+          result = PageSyncResult.Error;
+          throw err;
+        });
     }
   }
-
   await navigator.locks.request(
     "orangetask_queued_updates_sync",
     async (lock: Lock | null) => {
-      const queuedUpdates = await getQueuedUpdatesByUserId(userId);
+      const queuedUpdates = await _getQueuedUpdatesByUserId(userId);
       for (const queuedUpdate of queuedUpdates) {
         await processQueuedUpdate(queuedUpdate);
       }
@@ -170,11 +190,24 @@ export async function processQueuedUpdates(
   return result;
 }
 
-export async function performSync(userId: string, handleConflict: (pageId: string) => void): Promise<PageSyncResult> {
+export async function performSync(
+  userId: string,
+  handleConflict: (pageId: string) => void
+): Promise<PageSyncResult> {
   if (!navigator.onLine) return PageSyncResult.Success;
-  const syncResult = await fetchUpdatedPages(userId);
+  const syncResult = await fetchUpdatedPages(
+    userId,
+    getLocalPagesByUserId,
+    fetchUpdatesSince,
+    fetchPagesRemote
+  );
   if (syncResult !== PageSyncResult.Success) return syncResult;
-  return await processQueuedUpdates(userId, handleConflict);
+  return await processQueuedUpdates(
+    userId,
+    handleConflict,
+    getQueuedUpdatesByUserId,
+    getLocalPageById
+  );
 }
 
 /**
