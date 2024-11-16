@@ -1,6 +1,6 @@
 import { test as setup, expect } from '@playwright/test';
 import { STORAGE_STATE } from '../playwright.config';
-require('dotenv').config({ path: './.env.development.local' }); 
+require('dotenv').config({ path: './.env.playwright.local' }); 
 const { db } = require('@vercel/postgres');
 const {
   users,

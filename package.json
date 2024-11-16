@@ -43,6 +43,7 @@
     "next-auth": "^4.24.8",
     "openai": "^4.28.4",
     "openai-zod-functions": "^0.1.2",
+    "pg": "^8.13.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-error-boundary": "^4.1.2",
