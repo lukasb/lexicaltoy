@@ -11,8 +11,13 @@ import {
   getJournalPagesByUserId,
   getQueuedUpdatesByUserId,
   processQueuedUpdates,
-  fetchUpdatedPages
+  fetchUpdatedPages,
+  getQueuedUpdateById,
+  getLocalJournalPageByDate,
+  getJournalQueuedUpdatesByUserId,
+  getLocalPagesByUserId
 } from "./storage-context";
+import { getJournalTitle } from "@/lib/journal-helpers";
 
 // Mock remote DB functions
 jest.mock("@/lib/db", () => ({
@@ -71,12 +76,16 @@ describe("Page Sync Functions", () => {
   };
 
   beforeEach(async () => {
-    // Clear database before each test
-    await localDb.pages.clear();
-    await localDb.queuedUpdates.clear();
+    // Reset IndexedDB completely
+    indexedDB = new IDBFactory();
+    await localDb.delete();
+    await localDb.open();
 
     // Reset all mocks
     jest.clearAllMocks();
+    
+    // Reset navigator online status to default (true)
+    setNavigatorOnlineStatus(true);
   });
 
   describe("performSync", () => {
@@ -263,6 +272,112 @@ describe("Page Sync Functions", () => {
       expect(journalPages[0].isJournal).toBe(true);
       expect(journalPages[0].title).toBe("2024-01-01");
       expect(journalPages[0].id).toBe("journal-page-123");
+    });
+  });
+
+  describe("Local Page Operations", () => {
+    /*it("should retrieve local page by id", async () => {
+      await localDb.pages.put(mockPage);
+      const result = await getLocalPageById(mockPage.id);
+      expect(result).toEqual(mockPage);
+    });*/
+  
+    it("should retrieve queued update by id", async () => {
+      const queuedPage = { ...mockPage, value: "queued content" };
+      await localDb.queuedUpdates.put(queuedPage);
+      const result = await getQueuedUpdateById(mockPage.id);
+      expect(result).toEqual(queuedPage);
+    });
+  
+    it("should prioritize queued updates in journal page retrieval", async () => {
+      const journalDate = new Date("2024-01-01");
+      const journalTitle = getJournalTitle(journalDate);
+      
+      const localPage = { ...mockPage, title: journalTitle, isJournal: true };
+      const queuedPage = { ...localPage, value: "queued content" };
+      
+      await localDb.pages.put(localPage);
+      await localDb.queuedUpdates.put(queuedPage);
+      
+      const result = await getLocalJournalPageByDate(journalDate);
+      expect(result).toEqual(queuedPage);
+    });
+  });
+  
+  describe("Journal Operations", () => {
+    it("should retrieve queued journal updates for user", async () => {
+      const queuedJournal = { ...mockPage, isJournal: true };
+      const queuedRegular = { ...mockPage, id: "regular-123", isJournal: false };
+      
+      await localDb.queuedUpdates.bulkPut([queuedJournal, queuedRegular]);
+      
+      const results = await getJournalQueuedUpdatesByUserId(mockUserId);
+      expect(results).toHaveLength(1);
+      expect(results[0]).toEqual(queuedJournal);
+    });
+  });
+  
+  describe("Error Handling", () => {
+    it("should handle invalid page data during sync", async () => {
+      const invalidPage = { id: "invalid-123" }; // Missing required fields
+      (remoteDb.fetchPagesRemote as jest.Mock).mockResolvedValue([invalidPage]);
+      
+      await expect(fetchUpdatedPages(
+        mockUserId,
+        jest.fn(),
+        jest.fn(),
+        remoteDb.fetchPagesRemote
+      )).rejects.toThrow();
+    });
+  
+    it("should handle insertPageDb failures", async () => {
+
+      setNavigatorOnlineStatus(true);
+
+      (remoteDb.insertPageDb as jest.Mock).mockResolvedValue("duplicate key value");
+      
+      const queuedJournal = { ...mockPage, id: "journal-123", title: "Journal 2024-01-01", isJournal: true };
+      await localDb.queuedUpdates.put(queuedJournal);
+      
+      const result = await processQueuedUpdates(
+        mockUserId,
+        jest.fn(),
+        () => Promise.resolve([queuedJournal]),
+        () => Promise.resolve(undefined)
+      );
+      
+      expect(result).toBe(PageSyncResult.Error);
+    });
+  });
+  
+  describe("Network and Sync Edge Cases", () => {
+    it("should handle network failure during sync", async () => {
+      (remoteDb.fetchPagesRemote as jest.Mock).mockRejectedValue(new Error("Network error"));
+      
+      const result = await fetchUpdatedPages(
+        mockUserId,
+        jest.fn(),
+        jest.fn(),
+        remoteDb.fetchPagesRemote
+      );
+      
+      expect(result).toBe(PageSyncResult.Error);
+    });
+  
+    it("should use fetchUpdatesSince for incremental sync", async () => {
+      const mockFetchUpdatesSince = jest.fn().mockResolvedValue([mockPage]);
+      
+      await localDb.pages.put(mockPage);
+      
+      await fetchUpdatedPages(
+        mockUserId,
+        getLocalPagesByUserId,
+        mockFetchUpdatesSince,
+        remoteDb.fetchPagesRemote
+      );
+      
+      expect(mockFetchUpdatesSince).toHaveBeenCalled();
+      expect(remoteDb.fetchPagesRemote).not.toHaveBeenCalled();
     });
   });
 });

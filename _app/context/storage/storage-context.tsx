@@ -20,11 +20,11 @@ export async function getLocalPageById(id: string): Promise<Page | undefined> {
   return localDb.pages.get(id);
 }
 
-async function getQueuedUpdateById(id: string): Promise<Page | undefined> {
+export async function getQueuedUpdateById(id: string): Promise<Page | undefined> {
   return localDb.queuedUpdates.get(id);
 }
 
-async function getLocalPagesByUserId(userId: string): Promise<Page[]> {
+export async function getLocalPagesByUserId(userId: string): Promise<Page[]> {
   return localDb.pages.filter((page) => page.userId === userId).toArray();
 }
 
@@ -34,7 +34,7 @@ export async function getQueuedUpdatesByUserId(userId: string): Promise<Page[]> 
     .toArray();
 }
 
-async function getLocalJournalPageByDate(
+export async function getLocalJournalPageByDate(
   date: Date
 ): Promise<Page | undefined> {
   const dateStr = getJournalTitle(date);
@@ -72,23 +72,39 @@ export async function fetchUpdatedPages(
   await navigator.locks.request(
     "orangetask_main_table_sync",
     async (lock: Lock | null) => {
-      const localPages = await _getLocalPagesByUserId(userId);
-      const mostRecentLastModified = (localPages || []).reduce((max, page) => {
-        return Math.max(max, page.lastModified.getTime());
-      }, 0);
-      const updatedPages =
-        mostRecentLastModified > 0
-          ? await _fetchUpdatesSince(userId, new Date(mostRecentLastModified)) ?? undefined
-          : await _fetchPagesRemote(userId);
-      if (!updatedPages) {
-        result = PageSyncResult.Error;
-        return;
-      }
-      for (const page of updatedPages) {
-        if (!isPage(page)) { 
-          throw new Error(`expected page, got ${JSON.stringify(page)}`);
+      try {
+        const localPages = await _getLocalPagesByUserId(userId);
+        const mostRecentLastModified = (localPages || []).reduce((max, page) => {
+          return Math.max(max, page.lastModified.getTime());
+        }, 0);
+        
+        let updatedPages;
+        try {
+          updatedPages = mostRecentLastModified > 0
+            ? await _fetchUpdatesSince(userId, new Date(mostRecentLastModified)) ?? undefined
+            : await _fetchPagesRemote(userId);
+        } catch (error) {
+          result = PageSyncResult.Error;
+          return;
         }
-        localDb.pages.put(page);
+
+        if (!updatedPages) {
+          result = PageSyncResult.Error;
+          return;
+        }
+
+        for (const page of updatedPages) {
+          if (!isPage(page)) { 
+            throw new Error(`expected page, got ${JSON.stringify(page)}`);
+          }
+          await localDb.pages.put(page);
+        }
+      } catch (error) {
+        // Rethrow validation errors
+        if (error instanceof Error && error.message.startsWith('expected page')) {
+          throw error;
+        }
+        result = PageSyncResult.Error;
       }
     }
   );
@@ -116,8 +132,6 @@ export async function processQueuedUpdates(
         );
         handleConflict(queuedUpdate.id);
         return;
-      } else {
-        console.log("yeah it's fine");
       }
 
       if (isDevelopmentEnvironment)
@@ -160,8 +174,6 @@ export async function processQueuedUpdates(
             queuedUpdate.title
           );
           localDb.queuedUpdates.delete(queuedUpdate.id);
-        } else {
-          console.error("failed to insert page", queuedUpdate.title, page);
         }
         result = PageSyncResult.Error;
         return;
