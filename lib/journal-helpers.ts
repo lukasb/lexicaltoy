@@ -1,6 +1,6 @@
 import { parse, isBefore, startOfDay, subWeeks } from 'date-fns';
 import { Page } from "@/lib/definitions";
-import { insertPage, updatePage, PageSyncResult, performSync } from '@/_app/context/storage/storage-context';
+import { insertPage, updatePage, PageSyncResult } from '@/_app/context/storage/storage-context';
 import { getJournalPagesByUserId, getJournalQueuedUpdatesByUserId, deleteQueuedUpdate } from '@/_app/context/storage/storage-context';
 
 export const DEFAULT_JOURNAL_CONTENTS = '- ';
@@ -57,7 +57,7 @@ export const deleteStaleJournalPages = async (today: Date, defaultValue: string,
     const pageDate = parse(pageDateStr, 'MMM do, yyyy', new Date());
     const pageDateStartOfDay = startOfDay(pageDate);
     const todayStartOfDay = startOfDay(today);
-    return isBefore(pageDateStartOfDay, todayStartOfDay) && queuedUpdate.value === defaultValue;
+    return isBefore(pageDateStartOfDay, todayStartOfDay) && queuedUpdate.value === defaultValue && !queuedUpdate.deleted;
   });
   for (const queuedUpdate of staleQueuedUpdates) {
     console.log("deleting stale journal queued update", queuedUpdate.title);

@@ -15,7 +15,6 @@ import {
   setUseWhatChange,
 } from '@simbathesailor/use-what-changed';
 import { MiniSearchProvider } from "@/_app/context/minisearch-context";
-import { PageSyncResult, performSync } from '@/_app/context/storage/storage-context';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { localDb } from '@/_app/context/storage/db';
 import { PageUpdateProvider } from "@/_app/context/page-update-context";
@@ -91,6 +90,15 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
     ];
     return mergedPages;
   }, [session]);
+
+  /*useEffect(() => {
+    async function countPages() {
+      const localPagesCount = await localDb.pages.count();
+      const queuedUpdatesCount = await localDb.queuedUpdates.count();
+      console.log("local pages count", localPagesCount, "queued updates count", queuedUpdatesCount);
+    }
+    countPages();
+  }, [pages]);*/
 
   if (!session || !session.id) {
     console.log("Problem with session", session);

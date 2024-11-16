@@ -60,7 +60,7 @@ export async function deleteQueuedUpdate(id: string): Promise<void> {
   return localDb.queuedUpdates.delete(id);
 }
 
-export async function fetchUpdatedPages(
+export async function fetchUpdatedPagesInternal(
   userId: string,
   _getLocalPagesByUserId: (userId: string) => Promise<Page[]>,
   _fetchUpdatesSince: (userId: string, date: Date) => Promise<Page[] | null>,
@@ -111,7 +111,7 @@ export async function fetchUpdatedPages(
   return result;
 }
 
-export async function processQueuedUpdates(
+export async function processQueuedUpdatesInternal(
   userId: string,
   handleConflict: (pageId: string) => void,
   _getQueuedUpdatesByUserId: (userId: string) => Promise<Page[]>,
@@ -202,29 +202,22 @@ export async function processQueuedUpdates(
   return result;
 }
 
-export async function performSync(
+export async function fetchUpdatedPages(
+  userId: string,
+): Promise<PageSyncResult> {
+  return fetchUpdatedPagesInternal(userId, getLocalPagesByUserId, fetchUpdatesSince, fetchPagesRemote);
+}
+
+export async function processQueuedUpdates(
   userId: string,
   handleConflict: (pageId: string) => void
 ): Promise<PageSyncResult> {
-  if (!navigator.onLine) return PageSyncResult.Success;
-  const syncResult = await fetchUpdatedPages(
-    userId,
-    getLocalPagesByUserId,
-    fetchUpdatesSince,
-    fetchPagesRemote
-  );
-  if (syncResult !== PageSyncResult.Success) return syncResult;
-  return await processQueuedUpdates(
-    userId,
-    handleConflict,
-    getQueuedUpdatesByUserId,
-    getLocalPageById
-  );
+  return processQueuedUpdatesInternal(userId, handleConflict, getQueuedUpdatesByUserId, getLocalPageById);
 }
 
 /**
  * Queue an update to this page. Our useLiveQuery will use this new value for the global pages context.
- * Update will be synced to the server next time we're online and performSync is called.
+ * Update will be synced to the server next time we're online and processQueuedUpdates is called.
  * @param page - the page to update
  * @param value - the new value for the page
  * @param title - the new title for the page

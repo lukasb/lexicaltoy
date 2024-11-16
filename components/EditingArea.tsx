@@ -32,9 +32,11 @@ import {
   insertPage,
   updatePage,
   PageSyncResult,
-  performSync
+  fetchUpdatedPages,
+  processQueuedUpdates
 } from "@/_app/context/storage/storage-context";
 import { usePageUpdate } from "@/_app/context/page-update-context";
+
 function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
 
   const [isClient, setIsClient] = useState(false)
@@ -48,30 +50,38 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
   const hasInitializedSearch = useRef(false);
   let initCount = 0;
 
-  const { getPageUpdate, addPageUpdate, setPageUpdateStatus, pageUpdates } = usePageUpdate();
+  const { getPageUpdate, addPageUpdate, setPageUpdateStatus } = usePageUpdate();
 
-  const [syncResult, setSyncResult] = useState<PageSyncResult>(PageSyncResult.Success);
+  const handleConflict = useCallback((pageId: string) => {
+    if (getPageUpdate(pageId)) {
+      setPageUpdateStatus(pageId, PageStatus.Conflict);
+    } else {
+      addPageUpdate(pageId, PageStatus.Conflict);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    async function sync() {
+    async function fetch() {
       if (userId) {
-        console.log("performing sync");
-        const handleConflict = (pageId: string) => {
-          if (getPageUpdate(pageId)) {
-            setPageUpdateStatus(pageId, PageStatus.Conflict);
-          } else {
-            addPageUpdate(pageId, PageStatus.Conflict);
-          }
-        };
-        
-        const result = await performSync(userId, handleConflict);
-        setSyncResult(result);
+        console.log("fetching updated pages");
+        await fetchUpdatedPages(userId);
       }
     }
-
-    sync();
-    const intervalId = setInterval(sync, 8000);
-    return () => clearInterval(intervalId);
+    async function processUpdates() {
+      if (userId) {
+        console.log("processing queued updates");
+        await processQueuedUpdates(userId, handleConflict);
+      }
+    }
+    fetch();
+    const fetchIntervalId = setInterval(fetch, 60000);
+    const processIntervalId = setInterval(processUpdates, 8000);
+    return () => {
+      clearInterval(fetchIntervalId);
+      clearInterval(processIntervalId);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   useEffect(() => {
