@@ -8,7 +8,7 @@ module.exports = {
       tsconfig: 'tsconfig.test.json'
     }],
   },
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/playwright-tests/', '/tests-examples/'],
   testEnvironmentOptions: {
     jsdom: {
       url: "http://localhost/"
