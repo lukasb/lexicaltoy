@@ -30,7 +30,6 @@ import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blocki
 import { useMiniSearch } from "@/_app/context/minisearch-context";
 import { 
   insertPage,
-  updatePage,
   PageSyncResult,
   fetchUpdatedPages,
   processQueuedUpdates
@@ -205,14 +204,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     });
   };  
 
-  const handleUpdatePageTitle = async (page: Page, newTitle: string) => {
-    const result = await updatePage(page, page.value, newTitle, page.deleted);
-    if (result === PageSyncResult.Conflict) {
-      console.error("error updating page title");
-      return;
-    }
-  }
-
   const handleNewPage = async (title: string) => {
     const [newPage, result] = await insertPage(title, emptyPageMarkdownString, userId, false);
     if (result === PageSyncResult.Conflict) {
@@ -226,18 +217,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     }
   };
 
-  const handleDeletePage = async (id: string) => {
-    const page = pages?.find((p) => p.id === id);
-    if (!page) return;
-    const result = await updatePage(page, page.value, page.title, true);
-    if (result === PageSyncResult.Conflict) {
-      console.error("Failed to delete page");
-      return;
-    }
-    msDiscardPage(id);
-    setOpenPageIds((prevPageIds) => prevPageIds.filter((pId) => pId !== id));
-  }
-
   const handlePagePinToggle = (pageId: string) => {
     console.log("toggling pin for", pageId);
     const newPinnedPageIds = togglePagePin(pageId);
@@ -248,6 +227,21 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     const newCollapsedPageIds = togglePageCollapse(pageId);
     setCollapsedPageIds(newCollapsedPageIds);
   };
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && userId) {
+        console.log("tab became visible, fetching updated pages");
+        fetchUpdatedPages(userId);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [userId]);
 
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
