@@ -1,15 +1,27 @@
 import { test as teardown } from '@playwright/test';
-require('dotenv').config({ path: './.env.development.local' }); 
+require('dotenv').config({ path: './.env.playwright.local' }); 
 const { db } = require('@vercel/postgres');
 const {
   users,
   pages
 } = require('./tests-placeholder-data.js');
 
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  user: process.env.POSTGRES_USER,
+  host: process.env.POSTGRES_HOST,
+  database: process.env.POSTGRES_DATABASE,
+  password: process.env.POSTGRES_PASSWORD,
+  port: 5432,
+  ssl: process.env.POSTGRES_HOST ? !process.env.POSTGRES_HOST.includes('localhost') : true
+});
+
 teardown('clean up db', async () => {
-  const client = await db.connect();
+  const client = await pool.connect();
   await cleanUp(client, users);
   await client.end();
+  await pool.release();
 });
 
 async function cleanUp(client: { sql: any; }, users: any[]) {

@@ -13,7 +13,7 @@ export const STORAGE_STATE = path.join(__dirname, 'playwright/.auth/user.json');
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: './playwright-tests',
+  testDir: 'playwright-tests',
   /* Run tests in files in parallel */
   fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -27,7 +27,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:3000/',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -64,13 +64,13 @@ export default defineConfig({
 
     {
       name: 'setup',
-      testMatch: /global\.setup\.ts/,
+      testMatch: '**/global\.setup\.ts/',
       teardown: 'cleanup db',
     },
 
     {
       name: 'cleanup db',
-      testMatch: /global\.teardown\.ts/,
+      testMatch: '**/global\.teardown\.ts/',
     },
 
     /* Test against mobile viewports. */
