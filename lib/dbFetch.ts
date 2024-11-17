@@ -1,4 +1,4 @@
-import { sql } from "@vercel/postgres";
+import { sql } from "@/lib/dbwrapper";
 import { unstable_noStore as noStore } from "next/cache";
 
 export async function fetchPages(userId: string, fetchDeleted?: boolean) {

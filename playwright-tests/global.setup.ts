@@ -1,34 +1,29 @@
 import { test as setup, expect } from '@playwright/test';
 import { STORAGE_STATE } from '../playwright.config';
-require('dotenv').config({ path: './.env.playwright.local' }); 
-const { db } = require('@vercel/postgres');
+require('dotenv').config({ path: './.env.test.local' }); 
+import { db } from '@/lib/dbwrapper';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+//import ws from 'ws';
+//neonConfig.webSocketConstructor = ws;
 const {
   users,
   pages,
 } = require('./tests-placeholder-data.js');
 import { seedUsers, seedPages } from '../scripts/seed-inserts';
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  user: process.env.POSTGRES_USER,
-  host: process.env.POSTGRES_HOST,
-  database: process.env.POSTGRES_DATABASE,
-  password: process.env.POSTGRES_PASSWORD,
-  port: 5432,
-  ssl: process.env.POSTGRES_HOST ? !process.env.POSTGRES_HOST.includes('localhost') : true
-});
-
 
 setup('seed db', async () => {
-  const client = await pool.connect();
+  console.log("postgres url", process.env.POSTGRES_URL);
+  console.log("vercel env", process.env.VERCEL_ENV);
+  const client = await db.connect();
+  //const pool = new Pool({ connectionString: process.env.POSTGRES_URL });
+  //const client = await pool.connect();
 
   await seedUsers(client, users);
   await seedPages(client, pages);
   
   console.log('Seeded db');
 
-  await client.end();
-  await pool.release();
+  await client.release();
 });
 
 setup('do login', async ({ page }) => {

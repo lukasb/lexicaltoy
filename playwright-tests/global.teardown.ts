@@ -1,6 +1,6 @@
 import { test as teardown } from '@playwright/test';
 require('dotenv').config({ path: './.env.playwright.local' }); 
-const { db } = require('@vercel/postgres');
+const { db } = require('@/lib/dbwrapper');
 const {
   users,
   pages

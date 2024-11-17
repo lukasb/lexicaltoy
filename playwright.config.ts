@@ -64,13 +64,13 @@ export default defineConfig({
 
     {
       name: 'setup',
-      testMatch: '**/global\.setup\.ts/',
+      testMatch: /global\.setup\.ts/,
       teardown: 'cleanup db',
     },
 
     {
       name: 'cleanup db',
-      testMatch: '**/global\.teardown\.ts/',
+      testMatch: /global\.teardown\.ts/,
     },
 
     /* Test against mobile viewports. */

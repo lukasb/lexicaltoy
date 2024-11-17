@@ -18,3 +18,14 @@ which will set NODE_ENV to "production" and hit the prod db
 Create a new user by modifying scripts/create-user.js and running:
 
 ```npm run adduser```
+
+for playwright tests, create .env.test.local and populate with the same values as .env.development.local except for the db credentials, then run:
+
+```
+cd playwright-tests
+docker compose up -d
+cd ..
+NODE_ENV=test npx playwright test --ui
+cd playwright-tests
+docker compose down
+```

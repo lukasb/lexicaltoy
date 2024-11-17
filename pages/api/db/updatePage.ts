@@ -1,6 +1,6 @@
 // pages/api/updatePage.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { sql } from "@vercel/postgres";
+import { sql } from "@/lib/dbwrapper";
 import { getSessionServer } from '@/lib/getAuth';
 
 export default async function handler(

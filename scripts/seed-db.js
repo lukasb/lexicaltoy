@@ -8,7 +8,7 @@ if (process.env.NODE_ENV === 'production') {
   envfile = './.env.development.local';
 }
 require('dotenv').config({ path: envfile }); 
-const { db } = require('@vercel/postgres');
+const { db } = require('@/lib/dbwrapper');
 const {
   users,
   pages,

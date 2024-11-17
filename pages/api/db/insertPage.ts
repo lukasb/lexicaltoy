@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { sql } from "@vercel/postgres";
+import { sql } from "@/lib/dbwrapper";
 import { isPage, Page } from '@/lib/definitions';
-import { PageStatus } from '@/lib/definitions';
 import { getSessionServer } from '@/lib/getAuth';
 
 type ApiResponse = {

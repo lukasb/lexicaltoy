@@ -1,5 +1,5 @@
 require('dotenv').config({ path: './.env.development.local' }); 
-const { db } = require('@vercel/postgres');
+const { db } = require('@/lib/dbwrapper');
 const {
   users,
   pages
