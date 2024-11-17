@@ -7,9 +7,20 @@ const {
   pages,
 } = require('./tests-placeholder-data.js');
 import { seedUsers, seedPages } from '../scripts/seed-inserts';
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  user: process.env.POSTGRES_USER,
+  host: process.env.POSTGRES_HOST,
+  database: process.env.POSTGRES_DATABASE,
+  password: process.env.POSTGRES_PASSWORD,
+  port: 5432,
+  ssl: process.env.POSTGRES_HOST ? !process.env.POSTGRES_HOST.includes('localhost') : true
+});
+
 
 setup('seed db', async () => {
-  const client = await db.connect();
+  const client = await pool.connect();
 
   await seedUsers(client, users);
   await seedPages(client, pages);
@@ -17,6 +28,7 @@ setup('seed db', async () => {
   console.log('Seeded db');
 
   await client.end();
+  await pool.release();
 });
 
 setup('do login', async ({ page }) => {
