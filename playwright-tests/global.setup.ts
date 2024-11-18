@@ -1,7 +1,8 @@
 import { test as setup, expect } from '@playwright/test';
 import { STORAGE_STATE } from '../playwright.config';
 require('dotenv').config({ path: './.env.test.local' }); 
-import { db } from '@/lib/dbwrapper';
+//import { db } from '@/lib/dbwrapper';
+import { db } from '../scripts/seed-db-wrapper.mts';
 import { Pool, neonConfig } from '@neondatabase/serverless';
 //import ws from 'ws';
 //neonConfig.webSocketConstructor = ws;
@@ -14,13 +15,19 @@ import { seedUsers, seedPages } from '../scripts/seed-inserts';
 setup('seed db', async () => {
   console.log("postgres url", process.env.POSTGRES_URL);
   console.log("vercel env", process.env.VERCEL_ENV);
-  const client = await db.connect();
+  console.log("node env", process.env.NODE_ENV);
+  const client = await db.pool.connect();
   console.log("client:", client);
   //const pool = new Pool({ connectionString: process.env.POSTGRES_URL });
   //const client = await pool.connect();
 
-  await seedUsers(client, users);
-  await seedPages(client, pages);
+  const clientWithSql = {
+    ...client,
+    sql: db.sql.bind(null)
+  };
+
+  await seedUsers(clientWithSql, users);
+  await seedPages(clientWithSql, pages);
   
   console.log('Seeded db');
 

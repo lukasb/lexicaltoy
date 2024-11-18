@@ -48,7 +48,7 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
     if (queuedUpdate) {
       if (errorCode === ConflictErrorCode.NotFound && queuedUpdate.deleted) {
         try {
-          console.log("queued update with conflict does not exist on server, removing");
+          console.log("queued delete does not exist on server, removing");
           removePageUpdate(pageId);
           await deletePage(pageId);
           await deleteQueuedUpdate(pageId);
