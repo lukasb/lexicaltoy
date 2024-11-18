@@ -36,12 +36,10 @@ import {
 } from "@/_app/context/storage/storage-context";
 import { usePageUpdate } from "@/_app/context/page-update-context";
 
-function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
+function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefined }) {
 
   const [isClient, setIsClient] = useState(false)
-
   const emptyPageMarkdownString = '- ';
-
   const [pinnedPageIds, setPinnedPageIds] = useState<string[]>([]);
   const [collapsedPageIds, setCollapsedPageIds] = useState<string[]>([]);
   const { setBlockIdsForPage } = useBlockIdsIndex();
@@ -108,15 +106,24 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     }
   }, [pages, setBlockIdsForPage]);
 
-  const initialPageId = findMostRecentlyEditedPage(pages || [])?.id;
-  const lastWeekJournalPageIds = getLastWeekJournalPages(pages || []).map(page => page.id);
-  const [openPageIds, setOpenPageIds] = useState<string[]>(() => {
-    if (!pages) return [];
-    const initialIds: string[] = [];
-    if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) initialIds.push(initialPageId);
-    initialIds.push(...lastWeekJournalPageIds);
-    return initialIds;
-  });
+  const initializedPagesRef = useRef(false);
+  const [openPageIds, setOpenPageIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!initializedPagesRef.current && pages && pages.length > 0) {
+      const initialPageId = findMostRecentlyEditedPage(pages)?.id;
+      const lastWeekJournalPageIds = getLastWeekJournalPages(pages).map(page => page.id);
+      
+      const initialIds: string[] = [];
+      if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) {
+        initialIds.push(initialPageId);
+      }
+      initialIds.push(...lastWeekJournalPageIds);
+      
+      setOpenPageIds(initialIds);
+      initializedPagesRef.current = true;
+    }
+  }, [pages]);
 
   useEffect(() => {
     setOpenPageIds(prevIds => [...new Set([...prevIds, ...pinnedPageIds])]);
@@ -134,7 +141,11 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     const todayJournalTitle = getJournalTitle(today);
     if (!pages?.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
       try {
-        const result = await insertNewJournalPage(todayJournalTitle, userId, today);
+        const [newPage, result] = await insertNewJournalPage(todayJournalTitle, userId, today);
+        if (isPage(newPage)) {
+          msAddPage(newPage);
+          openPage(newPage);
+        }
       } catch (error) {
         console.error("error creating new journal page", todayJournalTitle, error);
       }
@@ -144,7 +155,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] }) {
     } catch (error) {
       console.error("error deleting stale journal pages", error);
     }
-  }, [userId, pages]);
+  }, [userId, pages, msAddPage]);
 
   useEffect(() => {
     if (!setupDoneRef.current) {

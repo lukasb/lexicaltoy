@@ -118,9 +118,6 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
             dev
           </div>
         )}
-        {pages === undefined || pages.length === 0 ? (
-          <div className="text-center py-4">Loading ...</div>
-        ) : (
           <BlockIdsIndexProvider>
             <MiniSearchProvider>
               <PageUpdateProvider>
@@ -128,7 +125,6 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
               </PageUpdateProvider>
             </MiniSearchProvider>
           </BlockIdsIndexProvider>
-        )}
         <SignoutButton />
       </div>
     </div>

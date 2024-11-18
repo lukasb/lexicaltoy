@@ -59,7 +59,7 @@ export default async function handler(
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const isDuplicateKey = errorMessage.includes('duplicate key value');
       
-      res.status(500).json({ 
+      res.status(isDuplicateKey ? 409 : 500).json({ 
         error: isDuplicateKey 
           ? 'Duplicate key error' 
           : 'Database Error: Failed to Insert Page'

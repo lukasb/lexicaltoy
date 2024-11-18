@@ -5,7 +5,10 @@ if (process.env.VERCEL_ENV === 'test') {
   /*neonConfig.wsProxy = (host) => `${host}:54330/v1`;
   neonConfig.useSecureWebSocket = false;
   neonConfig.pipelineTLS = false;
+  neonConfig.pipelineTLS = false;
   neonConfig.pipelineConnect = false;*/
+} else if (process.env.NODE_ENV === 'development') {
+  console.log("using dev db");
 } else {
   console.log("using prod db");
 }

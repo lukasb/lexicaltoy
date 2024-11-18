@@ -25,7 +25,11 @@ export async function insertPageDb(
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      if (response.status === 409) {
+        return "duplicate key value";
+      } else {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
     }
 
     const result = await response.json();

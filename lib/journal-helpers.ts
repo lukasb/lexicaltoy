@@ -29,11 +29,20 @@ export function getJournalTitle(date: Date) {
   return dateString.replace(new RegExp(` ${day},`), ` ${day}${ordinalSuffix},`);
 }
 
-export const insertNewJournalPage = async (title: string, userId: string, date: Date): Promise<PageSyncResult> => {
+export const insertNewJournalPage = async (
+  title: string,
+  userId: string,
+  date: Date
+): Promise<[Page | undefined, PageSyncResult]> => {
   console.log("inserttNewJournalPage", title, userId, date);
-  const [newPage, result] = await insertPage(title, DEFAULT_JOURNAL_CONTENTS, userId, true);
-  return result;
-}
+  const [newPage, result] = await insertPage(
+    title,
+    DEFAULT_JOURNAL_CONTENTS,
+    userId,
+    true
+  );
+  return [newPage, result];
+};
 
 export const deleteStaleJournalPages = async (today: Date, defaultValue: string, userId: string) => {
   const journalPages = await getJournalPagesByUserId(userId);
