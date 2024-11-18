@@ -3,7 +3,8 @@
 import { 
   Page, 
   isPage, 
-  DEFAULT_NONJOURNAL_PAGE_VALUE
+  DEFAULT_NONJOURNAL_PAGE_VALUE,
+  ConflictErrorCode
 } from "@/lib/definitions";
 import Omnibar from "./Omnibar";
 import { findMostRecentlyEditedPage } from "@/lib/pages-helpers";
@@ -55,12 +56,16 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
 
   const [initialFetchComplete, setInitialFetchComplete] = useState(false);
 
-  const handleConflict = createConflictHandler({
-    getPageUpdate,
-    addPageUpdate,
-    setPageUpdateStatus,
-    removePageUpdate,
-  });
+  const handleConflict = useCallback(
+    async (pageId: string, errorCode: ConflictErrorCode) => {
+      return createConflictHandler({
+        removePageUpdate,
+        pages: pages || [],
+        userId, 
+      })(pageId, errorCode);
+    },
+    [removePageUpdate, pages, userId]
+  );
 
   useEffect(() => {
     async function fetch() {

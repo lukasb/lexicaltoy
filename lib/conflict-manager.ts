@@ -2,18 +2,36 @@ import {
   PageStatus,
   DEFAULT_NONJOURNAL_PAGE_VALUE,
   ConflictErrorCode,
+  Page,
 } from "@/lib/definitions";
 import {
   getQueuedUpdateById,
   deleteQueuedUpdate,
+  insertPage,
+  PageSyncResult,
 } from "@/_app/context/storage/storage-context";
 import { DEFAULT_JOURNAL_CONTENTS } from "@/lib/journal-helpers";
 
 export interface ConflictManagerDeps {
-  getPageUpdate: (pageId: string) => any;
-  addPageUpdate: (pageId: string, status: PageStatus) => void;
-  setPageUpdateStatus: (pageId: string, status: PageStatus) => void;
   removePageUpdate: (pageId: string) => void;
+  pages: Page[];
+  userId: string;
+}
+
+function findUnusedTitle(startTitle: string, pages: Page[]): string {
+  // if startTitle is already unused, return it
+  if (!pages.find(page => page.title === startTitle)) {
+    return startTitle;
+  }
+  // otherwise, find the next unused title
+  for (let i = 1; i < 1000; i++) {
+    const title = `${startTitle} (conflict) ${i}`;
+    if (!pages.find(page => page.title === title)) {
+      return title;
+    }
+  }
+  // if we've exhausted the range, return a random UUID
+  return crypto.randomUUID();
 }
 
 export function createConflictHandler(deps: ConflictManagerDeps) {
@@ -22,10 +40,9 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
     errorCode: ConflictErrorCode
   ): Promise<void> {
     const {
-      getPageUpdate,
-      addPageUpdate,
-      setPageUpdateStatus,
       removePageUpdate,
+      pages,
+      userId,
     } = deps;
     const queuedUpdate = await getQueuedUpdateById(pageId);
     if (queuedUpdate) {
@@ -45,12 +62,18 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
         alert("A page with this title already exists. Please use a different title.");
         removePageUpdate(pageId);
         await deleteQueuedUpdate(pageId);
+      } else {
+        console.log("queued update with conflict is non-journal page with non-default value, adding conflict page");
+        removePageUpdate(pageId);
+        const newTitle = findUnusedTitle(queuedUpdate.title, pages);
+        await deleteQueuedUpdate(pageId);
+        const [newPage, result] = await insertPage(newTitle, queuedUpdate.value, userId, queuedUpdate.isJournal);
+        if (result === PageSyncResult.Success) {
+          console.log("successfully inserted conflict page");
+        } else {
+          console.error("failed to insert conflict page");
+        }
       }
-    }
-    if (getPageUpdate(pageId)) {
-      setPageUpdateStatus(pageId, PageStatus.Conflict);
-    } else {
-      addPageUpdate(pageId, PageStatus.Conflict);
     }
   };
 }
