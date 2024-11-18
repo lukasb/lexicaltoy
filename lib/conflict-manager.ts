@@ -1,5 +1,4 @@
 import {
-  PageStatus,
   DEFAULT_NONJOURNAL_PAGE_VALUE,
   ConflictErrorCode,
   Page,
@@ -9,6 +8,7 @@ import {
   deleteQueuedUpdate,
   insertPage,
   PageSyncResult,
+  deletePage
 } from "@/_app/context/storage/storage-context";
 import { DEFAULT_JOURNAL_CONTENTS } from "@/lib/journal-helpers";
 
@@ -46,7 +46,17 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
     } = deps;
     const queuedUpdate = await getQueuedUpdateById(pageId);
     if (queuedUpdate) {
-      if (
+      if (errorCode === ConflictErrorCode.NotFound && queuedUpdate.deleted) {
+        try {
+          console.log("queued update with conflict does not exist on server, removing");
+          removePageUpdate(pageId);
+          await deletePage(pageId);
+          await deleteQueuedUpdate(pageId);
+        } catch (error) {
+          console.error("error handling queued delete of page that does not exist on server", error);
+        }
+      }
+      else if (
         queuedUpdate.isJournal &&
         queuedUpdate.value === DEFAULT_JOURNAL_CONTENTS
       ) {

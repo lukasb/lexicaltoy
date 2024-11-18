@@ -44,5 +44,6 @@ export type User = {
   export enum ConflictErrorCode {
     StaleUpdate = 'stale_update',
     UniquenessViolation = 'uniqueness_violation',
+    NotFound = 'not_found',
     Unknown = 'unknown'
   }

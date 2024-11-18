@@ -60,6 +60,10 @@ export async function deleteQueuedUpdate(id: string): Promise<void> {
   return localDb.queuedUpdates.delete(id);
 }
 
+export async function deletePage(id: string): Promise<void> {
+  return localDb.pages.delete(id);
+}
+
 export async function fetchUpdatedPagesInternal(
   userId: string,
   _getLocalPagesByUserId: (userId: string) => Promise<Page[]>,
@@ -163,7 +167,11 @@ export async function processQueuedUpdatesInternal(
       } catch (error) {
         console.error("failed to update page", queuedUpdate.title, error);
         result = PageSyncResult.Error;
-        await handleConflict(queuedUpdate.id, ConflictErrorCode.Unknown);
+        if (error instanceof Error && error.message.includes("404")) {
+          await handleConflict(queuedUpdate.id, ConflictErrorCode.NotFound);
+        } else {
+          await handleConflict(queuedUpdate.id, ConflictErrorCode.Unknown);
+        }
         return;
       }
     } else {
