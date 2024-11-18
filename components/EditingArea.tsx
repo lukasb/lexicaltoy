@@ -58,11 +58,14 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [initialFetchComplete, setInitialFetchComplete] = useState(false);
+
   useEffect(() => {
     async function fetch() {
       if (userId) {
         console.log("fetching updated pages");
         await fetchUpdatedPages(userId);
+        setInitialFetchComplete(true);
       }
     }
     async function processUpdates() {
@@ -110,7 +113,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const [openPageIds, setOpenPageIds] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!initializedPagesRef.current && pages && pages.length > 0) {
+    if (!initializedPagesRef.current && pages && pages.length > 0 && initialFetchComplete) {
       const initialPageId = findMostRecentlyEditedPage(pages)?.id;
       const lastWeekJournalPageIds = getLastWeekJournalPages(pages).map(page => page.id);
       
@@ -123,7 +126,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
       setOpenPageIds(initialIds);
       initializedPagesRef.current = true;
     }
-  }, [pages]);
+  }, [pages, initialFetchComplete]);
 
   useEffect(() => {
     setOpenPageIds(prevIds => [...new Set([...prevIds, ...pinnedPageIds])]);
