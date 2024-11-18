@@ -1,4 +1,3 @@
-import { neonConfig } from '@neondatabase/serverless';
 import { Pool, QueryResultRow } from 'pg';
  
 if (process.env.VERCEL_ENV === 'test') {

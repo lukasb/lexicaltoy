@@ -5,14 +5,19 @@ if (process.env.NODE_ENV === 'production') {
   console.log('refusing to seed production database');
   process.exit(1);
 } else if (process.env.NODE_ENV === 'development') {
+  console.log('seeding development database');
   envfile = './.env.development.local';
+} else if (process.env.NODE_ENV === 'test') {
+  console.log('seeding test database');
+  envfile = './.env.test.local';
 }
 require('dotenv').config({ path: envfile }); 
-const { db } = require('@/lib/dbwrapper');
+//const { db } = require('@vercel/postgres');
+const { db } = require('../lib/dbwrapper.ts');
 const {
   users,
   pages,
-} = require('@/lib/placeholder-data.js');
+} = require('../lib/placeholder-data.js');
 
 async function main() {
   const client = await db.connect();
