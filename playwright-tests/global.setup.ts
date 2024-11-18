@@ -15,6 +15,7 @@ setup('seed db', async () => {
   console.log("postgres url", process.env.POSTGRES_URL);
   console.log("vercel env", process.env.VERCEL_ENV);
   const client = await db.connect();
+  console.log("client:", client);
   //const pool = new Pool({ connectionString: process.env.POSTGRES_URL });
   //const client = await pool.connect();
 

@@ -38,3 +38,11 @@ export type User = {
       typeof obj.deleted === 'boolean'
     );
   }
+
+  export const DEFAULT_NONJOURNAL_PAGE_VALUE = '- ';
+
+  export enum ConflictErrorCode {
+    StaleUpdate = 'stale_update',
+    UniquenessViolation = 'uniqueness_violation',
+    Unknown = 'unknown'
+  }

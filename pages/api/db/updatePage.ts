@@ -13,8 +13,9 @@ export default async function handler(
     return res.status(401).json({ error: 'Not Authorized' });
   }
 
+  const { id, value, title, deleted, oldRevisionNumber } = req.body;
+
   if (req.method === 'POST') {
-    const { id, value, title, deleted, oldRevisionNumber } = req.body;
 
     if (!id || value === undefined || oldRevisionNumber === undefined || 
       title === undefined || deleted === undefined
@@ -38,9 +39,14 @@ export default async function handler(
         WHERE id = ${id}
         RETURNING revision_number, last_modified
       `;
+      
+      if (result.rowCount === 0) {
+        return res.status(404).json({ error: `Page with ID ${id} not found` });
+      }
+      
       return res.status(200).json({ revisionNumber: result.rows[0].revision_number, lastModified: result.rows[0].last_modified });
     } catch (error) {
-      console.error("Database Error: Failed to Update Page", error, id, oldRevisionNumber);
+      console.error(`Database Error: failed to Update Page - ID: ${id}, RevisionNumber: ${oldRevisionNumber}`, error);
       res.status(500).json({ error: 'Database Error: Failed to Update Page' + oldRevisionNumber });
     }
   } else {

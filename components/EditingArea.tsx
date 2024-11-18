@@ -1,6 +1,10 @@
 "use client";
 
-import { Page, isPage, PageStatus } from "@/lib/definitions";
+import { 
+  Page, 
+  isPage, 
+  DEFAULT_NONJOURNAL_PAGE_VALUE
+} from "@/lib/definitions";
 import Omnibar from "./Omnibar";
 import { findMostRecentlyEditedPage } from "@/lib/pages-helpers";
 import { useState, useCallback, useEffect, useRef } from "react";
@@ -35,11 +39,11 @@ import {
   processQueuedUpdates
 } from "@/_app/context/storage/storage-context";
 import { usePageUpdate } from "@/_app/context/page-update-context";
+import { createConflictHandler } from "@/lib/conflict-manager";
 
 function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefined }) {
 
   const [isClient, setIsClient] = useState(false)
-  const emptyPageMarkdownString = '- ';
   const [pinnedPageIds, setPinnedPageIds] = useState<string[]>([]);
   const [collapsedPageIds, setCollapsedPageIds] = useState<string[]>([]);
   const { setBlockIdsForPage } = useBlockIdsIndex();
@@ -47,18 +51,16 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const hasInitializedSearch = useRef(false);
   let initCount = 0;
 
-  const { getPageUpdate, addPageUpdate, setPageUpdateStatus } = usePageUpdate();
-
-  const handleConflict = useCallback((pageId: string) => {
-    if (getPageUpdate(pageId)) {
-      setPageUpdateStatus(pageId, PageStatus.Conflict);
-    } else {
-      addPageUpdate(pageId, PageStatus.Conflict);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { getPageUpdate, addPageUpdate, setPageUpdateStatus, removePageUpdate } = usePageUpdate();
 
   const [initialFetchComplete, setInitialFetchComplete] = useState(false);
+
+  const handleConflict = createConflictHandler({
+    getPageUpdate,
+    addPageUpdate,
+    setPageUpdateStatus,
+    removePageUpdate,
+  });
 
   useEffect(() => {
     async function fetch() {
@@ -81,8 +83,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
       clearInterval(fetchIntervalId);
       clearInterval(processIntervalId);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+  }, [userId, handleConflict]);
 
   useEffect(() => {
     if (!hasInitializedSearch.current) {
@@ -219,7 +220,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   };  
 
   const handleNewPage = async (title: string) => {
-    const [newPage, result] = await insertPage(title, emptyPageMarkdownString, userId, false);
+    const [newPage, result] = await insertPage(title, DEFAULT_NONJOURNAL_PAGE_VALUE, userId, false);
     if (result === PageSyncResult.Conflict) {
       console.error("error creating page");
       return;

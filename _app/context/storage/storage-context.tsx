@@ -1,4 +1,4 @@
-import { Page, isPage } from "@/lib/definitions";
+import { ConflictErrorCode, Page, isPage } from "@/lib/definitions";
 import { localDb } from "./db";
 import {
   fetchPagesRemote,
@@ -113,7 +113,7 @@ export async function fetchUpdatedPagesInternal(
 
 export async function processQueuedUpdatesInternal(
   userId: string,
-  handleConflict: (pageId: string) => void,
+  handleConflict: (pageId: string, errorCode: ConflictErrorCode) => Promise<void>,
   _getQueuedUpdatesByUserId: (userId: string) => Promise<Page[]>,
   _getLocalPageById: (id: string) => Promise<Page | undefined>
 ): Promise<PageSyncResult> {
@@ -130,35 +130,42 @@ export async function processQueuedUpdatesInternal(
           "our proposed update is based on an old version of the page",
           queuedUpdate.title
         );
-        handleConflict(queuedUpdate.id);
+        await handleConflict(queuedUpdate.id, ConflictErrorCode.StaleUpdate);
         return;
       }
 
-      if (isDevelopmentEnvironment)
-        console.time(`updatePageWithHistory ${queuedUpdate.title}`);
-      const { revisionNumber, lastModified } = await updatePageWithHistory(
-        queuedUpdate.id,
-        queuedUpdate.value,
-        queuedUpdate.title,
-        queuedUpdate.deleted,
-        queuedUpdate.revisionNumber
-      );
-      if (isDevelopmentEnvironment)
-        console.timeEnd(`updatePageWithHistory ${queuedUpdate.title}`);
-      localDb.queuedUpdates.delete(queuedUpdate.id);
-      if (revisionNumber === -1 || !revisionNumber || !lastModified) {
-        console.log("failed to update page", queuedUpdate.title);
-        result = PageSyncResult.Conflict;
-        handleConflict(queuedUpdate.id);
+      try {
+        if (isDevelopmentEnvironment)
+          console.time(`updatePageWithHistory ${queuedUpdate.title}`);
+        const { revisionNumber, lastModified } = await updatePageWithHistory(
+          queuedUpdate.id,
+          queuedUpdate.value,
+          queuedUpdate.title,
+          queuedUpdate.deleted,
+          queuedUpdate.revisionNumber
+        );
+        if (isDevelopmentEnvironment)
+          console.timeEnd(`updatePageWithHistory ${queuedUpdate.title}`);
+        localDb.queuedUpdates.delete(queuedUpdate.id);
+        if (revisionNumber === -1 || !revisionNumber || !lastModified) {
+          console.log("failed to update page", queuedUpdate.title);
+          result = PageSyncResult.Conflict;
+          await handleConflict(queuedUpdate.id, ConflictErrorCode.Unknown);
+          return;
+        }
+
+        const pageUpdated = {
+          ...queuedUpdate,
+          revisionNumber: revisionNumber,
+          lastModified: lastModified,
+        };
+        localDb.pages.put(pageUpdated);
+      } catch (error) {
+        console.error("failed to update page", queuedUpdate.title, error);
+        result = PageSyncResult.Error;
+        await handleConflict(queuedUpdate.id, ConflictErrorCode.Unknown);
         return;
       }
-
-      const pageUpdated = {
-        ...queuedUpdate,
-        revisionNumber: revisionNumber,
-        lastModified: lastModified,
-      };
-      localDb.pages.put(pageUpdated);
     } else {
       const page = await insertPageDb(
         queuedUpdate.title,
@@ -168,12 +175,10 @@ export async function processQueuedUpdatesInternal(
         queuedUpdate.id
       );
       if (typeof page === "string") {
-        if (page.includes("duplicate key value") && queuedUpdate.isJournal) {
-          console.log(
-            "duplicate journal page, deleting queued update",
-            queuedUpdate.title
-          );
-          localDb.queuedUpdates.delete(queuedUpdate.id);
+        if (page.includes("duplicate key value")) {
+          await handleConflict(queuedUpdate.id, ConflictErrorCode.UniquenessViolation);
+        } else {
+          await handleConflict(queuedUpdate.id, ConflictErrorCode.Unknown);
         }
         result = PageSyncResult.Error;
         return;
@@ -210,7 +215,7 @@ export async function fetchUpdatedPages(
 
 export async function processQueuedUpdates(
   userId: string,
-  handleConflict: (pageId: string) => void
+  handleConflict: (pageId: string, errorCode: ConflictErrorCode) => Promise<void>
 ): Promise<PageSyncResult> {
   return processQueuedUpdatesInternal(userId, handleConflict, getQueuedUpdatesByUserId, getLocalPageById);
 }
