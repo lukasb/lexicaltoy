@@ -135,9 +135,8 @@ test('can create a wikilink', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(1000);
   await page.keyboard.press('Meta+k');
-  await page.keyboard.press('Tab');
+  await page.keyboard.press('Escape');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
@@ -145,13 +144,20 @@ test('can create a wikilink', async ({ page }) => {
   await page.keyboard.type(' [[abc]] ');
   const wikilink = page.locator('.PlaygroundEditorTheme__wikilinkPageTitle');
   await expect(wikilink).toHaveText('abc');
-  await page.waitForTimeout(1000); // make sure edit happens
+  await page.waitForTimeout(1000);
 });
 
 test('can open a wikilink', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
+  await page.keyboard.press('Meta+k');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type(' [[abc]] ');
   const wikilink = page.locator('.PlaygroundEditorTheme__wikilinkPageTitle');
   await wikilink.click();
   await page.waitForTimeout(1000);
@@ -172,6 +178,13 @@ test('clicking wikilink does not open duplicate pages', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
+  await page.keyboard.press('Meta+k');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type(' [[abc]] ');
   const wikilink = page.locator('.PlaygroundEditorTheme__wikilinkPageTitle');
   await wikilink.click();
   await page.waitForTimeout(1000);
@@ -244,7 +257,6 @@ test('wiki page names autocomplete correctly when match is not at start of page 
   await page.waitForTimeout(500);
   await page.keyboard.press('Meta+k');
   await page.keyboard.press('Escape');
-  await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
