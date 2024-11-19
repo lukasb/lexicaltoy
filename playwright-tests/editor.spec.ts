@@ -60,12 +60,9 @@ test('should select search result', async ({ page }) => {
 test('backspace deselects search result', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.focus();
-  await page.keyboard.press('t');
-  await page.keyboard.press('e');
-  await page.keyboard.press('s');
+  await newSearch.pressSequentially('TestPage1');
   await page.keyboard.press('Backspace');
-  const isSelectedItemPresent = await page.$('.selected-item') !== null;
-  expect(isSelectedItemPresent).toBeFalsy();
+  await expect(page.getByTestId('create-page-option')).toBeVisible();
 });
 
 test('escape closes search results', async ({ page }) => {
