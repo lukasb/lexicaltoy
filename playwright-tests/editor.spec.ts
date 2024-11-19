@@ -77,7 +77,7 @@ test('renaming page reflected in search results', async ({ page }) => {
   await newSearch.focus();
   await newSearch.pressSequentially('TestPage1');
   await page.keyboard.press('Enter');
-  await page.getByTestId('page-menu-button').click();
+  await page.getByTestId('page-menu-button').first().click();
   await page.getByText('Rename').click();
   await page.getByTestId('edit-dialog-input').fill('New Page Title');
   await page.getByTestId('edit-dialog-submit').click();
