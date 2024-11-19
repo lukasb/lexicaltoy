@@ -190,3 +190,17 @@ test('changes to nested nodes under shared nodes picked up by source page', asyn
     page.getByText('ingendless dream').nth(1))
     .toBeVisible();
 });
+
+test('changes to nested nodes under source nodes picked up by shared nodes', async ({ page }) => {
+  await createVilla(page);
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('=find("drastic")');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
+  await createElla(page);
+  await page.keyboard.type('ing');
+  await page.waitForTimeout(500);
+  await expect(
+    page.locator('li').filter({ hasText: '[[ella]]drastic picnicendless dreaming' }))
+    .toBeVisible();
+});
