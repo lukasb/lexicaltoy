@@ -11,6 +11,7 @@ async function createVilla(page: Page) {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
   await page.keyboard.press('Meta+k');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Tab');
@@ -52,6 +53,7 @@ async function createElla(page: Page) {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('ella');
   await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
   await page.keyboard.press('Meta+k');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Tab');
@@ -59,6 +61,7 @@ async function createElla(page: Page) {
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.type('drastic picnic');
+  await page.waitForTimeout(500);
   await page.keyboard.press('Enter');
   await page.keyboard.press('Tab');
   await page.keyboard.type('endless dream');
@@ -70,7 +73,15 @@ async function closePage(page: Page) {
   await page.keyboard.up('Meta');
 }
 
+async function typeSlower(page: Page, text: string) {
+  for (const char of text) {
+    await page.keyboard.type(char);
+    await page.waitForTimeout(10);
+  }
+}
+
 test('can create a shared node', async ({ page }) => {
+  await page.waitForTimeout(1000);
   await createVilla(page);
   await createAston(page);
   await expect(
@@ -79,6 +90,7 @@ test('can create a shared node', async ({ page }) => {
 });
 
 test('modifying shared node on source page propagates to find nodes', async ({ page }) => {
+  await page.waitForTimeout(1000);
   await createVilla(page);
   await createAston(page);
   const newerSearch = page.getByPlaceholder('Search or Create');
@@ -92,6 +104,7 @@ test('modifying shared node on source page propagates to find nodes', async ({ p
 });
 
 test('modifying shared node on find page propagates to source page', async ({ page }) => {
+  await page.waitForTimeout(1000);
   await createVilla(page);
   await createAston(page);
   await page.keyboard.press('ArrowUp');
@@ -103,6 +116,7 @@ test('modifying shared node on find page propagates to source page', async ({ pa
 });
 
 test('editing on source page is reflected in shared nodes (same page)', async ({ page }) => {
+  await page.waitForTimeout(1000);
   await createVilla(page);
   await page.keyboard.press('Enter');
   await page.keyboard.type('=find("horatio")');
@@ -120,6 +134,7 @@ test('editing on source page is reflected in shared nodes (same page)', async ({
 });
 
 test('editing shared nodes reflected on source page (same page)', async ({ page }) => {
+  await page.waitForTimeout(1000);
   await createVilla(page);
   await page.keyboard.press('Enter');
   await page.keyboard.type('=find("horatio")');
@@ -135,6 +150,7 @@ test('editing shared nodes reflected on source page (same page)', async ({ page 
 });
 
 test('editing shared nodes reflected on source page (same page, with GPT node)', async ({ page }) => {
+  await page.waitForTimeout(1000);
   await createVilla(page);
   await page.keyboard.press('Enter');
   await page.keyboard.type('=who was married at the feast of Cana?');
@@ -153,6 +169,7 @@ test('editing shared nodes reflected on source page (same page, with GPT node)',
 });
 
 test('changes propagate between shared nodes on different pages', async ({ page }) => {
+  await page.waitForTimeout(1000);
   await createVilla(page);
   await closePage(page);
   await createAston(page);
@@ -166,6 +183,7 @@ test('changes propagate between shared nodes on different pages', async ({ page 
 });
 
 test('nested nodes picked up by find', async ({ page }) => {
+  await page.waitForTimeout(1000);
   await createElla(page);
   await closePage(page);
   await createVilla(page);
@@ -177,6 +195,7 @@ test('nested nodes picked up by find', async ({ page }) => {
 });
 
 test('changes to nested nodes under shared nodes picked up by source page', async ({ page }) => {
+  await page.waitForTimeout(1000);
   await createElla(page);
   await createVilla(page);
   await page.keyboard.press('Enter');
@@ -192,6 +211,7 @@ test('changes to nested nodes under shared nodes picked up by source page', asyn
 });
 
 test('changes to nested nodes under source nodes picked up by shared nodes', async ({ page }) => {
+  await page.waitForTimeout(1000);
   await createVilla(page);
   await page.keyboard.press('Enter');
   await page.keyboard.type('=find("drastic")');
@@ -206,20 +226,31 @@ test('changes to nested nodes under source nodes picked up by shared nodes', asy
 });
 
 test('modify shared node when source page has find that also returns that node', async ({ page }) => {
+  await page.waitForTimeout(1000);
   await createElla(page);
+  await page.waitForTimeout(1000);
   await page.keyboard.press('Enter');
-  await page.keyboard.type('=find("drastic")');
+  await page.waitForTimeout(1000);
+  await typeSlower(page, '=find("drastic")');
+  await page.waitForTimeout(1000);
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1000);
   await createVilla(page);
+  await page.waitForTimeout(1000);
   await page.keyboard.press('Enter');
-  await page.keyboard.type('=find("drastic")');
+  await page.waitForTimeout(1000);
+  await typeSlower(page, '=find("drastic")');
+  await page.waitForTimeout(1000);
   await page.keyboard.press('Enter');
   await page.waitForTimeout(1000);
   await page.keyboard.press('ArrowUp');
-  await page.keyboard.type('ing');
+  await page.keyboard.down('Meta');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.up('Meta');
+  await page.waitForTimeout(1000);
+  await typeSlower(page, 'ing');
   await page.waitForTimeout(1000);
   await expect(
-    page.locator('li').filter({ hasText: '[[ella]]drastic picnicendless dreaming' }).first())
+    page.locator('li').filter({ hasText: '[[ella]]drastic picnicendless dreaming' }).nth(1))
     .toBeVisible();
 });

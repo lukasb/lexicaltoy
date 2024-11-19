@@ -125,36 +125,39 @@ export function PageListenerPlugin({
         if (!page) return;
         // I am so, so sorry.
         const newValue = pageUpdates.get(pageId)?.status === PageStatus.EditFromSharedNodes ? getUpdatedPageValue(page) : page.value;
-        if (!newValue) return;
-        editor.update(() => {
-          if (
-            editor.isEditable() &&
-            !editor.isComposing() &&
-            editor.getRootElement() !== document.activeElement
-          ) {
-            editor.setEditable(false); // prevent focus stealing
-            $myConvertFromMarkdownString(newValue, false);
-          } else {
-            const selection = $getSelection();
-            let anchorKey = undefined;
-            let focusKey = undefined;
-            let anchorOffset = 0;
-            let focusOffset = 0;
-            if ($isRangeSelection(selection)) {
-              anchorKey = selection.anchor.key;
-              focusKey = selection.focus.key;
-              anchorOffset = selection.anchor.offset;
-              focusOffset = selection.focus.offset;
+        if (newValue === undefined) return;
+        console.log("page listener plugin updating editor", page.title);
+        queueMicrotask(() => {
+          editor.update(() => {
+            if (
+              editor.isEditable() &&
+              !editor.isComposing() &&
+              editor.getRootElement() !== document.activeElement
+            ) {
+              editor.setEditable(false); // prevent focus stealing
+              $myConvertFromMarkdownString(newValue, false);
+            } else {
+              const selection = $getSelection();
+              let anchorKey = undefined;
+              let focusKey = undefined;
+              let anchorOffset = 0;
+              let focusOffset = 0;
+              if ($isRangeSelection(selection)) {
+                anchorKey = selection.anchor.key;
+                focusKey = selection.focus.key;
+                anchorOffset = selection.anchor.offset;
+                focusOffset = selection.focus.offset;
+              }
+              const root = $getRoot();
+              $updateListItems(root, newValue.split("\n"));
+              if (anchorKey && focusKey) {
+                const newSelection = $createRangeSelection();
+                newSelection.anchor = $createPoint(anchorKey, anchorOffset, 'text');
+                newSelection.focus = $createPoint(focusKey, focusOffset, 'text');
+                $setSelection(newSelection);
+              }
             }
-            const root = $getRoot();
-            $updateListItems(root, newValue.split("\n"));
-            if (anchorKey && focusKey) {
-              const newSelection = $createRangeSelection();
-              newSelection.anchor = $createPoint(anchorKey, anchorOffset, 'text');
-              newSelection.focus = $createPoint(focusKey, focusOffset, 'text');
-              $setSelection(newSelection);
-            }
-          }
+          });
         });
       }
   }, [editor, pageId, pages, pageUpdates, getUpdatedPageValue]);
