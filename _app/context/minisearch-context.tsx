@@ -41,11 +41,15 @@ export const MiniSearchProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [initializeMiniSearch]);
 
   const slurpPages = useCallback((pages: Page[]) => {
-    if (miniSearch) {
-      miniSearch.addAll(pages);
-    } else {
-      const ms = initializeMiniSearch(pages);
-      if (ms) ms.addAll(pages);
+    try {
+      if (miniSearch) {
+        miniSearch.addAll(pages);
+      } else {
+        const ms = initializeMiniSearch(pages);
+        if (ms) ms.addAll(pages);
+      }
+    } catch (error) {
+      console.error("Error slurping pages into MiniSearch", error);
     }
   }, [initializeMiniSearch, miniSearch]);
 
