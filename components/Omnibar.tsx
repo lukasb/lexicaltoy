@@ -89,6 +89,7 @@ const Omnibar = forwardRef(({
     }));
   }, [pages]);
 
+  // this is used to give the parent component access to the focus method
   useImperativeHandle(ref, () => ({
     focus: () => {
       inputRef.current?.focus();
@@ -123,6 +124,7 @@ const Omnibar = forwardRef(({
       }
   
       if (term) {
+        console.log("searching for", term);
         const filteredPages = await handleSearch(term);
         filteredPagesRef.current = filteredPages;
         const startMatch = filteredPages.find((page) =>

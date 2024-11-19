@@ -45,7 +45,7 @@ export const MiniSearchProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } else {
       initializeMiniSearch(pages);
     }
-  }, [initializeMiniSearch]);
+  }, [initializeMiniSearch, miniSearch]);
 
   const discardPage = useCallback((id: string) => {
     if (miniSearch) {

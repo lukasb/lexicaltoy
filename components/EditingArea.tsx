@@ -70,7 +70,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   useEffect(() => {
     async function fetch() {
       if (userId) {
-        console.log("fetching updated pages");
+        console.log("fetching updated pages...");
         await fetchUpdatedPages(userId);
         setInitialFetchComplete(true);
       }
@@ -91,13 +91,13 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   }, [userId, handleConflict]);
 
   useEffect(() => {
-    if (!hasInitializedSearch.current) {
+    if (!hasInitializedSearch.current && pages && pages.length > 0 && initialFetchComplete) {
       initCount++;
       if (initCount > 1) console.error("MiniSearch initialized more than once, count:", initCount);
       msSlurpPages(pages || []);
       hasInitializedSearch.current = true;
     }
-  }, [pages, msSlurpPages]);
+  }, [pages, msSlurpPages, initialFetchComplete]);
 
   useEffect(() => {
     const pnnedPageIds = getPinnedPageIds();

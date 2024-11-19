@@ -11,18 +11,26 @@ test('window title', async ({ page }) => {
   await expect(page).toHaveTitle(/🍊✅/);
 });
 
+test('should bring up search results', async ({ page }) => {
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.pressSequentially('test');
+  await expect(page.getByTestId('search-result')).toHaveText('TestPage1');
+});
+
 test('page contents', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.focus();
-  await newSearch.fill('test');
+  await newSearch.pressSequentially('aTestPage2');
   await page.keyboard.press('Enter');
   await expect(page.getByText('Hello, world!')).toBeVisible();
 });
 
-test('page title', async ({ page }) => {
+test('search for start title match opens page', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.focus();
-  await newSearch.fill('test');
+  await newSearch.pressSequentially('test');
+  await page.waitForTimeout(100);
+  await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
   
   const titles = page.locator('[data-testid="editable-title"]');
@@ -37,12 +45,6 @@ test('page title', async ({ page }) => {
     }
   }
   await expect(found).toBeTruthy();
-});
-
-test('should bring up search results', async ({ page }) => {
-  const newSearch = page.getByPlaceholder('Search or Create');
-  await newSearch.fill('test');
-  await expect(page.getByTestId('search-result')).toHaveText('TestPage1');
 });
 
 test('should select search result', async ({ page }) => {
