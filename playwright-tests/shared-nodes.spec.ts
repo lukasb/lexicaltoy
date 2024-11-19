@@ -204,3 +204,22 @@ test('changes to nested nodes under source nodes picked up by shared nodes', asy
     page.locator('li').filter({ hasText: '[[ella]]drastic picnicendless dreaming' }))
     .toBeVisible();
 });
+
+test('modify shared node when source page has find that also returns that node', async ({ page }) => {
+  await createElla(page);
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('=find("drastic")');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
+  await createVilla(page);
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('=find("drastic")');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.type('ing');
+  await page.waitForTimeout(1000);
+  await expect(
+    page.locator('li').filter({ hasText: '[[ella]]drastic picnicendless dreaming' }).first())
+    .toBeVisible();
+});

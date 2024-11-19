@@ -27,7 +27,7 @@ export function PageUpdateProvider({ children }: { children: React.ReactNode }) 
   );
 
   const addPageUpdate = (pageId: string, status: PageStatus, lastModified?: Date, newValue?: string) => {
-    if (status !== PageStatus.DroppingUpdate && status !== PageStatus.Conflict && (!lastModified || !newValue)) {
+    if (status !== PageStatus.DroppingUpdate && status !== PageStatus.Conflict && (!lastModified || newValue === undefined)) {
       throw new Error("lastModified and newValue are required for non-dropping updates");
     }
     setPageUpdates(prevMap => {
