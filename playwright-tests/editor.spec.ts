@@ -81,9 +81,10 @@ test('renaming page reflected in search results', async ({ page }) => {
   await page.getByText('Rename').click();
   await page.getByTestId('edit-dialog-input').fill('New Page Title');
   await page.getByTestId('edit-dialog-submit').click();
-  await newSearch.focus();
-  await newSearch.pressSequentially('New Page Title');
-  await expect(page.getByTestId('search-result').nth(1)).toContainText('New Page Title');
+  await page.waitForTimeout(100);
+  const newerSearch = page.getByPlaceholder('Search or Create');
+  await newerSearch.pressSequentially('New Page Title');
+  await expect(page.getByTestId('search-result').first()).toContainText('New Page Title');
 });
 
 test('create new page', async ({ page }) => {
