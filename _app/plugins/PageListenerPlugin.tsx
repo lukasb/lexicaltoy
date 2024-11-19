@@ -126,7 +126,6 @@ export function PageListenerPlugin({
         // I am so, so sorry.
         const newValue = pageUpdates.get(pageId)?.status === PageStatus.EditFromSharedNodes ? getUpdatedPageValue(page) : page.value;
         if (newValue === undefined) return;
-        console.log("page listener plugin updating editor", page.title);
         queueMicrotask(() => {
           editor.update(() => {
             if (
