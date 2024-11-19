@@ -175,3 +175,18 @@ test('nested nodes picked up by find', async ({ page }) => {
   await page.waitForTimeout(500);
   await expect(page.getByText('endless dream')).toBeVisible();
 });
+
+test('changes to nested nodes under shared nodes picked up by source page', async ({ page }) => {
+  await createElla(page);
+  await createVilla(page);
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('=find("drastic")');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.type('ing');
+  await page.waitForTimeout(500);
+  await expect(
+    page.getByText('ingendless dream').nth(1))
+    .toBeVisible();
+});
