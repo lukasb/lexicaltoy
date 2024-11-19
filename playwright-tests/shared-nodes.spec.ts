@@ -34,6 +34,20 @@ async function createAston(page: Page) {
   await page.keyboard.press('Enter');
 }
 
+async function createGemlike(page: Page) {
+  const newerSearch = page.getByPlaceholder('Search or Create');
+  await newerSearch.pressSequentially('gemlike');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Meta+k');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('=find("horatio")');
+  await page.keyboard.press('Enter');
+}
+
 async function closePage(page: Page) {
   await page.keyboard.down('Meta');
   await page.keyboard.press('u');
@@ -103,3 +117,35 @@ test('editing shared nodes reflected on source page (same page)', async ({ page 
     page.locator('li').first())
     .toHaveText('horatio hornblower was a great man');
 });
+
+test('editing shared nodes reflected on source page (same page, with GPT node)', async ({ page }) => {
+  await createVilla(page);
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('=who was married at the feast of Cana?');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(5000);
+  await page.keyboard.type('=find("horatio")');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(200);
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' was a great man');
+  await page.waitForTimeout(200);
+  await expect(
+    page.locator('li').first())
+    .toHaveText('horatio hornblower was a great man');
+});
+
+test('changes propagate between shared nodes on different pages', async ({ page }) => {
+  await createVilla(page);
+  await closePage(page);
+  await createAston(page);
+  await createGemlike(page);
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.type(' was who? ');
+  await page.waitForTimeout(500);
+  await closePage(page);
+  await expect(page.getByText('h was who? oratio hornblower')).toBeVisible();
+});
+
