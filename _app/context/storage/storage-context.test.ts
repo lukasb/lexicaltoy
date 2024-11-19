@@ -153,7 +153,7 @@ describe("Page Sync Functions", () => {
       );
       
       expect(result).toBe(PageSyncResult.Conflict);
-      expect(mockHandleConflict).toHaveBeenCalledWith(mockPage.id);
+      expect(mockHandleConflict).toHaveBeenCalledWith(mockPage.id, "stale_update");
       
       // Verify the state after sync
       const localPage = await getLocalPageById(mockPage.id);
