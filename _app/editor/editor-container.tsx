@@ -179,12 +179,14 @@ function EditorContainer({
                     align="end"
                     sideOffset={5}
                   >
+                    {!page.isJournal && (
                     <DropdownMenu.Item
                       className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
                       onClick={() => setIsRenameDialogOpen(true)}
                     >
                       Rename
                     </DropdownMenu.Item>
+                    )}
                     <DropdownMenu.Item
                       className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
                       onClick={() => closePage(page.id)}
