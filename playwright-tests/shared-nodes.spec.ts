@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 // TODO figure out per-browser users in db, then re-enable
 // parallelism is playwright.config.ts
@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/page');
 });
 
-test('can create a shared node', async ({ page }) => {
+async function createVilla(page: Page) {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
@@ -18,6 +18,9 @@ test('can create a shared node', async ({ page }) => {
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.type('horatio hornblower');
+}
+
+async function createAston(page: Page) {
   const newerSearch = page.getByPlaceholder('Search or Create');
   await newerSearch.pressSequentially('aston');
   await page.keyboard.press('Enter');
@@ -29,7 +32,25 @@ test('can create a shared node', async ({ page }) => {
   await page.keyboard.press('Tab');
   await page.keyboard.type('=find("horatio")');
   await page.keyboard.press('Enter');
+}
+
+test('can create a shared node', async ({ page }) => {
+  await createVilla(page);
+  await createAston(page);
   await expect(
     page.locator('li').filter({ hasText: '[[villa]]horatio hornblower' }))
+    .toBeVisible();
+});
+
+test('modifying shared node on source page propagates to find nodes', async ({ page }) => {
+  await createVilla(page);
+  await createAston(page);
+  const newerSearch = page.getByPlaceholder('Search or Create');
+  await newerSearch.pressSequentially('villa');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' was a great man');
+  await expect(
+    page.locator('li').filter({ hasText: '[[villa]]horatio hornblower was a great man' }))
     .toBeVisible();
 });
