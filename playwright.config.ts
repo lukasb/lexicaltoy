@@ -7,7 +7,7 @@ export const STORAGE_STATE = path.join(__dirname, 'playwright/.auth/user.json');
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// require('dotenv').config();
+require('dotenv').config({ path: './.env.test.local' });
 
 /**
  * See https://playwright.dev/docs/test-configuration.

@@ -25,15 +25,16 @@ export const MiniSearchProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const indexedRef = useRef(false);
 
   const initializeMiniSearch = useCallback((pages?: Page[]) => {
-    if (indexedRef.current) return;
+    if (indexedRef.current) return miniSearch;
     const ms = new MiniSearch<Page>({
       fields: ['title', 'value'],
       storeFields: ['title', 'value'],
     });
-    if (pages) ms.addAll(pages);
+    //if (pages) ms.addAll(pages);
     setMiniSearch(ms);
     indexedRef.current = true;
-  }, []);
+    return ms;
+  }, [miniSearch]);
 
   useEffect(() => {
     initializeMiniSearch();
@@ -43,7 +44,8 @@ export const MiniSearchProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (miniSearch) {
       miniSearch.addAll(pages);
     } else {
-      initializeMiniSearch(pages);
+      const ms = initializeMiniSearch(pages);
+      if (ms) ms.addAll(pages);
     }
   }, [initializeMiniSearch, miniSearch]);
 
