@@ -88,3 +88,18 @@ test('editing on source page is reflected in shared nodes (same page)', async ({
     page.locator('li').filter({ hasText: '[[villa]]horatio hornblower was a great man' }))
     .toBeVisible();
 });
+
+test('editing shared nodes reflected on source page (same page)', async ({ page }) => {
+  await createVilla(page);
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('=find("horatio")');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(200);
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' was a great man');
+  await page.waitForTimeout(200);
+  await expect(
+    page.locator('li').first())
+    .toHaveText('horatio hornblower was a great man');
+});
