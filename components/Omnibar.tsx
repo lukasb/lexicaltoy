@@ -124,7 +124,6 @@ const Omnibar = forwardRef(({
       }
   
       if (term) {
-        console.log("searching for", term);
         const filteredPages = await handleSearch(term);
         filteredPagesRef.current = filteredPages;
         const startMatch = filteredPages.find((page) =>

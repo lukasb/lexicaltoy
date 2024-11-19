@@ -34,6 +34,12 @@ async function createAston(page: Page) {
   await page.keyboard.press('Enter');
 }
 
+async function closePage(page: Page) {
+  await page.keyboard.down('Meta');
+  await page.keyboard.press('u');
+  await page.keyboard.up('Meta');
+}
+
 test('can create a shared node', async ({ page }) => {
   await createVilla(page);
   await createAston(page);
@@ -53,4 +59,15 @@ test('modifying shared node on source page propagates to find nodes', async ({ p
   await expect(
     page.locator('li').filter({ hasText: '[[villa]]horatio hornblower was a great man' }))
     .toBeVisible();
+});
+
+test('modifying shared node on find page propagates to source page', async ({ page }) => {
+  await createVilla(page);
+  await createAston(page);
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.type(' was who? ');
+  await page.waitForTimeout(500);
+  await closePage(page);
+  await expect(page.getByText('h was who? oratio hornblower')).toBeVisible();
 });
