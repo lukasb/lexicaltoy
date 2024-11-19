@@ -48,6 +48,22 @@ async function createGemlike(page: Page) {
   await page.keyboard.press('Enter');
 }
 
+async function createElla(page: Page) {
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.fill('ella');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Meta+k');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('drastic picnic');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('endless dream');
+}
+
 async function closePage(page: Page) {
   await page.keyboard.down('Meta');
   await page.keyboard.press('u');
@@ -149,3 +165,13 @@ test('changes propagate between shared nodes on different pages', async ({ page 
   await expect(page.getByText('h was who? oratio hornblower')).toBeVisible();
 });
 
+test('nested nodes picked up by find', async ({ page }) => {
+  await createElla(page);
+  await closePage(page);
+  await createVilla(page);
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('=find("drastic")');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
+  await expect(page.getByText('endless dream')).toBeVisible();
+});
