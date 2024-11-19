@@ -75,25 +75,15 @@ test('escape closes search results', async ({ page }) => {
 test('renaming page reflected in search results', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.focus();
-  await newSearch.fill('test');
+  await newSearch.pressSequentially('TestPage1');
   await page.keyboard.press('Enter');
-  await page.keyboard.press('Meta+k');
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
-  await page.keyboard.type('new');
-  await newSearch.fill('new');
-  await expect(page.getByTestId('search-result')).toHaveText('newTestPage1');
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('ArrowRight');
-  await page.keyboard.press('ArrowRight');
-  await page.keyboard.press('ArrowRight');
-  await page.keyboard.press('Backspace');
-  await page.keyboard.press('Backspace');
-  await page.keyboard.press('Backspace');
-  await page.keyboard.press('Meta+k');
+  await page.getByTestId('page-menu-button').click();
+  await page.getByText('Rename').click();
+  await page.getByTestId('edit-dialog-input').fill('New Page Title');
+  await page.getByTestId('edit-dialog-submit').click();
+  await newSearch.focus();
+  await newSearch.pressSequentially('New Page Title');
+  await expect(page.getByTestId('search-result').nth(1)).toContainText('New Page Title');
 });
 
 test('create new page', async ({ page }) => {

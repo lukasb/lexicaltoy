@@ -48,6 +48,7 @@ export const EditDialog = ({ isOpen, onClose, onSubmit, initialValue, title }: {
           onChange={(e) => setNewValue(e.target.value)}
           onKeyDown={handleKeyDown}
           className="w-full p-2 mb-4 border rounded dark:bg-gray-700 dark:text-white"
+          data-testid="edit-dialog-input"
         />
         <div className="flex justify-end">
           <button
@@ -60,6 +61,7 @@ export const EditDialog = ({ isOpen, onClose, onSubmit, initialValue, title }: {
             onClick={handleSubmit}
             disabled={newValue.trim() === ''}
             className="px-4 py-2 bg-indigo-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            data-testid="edit-dialog-submit"
           >
             Submit
           </button>

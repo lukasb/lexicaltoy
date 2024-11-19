@@ -167,6 +167,7 @@ function EditorContainer({
                     }`}
                   >
                     <MoreVertical
+                      data-testid="page-menu-button"
                       className={`h-5 w-5 ${
                         isMenuOpen ? "text-gray-800" : "text-gray-300"
                       }`}
