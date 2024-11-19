@@ -71,3 +71,20 @@ test('modifying shared node on find page propagates to source page', async ({ pa
   await closePage(page);
   await expect(page.getByText('h was who? oratio hornblower')).toBeVisible();
 });
+
+test('editing on source page is reflected in shared nodes (same page)', async ({ page }) => {
+  await createVilla(page);
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('=find("horatio")');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('End');
+  await page.keyboard.type(' was a great man');
+  await page.waitForTimeout(500);
+  await expect(
+    page.locator('li').filter({ hasText: '[[villa]]horatio hornblower was a great man' }))
+    .toBeVisible();
+});
