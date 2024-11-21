@@ -93,6 +93,8 @@ test('just one villa page', async ({ browser }) => {
   await clearIndexedDB(page);
 });
 
+// TODO this test will fail once we're properly pulling in changes from other tabs updating IndexedDB
+// goal here is to test a multiple browser scenario, need to figure out isolation for that
 test('detects conflict when localdb page is newer', async ({ browser }) => {
   test.setTimeout(70000);
   const context1 = await browser.newContext();
