@@ -32,16 +32,31 @@ export default async function handler(
         WHERE id = ${id}
       `;
 
-      // Then, update the page with the new value
+      // Then, update the page with the new value, but only if the revision number matches
       const result = await sql`
         UPDATE pages
-        SET value = ${value}, title = ${title}, deleted = ${deleted}, revision_number = ${oldRevisionNumber + 1}
-        WHERE id = ${id}
+        SET value = ${value}, 
+            title = ${title}, 
+            deleted = ${deleted}, 
+            revision_number = ${oldRevisionNumber + 1}
+        WHERE id = ${id} 
+        AND revision_number = ${oldRevisionNumber}
         RETURNING revision_number, last_modified
       `;
       
       if (result.rowCount === 0) {
-        return res.status(404).json({ error: `Page with ID ${id} not found` });
+        // Check if the page exists at all
+        const pageExists =
+          await sql`SELECT revision_number FROM pages WHERE id = ${id}`;
+        if (pageExists.rowCount === 0) {
+          return res
+            .status(404)
+            .json({ error: `Page with ID ${id} not found` });
+        }
+        // If we get here, the page exists but revision number didn't match
+        return res.status(409).json({
+          error: `Conflict: Page has been modified by another user, ID: ${id}, tried revision number: ${oldRevisionNumber}`,
+        });
       }
       
       return res.status(200).json({ revisionNumber: result.rows[0].revision_number, lastModified: result.rows[0].last_modified });

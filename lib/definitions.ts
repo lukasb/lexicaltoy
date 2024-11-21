@@ -11,7 +11,8 @@ export type User = {
     PendingWrite = 'pending_write',
     EditorUpdateRequested = 'editor_update_requested',
     Conflict = 'conflict',
-    DroppingUpdate = 'dropping_update'
+    DroppingUpdate = 'dropping_update',
+    Quiescent = 'quiescent'
   }
 
   export type Page = {

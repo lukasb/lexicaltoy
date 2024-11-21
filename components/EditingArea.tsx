@@ -48,11 +48,11 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const [pinnedPageIds, setPinnedPageIds] = useState<string[]>([]);
   const [collapsedPageIds, setCollapsedPageIds] = useState<string[]>([]);
   const { setBlockIdsForPage } = useBlockIdsIndex();
-  const { msAddPage, msDiscardPage, msSlurpPages } = useMiniSearch();
+  const { msAddPage, msSlurpPages } = useMiniSearch();
   const hasInitializedSearch = useRef(false);
   let initCount = 0;
 
-  const { getPageUpdate, addPageUpdate, setPageUpdateStatus, removePageUpdate } = usePageUpdate();
+  const { addPageUpdate, removePageUpdate } = usePageUpdate();
 
   const [initialFetchComplete, setInitialFetchComplete] = useState(false);
 
@@ -60,11 +60,12 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     async (pageId: string, errorCode: ConflictErrorCode) => {
       return createConflictHandler({
         removePageUpdate,
+        addPageUpdate,
         pages: pages || [],
         userId, 
       })(pageId, errorCode);
     },
-    [removePageUpdate, pages, userId]
+    [removePageUpdate, addPageUpdate, pages, userId]
   );
 
   useEffect(() => {
@@ -192,10 +193,13 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   }, []);
 
   const openOrCreatePageByTitle = (title: string) => {
+    console.log("initial fetch complete", initialFetchComplete);
     const page = pages?.find((p) => p.title.toLowerCase() === title.toLowerCase());
     if (page) {
+      console.log("opening page", page.title, pages);
       openPage(page);
     } else {
+      console.log("creating new page", title, pages);
       handleNewPage(title);
     }
   }

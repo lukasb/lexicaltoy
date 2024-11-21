@@ -165,7 +165,7 @@ export async function processQueuedUpdatesInternal(
         };
         localDb.pages.put(pageUpdated);
       } catch (error) {
-        console.error("failed to update page", queuedUpdate.title, error);
+        console.error("failed to update page", queuedUpdate.title, queuedUpdate.id, error);
         result = PageSyncResult.Error;
         if (error instanceof Error && error.message.includes("404")) {
           await handleConflict(queuedUpdate.id, ConflictErrorCode.NotFound);
@@ -278,6 +278,8 @@ export async function insertPage(
     .filter((page) => page.title === title && page.userId === userId)
     .first();
   if (localPage) return [undefined, PageSyncResult.Conflict];
+
+  console.log("inserting page", title);
 
   const id = crypto.randomUUID();
   const newPage = {

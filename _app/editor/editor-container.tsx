@@ -50,7 +50,7 @@ function EditorContainer({
   const pages = useContext(PagesContext);
   const [backlinks, setBacklinks] = useState<NodeElementMarkdown[]>([]);
   const [backlinksCollapsed, setBacklinksCollapsed] = useState(true);
-  const { getPageUpdate, setPageUpdateStatus } = usePageUpdate();
+  const { pageUpdates, getPageUpdate, setPageUpdateStatus } = usePageUpdate();
   const { msReplacePage } = useMiniSearch();
 
   useEffect(() => {
@@ -101,6 +101,15 @@ function EditorContainer({
     }
     setIsRenameDialogOpen(false);
   };
+
+  useEffect(() => {
+    pageUpdates.forEach((update, pageId) => {
+      const matchingPage = pages?.find(p => p.id === pageId);
+      if (matchingPage?.title === 'villa') {
+        console.log('Villa page update:', update);
+      }
+    });
+  }, [pageUpdates, pages]);
 
   useEffect(() => {
     async function fetchBacklinks() {

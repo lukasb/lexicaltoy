@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import EditingArea from "../../components/EditingArea";
 import { isDevelopmentEnvironment } from "@/lib/environment";
 import { SignoutButton } from "../../components/SignoutButton";
@@ -50,6 +50,8 @@ export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, r
 
 const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideProps>> = ({session}) => {
 
+  const pagesCount = useRef(-1);
+
   const pages = useLiveQuery(async () => {
 
     if (!session || !session.id) return [];
@@ -92,12 +94,10 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
   }, [session]);
 
   /*useEffect(() => {
-    async function countPages() {
-      const localPagesCount = await localDb.pages.count();
-      const queuedUpdatesCount = await localDb.queuedUpdates.count();
-      console.log("local pages count", localPagesCount, "queued updates count", queuedUpdatesCount);
+    if (pagesCount.current !== pages?.length) {
+      pagesCount.current = pages?.length || 0;
+      console.log("pages", pages);
     }
-    countPages();
   }, [pages]);*/
 
   if (!session || !session.id) {

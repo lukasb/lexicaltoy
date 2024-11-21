@@ -26,6 +26,8 @@ export default async function handler(
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    console.log("---inserting page---", title, id, userId);
+
     try {
       let result;
       if (id) {
@@ -52,6 +54,7 @@ export default async function handler(
         deleted: result.rows[0].deleted
       };
       if (!isPage(page)) throw new Error("expected page, got", page);
+      console.log("inserted page", page.title, page.id, userId);
       return res.status(200).json({ page });
     } catch (error) {
       console.error('Database Error: Failed to Insert Page.', error);

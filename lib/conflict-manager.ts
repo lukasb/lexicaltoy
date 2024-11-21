@@ -2,6 +2,7 @@ import {
   DEFAULT_NONJOURNAL_PAGE_VALUE,
   ConflictErrorCode,
   Page,
+  PageStatus
 } from "@/lib/definitions";
 import {
   getQueuedUpdateById,
@@ -14,6 +15,7 @@ import { DEFAULT_JOURNAL_CONTENTS } from "@/lib/journal-helpers";
 
 export interface ConflictManagerDeps {
   removePageUpdate: (pageId: string) => void;
+  addPageUpdate: (pageId: string, status: PageStatus, lastModified?: Date, newValue?: string) => void
   pages: Page[];
   userId: string;
 }
@@ -41,6 +43,7 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
   ): Promise<void> {
     const {
       removePageUpdate,
+      addPageUpdate,
       pages,
       userId,
     } = deps;
@@ -73,16 +76,11 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
         removePageUpdate(pageId);
         await deleteQueuedUpdate(pageId);
       } else {
-        console.log("queued update with conflict is non-journal page with non-default value, adding conflict page");
-        removePageUpdate(pageId);
-        const newTitle = findUnusedTitle(queuedUpdate.title, pages);
+        // I tried inserting a conflict page, but when multiple tabs were open this resulted in multiple conflict pages
+        console.log("queued update with conflict is non-journal page with non-default value, deleting update");
+        addPageUpdate(pageId, PageStatus.Conflict);
+        //removePageUpdate(pageId);
         await deleteQueuedUpdate(pageId);
-        const [newPage, result] = await insertPage(newTitle, queuedUpdate.value, userId, queuedUpdate.isJournal);
-        if (result === PageSyncResult.Success) {
-          console.log("successfully inserted conflict page");
-        } else {
-          console.error("failed to insert conflict page");
-        }
       }
     }
   };
