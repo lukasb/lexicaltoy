@@ -103,15 +103,6 @@ function EditorContainer({
   };
 
   useEffect(() => {
-    pageUpdates.forEach((update, pageId) => {
-      const matchingPage = pages?.find(p => p.id === pageId);
-      if (matchingPage?.title === 'villa') {
-        console.log('Villa page update:', update);
-      }
-    });
-  }, [pageUpdates, pages]);
-
-  useEffect(() => {
     async function fetchBacklinks() {
       const newBacklinks = await findCallback({ pages: pages }, [{ type: FormulaValueType.Text, output: `[[${page.title}]]` }]);
       if (newBacklinks && newBacklinks.output.length > 0 && newBacklinks.type === FormulaValueType.NodeMarkdown) {
