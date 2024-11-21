@@ -28,7 +28,7 @@ setup('seed db', async () => {
   await client.release();
 });
 
-setup('do login', async ({ page }) => {
+/*setup('do login', async ({ page }) => {
   await page.goto('/');
   await page.getByText('Log in').click();
   await page.getByLabel('Email').fill('test@nextmail.com');
@@ -39,4 +39,4 @@ setup('do login', async ({ page }) => {
   await expect(page.getByText('Sign Out')).toBeVisible();
 
   await page.context().storageState({ path: STORAGE_STATE });
-});
+});*/

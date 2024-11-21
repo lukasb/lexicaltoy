@@ -185,13 +185,13 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   }, [userId, pages, msAddPage]);
 
   useEffect(() => {
-    if (!setupDoneRef.current) {
+    if (initialFetchComplete && !setupDoneRef.current) {
       executeJournalLogic();
       setupDoneRef.current = true;
     }
     const intervalId = setInterval(executeJournalLogic, 30000);
     return () => clearInterval(intervalId);
-  }, [executeJournalLogic]);
+  }, [executeJournalLogic, initialFetchComplete]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

@@ -93,12 +93,12 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
     return mergedPages;
   }, [session]);
 
-  /*useEffect(() => {
+  useEffect(() => {
     if (pagesCount.current !== pages?.length) {
       pagesCount.current = pages?.length || 0;
       console.log("pages", pages);
     }
-  }, [pages]);*/
+  }, [pages]);
 
   if (!session || !session.id) {
     console.log("Problem with session", session);

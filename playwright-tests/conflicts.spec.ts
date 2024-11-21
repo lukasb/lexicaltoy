@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { db } from '../scripts/seed-db-wrapper.mts';
+import { STORAGE_STATE } from '@/playwright.config';
 const {
   users,
   pages
@@ -30,6 +31,7 @@ async function cleanUp(client: { sql: any; }, users: any[]) {
 }
 
 async function clearIndexedDB(page: Page) {
+  return;
   const result = await page.evaluate(() => {
     return new Promise((resolve, reject) => {
       const request = window.indexedDB.deleteDatabase('orangetask-local');
@@ -43,6 +45,19 @@ async function clearIndexedDB(page: Page) {
   });
   console.log("indexeddb cleared", result);
 }
+
+test.beforeEach('do login', async ({ page }) => {
+  await page.goto('/');
+  await page.getByText('Log in').click();
+  await page.getByLabel('Email').fill('test@nextmail.com');
+  await page.getByLabel('Password').fill('123456');
+  await page.getByText('Log in').click();
+
+  // Wait until the page actually signs in.
+  await expect(page.getByText('Sign Out')).toBeVisible();
+
+  //await page.context().storageState({ path: STORAGE_STATE });
+});
 
 test.afterEach(async ({ page }) => {
   const client = await db.pool.connect();
@@ -108,13 +123,13 @@ test('detects conflict when localdb page is newer', async ({ browser }) => {
   const page2 = await context2.newPage();
   await page2.goto('/page');
   //await page2.waitForTimeout(15000);
-  await new Promise(r => setTimeout(r, 15000));
+  await new Promise(r => setTimeout(r, 12000));
   const newSearch = page2.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page2.keyboard.press('Enter');
   await page2.waitForTimeout(5000);
   await page2.keyboard.type('i want to make my own changes');
-  await page2.waitForTimeout(1000);
+  await page2.waitForTimeout(5000);
   await page1.keyboard.type('i want to make my own changes too!');
   await page1.waitForTimeout(1000);
   await new Promise(r => setTimeout(r, 10000));
