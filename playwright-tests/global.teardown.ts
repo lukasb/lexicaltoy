@@ -45,7 +45,7 @@ async function cleanUp(client: { sql: any; }, users: any[]) {
       }),
     );
     
-    console.log(`Cleaned up db`);
+    console.log(`Cleaned up db in global teardown`);
 
     return {
       deletedUsers,

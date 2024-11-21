@@ -1,15 +1,58 @@
 import { test, expect, Page } from '@playwright/test';
+import { db } from '../scripts/seed-db-wrapper.mts';
+const {
+  users,
+  pages
+} = require('./tests-placeholder-data.js');
 
-async function updatePageInIndexedDB(page: Page, pageTitle: string) {
-  const result = await page.evaluate(async (title) => {
+async function cleanUp(client: { sql: any; }, users: any[]) {
+  try {
+
+    const deletedPages = await Promise.all(
+      users.map(async (user) => {
+        console.log("deleting pages for user", user.id);
+        return client.sql`
+        DELETE FROM pages
+        WHERE userId = ${user.id};
+      `;
+      }),
+    );
     
-  }, pageTitle);
+    console.log(`Cleaned up db in afterEach`);
 
-  return result;
+    return {
+      deletedPages
+    };
+  } catch (error) {
+    console.error('Error cleaning up:', error);
+    throw error;
+  }
 }
 
-test.beforeEach(async ({ page }) => {
-  await page.goto('/page');
+async function clearIndexedDB(page: Page) {
+  const result = await page.evaluate(() => {
+    return new Promise((resolve, reject) => {
+      const request = window.indexedDB.deleteDatabase('orangetask-local');
+      request.onsuccess = () => {
+        resolve(true);
+      };
+      request.onerror = () => {
+        reject(request);
+      };
+    });
+  });
+  console.log("indexeddb cleared", result);
+}
+
+test.afterEach(async ({ page }) => {
+  const client = await db.pool.connect();
+  const clientWithSql = {
+    ...client,
+    sql: db.sql.bind(null)
+  };
+  await cleanUp(clientWithSql, users);
+  await client.release();
+  await new Promise(r => setTimeout(r, 5000));
 });
 
 async function createVilla(page: Page) {
@@ -47,6 +90,7 @@ test('just one villa page', async ({ browser }) => {
     }
   }
   await expect(found).toBe(1);
+  await clearIndexedDB(page);
 });
 
 test('detects conflict when localdb page is newer', async ({ browser }) => {
@@ -75,4 +119,5 @@ test('detects conflict when localdb page is newer', async ({ browser }) => {
   await expect(
     page1.getByText('Your changes are based on an old version of this page.'))
     .toBeVisible();
+  await clearIndexedDB(page2);
 });

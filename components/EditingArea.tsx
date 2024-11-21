@@ -16,7 +16,8 @@ import {
   insertNewJournalPage,
   deleteStaleJournalPages,
   getLastWeekJournalPages,
-  getJournalTitle
+  getJournalTitle,
+  getTodayJournalTitle
  } from "@/lib/journal-helpers";
 import FlexibleEditorLayout from "./FlexibleEditorContainer";
 import PagesManager from "../lib/PagesManager";
@@ -120,20 +121,36 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const [openPageIds, setOpenPageIds] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!initializedPagesRef.current && pages && pages.length > 0 && initialFetchComplete) {
-      const initialPageId = findMostRecentlyEditedPage(pages)?.id;
-      const lastWeekJournalPageIds = getLastWeekJournalPages(pages).map(page => page.id);
-      
-      const initialIds: string[] = [];
-      if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) {
-        initialIds.push(initialPageId);
+    for (const pageId of openPageIds) {
+      if (!pages?.find(p => p.id === pageId)) {
+        setOpenPageIds(prevIds => prevIds.filter(id => id !== pageId));
       }
-      initialIds.push(...lastWeekJournalPageIds);
-      
-      setOpenPageIds(initialIds);
-      initializedPagesRef.current = true;
     }
-  }, [pages, initialFetchComplete]);
+  }, [pages, openPageIds]);
+
+  useEffect(() => {
+    if (pages && pages.length > 0 && initialFetchComplete) {
+      if (!initializedPagesRef.current) {
+        const initialPageId = findMostRecentlyEditedPage(pages)?.id;
+        const lastWeekJournalPageIds = getLastWeekJournalPages(pages).map(page => page.id);
+        
+        const initialIds: string[] = [];
+        if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) {
+          initialIds.push(initialPageId);
+        }
+        initialIds.push(...lastWeekJournalPageIds);
+        
+        setOpenPageIds(initialIds);
+          initializedPagesRef.current = true;
+      } else if (openPageIds.length === 0) {
+        const todayJournalTitle = getTodayJournalTitle();
+        const todayJournalPage = pages.find(p => p.title === todayJournalTitle && p.isJournal);
+        if (todayJournalPage) {
+          setOpenPageIds([todayJournalPage.id]);
+        }
+      }
+    }
+  }, [pages, initialFetchComplete, openPageIds]);
 
   useEffect(() => {
     setOpenPageIds(prevIds => [...new Set([...prevIds, ...pinnedPageIds])]);

@@ -13,13 +13,7 @@ const {
 import { seedUsers, seedPages } from '../scripts/seed-inserts';
 
 setup('seed db', async () => {
-  console.log("postgres url", process.env.POSTGRES_URL);
-  console.log("vercel env", process.env.VERCEL_ENV);
-  console.log("node env", process.env.NODE_ENV);
   const client = await db.pool.connect();
-  console.log("client:", client);
-  //const pool = new Pool({ connectionString: process.env.POSTGRES_URL });
-  //const client = await pool.connect();
 
   const clientWithSql = {
     ...client,
@@ -29,7 +23,7 @@ setup('seed db', async () => {
   await seedUsers(clientWithSql, users);
   await seedPages(clientWithSql, pages);
   
-  console.log('Seeded db');
+  console.log('Seeded db in global setup');
 
   await client.release();
 });
