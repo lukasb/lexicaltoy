@@ -38,7 +38,4 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
+/playwright/.auth/user.json
