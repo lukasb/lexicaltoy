@@ -17,7 +17,7 @@ import {
 import { MiniSearchProvider } from "@/_app/context/minisearch-context";
 import { useLiveQuery } from 'dexie-react-hooks';
 import { localDb } from '@/_app/context/storage/db';
-import { PageUpdateProvider } from "@/_app/context/page-update-context";
+import { PageStatusProvider } from "@/_app/context/page-update-context";
 
 // Only Once in your app you can set whether to enable hooks tracking or not.
 // In CRA(create-react-app) e.g. this can be done in src/index.js
@@ -93,12 +93,12 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
     return mergedPages;
   }, [session]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (pagesCount.current !== pages?.length) {
       pagesCount.current = pages?.length || 0;
       console.log("pages", pages);
     }
-  }, [pages]);
+  }, [pages]);*/
 
   if (!session || !session.id) {
     console.log("Problem with session", session);
@@ -120,9 +120,9 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
         )}
           <BlockIdsIndexProvider>
             <MiniSearchProvider>
-              <PageUpdateProvider>
+              <PageStatusProvider>
                 <EditingArea userId={session.id} pages={pages} />
-              </PageUpdateProvider>
+              </PageStatusProvider>
             </MiniSearchProvider>
           </BlockIdsIndexProvider>
         <SignoutButton />

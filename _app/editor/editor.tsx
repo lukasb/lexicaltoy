@@ -49,7 +49,7 @@ import { useSearchTerms } from "../context/search-terms-context";
 import { AIGeneratorPlugin } from "../plugins/AIGeneratorPlugin";
 import { editorNodes } from "./shared-editor-config";
 import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blockids-index-context";
-import { usePageUpdate } from "../context/page-update-context";
+import { usePageStatus } from "../context/page-update-context";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -86,7 +86,7 @@ function Editor({
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
   const [shouldHighlight, setShouldHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
   const { setBlockIdsForPage } = useBlockIdsIndex();
-  const { addPageUpdate, getUpdatedPageValue, getPageUpdate } = usePageUpdate();
+  const { addPageStatus, getUpdatedPageValue, getPageStatus } = usePageStatus();
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
@@ -104,19 +104,20 @@ function Editor({
     const currentPage = getPage(page.id);
     if (currentPage) {
       console.log("saving change for page", page.title);
-      addPageUpdate(page.id, PageStatus.UserEdit, new Date(), newContent);
+      addPageStatus(page.id, PageStatus.UserEdit, new Date(), newContent);
       ingestPageBlockIds(page.title, newContent, setBlockIdsForPage);
       pendingChangeRef.current = null;
     }
-  }, [page.id, getPage, setBlockIdsForPage, page.title, addPageUpdate]);
+  }, [page.id, getPage, setBlockIdsForPage, page.title, addPageStatus]);
 
   const debouncedSave = useDebouncedCallback(saveChange, 100);
 
   const onChange = useCallback((editorState: EditorState) => {
-    if (!editorState || getPageUpdate(page.id)?.status === PageStatus.EditFromSharedNodes) return;
+    if (!editorState || getPageStatus(page.id)?.status === PageStatus.EditFromSharedNodes) return;
     editorState.read(() => {
 
       const localPageValue = getUpdatedPageValue(page);
+      if (localPageValue === undefined) return;
       const trimmedPageValue = localPageValue.replace(/\s$/, '');
 
       const editorStateMarkdown = $myConvertToMarkdownString(TRANSFORMERS, undefined, true);
@@ -131,7 +132,7 @@ function Editor({
         pendingChangeRef.current = null; // Clear pending change if content matches current page value
       }
     });
-  }, [page.value, debouncedSave, deleteSearchTerms, page.id, getUpdatedPageValue, getPageUpdate]);
+  }, [debouncedSave, deleteSearchTerms, page, getUpdatedPageValue, getPageStatus]);
 
   const onBeforeUnload = useCallback(() => {
     if (pendingChangeRef.current) {

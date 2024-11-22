@@ -18,7 +18,7 @@ import BacklinksViewer from "./backlinks-viewer";
 import { EditDialog } from "@/_app/ui/edit-dialog";
 import { updatePage, PageSyncResult } from "@/_app/context/storage/storage-context"
 import { PageStatus } from "@/lib/definitions";
-import { usePageUpdate } from "@/_app/context/page-update-context";
+import { usePageStatus } from "@/_app/context/page-update-context";
 import { useMiniSearch } from "@/_app/context/minisearch-context";
 function EditorContainer({
   page,
@@ -50,7 +50,7 @@ function EditorContainer({
   const pages = useContext(PagesContext);
   const [backlinks, setBacklinks] = useState<NodeElementMarkdown[]>([]);
   const [backlinksCollapsed, setBacklinksCollapsed] = useState(true);
-  const { pageUpdates, getPageUpdate, setPageUpdateStatus } = usePageUpdate();
+  const { pageStatuses: pageUpdates, getPageStatus: getPageUpdate, setPageStatus: setPageUpdateStatus } = usePageStatus();
   const { msReplacePage } = useMiniSearch();
 
   useEffect(() => {

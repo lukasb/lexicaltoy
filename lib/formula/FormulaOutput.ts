@@ -17,7 +17,7 @@ import { IToken } from 'chevrotain';
 import { $getRoot } from 'lexical';
 import { getMarkdownUpTo } from './formula-context-helpers';
 import { getShortGPTResponse } from './gpt-formula-handlers';
-import { PageUpdateContextType } from '@/_app/context/page-update-context';
+import { PageStatusContextType } from '@/_app/context/page-update-context';
 
 const partialFormulaRegex = /=\s?[a-zA-z]+\(/;
 
@@ -25,7 +25,7 @@ export async function getFormulaOutput(
   formula: string,
   pages: Page[],
   context?: PageAndDialogueContext,
-  pageUpdateContext?: PageUpdateContextType
+  pageUpdateContext?: PageStatusContextType
 ): Promise<FormulaOutput | null> {
   try {
     const formulaWithEqualSign = formula.startsWith("=") ? formula : `=${formula}`;
@@ -57,7 +57,7 @@ async function getFormulaOutputInner(
   cst: CstNodeWithChildren,
   pages: Page[],
   context?: PageAndDialogueContext,
-  pageUpdateContext?: PageUpdateContextType
+  pageUpdateContext?: PageStatusContextType
 ): Promise<FormulaOutput | null> {
   const functionCallNode = cst.children.functionCall[0] as CstNodeWithChildren;
   const functionName = (functionCallNode.children.Identifier[0] as IToken).image;

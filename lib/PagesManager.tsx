@@ -11,7 +11,7 @@ import { useCallback } from "react";
 import { getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
 import { useMiniSearch } from '@/_app/context/minisearch-context';
 import { updatePage, PageSyncResult, deleteQueuedUpdate } from '@/_app/context/storage/storage-context';
-import { usePageUpdate } from '@/_app/context/page-update-context';
+import { usePageStatus } from '@/_app/context/page-update-context';
 
 // TODO maybe use Redux so we don't have an O(n) operation here every time
 function PagesManager() {
@@ -19,7 +19,7 @@ function PagesManager() {
   const { sharedNodeMap } = useSharedNodeContext();
   const { updatePagesResults, addPagesResults } = useFormulaResultService();
   const { msReplacePage } = useMiniSearch();
-  const { setPageUpdateStatus, removePageUpdate, addPageUpdate, pageUpdates } = usePageUpdate();
+  const { setPageStatus, removePageStatus, addPageStatus, pageStatuses } = usePageStatus();
   
   // Create a ref to store the save queue
   const saveQueue = useRef<Map<string, { page: Page, timestamp: number, newValue: string }>>(new Map());
@@ -35,11 +35,12 @@ function PagesManager() {
         const result = await updatePage(page, newValue, page.title, false);
         if (result === PageSyncResult.Conflict) {
           console.log("conflict", page.title);
-          setPageUpdateStatus(page.id, PageStatus.Conflict);
+          setPageStatus(page.id, PageStatus.Conflict);
         } else if (result === PageSyncResult.Error) {
           alert(`Error saving page ${page.title}`);
         } else {
-          removePageUpdate(page.id);
+          //removePageStatus(page.id);
+          setPageStatus(page.id, PageStatus.Quiescent);
           msReplacePage(page);
         }
       } catch (error) {
@@ -49,7 +50,7 @@ function PagesManager() {
         saveQueue.current.delete(pageId);
       }
     }
-  }, [msReplacePage, removePageUpdate, setPageUpdateStatus]);
+  }, [msReplacePage, setPageStatus]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -63,7 +64,7 @@ function PagesManager() {
 
   useEffect(() => {
     pages.forEach(page => {
-      const pageUpdate = pageUpdates.get(page.id);
+      const pageUpdate = pageStatuses.get(page.id);
       if (pageUpdate && pageUpdate.status === PageStatus.PendingWrite && pageUpdate.newValue) {
         const currentTimestamp = Date.now();
         const existingSave = saveQueue.current.get(page.id);
@@ -73,10 +74,10 @@ function PagesManager() {
         }
       } else if (pageUpdate && pageUpdate.status === PageStatus.DroppingUpdate) {
         deleteQueuedUpdate(page.id);
-        setTimeout(() => setPageUpdateStatus(page.id, PageStatus.EditorUpdateRequested), 0); // make sure PageListener gets the updated page
+        setTimeout(() => setPageStatus(page.id, PageStatus.EditorUpdateRequested), 0); // make sure PageListener gets the updated page
       }
     });
-  }, [pages, pageUpdates, setPageUpdateStatus]);
+  }, [pages, pageStatuses, setPageStatus]);
 
   // TODO maybe use Redux or some kind of message bus so we don't have an O(n) operation here every time
   // TODO make this async
@@ -93,7 +94,7 @@ function PagesManager() {
       const keyElements: SharedNodeKeyElements = getSharedNodeKeyElements(key);
       const page = pages.find((p) => p.title === keyElements.pageName);
       if (page) {
-        if (pageUpdates.get(page.id)?.status !== PageStatus.UserEdit && value.needsSyncToPage) {
+        if (pageStatuses.get(page.id)?.status !== PageStatus.UserEdit && value.needsSyncToPage) {
           const lines = page.value.split("\n");
           const currentMarkdown = getNodeElementFullMarkdown(value.output);
           if (lines.slice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd).join("\n") !== currentMarkdown) {
@@ -101,16 +102,16 @@ function PagesManager() {
           }
           pagesToUpdate.set(keyElements.pageName, lines.join("\n"));
           sharedNodeMap.set(key, { ...value, needsSyncToPage: false });
-        } else if (pageUpdates.get(page.id)?.status === PageStatus.UserEdit && value.needsSyncToPage) {
+        } else if (pageStatuses.get(page.id)?.status === PageStatus.UserEdit && value.needsSyncToPage) {
           console.error("Page has a user edit, but shared node also needs sync to page");
         } 
       }
     }
     const pagesToInvalidate = pages
-      .filter(page => pageUpdates.get(page.id)?.status === PageStatus.UserEdit)
+      .filter(page => pageStatuses.get(page.id)?.status === PageStatus.UserEdit)
       .map(page => ({
         ...page,
-        value: pageUpdates.get(page.id)?.newValue || page.value
+        value: pageStatuses.get(page.id)?.newValue || page.value
       }));
 
     if (pagesToInvalidate.length > 0) {
@@ -122,28 +123,28 @@ function PagesManager() {
       const updatedPages = pages.map(p => {
         const updatedPageContents = pagesToUpdate.get(p.title);
         if (updatedPageContents) {
-          addPageUpdate(p.id, PageStatus.EditFromSharedNodes, new Date(), updatedPageContents);
+          addPageStatus(p.id, PageStatus.EditFromSharedNodes, new Date(), updatedPageContents);
         }
         return p;
       });
     
       // this kicks off a codepath that attempts to append newly matching nodes to existing
       // FormulaDisplayNodes with node queries, without otherwise affecting them (i.e. not removing or changing existing nodes)
-      const filteredUpdatedPages = updatedPages.filter((p) => pageUpdates.get(p.id)?.status === PageStatus.EditFromSharedNodes);
+      const filteredUpdatedPages = updatedPages.filter((p) => pageStatuses.get(p.id)?.status === PageStatus.EditFromSharedNodes);
       if (filteredUpdatedPages.length > 0) {
         addPagesResults(filteredUpdatedPages);
       }
     }
     for (const page of pages) {
       if (!pagesToUpdate.has(page.title)) {
-        if (pageUpdates.get(page.id)?.status === PageStatus.UserEdit || pageUpdates.get(page.id)?.status === PageStatus.EditFromSharedNodes) {
-          setPageUpdateStatus(page.id, PageStatus.PendingWrite);
-        } else if (pageUpdates.get(page.id)?.status === PageStatus.EditorUpdateRequested) {
-          removePageUpdate(page.id);
+        if (pageStatuses.get(page.id)?.status === PageStatus.UserEdit || pageStatuses.get(page.id)?.status === PageStatus.EditFromSharedNodes) {
+          setPageStatus(page.id, PageStatus.PendingWrite);
+        } else if (pageStatuses.get(page.id)?.status === PageStatus.EditorUpdateRequested) {
+          removePageStatus(page.id);
         }
       }
     }
-  }, [sharedNodeMap, pages, setPageUpdateStatus, updatePagesResults, addPagesResults, pageUpdates, addPageUpdate, removePageUpdate]);
+  }, [sharedNodeMap, pages, setPageStatus, updatePagesResults, addPagesResults, pageStatuses, addPageStatus, removePageStatus]);
 
   return null;
 }

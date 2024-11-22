@@ -2,98 +2,125 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Page, PageStatus } from '@/lib/definitions';
 
 // Define the type for our map values
-type PageUpdateInfo = {
+type PageStatusInfo = {
   status: PageStatus;
   lastModified?: Date;
   newValue?: string;
 }
 
 // Create the context
-export type PageUpdateContextType = {
-  pageUpdates: Map<string, PageUpdateInfo>;
-  addPageUpdate: (pageId: string, status: PageStatus, lastModified?: Date, newValue?: string) => void;
-  getPageUpdate: (pageId: string) => PageUpdateInfo | undefined;
-  removePageUpdate: (pageId: string) => void;
-  setPageUpdateStatus: (pageId: string, status: PageStatus) => void;
+export type PageStatusContextType = {
+  pageStatuses: Map<string, PageStatusInfo>;
+  addPageStatus: (pageId: string, status: PageStatus, lastModified?: Date, newValue?: string) => void;
+  getPageStatus: (pageId: string) => PageStatusInfo | undefined;
+  removePageStatus: (pageId: string) => void;
+  setPageStatus: (pageId: string, status: PageStatus) => void;
   getUpdatedPageValue: (page: Page) => string;
 }
 
-const PageUpdateContext = createContext<PageUpdateContextType | undefined>(undefined);
+const PageStatusContext = createContext<PageStatusContextType | undefined>(undefined);
 
 // Create the provider component
-export function PageUpdateProvider({ children }: { children: React.ReactNode }) {
-  const [pageUpdates, setPageUpdates] = useState<Map<string, PageUpdateInfo>>(
+export function PageStatusProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [pageStatuses, setPageStatuses] = useState<Map<string, PageStatusInfo>>(
     new Map()
   );
 
-  const addPageUpdate = (pageId: string, status: PageStatus, lastModified?: Date, newValue?: string) => {
-    if (status !== PageStatus.DroppingUpdate && status !== PageStatus.Conflict && (!lastModified || newValue === undefined)) {
-      throw new Error("lastModified and newValue are required for non-dropping updates");
+  const addPageStatus = (
+    pageId: string,
+    status: PageStatus,
+    lastModified?: Date,
+    newValue?: string
+  ) => {
+    if (
+      status !== PageStatus.DroppingUpdate &&
+      status !== PageStatus.Conflict &&
+      status !== PageStatus.Quiescent &&
+      (!lastModified || newValue === undefined)
+    ) {
+      throw new Error(
+        `lastModified and newValue are required for status of type ${status}`
+      );
     }
-    setPageUpdates(prevMap => {
+    setPageStatuses((prevMap) => {
       const newMap = new Map(prevMap);
       newMap.set(pageId, {
         status,
-        lastModified: lastModified || prevMap.get(pageId)?.lastModified || new Date(new Date().toISOString()),
-        newValue
+        lastModified:
+          lastModified ||
+          prevMap.get(pageId)?.lastModified ||
+          new Date(new Date().toISOString()),
+        newValue,
       });
       return newMap;
     });
   };
 
-  const getPageUpdate = useCallback((pageId: string) => {
-    return pageUpdates.get(pageId);
-  }, [pageUpdates]);
+  const getPageStatus = useCallback(
+    (pageId: string) => {
+      return pageStatuses.get(pageId);
+    },
+    [pageStatuses]
+  );
 
-  const removePageUpdate = (pageId: string) => {
-    setPageUpdates(prevMap => {
+  const removePageStatus = (pageId: string) => {
+    setPageStatuses((prevMap) => {
       const newMap = new Map(prevMap);
       newMap.delete(pageId);
       return newMap;
     });
   };
 
-  const setPageUpdateStatus = (pageId: string, status: PageStatus) => {
-    setPageUpdates(prevMap => {
+  const setPageStatus = (pageId: string, status: PageStatus) => {
+    setPageStatuses((prevMap) => {
       const newMap = new Map(prevMap);
       const existingUpdate = newMap.get(pageId);
       if (existingUpdate) {
         newMap.set(pageId, {
           ...existingUpdate,
           status,
-          lastModified: new Date(new Date().toISOString())
+          lastModified: new Date(new Date().toISOString()),
         });
       } else {
-        throw new Error("Tried to update status for page without existing update");
+        throw new Error(
+          "Tried to update status for page without existing update"
+        );
       }
       return newMap;
     });
   };
 
-  const getUpdatedPageValue = useCallback((page: Page) => {
-    const pageUpdate = pageUpdates.get(page.id);
-    return pageUpdate?.newValue || page.value;
-  }, [pageUpdates]);
+  const getUpdatedPageValue = useCallback(
+    (page: Page) => {
+      const pageStatus = pageStatuses.get(page.id);
+      return pageStatus?.newValue || page.value;
+    },
+    [pageStatuses]
+  );
 
   return (
-    <PageUpdateContext.Provider 
-      value={{ 
-        pageUpdates: pageUpdates, 
-        addPageUpdate: addPageUpdate, 
-        getPageUpdate: getPageUpdate, 
-        removePageUpdate: removePageUpdate,
-        setPageUpdateStatus: setPageUpdateStatus,
-        getUpdatedPageValue: getUpdatedPageValue
+    <PageStatusContext.Provider
+      value={{
+        pageStatuses: pageStatuses,
+        addPageStatus: addPageStatus,
+        getPageStatus: getPageStatus,
+        removePageStatus: removePageStatus,
+        setPageStatus: setPageStatus,
+        getUpdatedPageValue: getUpdatedPageValue,
       }}
     >
       {children}
-    </PageUpdateContext.Provider>
+    </PageStatusContext.Provider>
   );
 }
 
 // Custom hook to use the page status context
-export function usePageUpdate() {
-  const context = useContext(PageUpdateContext);
+export function usePageStatus() {
+  const context = useContext(PageStatusContext);
   if (context === undefined) {
     throw new Error('usePageStatus must be used within a PageStatusProvider');
   }

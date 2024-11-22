@@ -27,7 +27,7 @@ import {
 } from "@lexical/list";
 import { $isFormulaDisplayNode } from "../nodes/FormulaNode";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
-import { usePageUpdate } from "@/_app/context/page-update-context";
+import { usePageStatus } from "@/_app/context/page-update-context";
 
 const listItemRegex = /^(\s*)-\s*(.+)$/;
 
@@ -107,7 +107,7 @@ export function PageListenerPlugin({
 }): null {
   const [editor] = useLexicalComposerContext();
   const pages = useContext(PagesContext);
-  const { pageUpdates, getUpdatedPageValue } = usePageUpdate();
+  const { pageStatuses, getUpdatedPageValue } = usePageStatus();
 
   // make sure open editors update their contents when updates from shared nodes occur
 
@@ -118,13 +118,13 @@ export function PageListenerPlugin({
 
   useEffect(() => {
       if (
-        pageUpdates.get(pageId)?.status === PageStatus.EditFromSharedNodes ||
-        pageUpdates.get(pageId)?.status === PageStatus.EditorUpdateRequested
+        pageStatuses.get(pageId)?.status === PageStatus.EditFromSharedNodes ||
+        pageStatuses.get(pageId)?.status === PageStatus.EditorUpdateRequested
       ) {
         const page = pages?.find((page) => page.id === pageId);
         if (!page) return;
         // I am so, so sorry.
-        const newValue = pageUpdates.get(pageId)?.status === PageStatus.EditFromSharedNodes ? getUpdatedPageValue(page) : page.value;
+        const newValue = pageStatuses.get(pageId)?.status === PageStatus.EditFromSharedNodes ? getUpdatedPageValue(page) : page.value;
         if (newValue === undefined) return;
         queueMicrotask(() => {
           editor.update(() => {
@@ -159,7 +159,7 @@ export function PageListenerPlugin({
           });
         });
       }
-  }, [editor, pageId, pages, pageUpdates, getUpdatedPageValue]);
+  }, [editor, pageId, pages, pageStatuses, getUpdatedPageValue]);
 
   useEffect(() => {
     return editor.registerUpdateListener(() => {
