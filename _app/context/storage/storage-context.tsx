@@ -262,7 +262,7 @@ export async function updatePage(
     lastModified: new Date(new Date().toISOString()),
   };
   
-  localDb.queuedUpdates.put(pageLocalUpdate);
+  await localDb.queuedUpdates.put(pageLocalUpdate);
   return PageSyncResult.Success;
 }
 
@@ -293,6 +293,6 @@ export async function insertPage(
     revisionNumber: 1,
   };
 
-  localDb.queuedUpdates.put(newPage);
+  await localDb.queuedUpdates.put(newPage);
   return [newPage, PageSyncResult.Success];
 }

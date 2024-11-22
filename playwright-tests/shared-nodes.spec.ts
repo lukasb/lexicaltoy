@@ -11,7 +11,7 @@ async function createVilla(page: Page) {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1000);
   await page.keyboard.press('Meta+k');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Tab');
@@ -25,6 +25,7 @@ async function createAston(page: Page) {
   const newerSearch = page.getByPlaceholder('Search or Create');
   await newerSearch.pressSequentially('aston');
   await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
   await page.keyboard.press('Meta+k');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Tab');
@@ -39,6 +40,7 @@ async function createGemlike(page: Page) {
   const newerSearch = page.getByPlaceholder('Search or Create');
   await newerSearch.pressSequentially('gemlike');
   await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
   await page.keyboard.press('Meta+k');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Tab');
@@ -92,10 +94,13 @@ test('can create a shared node', async ({ page }) => {
 test('modifying shared node on source page propagates to find nodes', async ({ page }) => {
   await page.waitForTimeout(1000);
   await createVilla(page);
+  await page.waitForTimeout(1000);
   await createAston(page);
+  await page.waitForTimeout(1000);
   const newerSearch = page.getByPlaceholder('Search or Create');
   await newerSearch.pressSequentially('villa');
   await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
   await page.keyboard.press('End');
   await page.keyboard.type(' was a great man');
   await expect(
@@ -126,6 +131,7 @@ test('editing on source page is reflected in shared nodes (same page)', async ({
   await page.keyboard.press('ArrowUp');
   await page.keyboard.press('ArrowUp');
   await page.keyboard.press('End');
+  await page.waitForTimeout(500);
   await page.keyboard.type(' was a great man');
   await page.waitForTimeout(500);
   await expect(
@@ -141,7 +147,8 @@ test('editing shared nodes reflected on source page (same page)', async ({ page 
   await page.keyboard.press('Enter');
   await page.waitForTimeout(200);
   await page.keyboard.press('ArrowUp');
-  await page.keyboard.press('End');
+  await page.keyboard.press('Meta+ArrowRight');
+  await page.waitForTimeout(500);
   await page.keyboard.type(' was a great man');
   await page.waitForTimeout(200);
   await expect(
@@ -160,7 +167,7 @@ test('editing shared nodes reflected on source page (same page, with GPT node)',
   await page.keyboard.press('Enter');
   await page.waitForTimeout(200);
   await page.keyboard.press('ArrowUp');
-  await page.keyboard.press('End');
+  await page.keyboard.press('Meta+ArrowRight');
   await page.keyboard.type(' was a great man');
   await page.waitForTimeout(200);
   await expect(
