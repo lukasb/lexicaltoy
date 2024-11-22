@@ -12,12 +12,4 @@ localDb.version(1).stores({
   queuedUpdates: 'id, userId'
 });
 
-if (typeof window !== 'undefined') {
-  localDb.pages.count().then((pages) => {
-    localDb.queuedUpdates.count().then((queuedUpdates) => {
-      console.log("local db pages", pages, "queued updates", queuedUpdates);
-    });
-  });
-}
-
 export { localDb };
