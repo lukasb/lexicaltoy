@@ -19,10 +19,10 @@ export default async function handler(
   }
 
   if (req.method === 'POST') {
-    const { title, value, userId, id, isJournal } = req.body;
+    const { title, value, userId, id, lastModified, isJournal } = req.body;
     
     // Validate the incoming data
-    if (!title || !value || !userId || isJournal === undefined) {
+    if (!title || !value || !userId || !lastModified || isJournal === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -32,14 +32,14 @@ export default async function handler(
       let result;
       if (id) {
         result = await sql`
-          INSERT INTO pages (id, title, value, userid, is_journal)
-          VALUES (${id}, ${title}, ${value}, ${userId}, ${isJournal})
+          INSERT INTO pages (id, title, value, userid, is_journal, last_modified)
+          VALUES (${id}, ${title}, ${value}, ${userId}, ${isJournal}, ${lastModified})
           RETURNING id, title, value, userid, last_modified, revision_number, is_journal, deleted
         `;
       } else {
         result = await sql`
-          INSERT INTO pages (title, value, userid, is_journal)
-          VALUES (${title}, ${value}, ${userId}, ${isJournal})
+          INSERT INTO pages (title, value, userid, is_journal, last_modified)
+          VALUES (${title}, ${value}, ${userId}, ${isJournal}, ${lastModified})
           RETURNING id, title, value, userid, last_modified, revision_number, is_journal, deleted
         `;
       }

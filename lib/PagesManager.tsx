@@ -19,7 +19,7 @@ function PagesManager() {
   const { sharedNodeMap } = useSharedNodeContext();
   const { updatePagesResults, addPagesResults } = useFormulaResultService();
   const { msReplacePage } = useMiniSearch();
-  const { setPageStatus, removePageStatus, addPageStatus, pageStatuses } = usePageStatus();
+  const { setPageStatus, removePageStatus, addPageStatus, pageStatuses, setPageLastModified } = usePageStatus();
   
   // Create a ref to store the save queue
   const saveQueue = useRef<Map<string, { page: Page, timestamp: number, newValue: string }>>(new Map());
@@ -64,20 +64,25 @@ function PagesManager() {
 
   useEffect(() => {
     pages.forEach(page => {
-      const pageUpdate = pageStatuses.get(page.id);
-      if (pageUpdate && pageUpdate.status === PageStatus.PendingWrite && pageUpdate.newValue) {
+      const pageStatus = pageStatuses.get(page.id);
+      if (pageStatus && pageStatus.status === PageStatus.PendingWrite && pageStatus.newValue && pageStatus.lastModified) {
         const currentTimestamp = Date.now();
         const existingSave = saveQueue.current.get(page.id);
-
         if (!existingSave || existingSave.timestamp < currentTimestamp) {
-          saveQueue.current.set(page.id, { page, timestamp: currentTimestamp, newValue: pageUpdate.newValue });
+          saveQueue.current.set(page.id, { page, timestamp: currentTimestamp, newValue: pageStatus.newValue });
+          setPageLastModified(page.id, new Date(currentTimestamp));
         }
-      } else if (pageUpdate && pageUpdate.status === PageStatus.DroppingUpdate) {
+      } else if (pageStatus && pageStatus.status === PageStatus.PendingWrite && (!pageStatus.newValue || !pageStatus.lastModified)) {
+        console.error("Pending write is missing either value or last modified", page.title);
+      } else if (pageStatus && pageStatus.status === PageStatus.DroppingUpdate) {
         deleteQueuedUpdate(page.id);
         setTimeout(() => setPageStatus(page.id, PageStatus.EditorUpdateRequested), 0); // make sure PageListener gets the updated page
+      } else if (!pageStatus || !pageStatus.lastModified || page.lastModified > pageStatus.lastModified) {
+        // this is probably a page updated by another tab
+        addPageStatus(page.id, PageStatus.UpdatedFromDisk, page.lastModified, page.value);
       }
     });
-  }, [pages, pageStatuses, setPageStatus]);
+  }, [pages, pageStatuses, setPageStatus, addPageStatus, setPageLastModified]);
 
   // TODO maybe use Redux or some kind of message bus so we don't have an O(n) operation here every time
   // TODO make this async
@@ -108,7 +113,7 @@ function PagesManager() {
       }
     }
     const pagesToInvalidate = pages
-      .filter(page => pageStatuses.get(page.id)?.status === PageStatus.UserEdit)
+      .filter(page => pageStatuses.get(page.id)?.status === PageStatus.UserEdit || pageStatuses.get(page.id)?.status === PageStatus.UpdatedFromDisk)
       .map(page => ({
         ...page,
         value: pageStatuses.get(page.id)?.newValue || page.value
@@ -139,8 +144,10 @@ function PagesManager() {
       if (!pagesToUpdate.has(page.title)) {
         if (pageStatuses.get(page.id)?.status === PageStatus.UserEdit || pageStatuses.get(page.id)?.status === PageStatus.EditFromSharedNodes) {
           setPageStatus(page.id, PageStatus.PendingWrite);
+        } else if (pageStatuses.get(page.id)?.status === PageStatus.UpdatedFromDisk) {
+          setPageStatus(page.id, PageStatus.EditorUpdateRequested);
         } else if (pageStatuses.get(page.id)?.status === PageStatus.EditorUpdateRequested) {
-          removePageStatus(page.id);
+          setPageStatus(page.id, PageStatus.Quiescent);
         }
       }
     }

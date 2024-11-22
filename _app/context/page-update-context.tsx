@@ -1,26 +1,24 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Page, PageStatus } from '@/lib/definitions';
 
-// Define the type for our map values
 type PageStatusInfo = {
   status: PageStatus;
   lastModified?: Date;
   newValue?: string;
 }
 
-// Create the context
 export type PageStatusContextType = {
   pageStatuses: Map<string, PageStatusInfo>;
   addPageStatus: (pageId: string, status: PageStatus, lastModified?: Date, newValue?: string) => void;
   getPageStatus: (pageId: string) => PageStatusInfo | undefined;
   removePageStatus: (pageId: string) => void;
-  setPageStatus: (pageId: string, status: PageStatus) => void;
+  setPageStatus: (pageId: string, status: PageStatus, lastModified?: Date) => void;
   getUpdatedPageValue: (page: Page) => string;
+  setPageLastModified: (pageId: string, lastModified: Date) => void;
 }
 
 const PageStatusContext = createContext<PageStatusContextType | undefined>(undefined);
 
-// Create the provider component
 export function PageStatusProvider({
   children,
 }: {
@@ -30,7 +28,8 @@ export function PageStatusProvider({
     new Map()
   );
 
-  const addPageStatus = (
+  // Memoize all functions to prevent unnecessary recreations
+  const addPageStatus = useCallback((
     pageId: string,
     status: PageStatus,
     lastModified?: Date,
@@ -58,24 +57,22 @@ export function PageStatusProvider({
       });
       return newMap;
     });
-  };
+  }, []); // No dependencies needed since we use functional updates
 
   const getPageStatus = useCallback(
-    (pageId: string) => {
-      return pageStatuses.get(pageId);
-    },
+    (pageId: string) => pageStatuses.get(pageId),
     [pageStatuses]
   );
 
-  const removePageStatus = (pageId: string) => {
+  const removePageStatus = useCallback((pageId: string) => {
     setPageStatuses((prevMap) => {
       const newMap = new Map(prevMap);
       newMap.delete(pageId);
       return newMap;
     });
-  };
+  }, []); // No dependencies needed since we use functional updates
 
-  const setPageStatus = (pageId: string, status: PageStatus) => {
+  const setPageStatus = useCallback((pageId: string, status: PageStatus, lastModified?: Date) => {
     setPageStatuses((prevMap) => {
       const newMap = new Map(prevMap);
       const existingUpdate = newMap.get(pageId);
@@ -83,7 +80,7 @@ export function PageStatusProvider({
         newMap.set(pageId, {
           ...existingUpdate,
           status,
-          lastModified: new Date(new Date().toISOString()),
+          lastModified: lastModified || existingUpdate.lastModified,
         });
       } else {
         throw new Error(
@@ -92,7 +89,7 @@ export function PageStatusProvider({
       }
       return newMap;
     });
-  };
+  }, []);
 
   const getUpdatedPageValue = useCallback(
     (page: Page) => {
@@ -102,23 +99,46 @@ export function PageStatusProvider({
     [pageStatuses]
   );
 
+  const setPageLastModified = useCallback((pageId: string, lastModified: Date) => {
+    setPageStatuses((prevMap) => {
+      const newMap = new Map(prevMap);
+      const existingUpdate = newMap.get(pageId);
+      if (existingUpdate && existingUpdate.status) {
+        newMap.set(pageId, {
+          ...existingUpdate,
+          lastModified
+        });
+      }
+      return newMap;
+    });
+  }, []);
+
+  // Memoize the context value to prevent unnecessary rerenders of consumers
+  const contextValue = React.useMemo(() => ({
+    pageStatuses,
+    addPageStatus,
+    getPageStatus,
+    removePageStatus,
+    setPageStatus,
+    getUpdatedPageValue,
+    setPageLastModified,
+  }), [
+    pageStatuses,
+    addPageStatus,
+    getPageStatus,
+    removePageStatus,
+    setPageStatus,
+    getUpdatedPageValue,
+    setPageLastModified
+  ]);
+
   return (
-    <PageStatusContext.Provider
-      value={{
-        pageStatuses: pageStatuses,
-        addPageStatus: addPageStatus,
-        getPageStatus: getPageStatus,
-        removePageStatus: removePageStatus,
-        setPageStatus: setPageStatus,
-        getUpdatedPageValue: getUpdatedPageValue,
-      }}
-    >
+    <PageStatusContext.Provider value={contextValue}>
       {children}
     </PageStatusContext.Provider>
   );
 }
 
-// Custom hook to use the page status context
 export function usePageStatus() {
   const context = useContext(PageStatusContext);
   if (context === undefined) {

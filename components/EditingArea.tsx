@@ -53,44 +53,59 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const hasInitializedSearch = useRef(false);
   let initCount = 0;
 
-  const { addPageStatus: addPageUpdate, removePageStatus: removePageUpdate } = usePageStatus();
+  const { addPageStatus, removePageStatus } = usePageStatus();
 
   const [initialFetchComplete, setInitialFetchComplete] = useState(false);
+
+  const pagesRef = useRef(pages);
+  useEffect(() => {
+    pagesRef.current = pages;
+  }, [pages]);
 
   const handleConflict = useCallback(
     async (pageId: string, errorCode: ConflictErrorCode) => {
       return createConflictHandler({
-        removePageUpdate,
-        addPageUpdate,
-        pages: pages || [],
+        removePageStatus: removePageStatus,
+        addPageStatus: addPageStatus,
+        pages: pagesRef.current || [],
         userId, 
       })(pageId, errorCode);
     },
-    [removePageUpdate, addPageUpdate, pages, userId]
+    [removePageStatus, addPageStatus, userId]
   );
 
+  const fetch = useCallback(async () => {
+    if (userId) {
+      console.log("fetching updated pages...");
+      await fetchUpdatedPages(userId);
+      setInitialFetchComplete(true);
+    } else {
+      console.error("no user id, can't fetch updated pages");
+    }
+  }, [userId]);
+  
+  const processUpdates = useCallback(async () => {
+    if (userId) {
+      console.log("processing queued updates");
+      await processQueuedUpdates(userId, handleConflict);
+    } else {
+      console.error("no user id, can't process queued updates");
+    }
+  }, [userId, handleConflict]);
+
   useEffect(() => {
-    async function fetch() {
-      if (userId) {
-        console.log("fetching updated pages...");
-        await fetchUpdatedPages(userId);
-        setInitialFetchComplete(true);
-      }
-    }
-    async function processUpdates() {
-      if (userId) {
-        console.log("processing queued updates");
-        await processQueuedUpdates(userId, handleConflict);
-      }
-    }
-    fetch();
+    console.log("setting up fetch interval");
+    if (!initialFetchComplete) fetch();
+    
     const fetchIntervalId = setInterval(fetch, 60000);
     const processIntervalId = setInterval(processUpdates, 8000);
+    
     return () => {
+      console.log("clearing fetch interval");
       clearInterval(fetchIntervalId);
       clearInterval(processIntervalId);
     };
-  }, [userId, handleConflict]);
+  }, [fetch, processUpdates, initialFetchComplete]);
 
   useEffect(() => {
     if (!hasInitializedSearch.current && pages && pages.length > 0 && initialFetchComplete) {

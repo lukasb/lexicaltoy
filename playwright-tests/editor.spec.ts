@@ -114,6 +114,7 @@ test('open page', async ({ page }) => {
   const anotherSearch = page.getByPlaceholder('Search or Create');
   await anotherSearch.fill('avalon');
   await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
   const titles = await page.locator('[data-testid="editable-title"]');
   let found = false;
   const count = await titles.count();

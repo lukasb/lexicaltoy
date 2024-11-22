@@ -6,6 +6,7 @@ export type User = {
   };
   
   export enum PageStatus {
+    UpdatedFromDisk = 'updated_from_disk',
     UserEdit = 'user_edit',
     EditFromSharedNodes = 'edit_from_shared_nodes',
     PendingWrite = 'pending_write',

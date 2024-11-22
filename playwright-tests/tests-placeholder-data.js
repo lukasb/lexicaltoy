@@ -14,6 +14,7 @@ const pages = [
     userId: '410544b2-4001-4271-9855-fec4b6a6442b',
     title: 'TestPage1',
     isJournal: false,
+    last_modified: new Date().toISOString()
   },
   {
     id: '3958dc9e-712f-4377-85e9-fec4b6a6442c',
@@ -21,6 +22,7 @@ const pages = [
     userId: '410544b2-4001-4271-9855-fec4b6a6442b',
     title: 'aTestPage2',
     isJournal: false,
+    last_modified: new Date().toISOString()
   }
 ];
 

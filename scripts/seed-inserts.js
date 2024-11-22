@@ -55,7 +55,7 @@ async function seedPages(client, pages) {
       value TEXT NOT NULL,
       userId UUID NOT NULL,
       title TEXT NOT NULL,
-      last_modified TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
       revision_number INT NOT NULL DEFAULT 1,
       is_journal BOOLEAN NOT NULL DEFAULT FALSE,
       deleted BOOLEAN NOT NULL DEFAULT FALSE
@@ -168,8 +168,8 @@ async function seedPages(client, pages) {
     const insertedPages = await Promise.all(
       pages.map(
         (page) => client.sql`
-        INSERT INTO pages (id, value, userId, title)
-        VALUES (${page.id}, ${page.value}, ${page.userId}, ${page.title})
+        INSERT INTO pages (id, value, userId, title, last_modified)
+        VALUES (${page.id}, ${page.value}, ${page.userId}, ${page.title}, ${page.last_modified})
         ON CONFLICT (id) DO NOTHING;
       `
       )

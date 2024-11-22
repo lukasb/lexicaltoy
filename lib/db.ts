@@ -11,6 +11,7 @@ export async function insertPageDb(
   value: string,
   userId: string,
   isJournal: boolean,
+  lastModified: Date,
   id?: string
 ): Promise<Page | string> {
   const endpoint = "/api/db/insertPage";
@@ -21,7 +22,7 @@ export async function insertPageDb(
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ title, value, userId, id, isJournal }),
+      body: JSON.stringify({ title, value, userId, id, lastModified, isJournal }),
     });
 
     if (!response.ok) {
@@ -54,7 +55,7 @@ export async function insertPageDb(
   }
 }
 
-export async function updatePageWithHistory(id: string, value: string, title: string, deleted: boolean, oldRevisionNumber: number): Promise<PageUpdateResponse> {
+export async function updatePageWithHistory(id: string, value: string, title: string, deleted: boolean, oldRevisionNumber: number, lastModified: Date): Promise<PageUpdateResponse> {
   const endpoint = '/api/db/updatePage';
 
   try {      
@@ -63,7 +64,7 @@ export async function updatePageWithHistory(id: string, value: string, title: st
           headers: {
               'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ id, value, title, deleted, oldRevisionNumber }),
+          body: JSON.stringify({ id, value, title, deleted, oldRevisionNumber, lastModified }),
       });
 
       if (!response.ok) {

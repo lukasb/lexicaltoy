@@ -14,8 +14,8 @@ import {
 import { DEFAULT_JOURNAL_CONTENTS } from "@/lib/journal-helpers";
 
 export interface ConflictManagerDeps {
-  removePageUpdate: (pageId: string) => void;
-  addPageUpdate: (pageId: string, status: PageStatus, lastModified?: Date, newValue?: string) => void
+  removePageStatus: (pageId: string) => void;
+  addPageStatus: (pageId: string, status: PageStatus, lastModified?: Date, newValue?: string) => void
   pages: Page[];
   userId: string;
 }
@@ -42,8 +42,8 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
     errorCode: ConflictErrorCode
   ): Promise<void> {
     const {
-      removePageUpdate,
-      addPageUpdate,
+      removePageStatus,
+      addPageStatus,
       pages,
       userId,
     } = deps;
@@ -51,8 +51,8 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
     if (queuedUpdate) {
       if (errorCode === ConflictErrorCode.NotFound && queuedUpdate.deleted) {
         try {
-          console.log("queued delete does not exist on server, removing");
-          removePageUpdate(pageId);
+          console.log("page with queued delete does not exist on server, removing");
+          removePageStatus(pageId);
           await deletePage(pageId);
           await deleteQueuedUpdate(pageId);
         } catch (error) {
@@ -64,7 +64,7 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
         queuedUpdate.value === DEFAULT_JOURNAL_CONTENTS
       ) {
         console.log("queued update with conflict is journal page with default value, removing");
-        removePageUpdate(pageId);
+        removePageStatus(pageId);
         await deleteQueuedUpdate(pageId);
       } else if (
         !queuedUpdate.isJournal &&
@@ -73,12 +73,12 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
       ) {
         console.log("queued update violating uniqueness constraint is non-journal page with default value, removing");
         alert("A page with this title already exists. Please use a different title.");
-        removePageUpdate(pageId);
+        removePageStatus(pageId);
         await deleteQueuedUpdate(pageId);
       } else {
         // I tried inserting a conflict page, but when multiple tabs were open this resulted in multiple conflict pages
         console.log("queued update with conflict is non-journal page with non-default value, deleting update");
-        addPageUpdate(pageId, PageStatus.Conflict);
+        addPageStatus(pageId, PageStatus.Conflict);
         //removePageUpdate(pageId);
         await deleteQueuedUpdate(pageId);
       }

@@ -146,7 +146,8 @@ export async function processQueuedUpdatesInternal(
           queuedUpdate.value,
           queuedUpdate.title,
           queuedUpdate.deleted,
-          queuedUpdate.revisionNumber
+          queuedUpdate.revisionNumber,
+          queuedUpdate.lastModified
         );
         if (isDevelopmentEnvironment)
           console.timeEnd(`updatePageWithHistory ${queuedUpdate.title}`);
@@ -180,6 +181,7 @@ export async function processQueuedUpdatesInternal(
         queuedUpdate.value,
         userId,
         queuedUpdate.isJournal,
+        queuedUpdate.lastModified,
         queuedUpdate.id
       );
       if (typeof page === "string") {
