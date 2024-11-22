@@ -1,6 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
 import { db } from '../scripts/seed-db-wrapper.mts';
-import { STORAGE_STATE } from '@/playwright.config';
 const {
   users,
   pages
@@ -30,35 +29,6 @@ async function cleanUp(client: { sql: any; }, users: any[]) {
   }
 }
 
-async function clearIndexedDB(page: Page) {
-  return;
-  const result = await page.evaluate(() => {
-    return new Promise((resolve, reject) => {
-      const request = window.indexedDB.deleteDatabase('orangetask-local');
-      request.onsuccess = () => {
-        resolve(true);
-      };
-      request.onerror = () => {
-        reject(request);
-      };
-    });
-  });
-  console.log("indexeddb cleared", result);
-}
-
-/*test.beforeEach('do login', async ({ page }) => {
-  await page.goto('/');
-  await page.getByText('Log in').click();
-  await page.getByLabel('Email').fill('test@nextmail.com');
-  await page.getByLabel('Password').fill('123456');
-  await page.getByText('Log in').click();
-
-  // Wait until the page actually signs in.
-  await expect(page.getByText('Sign Out')).toBeVisible();
-
-  //await page.context().storageState({ path: STORAGE_STATE });
-});*/
-
 test.afterEach(async ({ page }) => {
   const client = await db.pool.connect();
   const clientWithSql = {
@@ -67,9 +37,6 @@ test.afterEach(async ({ page }) => {
   };
   await cleanUp(clientWithSql, users);
   await client.release();
-  //await page.goto('/');
-  //await page.getByText('Sign Out').click();
-  //await new Promise(r => setTimeout(r, 5000));
 });
 
 async function createVilla(page: Page) {
@@ -107,7 +74,6 @@ test('just one villa page', async ({ browser }) => {
     }
   }
   await expect(found).toBe(1);
-  await clearIndexedDB(page);
   await page.close();
 });
 
@@ -141,5 +107,4 @@ test('detects conflict when localdb page is newer', async ({ browser }) => {
   await expect(
     page1.getByText('Your changes are based on an old version of this page.'))
     .toBeVisible();
-  await clearIndexedDB(page2);
 });
