@@ -46,7 +46,7 @@ async function clearIndexedDB(page: Page) {
   console.log("indexeddb cleared", result);
 }
 
-test.beforeEach('do login', async ({ page }) => {
+/*test.beforeEach('do login', async ({ page }) => {
   await page.goto('/');
   await page.getByText('Log in').click();
   await page.getByLabel('Email').fill('test@nextmail.com');
@@ -57,7 +57,7 @@ test.beforeEach('do login', async ({ page }) => {
   await expect(page.getByText('Sign Out')).toBeVisible();
 
   //await page.context().storageState({ path: STORAGE_STATE });
-});
+});*/
 
 test.afterEach(async ({ page }) => {
   const client = await db.pool.connect();
@@ -67,14 +67,16 @@ test.afterEach(async ({ page }) => {
   };
   await cleanUp(clientWithSql, users);
   await client.release();
-  await new Promise(r => setTimeout(r, 5000));
+  //await page.goto('/');
+  //await page.getByText('Sign Out').click();
+  //await new Promise(r => setTimeout(r, 5000));
 });
 
 async function createVilla(page: Page) {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(500);
+  await new Promise(r => setTimeout(r, 5000));
   await page.keyboard.press('Meta+k');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Tab');
@@ -106,6 +108,7 @@ test('just one villa page', async ({ browser }) => {
   }
   await expect(found).toBe(1);
   await clearIndexedDB(page);
+  await page.close();
 });
 
 // TODO this test will fail once we're properly pulling in changes from other tabs updating IndexedDB
@@ -115,19 +118,21 @@ test('detects conflict when localdb page is newer', async ({ browser }) => {
   const context1 = await browser.newContext();
   const page1 = await context1.newPage();
   await page1.goto('/page');
-  //await page1.waitForTimeout(15000);
-  await new Promise(r => setTimeout(r, 15000));
+  await new Promise(r => setTimeout(r, 5000));
   await createVilla(page1);
-  await page1.waitForTimeout(5000);
+  //await page1.waitForTimeout(8000);
+  await new Promise(r => setTimeout(r, 15000));
   const context2 = await browser.newContext();
   const page2 = await context2.newPage();
   await page2.goto('/page');
-  //await page2.waitForTimeout(15000);
-  await new Promise(r => setTimeout(r, 12000));
-  const newSearch = page2.getByPlaceholder('Search or Create');
-  await newSearch.fill('villa');
-  await page2.keyboard.press('Enter');
-  await page2.waitForTimeout(5000);
+  await new Promise(r => setTimeout(r, 15000));
+  const activePageTitle = await page2.locator('[data-testid="editable-title"]').first().textContent();
+  if (activePageTitle !== 'villa') {
+    const newSearch = page2.getByPlaceholder('Search or Create');
+    await newSearch.fill('villa');
+    await page2.keyboard.press('Enter');
+    await page2.waitForTimeout(5000);
+  }
   await page2.keyboard.type('i want to make my own changes');
   await page2.waitForTimeout(5000);
   await page1.keyboard.type('i want to make my own changes too!');

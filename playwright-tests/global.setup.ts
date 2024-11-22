@@ -28,7 +28,7 @@ setup('seed db', async () => {
   await client.release();
 });
 
-/*setup('do login', async ({ page }) => {
+setup('do login', async ({ page }) => {
   await page.goto('/');
   await page.getByText('Log in').click();
   await page.getByLabel('Email').fill('test@nextmail.com');
@@ -37,6 +37,7 @@ setup('seed db', async () => {
 
   // Wait until the page actually signs in.
   await expect(page.getByText('Sign Out')).toBeVisible();
+  await page.close();
 
-  await page.context().storageState({ path: STORAGE_STATE });
-});*/
+  //await page.context().storageState({ path: STORAGE_STATE });
+});
