@@ -1,10 +1,23 @@
 import { test, expect, Page } from '@playwright/test';
+import { cleanUp } from './tests.shared.ts';
+import { db } from '../scripts/seed-db-wrapper.mts';
+const { users } = require('./tests-placeholder-data.js');
 
 // TODO figure out per-browser users in db, then re-enable
 // parallelism is playwright.config.ts
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/page');
+});
+
+test.afterEach(async ({ page }) => {
+  const client = await db.pool.connect();
+  const clientWithSql = {
+    ...client,
+    sql: db.sql.bind(null)
+  };
+  await cleanUp(clientWithSql, users);
+  await client.release();
 });
 
 async function createVilla(page: Page) {
@@ -145,7 +158,7 @@ test('editing shared nodes reflected on source page (same page)', async ({ page 
   await page.keyboard.press('Enter');
   await page.keyboard.type('=find("horatio")');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(1000);
   await page.keyboard.press('ArrowUp');
   await page.keyboard.press('Meta+ArrowRight');
   await page.waitForTimeout(500);
@@ -165,7 +178,7 @@ test('editing shared nodes reflected on source page (same page, with GPT node)',
   await page.waitForTimeout(5000);
   await page.keyboard.type('=find("horatio")');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(1000);
   await page.keyboard.press('ArrowUp');
   await page.keyboard.press('Meta+ArrowRight');
   await page.keyboard.type(' was a great man');
@@ -197,7 +210,7 @@ test('nested nodes picked up by find', async ({ page }) => {
   await page.keyboard.press('Enter');
   await page.keyboard.type('=find("drastic")');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1000);
   await expect(page.getByText('endless dream')).toBeVisible();
 });
 
@@ -208,7 +221,7 @@ test('changes to nested nodes under shared nodes picked up by source page', asyn
   await page.keyboard.press('Enter');
   await page.keyboard.type('=find("drastic")');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1000);
   await page.keyboard.press('ArrowUp');
   await page.keyboard.type('ing');
   await page.waitForTimeout(500);
@@ -223,7 +236,7 @@ test('changes to nested nodes under source nodes picked up by shared nodes', asy
   await page.keyboard.press('Enter');
   await page.keyboard.type('=find("drastic")');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1000);
   await createElla(page);
   await page.keyboard.type('ing');
   await page.waitForTimeout(500);
