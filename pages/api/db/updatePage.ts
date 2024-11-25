@@ -13,12 +13,12 @@ export default async function handler(
     return res.status(401).json({ error: 'Not Authorized' });
   }
 
-  const { id, value, title, deleted, oldRevisionNumber, lastModified } = req.body;
+  const { id, value, title, deleted, oldRevisionNumber } = req.body;
 
   if (req.method === 'POST') {
 
     if (!id || value === undefined || oldRevisionNumber === undefined || 
-      title === undefined || deleted === undefined || lastModified === undefined
+      title === undefined || deleted === undefined
     ) {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
@@ -38,8 +38,7 @@ export default async function handler(
         SET value = ${value}, 
             title = ${title}, 
             deleted = ${deleted}, 
-            revision_number = ${oldRevisionNumber + 1},
-            last_modified = ${lastModified}
+            revision_number = ${oldRevisionNumber + 1}
         WHERE id = ${id} 
         AND revision_number = ${oldRevisionNumber}
         RETURNING revision_number, last_modified
@@ -59,7 +58,6 @@ export default async function handler(
           error: `Conflict: Page has been modified by another user, ID: ${id}, tried revision number: ${oldRevisionNumber}`,
         });
       }
-      
       return res.status(200).json({ revisionNumber: result.rows[0].revision_number, lastModified: result.rows[0].last_modified });
     } catch (error) {
       console.error(`Database Error: failed to Update Page - ID: ${id}, RevisionNumber: ${oldRevisionNumber}`, error);

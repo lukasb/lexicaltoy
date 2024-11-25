@@ -98,36 +98,6 @@ async function seedPages(client, pages) {
 
     console.log(`Created "validate_revision_update" trigger`);
 
-    const createLastModified = await client.sql`
-    CREATE OR REPLACE FUNCTION update_last_modified_column()
-    RETURNS TRIGGER AS $$
-    BEGIN
-    NEW.last_modified = CURRENT_TIMESTAMP;
-    RETURN NEW;
-    END;
-    $$ LANGUAGE plpgsql;
-    `;
-
-    console.log(`Created "update_last_modified_column" function`);
-
-    const createLastModifiedTrigger = await client.sql`
-    DO $$
-    BEGIN
-        IF EXISTS (
-            SELECT 1
-            FROM pg_trigger
-            WHERE tgname = 'update_pages_last_modified'
-        ) THEN
-            -- do nothing
-        ELSE
-            EXECUTE 'CREATE TRIGGER update_pages_last_modified BEFORE UPDATE ON pages FOR EACH ROW EXECUTE FUNCTION update_last_modified_column();';
-        END IF;
-    END
-    $$;
-    `;
-
-    console.log(`Created "update_pages_last_modified" trigger`);
-    
     const createUniqueJournalTrigger = await client.sql`
     DO $$
     BEGIN

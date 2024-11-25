@@ -103,14 +103,14 @@ function Editor({
   const saveChange = useCallback(async (newContent: string) => {
     const currentPage = getPage(page.id);
     if (currentPage) {
-      console.log("saving change for page", page.title);
+      console.log("saving change for page", page.title, page.id);
       addPageStatus(page.id, PageStatus.UserEdit, new Date(), newContent);
       ingestPageBlockIds(page.title, newContent, setBlockIdsForPage);
       pendingChangeRef.current = null;
     }
   }, [page.id, getPage, setBlockIdsForPage, page.title, addPageStatus]);
 
-  const debouncedSave = useDebouncedCallback(saveChange, 100);
+  const debouncedSave = useDebouncedCallback(saveChange, 300);
 
   const onChange = useCallback((editorState: EditorState) => {
     if (!editorState || getPageStatus(page.id)?.status === PageStatus.EditFromSharedNodes) return;

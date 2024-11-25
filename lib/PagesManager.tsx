@@ -32,7 +32,7 @@ function PagesManager() {
       isSaving.current.add(pageId);
 
       try {
-        const result = await updatePage(page, newValue, page.title, false);
+        const result = await updatePage({...page, lastModified: new Date(timestamp)}, newValue, page.title, false);
         if (result === PageSyncResult.Conflict) {
           console.log("conflict", page.title);
           setPageStatus(page.id, PageStatus.Conflict);
@@ -66,11 +66,12 @@ function PagesManager() {
     pages.forEach(page => {
       const pageStatus = pageStatuses.get(page.id);
       if (pageStatus && pageStatus.status === PageStatus.PendingWrite && pageStatus.newValue && pageStatus.lastModified) {
-        const currentTimestamp = Date.now();
+        //const currentTimestamp = Date.now();
         const existingSave = saveQueue.current.get(page.id);
-        if (!existingSave || existingSave.timestamp < currentTimestamp) {
-          saveQueue.current.set(page.id, { page, timestamp: currentTimestamp, newValue: pageStatus.newValue });
-          setPageLastModified(page.id, new Date(currentTimestamp));
+        //if (!existingSave || existingSave.timestamp < currentTimestamp) {
+        if (!existingSave) {
+          saveQueue.current.set(page.id, { page, timestamp: pageStatus.lastModified.getTime(), newValue: pageStatus.newValue });
+          //setPageLastModified(page.id, new Date(currentTimestamp));
         }
       } else if (pageStatus && pageStatus.status === PageStatus.PendingWrite && (!pageStatus.newValue || !pageStatus.lastModified)) {
         console.error("Pending write is missing either value or last modified", page.title);
@@ -79,6 +80,13 @@ function PagesManager() {
         setTimeout(() => setPageStatus(page.id, PageStatus.EditorUpdateRequested), 0); // make sure PageListener gets the updated page
       } else if (!pageStatus || !pageStatus.lastModified || page.lastModified > pageStatus.lastModified) {
         // this is probably a page updated by another tab
+        console.log(
+          "page updated by another tab, I think",
+          !pageStatus,
+          !pageStatus?.lastModified,
+          page.lastModified > (pageStatus?.lastModified || 0),
+          pageStatus?.lastModified
+        );
         addPageStatus(page.id, PageStatus.UpdatedFromDisk, page.lastModified, page.value);
       }
     });

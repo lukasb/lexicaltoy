@@ -132,6 +132,7 @@ export async function processQueuedUpdatesInternal(
         result = PageSyncResult.Conflict;
         console.log(
           "our proposed update is based on an old version of the page",
+          "local last modified > queued update last modified",
           queuedUpdate.title
         );
         await handleConflict(queuedUpdate.id, ConflictErrorCode.StaleUpdate);
@@ -261,7 +262,8 @@ export async function updatePage(
     value: value,
     title: title,
     deleted: deleted,
-    lastModified: new Date(new Date().toISOString()),
+    //lastModified: new Date(new Date().toISOString()),
+    lastModified: page.lastModified,
   };
   
   await localDb.queuedUpdates.put(pageLocalUpdate);
