@@ -63,22 +63,40 @@ function PagesManager() {
   }, [savePagesToDatabase]);
 
   useEffect(() => {
-    pages.forEach(page => {
+    pages.forEach((page) => {
       const pageStatus = pageStatuses.get(page.id);
-      if (pageStatus && pageStatus.status === PageStatus.PendingWrite && pageStatus.newValue && pageStatus.lastModified) {
-        //const currentTimestamp = Date.now();
+      if (
+        pageStatus &&
+        pageStatus.status === PageStatus.PendingWrite &&
+        pageStatus.newValue
+      ) {
         const existingSave = saveQueue.current.get(page.id);
-        //if (!existingSave || existingSave.timestamp < currentTimestamp) {
         if (!existingSave) {
-          saveQueue.current.set(page.id, { page, timestamp: pageStatus.lastModified.getTime(), newValue: pageStatus.newValue });
-          //setPageLastModified(page.id, new Date(currentTimestamp));
+          saveQueue.current.set(page.id, {
+            page,
+            timestamp: pageStatus.lastModified.getTime(),
+            newValue: pageStatus.newValue,
+          });
         }
-      } else if (pageStatus && pageStatus.status === PageStatus.PendingWrite && (!pageStatus.newValue || !pageStatus.lastModified)) {
-        console.error("Pending write is missing either value or last modified", page.title);
-      } else if (pageStatus && pageStatus.status === PageStatus.DroppingUpdate) {
+      } else if (
+        pageStatus &&
+        pageStatus.status === PageStatus.PendingWrite &&
+        !pageStatus.newValue
+      ) {
+        console.error("Pending write is missing value", page.title);
+      } else if (
+        pageStatus &&
+        pageStatus.status === PageStatus.DroppingUpdate
+      ) {
         deleteQueuedUpdate(page.id);
-        setTimeout(() => setPageStatus(page.id, PageStatus.EditorUpdateRequested), 0); // make sure PageListener gets the updated page
-      } else if (!pageStatus || !pageStatus.lastModified || page.lastModified > pageStatus.lastModified) {
+        setTimeout(  // make sure PageListener gets the updated page
+          () => setPageStatus(page.id, PageStatus.EditorUpdateRequested),
+        0);
+      } else if (
+        !pageStatus ||
+        (page.revisionNumber === pageStatus.revisionNumber &&
+          page.lastModified > pageStatus.lastModified)
+      ) {
         // this is probably a page updated by another tab
         console.log(
           "page updated by another tab, I think",
@@ -87,7 +105,25 @@ function PagesManager() {
           page.lastModified > (pageStatus?.lastModified || 0),
           pageStatus?.lastModified
         );
-        addPageStatus(page.id, PageStatus.UpdatedFromDisk, page.lastModified, page.value);
+        addPageStatus(page.id, PageStatus.UpdatedFromDisk, page.lastModified, page.revisionNumber, page.value);
+      } else if (page.revisionNumber > pageStatus.revisionNumber) {
+        if (
+          pageStatus.status === PageStatus.UserEdit ||
+          pageStatus.status === PageStatus.EditFromSharedNodes ||
+          pageStatus.status === PageStatus.PendingWrite
+        ) {
+          console.log("page updated on server but edited, conflict", page.title);
+          addPageStatus(
+            page.id,
+            PageStatus.Conflict,
+            page.lastModified,
+            page.revisionNumber,
+            page.value
+          );
+        } else {
+          console.log("page updated on server, load new content", page.title);
+          addPageStatus(page.id, PageStatus.UpdatedFromDisk, page.lastModified, page.revisionNumber, page.value);
+        }
       }
     });
   }, [pages, pageStatuses, setPageStatus, addPageStatus, setPageLastModified]);
@@ -136,7 +172,7 @@ function PagesManager() {
       const updatedPages = pages.map(p => {
         const updatedPageContents = pagesToUpdate.get(p.title);
         if (updatedPageContents) {
-          addPageStatus(p.id, PageStatus.EditFromSharedNodes, new Date(), updatedPageContents);
+          addPageStatus(p.id, PageStatus.EditFromSharedNodes, new Date(), p.revisionNumber, updatedPageContents);
         }
         return p;
       });

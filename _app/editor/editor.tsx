@@ -104,11 +104,11 @@ function Editor({
     const currentPage = getPage(page.id);
     if (currentPage) {
       console.log("saving change for page", page.title, page.id);
-      addPageStatus(page.id, PageStatus.UserEdit, new Date(), newContent);
+      addPageStatus(page.id, PageStatus.UserEdit, new Date(), page.revisionNumber, newContent);
       ingestPageBlockIds(page.title, newContent, setBlockIdsForPage);
       pendingChangeRef.current = null;
     }
-  }, [page.id, getPage, setBlockIdsForPage, page.title, addPageStatus]);
+  }, [page.id, getPage, setBlockIdsForPage, page.title, addPageStatus, page.revisionNumber]);
 
   const debouncedSave = useDebouncedCallback(saveChange, 300);
 

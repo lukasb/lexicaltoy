@@ -3,16 +3,17 @@ import { Page, PageStatus } from '@/lib/definitions';
 
 type PageStatusInfo = {
   status: PageStatus;
-  lastModified?: Date;
+  lastModified: Date;
+  revisionNumber: number;
   newValue?: string;
 }
 
 export type PageStatusContextType = {
   pageStatuses: Map<string, PageStatusInfo>;
-  addPageStatus: (pageId: string, status: PageStatus, lastModified?: Date, newValue?: string) => void;
+  addPageStatus: (pageId: string, status: PageStatus, lastModified: Date, revisionNumber: number, newValue?: string) => void;
   getPageStatus: (pageId: string) => PageStatusInfo | undefined;
   removePageStatus: (pageId: string) => void;
-  setPageStatus: (pageId: string, status: PageStatus, lastModified?: Date) => void;
+  setPageStatus: (pageId: string, status: PageStatus, lastModified?: Date, revisionNumber?: number, newValue?: string) => void;
   getUpdatedPageValue: (page: Page) => string;
   setPageLastModified: (pageId: string, lastModified: Date) => void;
 }
@@ -32,14 +33,15 @@ export function PageStatusProvider({
   const addPageStatus = useCallback((
     pageId: string,
     status: PageStatus,
-    lastModified?: Date,
+    lastModified: Date,
+    revisionNumber: number,
     newValue?: string
   ) => {
     if (
       status !== PageStatus.DroppingUpdate &&
       status !== PageStatus.Conflict &&
       status !== PageStatus.Quiescent &&
-      (!lastModified || newValue === undefined)
+      (newValue === undefined)
     ) {
       throw new Error(
         `lastModified and newValue are required for status of type ${status}`
@@ -49,15 +51,13 @@ export function PageStatusProvider({
       const newMap = new Map(prevMap);
       newMap.set(pageId, {
         status,
-        lastModified:
-          lastModified ||
-          prevMap.get(pageId)?.lastModified ||
-          new Date(new Date().toISOString()),
+        lastModified,
+        revisionNumber,
         newValue,
       });
       return newMap;
     });
-  }, []); // No dependencies needed since we use functional updates
+  }, []);
 
   const getPageStatus = useCallback(
     (pageId: string) => pageStatuses.get(pageId),
@@ -70,9 +70,9 @@ export function PageStatusProvider({
       newMap.delete(pageId);
       return newMap;
     });
-  }, []); // No dependencies needed since we use functional updates
+  }, []);
 
-  const setPageStatus = useCallback((pageId: string, status: PageStatus, lastModified?: Date) => {
+  const setPageStatus = useCallback((pageId: string, status: PageStatus, lastModified?: Date, revisionNumber?: number, newValue?: string) => {
     setPageStatuses((prevMap) => {
       const newMap = new Map(prevMap);
       const existingUpdate = newMap.get(pageId);
@@ -81,6 +81,8 @@ export function PageStatusProvider({
           ...existingUpdate,
           status,
           lastModified: lastModified || existingUpdate.lastModified,
+          revisionNumber: revisionNumber || existingUpdate.revisionNumber,
+          newValue: newValue || existingUpdate.newValue,
         });
       } else {
         throw new Error(

@@ -15,7 +15,13 @@ import { DEFAULT_JOURNAL_CONTENTS } from "@/lib/journal-helpers";
 
 export interface ConflictManagerDeps {
   removePageStatus: (pageId: string) => void;
-  addPageStatus: (pageId: string, status: PageStatus, lastModified?: Date, newValue?: string) => void
+  addPageStatus: (
+    pageId: string,
+    status: PageStatus,
+    lastModified: Date,
+    revisionNumber: number,
+    newValue?: string
+  ) => void;
   pages: Page[];
   userId: string;
 }
@@ -78,7 +84,7 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
       } else {
         // I tried inserting a conflict page, but when multiple tabs were open this resulted in multiple conflict pages
         console.log("queued update with conflict is non-journal page with non-default value, deleting update");
-        addPageStatus(pageId, PageStatus.Conflict);
+        addPageStatus(pageId, PageStatus.Conflict, queuedUpdate.lastModified, queuedUpdate.revisionNumber);
         //removePageUpdate(pageId);
         await deleteQueuedUpdate(pageId);
       }
