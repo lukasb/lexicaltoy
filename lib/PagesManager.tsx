@@ -81,7 +81,7 @@ function PagesManager() {
       } else if (
         pageStatus &&
         pageStatus.status === PageStatus.PendingWrite &&
-        !pageStatus.newValue
+        pageStatus.newValue === undefined
       ) {
         console.error("Pending write is missing value", page.title);
       } else if (
