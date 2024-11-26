@@ -121,8 +121,13 @@ function PagesManager() {
             page.value
           );
         } else {
-          console.log("page updated on server, load new content", page.title);
-          addPageStatus(page.id, PageStatus.UpdatedFromDisk, page.lastModified, page.revisionNumber, page.value);
+          if (page.value !== pageStatus.newValue) {
+            console.log("page updated on server, load new content", page.title);
+            addPageStatus(page.id, PageStatus.UpdatedFromDisk, page.lastModified, page.revisionNumber, page.value);
+          } else {
+            console.log("page updated on server, no change", page.title);
+            addPageStatus(page.id, PageStatus.Quiescent, page.lastModified, page.revisionNumber);
+          }
         }
       }
     });

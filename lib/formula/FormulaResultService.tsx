@@ -189,7 +189,6 @@ export const useFormulaResultService = () => {
   }
   
   const updatePagesResults = async (pagesToQuery: Page[]): Promise<void> => {
-    console.log("updating pages results", pagesToQuery.map(p => p.title));
     getFormulaOutputs(nodeQueries.getUniqueQueries(), pagesToQuery)
       .then((outputMap) => {
         if (compareSharedNodesToResults(outputMap)) {
