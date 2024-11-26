@@ -85,7 +85,7 @@ test('detect conflicts between separate browsers', async ({ browser }) => {
     .toBeVisible();
 });
 
-test('detect conflicts between two tabs in the same browser', async ({ context }) => {
+test('pull in changes from other tabs with network off', async ({ context }) => {
   test.setTimeout(70000);
   const page1 = await context.newPage();
   await page1.goto('/page');
@@ -94,6 +94,7 @@ test('detect conflicts between two tabs in the same browser', async ({ context }
   const page2 = await context.newPage();
   await page2.goto('/page');
   await new Promise(r => setTimeout(r, 2000));
+  await context.setOffline(true);
   await page2.keyboard.type('i want to make my own changes too!');
   await page1.waitForTimeout(8500);
   await expect(
