@@ -84,3 +84,19 @@ test('detect conflicts between separate browsers', async ({ browser }) => {
     page1.getByText('Your changes are based on an old version of this page.'))
     .toBeVisible();
 });
+
+test('detect conflicts between two tabs in the same browser', async ({ context }) => {
+  test.setTimeout(70000);
+  const page1 = await context.newPage();
+  await page1.goto('/page');
+  await new Promise(r => setTimeout(r, 8000));
+  await createVilla(page1);
+  const page2 = await context.newPage();
+  await page2.goto('/page');
+  await new Promise(r => setTimeout(r, 2000));
+  await page2.keyboard.type('i want to make my own changes too!');
+  await page1.waitForTimeout(8500);
+  await expect(
+    page1.getByText('i want to make my own changes too!'))
+    .toBeVisible();
+});

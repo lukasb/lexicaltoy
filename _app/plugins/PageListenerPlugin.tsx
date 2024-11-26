@@ -129,9 +129,10 @@ export function PageListenerPlugin({
         queueMicrotask(() => {
           editor.update(() => {
             if (
-              editor.isEditable() &&
+              (editor.isEditable() &&
               !editor.isComposing() &&
-              editor.getRootElement() !== document.activeElement
+              editor.getRootElement() !== document.activeElement) ||
+              pageStatuses.get(pageId)?.status === PageStatus.EditorUpdateRequested
             ) {
               editor.setEditable(false); // prevent focus stealing
               $myConvertFromMarkdownString(newValue, false);
