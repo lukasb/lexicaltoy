@@ -114,7 +114,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
       msSlurpPages(pages || []);
       hasInitializedSearch.current = true;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages, msSlurpPages, initialFetchComplete]);
 
   useEffect(() => {
