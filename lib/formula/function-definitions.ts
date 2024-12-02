@@ -5,8 +5,6 @@ import {
   FormulaValueType,
 } from "./formula-definitions";
 import { 
-  FIND_FORMULA_START_REGEX,
-  IS_FORMULA_REGEX,
   FORMULA_RESULTS_END_REGEX,
   isFindFormula,
   isFormula,
@@ -184,31 +182,36 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
   return gptResponse;
 };
 
-function sortFindOutput(output: NodeElementMarkdown[], pages: Page[]): NodeElementMarkdown[] {
-  return output.sort((a, b) => {
+export function sortFindOutput(output: NodeElementMarkdown[], pages: Page[]): NodeElementMarkdown[] {
+
+  const sortedOutput = output.sort((a, b) => {
     const pageA = pages.find(p => p.title === a.baseNode.pageName);
     const pageB = pages.find(p => p.title === b.baseNode.pageName);
     
-    const getTime = (lastModified: any): number => {
-      if (lastModified instanceof Date) return lastModified.getTime();
-      if (typeof lastModified === 'string' || typeof lastModified === 'number') {
-        try {
-          const date = new Date(lastModified);
-          if (isNaN(date.getTime())) {
-            console.warn(`Invalid date: ${lastModified}`);
-            return 0;
-          }
-          return date.getTime();
-        } catch (error) {
-          console.error(`Error parsing date: ${lastModified}`, error);
-          return 0;
-        }
-      }
-      return 0;
-    };
+    // If one is a journal and the other isn't, journal comes first
+    if (pageA?.isJournal !== pageB?.isJournal) {
+      return pageA?.isJournal ? -1 : 1;
+    }
 
-    return getTime(pageB?.lastModified) - getTime(pageA?.lastModified);
+    // If both are journals, sort by date (reverse chronological)
+    if (pageA?.isJournal && pageB?.isJournal) {
+      // Convert date strings like "Oct 23rd, 2024" to "2024-10-23" format
+      const parseDate = (dateStr: string) => {
+        const [month, day, year] = dateStr.replace(/(?:st|nd|rd|th)/, '').split(/[\s,]+/);
+        const monthNum = new Date(`${month} 1, 2000`).getMonth() + 1;
+        return `${year}-${monthNum.toString().padStart(2, '0')}-${day.padStart(2, '0')}`;
+      };
+      
+      const dateStrA = parseDate(pageA.title);
+      const dateStrB = parseDate(pageB.title);
+      return dateStrB.localeCompare(dateStrA);
+    }
+
+    // If neither are journals, sort alphabetically by title
+    return (pageA?.title || '').localeCompare(pageB?.title || '');
   });
+
+  return sortedOutput;
 }
 
 export const findCallback = async (defaultArgs: DefaultArguments, userArgs: FormulaOutput[]): Promise<FormulaOutput | null> => {
@@ -247,6 +250,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
   const output: NodeElementMarkdown[] = [];
 
   for (const page of defaultArgs.pages) {
+    //if (page.title === 'Oct 23rd, 2024') console.log("processing page", page.title, page.value);
     let unmatchedSubstringRegexps = [...substrings];
 
     // search terms can appear in the title or the content of the page
@@ -308,7 +312,8 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
         return output;
       }
 
-      const nodesMarkdown = splitMarkdownByNodes(page.value, page.title);
+      const pageValue = defaultArgs.pageUpdateContext ? defaultArgs.pageUpdateContext.getUpdatedPageValue(page) : page.value;
+      const nodesMarkdown = splitMarkdownByNodes(pageValue, page.title);
       output.push(
         ...processNodes(nodesMarkdown, unmatchedSubstringRegexps, orStatuses)
       );

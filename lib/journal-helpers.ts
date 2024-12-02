@@ -1,7 +1,7 @@
 import { parse, isBefore, startOfDay, subWeeks } from 'date-fns';
-import { Page, isPage } from "@/lib/definitions";
-import { deleteStaleJournalPages } from "@/lib/db";
-import { insertJournalPage } from '@/lib/db';
+import { Page } from "@/lib/definitions";
+import { insertPage, updatePage, PageSyncResult } from '@/_app/context/storage/storage-context';
+import { getJournalPagesByUserId, getJournalQueuedUpdatesByUserId, deleteQueuedUpdate } from '@/_app/context/storage/storage-context';
 
 export const DEFAULT_JOURNAL_CONTENTS = '- ';
 
@@ -29,20 +29,24 @@ export function getJournalTitle(date: Date) {
   return dateString.replace(new RegExp(` ${day},`), ` ${day}${ordinalSuffix},`);
 }
 
-export const handleNewJournalPage = async (title: string, userId: string, date: Date): Promise<Page | undefined> => {
-  const result = await insertJournalPage(title, DEFAULT_JOURNAL_CONTENTS, userId, date);
-  if (typeof result === "string") {
-    if (result !== "409") {
-      console.error("expected page, got string", result);
-    }
-    return;
-  } else if (isPage(result)) {
-    return result;
-  }
-}
+export const insertNewJournalPage = async (
+  title: string,
+  userId: string,
+  date: Date
+): Promise<[Page | undefined, PageSyncResult]> => {
+  console.log("inserttNewJournalPage", title, userId, date);
+  const [newPage, result] = await insertPage(
+    title,
+    DEFAULT_JOURNAL_CONTENTS,
+    userId,
+    true
+  );
+  return [newPage, result];
+};
 
-export const handleDeleteStaleJournalPages = async (today: Date, defaultValue: string, currentPages: Page[], setCurrentPages: Function) => {
-  const stalePages = currentPages.filter((page) => {
+export const deleteStaleJournalPages = async (today: Date, defaultValue: string, userId: string) => {
+  const journalPages = await getJournalPagesByUserId(userId);
+  const stalePages = journalPages.filter((page) => {
     if (!page.isJournal) {
       return false;
     }
@@ -52,11 +56,21 @@ export const handleDeleteStaleJournalPages = async (today: Date, defaultValue: s
     const todayStartOfDay = startOfDay(today);
     return isBefore(pageDateStartOfDay, todayStartOfDay) && page.value === defaultValue;
   });
-  const idsToDelete = stalePages.map(page => page.id);
-  if (idsToDelete.length === 0) return;
-  const deletedIds = await deleteStaleJournalPages(idsToDelete, defaultValue);
-  if (deletedIds.length > 0) {
-    setCurrentPages((prevPages: Page[]) => prevPages.filter((p) => !deletedIds.includes(p.id)));
+  for (const page of stalePages) {
+    console.log("deleting stale journal page", page.title);
+    await updatePage(page, page.value, page.title, true);
+  }
+  const journalQueuedUpdates = await getJournalQueuedUpdatesByUserId(userId);
+  const staleQueuedUpdates = journalQueuedUpdates.filter((queuedUpdate) => {
+    const pageDateStr = queuedUpdate.title;
+    const pageDate = parse(pageDateStr, 'MMM do, yyyy', new Date());
+    const pageDateStartOfDay = startOfDay(pageDate);
+    const todayStartOfDay = startOfDay(today);
+    return isBefore(pageDateStartOfDay, todayStartOfDay) && queuedUpdate.value === defaultValue && !queuedUpdate.deleted;
+  });
+  for (const queuedUpdate of staleQueuedUpdates) {
+    console.log("deleting stale journal queued update", queuedUpdate.title);
+    await deleteQueuedUpdate(queuedUpdate.id);
   }
 }
 

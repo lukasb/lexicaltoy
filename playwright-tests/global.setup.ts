@@ -1,7 +1,11 @@
 import { test as setup, expect } from '@playwright/test';
 import { STORAGE_STATE } from '../playwright.config';
-require('dotenv').config({ path: './.env.development.local' }); 
-const { db } = require('@vercel/postgres');
+require('dotenv').config({ path: './.env.test.local' }); 
+//import { db } from '@/lib/dbwrapper';
+import { db } from '../scripts/seed-db-wrapper.mts';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+//import ws from 'ws';
+//neonConfig.webSocketConstructor = ws;
 const {
   users,
   pages,
@@ -9,14 +13,19 @@ const {
 import { seedUsers, seedPages } from '../scripts/seed-inserts';
 
 setup('seed db', async () => {
-  const client = await db.connect();
+  const client = await db.pool.connect();
 
-  await seedUsers(client, users);
-  await seedPages(client, pages);
+  const clientWithSql = {
+    ...client,
+    sql: db.sql.bind(null)
+  };
+
+  await seedUsers(clientWithSql, users);
+  await seedPages(clientWithSql, pages);
   
-  console.log('Seeded db');
+  console.log('Seeded db in global setup');
 
-  await client.end();
+  await client.release();
 });
 
 setup('do login', async ({ page }) => {
@@ -28,6 +37,7 @@ setup('do login', async ({ page }) => {
 
   // Wait until the page actually signs in.
   await expect(page.getByText('Sign Out')).toBeVisible();
+  await page.close();
 
-  await page.context().storageState({ path: STORAGE_STATE });
+  //await page.context().storageState({ path: STORAGE_STATE });
 });

@@ -1,15 +1,19 @@
 import { test as teardown } from '@playwright/test';
-require('dotenv').config({ path: './.env.development.local' }); 
-const { db } = require('@vercel/postgres');
+require('dotenv').config({ path: './.env.playwright.local' }); 
+import { db } from '../scripts/seed-db-wrapper.mts';
 const {
   users,
   pages
 } = require('./tests-placeholder-data.js');
 
 teardown('clean up db', async () => {
-  const client = await db.connect();
-  await cleanUp(client, users);
-  await client.end();
+  const client = await db.pool.connect();
+  const clientWithSql = {
+    ...client,
+    sql: db.sql.bind(null)
+  };
+  await cleanUp(clientWithSql, users);
+  await client.release();
 });
 
 async function cleanUp(client: { sql: any; }, users: any[]) {
@@ -41,7 +45,7 @@ async function cleanUp(client: { sql: any; }, users: any[]) {
       }),
     );
     
-    console.log(`Cleaned up db`);
+    console.log(`Cleaned up db in global teardown`);
 
     return {
       deletedUsers,

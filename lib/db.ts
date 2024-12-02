@@ -1,4 +1,4 @@
-import { Page, toPageStatus } from '@/lib/definitions';
+import { Page } from '@/lib/definitions';
 
 export interface PageUpdateResponse {
     revisionNumber?: number;
@@ -6,91 +6,65 @@ export interface PageUpdateResponse {
     error?: string;
 }
 
-export async function updatePageTitle(id: string, title: string, oldRevisionNumber: number): Promise<PageUpdateResponse> {
-  // Define the endpoint URL (use the full URL if calling from a different domain in production)
-  const endpoint = '/api/db/updatePageTitle';
+export async function insertPageDb(
+  title: string,
+  value: string,
+  userId: string,
+  isJournal: boolean,
+  lastModified: Date,
+  id?: string
+): Promise<Page | string> {
+  const endpoint = "/api/db/insertPage";
 
   try {
-      const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ id, title, oldRevisionNumber }),
-      });
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title, value, userId, id, lastModified, isJournal }),
+    });
 
-      if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      if (result.revisionNumber !== undefined) {
-        return {
-            revisionNumber: result.revisionNumber,
-            lastModified: new Date(result.lastModified)
-          };
+    if (!response.ok) {
+      if (response.status === 409) {
+        return "duplicate key value";
       } else {
-          return {
-            error: result.error || 'Unknown error occurred'
-          }; // Return -1 to indicate failure as per the original function
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
+    }
+
+    const result = await response.json();
+    if (result.page) {
+      return {
+        ...result.page,
+        userId: String(result.page.userId), // Ensure userId is a string
+        lastModified: new Date(result.page.lastModified) // Convert string to Date
+      } as Page;
+    } else {
+      console.error("Failed to insert page:", result.error);
+      return result.error || "Unknown error occurred";
+    }
   } catch (error) {
-      console.error('Error fetching from API:', error);
-      return { 
-        error: error instanceof Error ? error.message : 'An unknown error occurred'
-      };
+    console.error("Error fetching from API:", error);
+    if (error instanceof Error) {
+      return `Error fetching from API: ${error.message}`;
+    } else {
+      // Handle cases where the error might not be an instance of Error
+      return `Error fetching from API: ${String(error)}`;
+    }
   }
 }
 
-export async function insertPage(title: string, value: string, userId: string): Promise<Page | string> {
-    const endpoint = '/api/db/insertPage';
+export async function updatePageWithHistory(id: string, value: string, title: string, deleted: boolean, oldRevisionNumber: number, lastModified: Date): Promise<PageUpdateResponse> {
+  const endpoint = '/api/db/updatePage';
 
-    try {
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ title, value, userId }),
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        if (result.page) {
-          return {
-            ...result.page,
-            userId: String(result.page.userId), // Ensure userId is a string
-            lastModified: new Date(result.page.lastModified), // Convert string to Date
-            status: toPageStatus(result.page.status) // Ensure status is correctly typed
-        } as Page;
-        } else {
-            console.error('Failed to insert page:', result.error);
-            return result.error || 'Unknown error occurred';
-        }
-    } catch (error) {
-        console.error('Error fetching from API:', error);
-        if (error instanceof Error) {
-          return `Error fetching from API: ${error.message}`;
-      } else {
-          // Handle cases where the error might not be an instance of Error
-          return `Error fetching from API: ${String(error)}`;
-      }
-    }
-}
-
-export async function updatePageContentsWithHistory(id: string, value: string, oldRevisionNumber: number): Promise<PageUpdateResponse> {
-  const endpoint = '/api/db/updatePageContents'; // Adjust the endpoint as needed
-
-  try {
+  try {      
       const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ id, value, oldRevisionNumber }),
+          body: JSON.stringify({ id, value, title, deleted, oldRevisionNumber, lastModified }),
       });
 
       if (!response.ok) {
@@ -106,120 +80,12 @@ export async function updatePageContentsWithHistory(id: string, value: string, o
           };
       } else {
           // If the server response does not include a revision number, throw an error
-          throw new Error('Failed to update page contents: ' + (result.error || 'Unknown error occurred'));
+          throw new Error('Failed to update page: ' + (result.error || 'Unknown error occurred'));
       }
   } catch (error) {
       console.error('Error fetching from API:', error);
       // Return a specific error code or throw an exception depending on your error handling strategy
       throw error; // Here, we choose to propagate the exception further up
-  }
-}
-
-export async function insertJournalPage(title: string, value: string, userId: string, journalDate: Date): Promise<Page | string> {
-  const endpoint = '/api/db/insertJournalPage'; // Adjust the endpoint as needed
-
-  try {
-      const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-              title,
-              value,
-              userId,
-              journalDate: journalDate.toISOString() // Ensuring date is in a proper format for JSON
-          }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.page) {
-          return result.page as Page;
-        } else {
-          return result.error || "Unknown error occurred"; // Returning error as a string
-        }
-      }
-
-      if (response.status === 409) {
-          return '409'; // TODO yeah yeah there's a better way
-      }
-
-      throw new Error(`HTTP error! status: ${response.status}`);
-      
-  } catch (error) {
-      console.error('Error fetching from API:', error);
-      if (error instanceof Error) {
-          return error.message; // Return the error message if it is an instance of Error
-      } else {
-          return 'An unknown error occurred'; // Return a generic error message otherwise
-      }
-  }
-}
-
-export async function deleteStaleJournalPages(ids: string[], defaultValue: string): Promise<string[]> {
-  const endpoint = '/api/db/deleteStaleJournalPages'; // Ensure the endpoint matches your setup
-
-  try {
-      const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ ids, defaultValue }),
-      });
-
-      if (!response.ok) {
-          // Convert non-2xx HTTP responses into throws to handle them in the catch block
-          throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      if (result.error) {
-          console.error('Error deleting pages:', result.error);
-          throw new Error(result.error);
-      }
-      return result.deletedIds; // Assuming the API returns an object with a deletedIds array
-  } catch (error) {
-      console.error('Error fetching from API:', error);
-      if (error instanceof Error) {
-          throw error; // Propagate the error for further handling, or you could return an empty array to signify failure
-      } else {
-          throw new Error('An unknown error occurred');
-      }
-  }
-}
-
-export async function deletePage(id: string, oldRevisionNumber: number): Promise<number | string> {
-  const endpoint = '/api/db/deletePage'; // Adjust the endpoint as necessary
-
-  try {
-      const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ id, oldRevisionNumber }),
-      });
-
-      if (!response.ok) {
-          // Convert non-2xx HTTP responses into throws to handle them in the catch block
-          throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      if (result.revisionNumber !== undefined) {
-          return result.revisionNumber;
-      } else {
-          return result.error || 'Unknown error occurred'; // Returning error as a string
-      }
-  } catch (error) {
-      console.error('Error fetching from API:', error);
-      if (error instanceof Error) {
-          return error.message; // Return the error message if it is an instance of Error
-      } else {
-          return 'An unknown error occurred'; // Return a generic error message otherwise
-      }
   }
 }
 
@@ -233,6 +99,40 @@ export async function fetchPagesRemote(userId: string, fetchDeleted?: boolean): 
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ userId, fetchDeleted }),
+        });
+  
+        if (!response.ok) {
+            // Convert non-2xx HTTP responses into throws to handle them in the catch block
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+  
+        const result = await response.json();
+        if (result.pages) {
+            let pages = JSON.parse(JSON.stringify(result.pages));
+            pages = result.pages.map((page: Page) => ({
+                ...page,
+                lastModified: new Date(page.lastModified) // Convert lastModified to Date object
+            }));
+            return pages;
+        } else {
+            return result.error || 'Unknown error occurred'; // Returning error as a string
+        }
+    } catch (error) {
+        console.error('Error fetching from API:', error);
+        return null;
+    }
+  }
+
+  export async function fetchUpdatesSince(userId: string, since: Date): Promise<Page[] | null> {
+    const endpoint = '/api/db/fetchUpdatesSince'; // Adjust the endpoint as necessary
+  
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId, since }),
         });
   
         if (!response.ok) {

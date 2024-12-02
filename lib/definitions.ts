@@ -6,14 +6,14 @@ export type User = {
   };
   
   export enum PageStatus {
+    UpdatedFromDisk = 'updated_from_disk',
     UserEdit = 'user_edit',
     EditFromSharedNodes = 'edit_from_shared_nodes',
     PendingWrite = 'pending_write',
+    EditorUpdateRequested = 'editor_update_requested',
+    Conflict = 'conflict',
+    DroppingUpdate = 'dropping_update',
     Quiescent = 'quiescent'
-  }
-  
-  export function toPageStatus(statusKey: string): PageStatus {
-    return Object.values(PageStatus).includes(statusKey as PageStatus) ? statusKey as PageStatus : PageStatus.Quiescent;
   }
 
   export type Page = {
@@ -25,7 +25,6 @@ export type User = {
     revisionNumber: number;
     isJournal: boolean;
     deleted: boolean;
-    status: PageStatus;
   };
 
   export function isPage(obj: any): obj is Page {
@@ -38,7 +37,15 @@ export type User = {
       obj.lastModified instanceof Date &&
       typeof obj.revisionNumber === 'number' &&
       typeof obj.isJournal === 'boolean' &&
-      typeof obj.deleted === 'boolean' &&
-      Object.values(PageStatus).includes(obj.status)
+      typeof obj.deleted === 'boolean'
     );
+  }
+
+  export const DEFAULT_NONJOURNAL_PAGE_VALUE = '- ';
+
+  export enum ConflictErrorCode {
+    StaleUpdate = 'stale_update',
+    UniquenessViolation = 'uniqueness_violation',
+    NotFound = 'not_found',
+    Unknown = 'unknown'
   }

@@ -22,6 +22,7 @@ import { WikilinkNode } from "@/_app/nodes/WikilinkNode";
 import { FormattableTextNode } from "@/_app/nodes/FormattableTextNode";
 import { TodoCheckboxStatusNode } from "@/_app/nodes/TodoNode";
 import { ChildSharedNodeReference } from ".";
+import { debounce } from "lodash";
 
 export function registerFormulaMutationListeners(
   editor: LexicalEditor,
@@ -110,15 +111,21 @@ export function registerFormulaMutationListeners(
         });
     };
 
+    // Debounce the handler with a 150ms delay
+    const debouncedHandleSharedNodeUpdate = debounce(
+      (mutations: Map<string, NodeMutation>) => {
+        handleSharedNodeUpdate(mutations);
+      },
+      150,
+      { maxWait: 1000 } // Ensure updates happen at least every second
+    );
+
     return mergeRegister(
       editor.registerMutationListener(FormattableTextNode, (mutations) => {
-        handleSharedNodeUpdate(mutations);
+        debouncedHandleSharedNodeUpdate(mutations);
       }),
       editor.registerMutationListener(TodoCheckboxStatusNode, (mutations) => {
-        // TODO marking a todo done will trigger this mutation listener, and will also
-        // trigger the FormattableTextNode mutation listener by setting strikethrough,
-        // leading to double updates. this is unfortunate.
-        handleSharedNodeUpdate(mutations);
+        debouncedHandleSharedNodeUpdate(mutations);
       }),
       editor.registerMutationListener(FormulaDisplayNode, (mutations) => {
 

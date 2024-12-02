@@ -24,7 +24,7 @@ if (nodeEnv === 'production') {
   process.exit(1);
 }
 require('dotenv').config({ path: envfile }); 
-const { db } = require('@vercel/postgres');
+const { db } = require('@/lib/dbwrapper');
 
 async function main() {
   const client = await db.connect();

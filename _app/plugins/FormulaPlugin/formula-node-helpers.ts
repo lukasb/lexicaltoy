@@ -318,6 +318,7 @@ export function $createFormulaOutputSharedNodes({editor, displayNode, rootNode, 
   setLocalSharedNodeMap: React.Dispatch<React.SetStateAction<Map<string, NodeElementMarkdown>>> | undefined,
   setLocalChildNodeMap: React.Dispatch<React.SetStateAction<Map<string, ChildSharedNodeReference>>> | undefined
 }) {
+  
   let parentList: ListNode | null = null;
   if (displayNode) {
     $deleteFormulaDisplayNodeChildren(displayNode)

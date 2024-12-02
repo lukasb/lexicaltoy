@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Page } from '@/lib/definitions';
 import { getSessionServer } from '@/lib/getAuth';
-import { fetchPages } from '@/lib/dbFetch';
+import { fetchUpdatesSince } from '@/lib/dbFetch';
 
 type ApiResponse = {
   pages?: Page[];
@@ -19,7 +19,7 @@ export default async function handler(
   }
 
   if (req.method === 'POST') {
-    const { userId, fetchDeleted } = req.body;
+    const { userId, since } = req.body;
     
     // Validate the incoming data
     if (!userId) {
@@ -27,11 +27,11 @@ export default async function handler(
     }
 
     try {
-      const pages = await fetchPages(userId, fetchDeleted);
+      const pages = await fetchUpdatesSince(userId, since);
       return res.status(200).json({ pages });
     } catch (error) {
-      console.error('Database Error: Failed to Fetch Pages.', error);
-      res.status(500).json({ error: 'Database Error: Failed to Fetch Pages' });
+      console.error('Database Error: Failed to Fetch Updates.', error);
+      res.status(500).json({ error: 'Database Error: Failed to Fetch Updates' });
     }
   } else {
     res.setHeader('Allow', ['POST']);

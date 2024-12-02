@@ -55,7 +55,7 @@ async function seedPages(client, pages) {
       value TEXT NOT NULL,
       userId UUID NOT NULL,
       title TEXT NOT NULL,
-      last_modified TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
       revision_number INT NOT NULL DEFAULT 1,
       is_journal BOOLEAN NOT NULL DEFAULT FALSE,
       deleted BOOLEAN NOT NULL DEFAULT FALSE
@@ -98,36 +98,6 @@ async function seedPages(client, pages) {
 
     console.log(`Created "validate_revision_update" trigger`);
 
-    const createLastModified = await client.sql`
-    CREATE OR REPLACE FUNCTION update_last_modified_column()
-    RETURNS TRIGGER AS $$
-    BEGIN
-    NEW.last_modified = CURRENT_TIMESTAMP;
-    RETURN NEW;
-    END;
-    $$ LANGUAGE plpgsql;
-    `;
-
-    console.log(`Created "update_last_modified_column" function`);
-
-    const createLastModifiedTrigger = await client.sql`
-    DO $$
-    BEGIN
-        IF EXISTS (
-            SELECT 1
-            FROM pg_trigger
-            WHERE tgname = 'update_pages_last_modified'
-        ) THEN
-            -- do nothing
-        ELSE
-            EXECUTE 'CREATE TRIGGER update_pages_last_modified BEFORE UPDATE ON pages FOR EACH ROW EXECUTE FUNCTION update_last_modified_column();';
-        END IF;
-    END
-    $$;
-    `;
-
-    console.log(`Created "update_pages_last_modified" trigger`);
-    
     const createUniqueJournalTrigger = await client.sql`
     DO $$
     BEGIN
@@ -139,7 +109,7 @@ async function seedPages(client, pages) {
             WHERE conname = 'unique_pages'
         ) THEN
             ALTER TABLE pages
-            ADD CONSTRAINT unique_pages UNIQUE (userId, is_journal, title);
+            ADD CONSTRAINT unique_pages UNIQUE (userId, title);
         END IF;
     END$$;
     `;
@@ -152,7 +122,7 @@ async function seedPages(client, pages) {
       history_id SERIAL PRIMARY KEY,
       id UUID NOT NULL,
       value TEXT NOT NULL,
-      userId UUID NOT NULL,
+      userid UUID NOT NULL,
       title TEXT NOT NULL,
       last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
       history_created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -168,8 +138,8 @@ async function seedPages(client, pages) {
     const insertedPages = await Promise.all(
       pages.map(
         (page) => client.sql`
-        INSERT INTO pages (id, value, userId, title)
-        VALUES (${page.id}, ${page.value}, ${page.userId}, ${page.title})
+        INSERT INTO pages (id, value, userId, title, last_modified)
+        VALUES (${page.id}, ${page.value}, ${page.userId}, ${page.title}, ${page.last_modified})
         ON CONFLICT (id) DO NOTHING;
       `
       )

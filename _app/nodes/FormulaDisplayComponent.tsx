@@ -135,9 +135,11 @@ export default function FormulaDisplayComponent(
     ) {
       fetchedNodes.current = true;
       //if (output === "") setOutput("(getting response...)");
+      
       getFormulaOutput(formula);
+      
     }
-  }, []);
+  }, [getFormulaOutput]);
 
   //useWhatChanged([formula, output, sharedNodeMap, editor, nodeKey]);
   useEffect(() => {
@@ -185,6 +187,7 @@ export default function FormulaDisplayComponent(
           );
         }
         pageLineMarkdownMapRef.current = newPageLineMarkdownMap;
+
         editor.dispatchCommand(CREATE_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: sharedNodes,

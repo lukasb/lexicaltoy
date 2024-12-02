@@ -27,6 +27,7 @@ import {
 } from "@lexical/list";
 import { $isFormulaDisplayNode } from "../nodes/FormulaNode";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
+import { usePageStatus } from "@/_app/context/page-update-context";
 
 const listItemRegex = /^(\s*)-\s*(.+)$/;
 
@@ -75,7 +76,9 @@ function $updateListItems(root: RootNode, markdownLines: string[]) {
           } as unknown as ElementNode);
           if (oldMarkdown === newMarkdown) skip = true;
         }
-        if (!skip) $convertFromMarkdownString(newMarkdown, TRANSFORMERS, element as ListItemNode);
+        if (!skip) {
+          $convertFromMarkdownString(newMarkdown, TRANSFORMERS, element as ListItemNode);
+        }
       }
     } else if (markdownLines[i] !== "") {
       previousBlank = false;
@@ -104,6 +107,7 @@ export function PageListenerPlugin({
 }): null {
   const [editor] = useLexicalComposerContext();
   const pages = useContext(PagesContext);
+  const { pageStatuses, getUpdatedPageValue } = usePageStatus();
 
   // make sure open editors update their contents when updates from shared nodes occur
 
@@ -113,44 +117,50 @@ export function PageListenerPlugin({
   // (works so far though...)
 
   useEffect(() => {
-    for (const page of pages) {
       if (
-        page.id === pageId &&
-        page.status === PageStatus.EditFromSharedNodes
+        pageStatuses.get(pageId)?.status === PageStatus.EditFromSharedNodes ||
+        pageStatuses.get(pageId)?.status === PageStatus.EditorUpdateRequested
       ) {
-        editor.update(() => {
-          if (
-            editor.isEditable() &&
-            !editor.isComposing() &&
-            editor.getRootElement() !== document.activeElement
-          ) {
-            editor.setEditable(false); // prevent focus stealing
-            $myConvertFromMarkdownString(page.value, false);
-          } else {
-            const selection = $getSelection();
-            let anchorKey = undefined;
-            let focusKey = undefined;
-            let anchorOffset = 0;
-            let focusOffset = 0;
-            if ($isRangeSelection(selection)) {
-              anchorKey = selection.anchor.key;
-              focusKey = selection.focus.key;
-              anchorOffset = selection.anchor.offset;
-              focusOffset = selection.focus.offset;
+        const page = pages?.find((page) => page.id === pageId);
+        if (!page) return;
+        // I am so, so sorry.
+        const newValue = pageStatuses.get(pageId)?.status === PageStatus.EditFromSharedNodes ? getUpdatedPageValue(page) : page.value;
+        if (newValue === undefined) return;
+        queueMicrotask(() => {
+          editor.update(() => {
+            if (
+              (editor.isEditable() &&
+              !editor.isComposing() &&
+              editor.getRootElement() !== document.activeElement) ||
+              pageStatuses.get(pageId)?.status === PageStatus.EditorUpdateRequested
+            ) {
+              editor.setEditable(false); // prevent focus stealing
+              $myConvertFromMarkdownString(newValue, false);
+            } else {
+              const selection = $getSelection();
+              let anchorKey = undefined;
+              let focusKey = undefined;
+              let anchorOffset = 0;
+              let focusOffset = 0;
+              if ($isRangeSelection(selection)) {
+                anchorKey = selection.anchor.key;
+                focusKey = selection.focus.key;
+                anchorOffset = selection.anchor.offset;
+                focusOffset = selection.focus.offset;
+              }
+              const root = $getRoot();
+              $updateListItems(root, newValue.split("\n"));
+              if (anchorKey && focusKey) {
+                const newSelection = $createRangeSelection();
+                newSelection.anchor = $createPoint(anchorKey, anchorOffset, 'text');
+                newSelection.focus = $createPoint(focusKey, focusOffset, 'text');
+                $setSelection(newSelection);
+              }
             }
-            const root = $getRoot();
-            $updateListItems(root, page.value.split("\n"));
-            if (anchorKey && focusKey) {
-              const newSelection = $createRangeSelection();
-              newSelection.anchor = $createPoint(anchorKey, anchorOffset, 'text');
-              newSelection.focus = $createPoint(focusKey, focusOffset, 'text');
-              $setSelection(newSelection);
-            }
-          }
+          });
         });
       }
-    }
-  }, [editor, pageId, pages]);
+  }, [editor, pageId, pages, pageStatuses, getUpdatedPageValue]);
 
   useEffect(() => {
     return editor.registerUpdateListener(() => {

@@ -9,11 +9,8 @@ import { Page } from '@/lib/definitions';
 function FlexibleEditorLayout ({
   openPageIds,
   currentPages,
-  updatePageContentsLocal,
-  updatePageTitleLocal,
   closePage,
   openOrCreatePageByTitle,
-  deletePage,
   pinnedPageIds,
   onPagePinToggle,
   collapsedPageIds,
@@ -21,11 +18,8 @@ function FlexibleEditorLayout ({
 }: {
   openPageIds: string[];
   currentPages: Page[];
-  updatePageContentsLocal: (id: string, newValue: string, revisionNumber: number) => void;
-  updatePageTitleLocal: (id: string, newTitle: string, revisionNumber: number, lastModified: Date) => void;
   closePage: (id: string) => void;
   openOrCreatePageByTitle: (title: string) => void;
-  deletePage: (id: string) => void;
   pinnedPageIds: string[];
   onPagePinToggle: (pageId: string) => void;
   collapsedPageIds: string[];
@@ -38,8 +32,11 @@ function FlexibleEditorLayout ({
   useBreakpoint(1537, isSmallWidthViewport, setIsSmallWidthViewport);
 
   const sortPages = useCallback((pageIds: string[]): string[] => {
+    if (pageIds.length === 0) return [];
     const pages = pageIds.map(id => currentPages.find(p => p.id === id)).filter(p => p !== undefined) as Page[];
+    if (pages.length === 0) return [];
     const firstPage = pages[0];
+    if (!firstPage) return [];
     const pinnedPages = pages.filter(p => pinnedPageIds.includes(p.id) && p.id !== firstPage.id);
     const unpinnedPages = pages.filter(p => !pinnedPageIds.includes(p.id) && p.id !== firstPage.id);
 
@@ -57,7 +54,7 @@ function FlexibleEditorLayout ({
     setIsLoading(false);
   }, [openPageIds, currentPages, sortPages]);
 
-  if (isLoading) {
+  if (isLoading || !sortedPageIds || sortedPageIds.length === 0) {
     return <div>Loading...</div>; // Or any loading indicator you prefer
   }
 
@@ -103,11 +100,8 @@ function FlexibleEditorLayout ({
         key={page.id}
         page={page}
         requestFocus={requestFocus}
-        updatePageContentsLocal={updatePageContentsLocal}
-        updatePageTitleLocal={updatePageTitleLocal}
         closePage={closePage}
         openOrCreatePageByTitle={openOrCreatePageByTitle}
-        deletePage={deletePage}
         onPagePinToggle={onPagePinToggle}
         isPinned={pinnedPageIds.includes(page.id)}
         isCollapsed={collapsedPageIds.includes(page.id)}

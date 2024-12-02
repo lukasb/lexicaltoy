@@ -89,6 +89,7 @@ const Omnibar = forwardRef(({
     }));
   }, [pages]);
 
+  // this is used to give the parent component access to the focus method
   useImperativeHandle(ref, () => ({
     focus: () => {
       inputRef.current?.focus();

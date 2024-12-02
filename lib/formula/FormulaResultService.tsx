@@ -14,9 +14,9 @@ import {
   FormulaOutput,
   FormulaValueType,
 } from "@/lib/formula/formula-definitions";
-import { DialogueElement } from "../ai";
 import { QueryCounter } from './query-counter';
 import { getFormulaOutputType } from "./formula-parser";
+import { usePageStatus } from "@/_app/context/page-update-context";
 
 export const nodeQueries = new QueryCounter();
 
@@ -35,6 +35,7 @@ export function unregisterFormula(formula: string): void {
 export const useFormulaResultService = () => {
   const { sharedNodeMap, setSharedNodeMap } = useSharedNodeContext();
   const pages = useContext(PagesContext);
+  const pageUpdateContext = usePageStatus();
 
   const mergeResults = (
     resultNodes: NodeElementMarkdown[],
@@ -142,8 +143,7 @@ export const useFormulaResultService = () => {
     query: string,
     context?: PageAndDialogueContext
   ): Promise<FormulaOutput | null> => {
-    // Perform the query and fetch the results
-    const output = await getFormulaOutput(query, pages, context);
+    const output = await getFormulaOutput(query, pages, context, pageUpdateContext);
     if (!output) return null;
 
     if (output.type === FormulaValueType.NodeMarkdown) {
@@ -189,7 +189,6 @@ export const useFormulaResultService = () => {
   }
   
   const updatePagesResults = async (pagesToQuery: Page[]): Promise<void> => {
-
     getFormulaOutputs(nodeQueries.getUniqueQueries(), pagesToQuery)
       .then((outputMap) => {
         if (compareSharedNodesToResults(outputMap)) {
@@ -227,6 +226,7 @@ export const useFormulaResultService = () => {
 
   const addPagesResults = async (pagesToQuery: Page[]): Promise<void> => {
 
+    console.log("adding pages results", pagesToQuery.map(p => p.title));
     // run all the formulas over the updated pages and add to the shared node map
     getFormulaOutputs(nodeQueries.getUniqueQueries(), pagesToQuery)
       .then((outputMap) => {

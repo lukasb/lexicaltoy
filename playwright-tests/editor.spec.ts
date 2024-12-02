@@ -11,18 +11,26 @@ test('window title', async ({ page }) => {
   await expect(page).toHaveTitle(/🍊✅/);
 });
 
+test('should bring up search results', async ({ page }) => {
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.pressSequentially('test');
+  await expect(page.getByTestId('search-result')).toContainText('TestPage1');
+});
+
 test('page contents', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.focus();
-  await newSearch.fill('test');
+  await newSearch.pressSequentially('aTestPage2');
   await page.keyboard.press('Enter');
   await expect(page.getByText('Hello, world!')).toBeVisible();
 });
 
-test('page title', async ({ page }) => {
+test('search for start title match opens page', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.focus();
-  await newSearch.fill('test');
+  await newSearch.pressSequentially('test');
+  await page.waitForTimeout(100);
+  await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
   
   const titles = page.locator('[data-testid="editable-title"]');
@@ -39,12 +47,6 @@ test('page title', async ({ page }) => {
   await expect(found).toBeTruthy();
 });
 
-test('should bring up search results', async ({ page }) => {
-  const newSearch = page.getByPlaceholder('Search or Create');
-  await newSearch.fill('test');
-  await expect(page.getByTestId('search-result')).toHaveText('TestPage1');
-});
-
 test('should select search result', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.focus();
@@ -58,12 +60,9 @@ test('should select search result', async ({ page }) => {
 test('backspace deselects search result', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.focus();
-  await page.keyboard.press('t');
-  await page.keyboard.press('e');
-  await page.keyboard.press('s');
+  await newSearch.pressSequentially('TestPage1');
   await page.keyboard.press('Backspace');
-  const isSelectedItemPresent = await page.$('.selected-item') !== null;
-  expect(isSelectedItemPresent).toBeFalsy();
+  await expect(page.getByTestId('create-page-option')).toBeVisible();
 });
 
 test('escape closes search results', async ({ page }) => {
@@ -76,25 +75,17 @@ test('escape closes search results', async ({ page }) => {
 test('renaming page reflected in search results', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.focus();
-  await newSearch.fill('test');
+  await newSearch.pressSequentially('TestPage1');
   await page.keyboard.press('Enter');
-  await page.keyboard.press('Meta+k');
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
-  await page.keyboard.type('new');
-  await newSearch.fill('new');
-  await expect(page.getByTestId('search-result')).toHaveText('newTestPage1');
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('ArrowRight');
-  await page.keyboard.press('ArrowRight');
-  await page.keyboard.press('ArrowRight');
-  await page.keyboard.press('Backspace');
-  await page.keyboard.press('Backspace');
-  await page.keyboard.press('Backspace');
-  await page.keyboard.press('Meta+k');
+  await page.waitForTimeout(1000);
+  await page.getByTestId('page-menu-button').first().click();
+  await page.getByText('Rename').click();
+  await page.getByTestId('edit-dialog-input').fill('New Page Title');
+  await page.getByTestId('edit-dialog-submit').click();
+  await page.waitForTimeout(100);
+  const newerSearch = page.getByPlaceholder('Search or Create');
+  await newerSearch.pressSequentially('New Page Title');
+  await expect(page.getByTestId('search-result').first()).toContainText('New Page Title');
 });
 
 test('create new page', async ({ page }) => {
@@ -123,6 +114,7 @@ test('open page', async ({ page }) => {
   const anotherSearch = page.getByPlaceholder('Search or Create');
   await anotherSearch.fill('avalon');
   await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
   const titles = await page.locator('[data-testid="editable-title"]');
   let found = false;
   const count = await titles.count();
@@ -145,9 +137,8 @@ test('can create a wikilink', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(1000);
   await page.keyboard.press('Meta+k');
-  await page.keyboard.press('Tab');
+  await page.keyboard.press('Escape');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
@@ -155,13 +146,20 @@ test('can create a wikilink', async ({ page }) => {
   await page.keyboard.type(' [[abc]] ');
   const wikilink = page.locator('.PlaygroundEditorTheme__wikilinkPageTitle');
   await expect(wikilink).toHaveText('abc');
-  await page.waitForTimeout(1000); // make sure edit happens
+  await page.waitForTimeout(1000);
 });
 
 test('can open a wikilink', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
+  await page.keyboard.press('Meta+k');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type(' [[abc]] ');
   const wikilink = page.locator('.PlaygroundEditorTheme__wikilinkPageTitle');
   await wikilink.click();
   await page.waitForTimeout(1000);
@@ -182,6 +180,13 @@ test('clicking wikilink does not open duplicate pages', async ({ page }) => {
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
+  await page.keyboard.press('Meta+k');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type(' [[abc]] ');
   const wikilink = page.locator('.PlaygroundEditorTheme__wikilinkPageTitle');
   await wikilink.click();
   await page.waitForTimeout(1000);
@@ -254,7 +259,6 @@ test('wiki page names autocomplete correctly when match is not at start of page 
   await page.waitForTimeout(500);
   await page.keyboard.press('Meta+k');
   await page.keyboard.press('Escape');
-  await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');

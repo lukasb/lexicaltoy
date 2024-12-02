@@ -11,21 +11,20 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Pin } from 'lucide-react';
 import { useBreakpoint } from "@/lib/window-helpers";
 import { getModifierKey } from "@/lib/utils";
-import { updatePageTitle } from '@/lib/db';
 import { PagesContext } from '@/_app/context/pages-context';
 import { findCallback } from "@/lib/formula/function-definitions";
 import { FormulaValueType, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
 import BacklinksViewer from "./backlinks-viewer";
 import { EditDialog } from "@/_app/ui/edit-dialog";
-
+import { updatePage, PageSyncResult } from "@/_app/context/storage/storage-context"
+import { PageStatus } from "@/lib/definitions";
+import { usePageStatus } from "@/_app/context/page-update-context";
+import { useMiniSearch } from "@/_app/context/minisearch-context";
 function EditorContainer({
   page,
   requestFocus,
-  updatePageTitleLocal,
-  updatePageContentsLocal,
   closePage,
   openOrCreatePageByTitle,
-  deletePage,
   isPinned,
   isCollapsed,
   onPagePinToggle,
@@ -33,11 +32,8 @@ function EditorContainer({
 }: {
   page: Page;
   requestFocus: boolean;
-  updatePageTitleLocal: (id: string, newTitle: string, newRevisionNumber: number, newLastModified: Date) => void;
-  updatePageContentsLocal: (id: string, newValue: string, newRevisionNumber: number) => void;
   closePage: (id: string) => void;
   openOrCreatePageByTitle: (title: string) => void;
-  deletePage: (id: string, oldRevisionNumber: number) => void;
   isPinned: boolean;
   isCollapsed: boolean;
   onPagePinToggle: (pageId: string) => void;
@@ -54,6 +50,8 @@ function EditorContainer({
   const pages = useContext(PagesContext);
   const [backlinks, setBacklinks] = useState<NodeElementMarkdown[]>([]);
   const [backlinksCollapsed, setBacklinksCollapsed] = useState(true);
+  const { pageStatuses: pageUpdates, getPageStatus: getPageUpdate, setPageStatus: setPageUpdateStatus } = usePageStatus();
+  const { msReplacePage } = useMiniSearch();
 
   useEffect(() => {
     setModifierKey(getModifierKey());
@@ -85,17 +83,21 @@ function EditorContainer({
     handleCollapsedToggle();
   };
 
+  const handleDeletePage = async () => {
+    const result = await updatePage(page, page.value, page.title, true);
+    if (result === PageSyncResult.Conflict || result === PageSyncResult.Error) {
+      alert("Failed to delete page");
+    }
+    closePage(page.id);
+  }
+
   const handleRename = async (newTitle: string) => {
     if (!page) return;
-    try {
-      const { revisionNumber, lastModified, error } = await updatePageTitle(page.id, newTitle, page.revisionNumber);
-      if (!revisionNumber || !lastModified) {
-        alert("Failed to update title because you edited an old version, please relead for the latest version.");
-        return;
-      }
-      updatePageTitleLocal(page.id, newTitle, revisionNumber, lastModified);
-    } catch (error) {
+    const result = await updatePage(page, page.value, newTitle, false);
+    if (result === PageSyncResult.Conflict || result === PageSyncResult.Error) {
       alert("Failed to update title");
+    } else if (result === PageSyncResult.Success) {
+      msReplacePage({...page, title: newTitle});
     }
     setIsRenameDialogOpen(false);
   };
@@ -168,6 +170,7 @@ function EditorContainer({
                     }`}
                   >
                     <MoreVertical
+                      data-testid="page-menu-button"
                       className={`h-5 w-5 ${
                         isMenuOpen ? "text-gray-800" : "text-gray-300"
                       }`}
@@ -180,12 +183,14 @@ function EditorContainer({
                     align="end"
                     sideOffset={5}
                   >
+                    {!page.isJournal && (
                     <DropdownMenu.Item
                       className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
                       onClick={() => setIsRenameDialogOpen(true)}
                     >
                       Rename
                     </DropdownMenu.Item>
+                    )}
                     <DropdownMenu.Item
                       className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
                       onClick={() => closePage(page.id)}
@@ -195,7 +200,7 @@ function EditorContainer({
                     {!page.isJournal && (
                       <DropdownMenu.Item
                         className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
-                        onClick={() => deletePage(page.id, page.revisionNumber)}
+                        onClick={handleDeletePage}
                       >
                         Delete
                       </DropdownMenu.Item>
@@ -230,10 +235,20 @@ function EditorContainer({
         </div>
         <NoSSRWrapper>
           <div className={`pl-[22px] pr-1 md:pl-[29px] mt-4 ${localIsCollapsed ? 'hidden' : 'pb-1'}`}>
+            {getPageUpdate(page.id)?.status === PageStatus.Conflict && (
+              <div className="mb-4 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 rounded-md flex justify-between items-center">
+                <span>Your changes are based on an old version of this page. Click reload to get the latest version. Reloading will lose your changes, so copy anything you do not want to lose and paste it somewhere else.</span>
+                <button 
+                  onClick={() => setPageUpdateStatus(page.id, PageStatus.DroppingUpdate)}
+                  className="ml-4 px-4 py-2 bg-red-200 dark:bg-red-800 rounded-md hover:bg-red-300 dark:hover:bg-red-700"
+                >
+                  Reload
+                </button>
+              </div>
+            )}
             <Editor
               page={page}
               showDebugInfo={showDebug}
-              updatePageContentsLocal={updatePageContentsLocal}
               openOrCreatePageByTitle={openOrCreatePageByTitle}
               requestFocus={requestFocus}
               closePage={closePage}

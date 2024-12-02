@@ -17,13 +17,15 @@ import { IToken } from 'chevrotain';
 import { $getRoot } from 'lexical';
 import { getMarkdownUpTo } from './formula-context-helpers';
 import { getShortGPTResponse } from './gpt-formula-handlers';
+import { PageStatusContextType } from '@/_app/context/page-update-context';
 
 const partialFormulaRegex = /=\s?[a-zA-z]+\(/;
 
 export async function getFormulaOutput(
   formula: string,
   pages: Page[],
-  context?: PageAndDialogueContext
+  context?: PageAndDialogueContext,
+  pageUpdateContext?: PageStatusContextType
 ): Promise<FormulaOutput | null> {
   try {
     const formulaWithEqualSign = formula.startsWith("=") ? formula : `=${formula}`;
@@ -44,7 +46,7 @@ export async function getFormulaOutput(
       }
     }
 
-    return getFormulaOutputInner(cst, pages, context);
+    return getFormulaOutputInner(cst, pages, context, pageUpdateContext);
   } catch (error) {
     console.error("Error parsing or executing formula:", error);
     return null;
@@ -54,7 +56,8 @@ export async function getFormulaOutput(
 async function getFormulaOutputInner(
   cst: CstNodeWithChildren,
   pages: Page[],
-  context?: PageAndDialogueContext
+  context?: PageAndDialogueContext,
+  pageUpdateContext?: PageStatusContextType
 ): Promise<FormulaOutput | null> {
   const functionCallNode = cst.children.functionCall[0] as CstNodeWithChildren;
   const functionName = (functionCallNode.children.Identifier[0] as IToken).image;
@@ -70,7 +73,7 @@ async function getFormulaOutputInner(
     } else if (arg.children.TodoStatus) {
       return { output: arg.children.TodoStatus[0].image, type: FormulaValueType.NodeTypeOrTypes };
     } else if (arg.children.functionCall) {
-      const nestedResult = await getFormulaOutputInner(arg as CstNodeWithChildren, pages, context);
+      const nestedResult = await getFormulaOutputInner(arg as CstNodeWithChildren, pages, context, pageUpdateContext);
       return nestedResult ? nestedResult : { output: '', type: FormulaValueType.Text };
     } else if (arg.children.Wikilink) {
       // TODO should probably get the page contents here and pass them in
@@ -84,7 +87,7 @@ async function getFormulaOutputInner(
 
   if (funcDef) {
     // Prepare the default arguments
-    const defaultArgs = { pages, context };
+    const defaultArgs = { pages, context, pageUpdateContext };
     
     // Call the function's callback with the default arguments and parsed arguments
     return await funcDef.callback(defaultArgs, parsedArgs);
