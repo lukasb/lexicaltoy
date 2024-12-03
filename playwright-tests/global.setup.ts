@@ -39,5 +39,5 @@ setup('do login', async ({ page }) => {
   await expect(page.getByText('Sign Out')).toBeVisible();
   await page.close();
 
-  //await page.context().storageState({ path: STORAGE_STATE });
+  await page.context().storageState({ path: STORAGE_STATE });
 });
