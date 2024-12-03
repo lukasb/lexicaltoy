@@ -160,8 +160,6 @@ export async function processQueuedUpdatesInternal(
           await handleConflict(queuedUpdate.id, ConflictErrorCode.Unknown);
           return;
         }
-
-        console.log("setting page revision number", queuedUpdate.id, revisionNumber);
         
         setPageRevisionNumber(queuedUpdate.id, revisionNumber);
         setLastRevisionSynced(queuedUpdate.id, revisionNumber);
