@@ -12,14 +12,14 @@ import { getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
 import { useMiniSearch } from '@/_app/context/minisearch-context';
 import { updatePage, PageSyncResult, deleteQueuedUpdate } from '@/_app/context/storage/storage-context';
 import { usePageStatus } from '@/_app/context/page-update-context';
-
+import { getLastRevisionSynced } from '@/_app/context/storage/last-revision';
 // TODO maybe use Redux so we don't have an O(n) operation here every time
 function PagesManager() {
   const pages = useContext(PagesContext);
   const { sharedNodeMap } = useSharedNodeContext();
   const { updatePagesResults, addPagesResults } = useFormulaResultService();
   const { msReplacePage } = useMiniSearch();
-  const { setPageStatus, removePageStatus, addPageStatus, pageStatuses, setPageLastModified } = usePageStatus();
+  const { setPageStatus, removePageStatus, addPageStatus, pageStatuses, setPageLastModified, setPageRevisionNumber } = usePageStatus();
   
   // Create a ref to store the save queue
   const saveQueue = useRef<Map<string, { page: Page, timestamp: number, newValue: string }>>(new Map());
@@ -41,7 +41,8 @@ function PagesManager() {
         } else {
           //removePageStatus(page.id);
           setPageStatus(page.id, PageStatus.Quiescent);
-          msReplacePage(page);
+          setPageRevisionNumber(page.id, page.revisionNumber + 1);
+          msReplacePage({...page, lastModified: new Date(timestamp), value: newValue});
         }
       } catch (error) {
         alert(`Failed to save page ${page.title} - ${error}`);
@@ -50,7 +51,7 @@ function PagesManager() {
         saveQueue.current.delete(pageId);
       }
     }
-  }, [msReplacePage, setPageStatus]);
+  }, [msReplacePage, setPageStatus, setPageRevisionNumber]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -65,6 +66,8 @@ function PagesManager() {
   useEffect(() => {
     pages.forEach((page) => {
       const pageStatus = pageStatuses.get(page.id);
+      const lastRevisionSynced = getLastRevisionSynced(page.id);
+      if (page.title === "Dec 3rd, 2024") console.log(page.title, page.revisionNumber, pageStatus?.revisionNumber, lastRevisionSynced);
       if (
         pageStatus &&
         pageStatus.status === PageStatus.PendingWrite &&
@@ -106,7 +109,7 @@ function PagesManager() {
           pageStatus?.lastModified
         );
         addPageStatus(page.id, PageStatus.UpdatedFromDisk, page.lastModified, page.revisionNumber, page.value);
-      } else if (page.revisionNumber > pageStatus.revisionNumber) {
+      } else if (page.revisionNumber > pageStatus.revisionNumber && page.lastModified > pageStatus.lastModified) {
         if (
           pageStatus.status === PageStatus.UserEdit ||
           pageStatus.status === PageStatus.EditFromSharedNodes ||
@@ -129,9 +132,20 @@ function PagesManager() {
             addPageStatus(page.id, PageStatus.Quiescent, page.lastModified, page.revisionNumber);
           }
         }
+      } else if (page.revisionNumber > pageStatus.revisionNumber) {
+        if (page.lastModified === pageStatus.lastModified) {
+          console.log("page updated on server, no change", page.title);
+          addPageStatus(page.id, PageStatus.Quiescent, page.lastModified, page.revisionNumber);
+        } else if (lastRevisionSynced && page.revisionNumber === (lastRevisionSynced + 1) && pageStatus.revisionNumber === lastRevisionSynced) {
+          // this is probably a page updated by another tab
+          console.log("page updated on server, our local change is still good though", page.title);
+          setPageRevisionNumber(page.id, page.revisionNumber);
+        } else {
+          console.error("page updated on server, but last modified is older", page.title, page.revisionNumber, pageStatus.revisionNumber, lastRevisionSynced);
+        }
       }
     });
-  }, [pages, pageStatuses, setPageStatus, addPageStatus, setPageLastModified]);
+  }, [pages, pageStatuses, setPageStatus, addPageStatus, setPageRevisionNumber]);
 
   // TODO maybe use Redux or some kind of message bus so we don't have an O(n) operation here every time
   // TODO make this async

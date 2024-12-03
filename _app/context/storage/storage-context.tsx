@@ -8,7 +8,7 @@ import {
 } from "@/lib/db";
 import { getJournalTitle } from "@/lib/journal-helpers";
 import { isDevelopmentEnvironment } from "@/lib/environment";
-
+import { setLastRevisionSynced } from "./last-revision";
 // TODO also return titles of conflicted pages
 export enum PageSyncResult {
   Success,
@@ -118,6 +118,7 @@ export async function fetchUpdatedPagesInternal(
 export async function processQueuedUpdatesInternal(
   userId: string,
   handleConflict: (pageId: string, errorCode: ConflictErrorCode) => Promise<void>,
+  setPageRevisionNumber: (pageId: string, revisionNumber: number) => void,
   _getQueuedUpdatesByUserId: (userId: string) => Promise<Page[]>,
   _getLocalPageById: (id: string) => Promise<Page | undefined>
 ): Promise<PageSyncResult> {
@@ -160,12 +161,19 @@ export async function processQueuedUpdatesInternal(
           return;
         }
 
+        console.log("setting page revision number", queuedUpdate.id, revisionNumber);
+        
+        setPageRevisionNumber(queuedUpdate.id, revisionNumber);
+        setLastRevisionSynced(queuedUpdate.id, revisionNumber);
+
         const pageUpdated = {
           ...queuedUpdate,
           revisionNumber: revisionNumber,
           lastModified: lastModified,
         };
-        localDb.pages.put(pageUpdated);
+        setTimeout(() => {
+          localDb.pages.put(pageUpdated);
+        }, 0);
       } catch (error) {
         console.error("failed to update page", queuedUpdate.title, queuedUpdate.id, error);
         result = PageSyncResult.Error;
@@ -226,9 +234,10 @@ export async function fetchUpdatedPages(
 
 export async function processQueuedUpdates(
   userId: string,
-  handleConflict: (pageId: string, errorCode: ConflictErrorCode) => Promise<void>
+  handleConflict: (pageId: string, errorCode: ConflictErrorCode) => Promise<void>,
+  setPageRevisionNumber: (pageId: string, revisionNumber: number) => void
 ): Promise<PageSyncResult> {
-  return processQueuedUpdatesInternal(userId, handleConflict, getQueuedUpdatesByUserId, getLocalPageById);
+  return processQueuedUpdatesInternal(userId, handleConflict, setPageRevisionNumber, getQueuedUpdatesByUserId, getLocalPageById);
 }
 
 /**

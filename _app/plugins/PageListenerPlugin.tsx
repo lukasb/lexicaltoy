@@ -121,11 +121,14 @@ export function PageListenerPlugin({
         pageStatuses.get(pageId)?.status === PageStatus.EditFromSharedNodes ||
         pageStatuses.get(pageId)?.status === PageStatus.EditorUpdateRequested
       ) {
+        console.log("PageListenerPlugin: editor update requested");
         const page = pages?.find((page) => page.id === pageId);
         if (!page) return;
+        console.log("PageListenerPlugin: page found");
         // I am so, so sorry.
         const newValue = pageStatuses.get(pageId)?.status === PageStatus.EditFromSharedNodes ? getUpdatedPageValue(page) : page.value;
         if (newValue === undefined) return;
+        console.log("PageListenerPlugin: newValue is", newValue);
         queueMicrotask(() => {
           editor.update(() => {
             if (

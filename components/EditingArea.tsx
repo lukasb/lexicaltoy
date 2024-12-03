@@ -53,7 +53,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const hasInitializedSearch = useRef(false);
   let initCount = 0;
 
-  const { addPageStatus, removePageStatus } = usePageStatus();
+  const { addPageStatus, removePageStatus, setPageRevisionNumber } = usePageStatus();
 
   const [initialFetchComplete, setInitialFetchComplete] = useState(false);
 
@@ -74,6 +74,10 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     [removePageStatus, addPageStatus, userId]
   );
 
+  const updateRevisionNumber = useCallback((pageId: string, revisionNumber: number) => {
+    setPageRevisionNumber(pageId, revisionNumber);
+  }, [setPageRevisionNumber]);
+
   const fetch = useCallback(async () => {
     if (userId) {
       console.log("fetching updated pages...");
@@ -87,17 +91,17 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const processUpdates = useCallback(async () => {
     if (userId) {
       console.log("processing queued updates");
-      await processQueuedUpdates(userId, handleConflict);
+      await processQueuedUpdates(userId, handleConflict, updateRevisionNumber);
     } else {
       console.error("no user id, can't process queued updates");
     }
-  }, [userId, handleConflict]);
+  }, [userId, handleConflict, updateRevisionNumber]);
 
   useEffect(() => {
     console.log("setting up fetch interval");
     if (!initialFetchComplete) fetch();
     
-    const fetchIntervalId = setInterval(fetch, 60000);
+    const fetchIntervalId = setInterval(fetch, 30000);
     const processIntervalId = setInterval(processUpdates, 8000);
     
     return () => {

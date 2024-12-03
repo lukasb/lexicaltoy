@@ -16,6 +16,7 @@ export type PageStatusContextType = {
   setPageStatus: (pageId: string, status: PageStatus, lastModified?: Date, revisionNumber?: number, newValue?: string) => void;
   getUpdatedPageValue: (page: Page) => string;
   setPageLastModified: (pageId: string, lastModified: Date) => void;
+  setPageRevisionNumber: (pageId: string, revisionNumber: number) => void;
 }
 
 const PageStatusContext = createContext<PageStatusContextType | undefined>(undefined);
@@ -115,6 +116,20 @@ export function PageStatusProvider({
     });
   }, []);
 
+  const setPageRevisionNumber = useCallback((pageId: string, revisionNumber: number) => {
+    setPageStatuses((prevMap) => {
+      const newMap = new Map(prevMap);
+      const existingUpdate = newMap.get(pageId);
+      if (existingUpdate) {
+        newMap.set(pageId, {
+          ...existingUpdate,
+          revisionNumber
+        });
+      }
+      return newMap;
+    });
+  }, []);
+
   // Memoize the context value to prevent unnecessary rerenders of consumers
   const contextValue = React.useMemo(() => ({
     pageStatuses,
@@ -124,6 +139,7 @@ export function PageStatusProvider({
     setPageStatus,
     getUpdatedPageValue,
     setPageLastModified,
+    setPageRevisionNumber,
   }), [
     pageStatuses,
     addPageStatus,
@@ -131,7 +147,8 @@ export function PageStatusProvider({
     removePageStatus,
     setPageStatus,
     getUpdatedPageValue,
-    setPageLastModified
+    setPageLastModified,
+    setPageRevisionNumber
   ]);
 
   return (

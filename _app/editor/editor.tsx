@@ -86,7 +86,7 @@ function Editor({
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
   const [shouldHighlight, setShouldHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
   const { setBlockIdsForPage } = useBlockIdsIndex();
-  const { addPageStatus, getUpdatedPageValue, getPageStatus } = usePageStatus();
+  const { setPageStatus, getUpdatedPageValue, getPageStatus } = usePageStatus();
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);
@@ -104,11 +104,18 @@ function Editor({
     const currentPage = getPage(page.id);
     if (currentPage) {
       console.log("saving change for page", page.title, page.id);
-      addPageStatus(page.id, PageStatus.UserEdit, new Date(), page.revisionNumber, newContent);
+      const currentStatus = getPageStatus(page.id);
+      setPageStatus(
+        page.id,
+        PageStatus.UserEdit,
+        new Date(),
+        currentStatus?.revisionNumber ?? page.revisionNumber,
+        newContent
+      );
       ingestPageBlockIds(page.title, newContent, setBlockIdsForPage);
       pendingChangeRef.current = null;
     }
-  }, [page.id, getPage, setBlockIdsForPage, page.title, addPageStatus, page.revisionNumber]);
+  }, [page.id, getPage, setBlockIdsForPage, page.title, setPageStatus, getPageStatus, page.revisionNumber]);
 
   const debouncedSave = useDebouncedCallback(saveChange, 300);
 
