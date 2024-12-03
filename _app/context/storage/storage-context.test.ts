@@ -122,6 +122,7 @@ describe("Page Sync Functions", () => {
       setNavigatorOnlineStatus(true);
       
       const mockHandleConflict = jest.fn();
+      const setPageRevisionNumber = jest.fn();
       const conflictedPage = { 
         ...mockPage,
         lastModified: new Date("2024-01-02")
@@ -148,8 +149,9 @@ describe("Page Sync Functions", () => {
       const result = await processQueuedUpdatesInternal(
         mockUserId,
         mockHandleConflict,
+        setPageRevisionNumber,
         getQueuedUpdatesByUserId,
-        getLocalPageById
+        getLocalPageById,
       );
       
       expect(result).toBe(PageSyncResult.Conflict);
@@ -333,6 +335,7 @@ describe("Page Sync Functions", () => {
     it("should handle insertPageDb failures", async () => {
 
       setNavigatorOnlineStatus(true);
+      const setPageRevisionNumber = jest.fn();
 
       (remoteDb.insertPageDb as jest.Mock).mockResolvedValue("duplicate key value");
       
@@ -342,6 +345,7 @@ describe("Page Sync Functions", () => {
       const result = await processQueuedUpdatesInternal(
         mockUserId,
         jest.fn(),
+        setPageRevisionNumber,
         () => Promise.resolve([queuedJournal]),
         () => Promise.resolve(undefined)
       );
