@@ -6,14 +6,15 @@ type PageStatusInfo = {
   lastModified: Date;
   revisionNumber: number;
   newValue?: string;
+  newTitle?: string;
 }
 
 export type PageStatusContextType = {
   pageStatuses: Map<string, PageStatusInfo>;
-  addPageStatus: (pageId: string, status: PageStatus, lastModified: Date, revisionNumber: number, newValue?: string) => void;
+  addPageStatus: (pageId: string, status: PageStatus, lastModified: Date, revisionNumber: number, newValue?: string, newTitle?: string) => void;
   getPageStatus: (pageId: string) => PageStatusInfo | undefined;
   removePageStatus: (pageId: string) => void;
-  setPageStatus: (pageId: string, status: PageStatus, lastModified?: Date, revisionNumber?: number, newValue?: string) => void;
+  setPageStatus: (pageId: string, status: PageStatus, lastModified?: Date, revisionNumber?: number, newValue?: string, newTitle?: string) => void;
   getUpdatedPageValue: (page: Page) => string;
   setPageLastModified: (pageId: string, lastModified: Date) => void;
   setPageRevisionNumber: (pageId: string, revisionNumber: number) => void;
@@ -36,16 +37,17 @@ export function PageStatusProvider({
     status: PageStatus,
     lastModified: Date,
     revisionNumber: number,
-    newValue?: string
+    newValue?: string,
+    newTitle?: string
   ) => {
     if (
       status !== PageStatus.DroppingUpdate &&
       status !== PageStatus.Conflict &&
       status !== PageStatus.Quiescent &&
-      (newValue === undefined)
+      (newValue === undefined && newTitle === undefined)
     ) {
       throw new Error(
-        `lastModified and newValue are required for status of type ${status}`
+        `lastModified and either newValue or newTitle are required for status of type ${status}`
       );
     }
     setPageStatuses((prevMap) => {
@@ -55,6 +57,7 @@ export function PageStatusProvider({
         lastModified,
         revisionNumber,
         newValue,
+        newTitle,
       });
       return newMap;
     });
@@ -73,17 +76,28 @@ export function PageStatusProvider({
     });
   }, []);
 
-  const setPageStatus = useCallback((pageId: string, status: PageStatus, lastModified?: Date, revisionNumber?: number, newValue?: string) => {
+  const setPageStatus = useCallback((pageId: string, status: PageStatus, lastModified?: Date, revisionNumber?: number, newValue?: string, newTitle?: string) => {
     setPageStatuses((prevMap) => {
       const newMap = new Map(prevMap);
       const existingUpdate = newMap.get(pageId);
       if (existingUpdate) {
+        if (
+          status !== PageStatus.DroppingUpdate &&
+          status !== PageStatus.Conflict &&
+          status !== PageStatus.Quiescent &&
+          (newValue === undefined && newTitle === undefined && existingUpdate.newValue === undefined && existingUpdate.newTitle === undefined)
+        ) {
+          throw new Error(
+            `lastModified and either newValue or newTitle are required for status of type ${status}`
+          );
+        }
         newMap.set(pageId, {
           ...existingUpdate,
           status,
           lastModified: lastModified || existingUpdate.lastModified,
           revisionNumber: revisionNumber || existingUpdate.revisionNumber,
           newValue: newValue || existingUpdate.newValue,
+          newTitle: newTitle || existingUpdate.newTitle,
         });
       } else {
         throw new Error(

@@ -20,6 +20,7 @@ import { updatePage, PageSyncResult } from "@/_app/context/storage/storage-conte
 import { PageStatus } from "@/lib/definitions";
 import { usePageStatus } from "@/_app/context/page-update-context";
 import { useMiniSearch } from "@/_app/context/minisearch-context";
+
 function EditorContainer({
   page,
   requestFocus,
