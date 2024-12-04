@@ -319,14 +319,15 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
         />
         {(!pages || pages.length === 0 || openPageIds.length === 0) ? (
           <div className="w-full h-40 flex justify-center items-center flex-col gap-2">
-            <div className="text-sm text-muted-foreground">
-              Debug: pages={pages ? 'defined' : 'undefined'}, 
-              pages.length={pages?.length || 0}, 
-              openPageIds.length={openPageIds.length}
-            </div>
-            <Button onClick={() => handleNewPage("New Page")}>
-              Create New Page
-            </Button>
+            {!initialFetchComplete ? (
+              <div className="text-sm text-muted-foreground">
+                Loading...<br />
+              </div>
+            ) : (
+              <Button onClick={() => handleNewPage("New Page")}>
+                Create New Page
+              </Button>
+            )}
           </div>
         ) : (
           <FlexibleEditorLayout
