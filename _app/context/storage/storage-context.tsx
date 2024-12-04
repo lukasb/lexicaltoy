@@ -143,10 +143,10 @@ export async function processQueuedUpdatesInternal(
       }
 
       try {
-        if (isDevelopmentEnvironment)
+        if (isDevelopmentEnvironment) {
           console.time(`updatePageWithHistory ${queuedUpdate.title}`);
-
-        console.log("processQueuedUpdatesInternal: updating page", queuedUpdate.title, queuedUpdate.lastModified);
+          console.log("processQueuedUpdatesInternal: updating page", queuedUpdate.title, "revision number", queuedUpdate.revisionNumber);
+        }
 
         const { revisionNumber, lastModified } = await updatePageWithHistory(
           queuedUpdate.id,
@@ -156,8 +156,11 @@ export async function processQueuedUpdatesInternal(
           queuedUpdate.revisionNumber,
           queuedUpdate.lastModified
         );
-        if (isDevelopmentEnvironment)
-          console.timeEnd(`updatePageWithHistory ${queuedUpdate.title} new revision number: ${revisionNumber}`);
+        if (isDevelopmentEnvironment) {
+          console.timeEnd(`updatePageWithHistory ${queuedUpdate.title}`);
+          console.log("processQueuedUpdatesInternal: updated page", queuedUpdate.title, "new revision number", revisionNumber);
+        }
+
         localDb.queuedUpdates.delete(queuedUpdate.id);
         if (revisionNumber === -1 || !revisionNumber || !lastModified) {
           console.log("failed to update page", queuedUpdate.title);
@@ -218,7 +221,8 @@ export async function processQueuedUpdatesInternal(
     }
   }
   await navigator.locks.request(
-    "orangetask_queued_updates_sync",
+    "orangetask_queued_updates",
+    //{ ifAvailable: true },
     async (lock: Lock | null) => {
       if (!lock) return;
       const queuedUpdates = await _getQueuedUpdatesByUserId(userId);
@@ -270,7 +274,7 @@ export async function updatePage(
     return PageSyncResult.Conflict;
   }
 
-  console.log("updatePage: storing queued update", page.title, page.lastModified);
+  console.log("updatePage: storing queued update", page.title, "revision number", page.revisionNumber);
 
   const pageLocalUpdate = {
     ...page,

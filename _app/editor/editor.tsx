@@ -103,7 +103,6 @@ function Editor({
   const saveChange = useCallback(async (newContent: string) => {
     const currentPage = getPage(page.id);
     if (currentPage) {
-      console.log("saving change for page", page.title, page.id);
       const currentStatus = getPageStatus(page.id);
       setPageStatus(
         page.id,

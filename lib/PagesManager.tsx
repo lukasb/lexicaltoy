@@ -69,7 +69,6 @@ function PagesManager() {
     pages.forEach((page) => {
       const pageStatus = pageStatuses.get(page.id);
       const lastRevisionSynced = getLastRevisionSynced(page.id);
-      if (page.title === "Dec 3rd, 2024") console.log(page.title, page.revisionNumber, pageStatus?.revisionNumber, lastRevisionSynced);
       if (
         pageStatus &&
         pageStatus.status === PageStatus.PendingWrite &&
@@ -77,12 +76,16 @@ function PagesManager() {
       ) {
         const existingSave = saveQueue.current.get(page.id);
         if (!existingSave) {
-          saveQueue.current.set(page.id, {
-            page,
+          if (lastRevisionSynced && page.revisionNumber !== lastRevisionSynced) {
+            console.error("revision number mismatch", page.title, page.revisionNumber, lastRevisionSynced);
+          } else {
+            saveQueue.current.set(page.id, {
+              page,
             timestamp: pageStatus.lastModified.getTime(),
             newValue: pageStatus.newValue,
-            newTitle: pageStatus.newTitle,
-          });
+              newTitle: pageStatus.newTitle,
+            });
+          }
         }
       } else if (
         pageStatus &&
@@ -191,7 +194,6 @@ function PagesManager() {
       }));
 
     if (pagesToInvalidate.length > 0) {
-      console.log("PagesManager updating pages results for pages", pagesToInvalidate.map(p => p.title));
       updatePagesResults(pagesToInvalidate);
     }
     if (pagesToUpdate.size > 0) {
