@@ -3,10 +3,9 @@ import { signOut } from "next-auth/react";
 import { localDb } from "@/_app/context/storage/db";
 
 export const SignoutButton = () => {
-  const handleClick = () => {
+  const handleClick = async () => {
+    await localDb.delete();
     signOut();
-    alert("clearing local db");
-    localDb.delete();
   };
   return (
     <Button onClick={handleClick}>
