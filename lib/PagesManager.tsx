@@ -77,6 +77,8 @@ function PagesManager() {
         const existingSave = saveQueue.current.get(page.id);
         if (!existingSave) {
           if (lastRevisionSynced && page.revisionNumber !== lastRevisionSynced) {
+            // TODO probably we could use the lastRevisionSynced value to update the page
+            // what we're doing now risks dropping an update
             console.error("revision number mismatch", page.title, page.revisionNumber, lastRevisionSynced);
           } else {
             saveQueue.current.set(page.id, {
