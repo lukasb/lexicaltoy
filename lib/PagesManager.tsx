@@ -113,7 +113,11 @@ function PagesManager() {
           pageStatus?.lastModified
         );
         addPageStatus(page.id, PageStatus.UpdatedFromDisk, page.lastModified, page.revisionNumber, page.value);
-      } else if (page.revisionNumber > pageStatus.revisionNumber && page.lastModified > pageStatus.lastModified) {
+      } else if (
+        page.revisionNumber > pageStatus.revisionNumber && 
+        page.lastModified > pageStatus.lastModified && 
+        (lastRevisionSynced === null || page.revisionNumber > (lastRevisionSynced + 1) || pageStatus.revisionNumber !== lastRevisionSynced)
+      ) {
         if (
           pageStatus.status === PageStatus.UserEdit ||
           pageStatus.status === PageStatus.EditFromSharedNodes ||
