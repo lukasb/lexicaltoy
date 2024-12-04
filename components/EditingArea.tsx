@@ -141,12 +141,14 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const [openPageIds, setOpenPageIds] = useState<string[]>([]);
 
   useEffect(() => {
-    for (const pageId of openPageIds) {
-      if (!pages?.find(p => p.id === pageId)) {
-        setOpenPageIds(prevIds => prevIds.filter(id => id !== pageId));
+    if (initialFetchComplete && pages && pages.length > 0) {
+      for (const pageId of openPageIds) {
+        if (!pages?.find(p => p.id === pageId)) {
+          setOpenPageIds(prevIds => prevIds.filter(id => id !== pageId));
+        }
       }
     }
-  }, [pages, openPageIds]);
+  }, [pages, openPageIds, initialFetchComplete]);
 
   useEffect(() => {
     if (pages && pages.length > 0 && initialFetchComplete) {
@@ -160,8 +162,8 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
         }
         initialIds.push(...lastWeekJournalPageIds);
         
-        setOpenPageIds(initialIds);
-          initializedPagesRef.current = true;
+        setOpenPageIds(prevIds => [...new Set([...prevIds, ...initialIds])]);
+        initializedPagesRef.current = true;
       } else if (openPageIds.length === 0) {
         const todayJournalTitle = getTodayJournalTitle();
         const todayJournalPage = pages.find(p => p.title === todayJournalTitle && p.isJournal);
