@@ -13,7 +13,7 @@ export default async function handler(
     return res.status(401).json({ error: 'Not Authorized' });
   }
 
-  const { id, value, title, deleted, oldRevisionNumber } = req.body;
+  const { id, value, title, deleted, oldRevisionNumber, lastModified } = req.body;
 
   if (req.method === 'POST') {
 
@@ -38,7 +38,8 @@ export default async function handler(
         SET value = ${value}, 
             title = ${title}, 
             deleted = ${deleted}, 
-            revision_number = ${oldRevisionNumber + 1}
+            revision_number = ${oldRevisionNumber + 1},
+            last_modified = ${lastModified}
         WHERE id = ${id} 
         AND revision_number = ${oldRevisionNumber}
         RETURNING revision_number, last_modified

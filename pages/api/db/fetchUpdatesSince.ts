@@ -28,6 +28,7 @@ export default async function handler(
 
     try {
       const pages = await fetchUpdatesSince(userId, since);
+      console.log("fetchUpdatesSince: returning", pages?.length, "pages");
       return res.status(200).json({ pages });
     } catch (error) {
       console.error('Database Error: Failed to Fetch Updates.', error);

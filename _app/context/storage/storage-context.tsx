@@ -101,6 +101,7 @@ export async function fetchUpdatedPagesInternal(
           if (!isPage(page)) { 
             throw new Error(`expected page, got ${JSON.stringify(page)}`);
           }
+          console.log("fetchUpdatedPagesInternal: storing updated page", page.title, page.value);
           await localDb.pages.put(page);
         }
       } catch (error) {
@@ -143,6 +144,9 @@ export async function processQueuedUpdatesInternal(
       try {
         if (isDevelopmentEnvironment)
           console.time(`updatePageWithHistory ${queuedUpdate.title}`);
+
+        console.log("processQueuedUpdatesInternal: updating page", queuedUpdate.title, queuedUpdate.lastModified);
+
         const { revisionNumber, lastModified } = await updatePageWithHistory(
           queuedUpdate.id,
           queuedUpdate.value,
@@ -264,13 +268,13 @@ export async function updatePage(
     return PageSyncResult.Conflict;
   }
 
+  console.log("updatePage: storing queued update", page.title, page.lastModified);
+
   const pageLocalUpdate = {
     ...page,
     value: value,
     title: title,
     deleted: deleted,
-    //lastModified: new Date(new Date().toISOString()),
-    lastModified: page.lastModified,
   };
   
   await localDb.queuedUpdates.put(pageLocalUpdate);
