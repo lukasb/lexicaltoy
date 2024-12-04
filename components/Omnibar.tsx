@@ -278,7 +278,7 @@ const Omnibar = forwardRef(({
     } else if (
       (event.key === "Backspace" && !event.metaKey) || 
       event.key === "Delete") {
-      skipTermResolutionRef.current = true;
+      //skipTermResolutionRef.current = true;
       setSelectedIndex(-1);
     } else if (event.key === "Escape") {
       // tried also checking event.code === "Escape" to recognize
