@@ -85,7 +85,7 @@ function EditorContainer({
   };
 
   const handleDeletePage = async () => {
-    const result = await updatePage(page, page.value, page.title, true);
+    const result = await updatePage({...page, lastModified: new Date(new Date().toISOString())}, page.value, page.title, true);
     if (result === PageSyncResult.Conflict || result === PageSyncResult.Error) {
       alert("Failed to delete page");
     }
@@ -94,7 +94,7 @@ function EditorContainer({
 
   const handleRename = async (newTitle: string) => {
     if (!page) return;
-    const result = await updatePage(page, page.value, newTitle, false);
+    const result = await updatePage({...page, lastModified: new Date(new Date().toISOString())}, page.value, newTitle, false);
     if (result === PageSyncResult.Conflict || result === PageSyncResult.Error) {
       alert("Failed to update title");
     } else if (result === PageSyncResult.Success) {

@@ -108,7 +108,7 @@ function Editor({
       setPageStatus(
         page.id,
         PageStatus.UserEdit,
-        new Date(),
+        new Date(new Date().toISOString()),
         currentStatus?.revisionNumber ?? page.revisionNumber,
         newContent
       );
