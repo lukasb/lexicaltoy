@@ -75,10 +75,12 @@ test('detect conflicts between separate browsers', async ({ browser }) => {
     await page2.keyboard.press('Enter');
     await page2.waitForTimeout(5000);
   }
+  await context1.setOffline(true);
   await page2.keyboard.type('i want to make my own changes');
   await page2.waitForTimeout(5000);
   await page1.keyboard.type('i want to make my own changes too!');
   await page1.waitForTimeout(1000);
+  await context1.setOffline(false);
   await new Promise(r => setTimeout(r, 10000));
   await expect(
     page1.getByText('Your changes are based on an old version of this page.'))
