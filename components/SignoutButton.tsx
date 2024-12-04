@@ -4,7 +4,11 @@ import { localDb } from "@/_app/context/storage/db";
 
 export const SignoutButton = () => {
   const handleClick = async () => {
-    await localDb.delete();
+    try {
+      await localDb.delete();
+    } catch (e) {
+      alert("Error deleting local db: " + e);
+    }
     signOut();
   };
   return (
