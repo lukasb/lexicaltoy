@@ -103,6 +103,7 @@ function PagesManager() {
         // this is probably a page updated by another tab
         console.log(
           "page updated by another tab, I think",
+          page.title,
           !pageStatus,
           !pageStatus?.lastModified,
           page.lastModified > (pageStatus?.lastModified || 0),
