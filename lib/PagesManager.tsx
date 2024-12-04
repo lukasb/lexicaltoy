@@ -126,7 +126,7 @@ function PagesManager() {
           );
         } else {
           if (page.value !== pageStatus.newValue) {
-            console.log("page updated on server, load new content", page.title);
+            console.log("page updated on server or locally, load new content", page.title);
             addPageStatus(page.id, PageStatus.UpdatedFromDisk, page.lastModified, page.revisionNumber, page.value);
           } else {
             console.log("page updated on server, no change", page.title);
