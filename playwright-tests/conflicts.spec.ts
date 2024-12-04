@@ -6,7 +6,6 @@ const {
   pages
 } = require('./tests-placeholder-data.js');
 
-
 test.afterEach(async ({ page }) => {
   const client = await db.pool.connect();
   const clientWithSql = {
