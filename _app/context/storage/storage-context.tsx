@@ -76,6 +76,7 @@ export async function fetchUpdatedPagesInternal(
   await navigator.locks.request(
     "orangetask_main_table_sync",
     async (lock: Lock | null) => {
+      if (!lock) return;
       try {
         const localPages = await _getLocalPagesByUserId(userId);
         const mostRecentLastModified = (localPages || []).reduce((max, page) => {
@@ -156,7 +157,7 @@ export async function processQueuedUpdatesInternal(
           queuedUpdate.lastModified
         );
         if (isDevelopmentEnvironment)
-          console.timeEnd(`updatePageWithHistory ${queuedUpdate.title}`);
+          console.timeEnd(`updatePageWithHistory ${queuedUpdate.title} new revision number: ${revisionNumber}`);
         localDb.queuedUpdates.delete(queuedUpdate.id);
         if (revisionNumber === -1 || !revisionNumber || !lastModified) {
           console.log("failed to update page", queuedUpdate.title);
@@ -219,6 +220,7 @@ export async function processQueuedUpdatesInternal(
   await navigator.locks.request(
     "orangetask_queued_updates_sync",
     async (lock: Lock | null) => {
+      if (!lock) return;
       const queuedUpdates = await _getQueuedUpdatesByUserId(userId);
       for (const queuedUpdate of queuedUpdates) {
         await processQueuedUpdate(queuedUpdate);
