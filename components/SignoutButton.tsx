@@ -5,6 +5,7 @@ import { localDb } from "@/_app/context/storage/db";
 export const SignoutButton = () => {
   const handleClick = () => {
     signOut();
+    alert("clearing local db");
     localDb.delete();
   };
   return (
