@@ -326,9 +326,15 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
                 Loading...<br />
               </div>
             ) : (
+              <div>
+                <div>Debug info: {pages?.length} pages</div>
               <Button onClick={() => handleNewPage("New Page")}>
                 Create New Page
               </Button>
+              <Button onClick={() => console.log("test console")}>
+                Test console
+              </Button>
+              </div>
             )}
           </div>
         ) : (
