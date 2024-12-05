@@ -12,7 +12,7 @@ import { getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
 import { useMiniSearch } from '@/_app/context/minisearch-context';
 import { updatePage, PageSyncResult, deleteQueuedUpdate } from '@/_app/context/storage/storage-context';
 import { usePageStatus } from '@/_app/context/page-update-context';
-import { getLastRevisionSynced } from '@/_app/context/storage/last-revision';
+
 // TODO maybe use Redux so we don't have an O(n) operation here every time
 function PagesManager() {
   const pages = useContext(PagesContext);
@@ -68,7 +68,6 @@ function PagesManager() {
   useEffect(() => {
     pages.forEach((page) => {
       const pageStatus = pageStatuses.get(page.id);
-      const lastRevisionSynced = getLastRevisionSynced(page.id);
       if (
         pageStatus &&
         pageStatus.status === PageStatus.PendingWrite &&
@@ -76,18 +75,12 @@ function PagesManager() {
       ) {
         const existingSave = saveQueue.current.get(page.id);
         if (!existingSave) {
-          if (lastRevisionSynced && page.revisionNumber !== lastRevisionSynced) {
-            // TODO probably we could use the lastRevisionSynced value to update the page
-            // what we're doing now risks dropping an update
-            console.error("revision number mismatch", page.title, page.revisionNumber, lastRevisionSynced);
-          } else {
-            saveQueue.current.set(page.id, {
-              page,
+          saveQueue.current.set(page.id, {
+            page,
             timestamp: pageStatus.lastModified.getTime(),
             newValue: pageStatus.newValue,
-              newTitle: pageStatus.newTitle,
-            });
-          }
+            newTitle: pageStatus.newTitle,
+          });
         }
       } else if (
         pageStatus &&
@@ -120,8 +113,7 @@ function PagesManager() {
         addPageStatus(page.id, PageStatus.UpdatedFromDisk, page.lastModified, page.revisionNumber, page.value);
       } else if (
         page.revisionNumber > pageStatus.revisionNumber && 
-        page.lastModified > pageStatus.lastModified && 
-        (lastRevisionSynced === null || page.revisionNumber > (lastRevisionSynced + 1) || pageStatus.revisionNumber !== lastRevisionSynced)
+        page.lastModified > pageStatus.lastModified
       ) {
         if (
           pageStatus.status === PageStatus.UserEdit ||
@@ -149,12 +141,8 @@ function PagesManager() {
         if (page.lastModified === pageStatus.lastModified) {
           console.log("page updated on server, no change", page.title);
           addPageStatus(page.id, PageStatus.Quiescent, page.lastModified, page.revisionNumber);
-        } else if (lastRevisionSynced && page.revisionNumber === (lastRevisionSynced + 1) && pageStatus.revisionNumber === lastRevisionSynced) {
-          // this is probably a page updated by another tab
-          console.log("page updated on server, our local change is still good though", page.title);
-          setPageRevisionNumber(page.id, page.revisionNumber);
         } else {
-          console.error("page updated on server, but last modified is older", page.title, page.revisionNumber, pageStatus.revisionNumber, lastRevisionSynced);
+          console.error("page updated on server, but last modified is older", page.title, page.revisionNumber, pageStatus.revisionNumber);
         }
       }
     });

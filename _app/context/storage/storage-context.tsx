@@ -8,7 +8,16 @@ import {
 } from "@/lib/db";
 import { getJournalTitle } from "@/lib/journal-helpers";
 import { isDevelopmentEnvironment } from "@/lib/environment";
-import { setLastRevisionSynced } from "./last-revision";
+
+async function getLastRevisionSynced(id: string): Promise<number | undefined> {
+  const lastRevisionSynced = await localDb.lastRevisionSynced.get(id);
+  return lastRevisionSynced?.revisionNumber;
+}
+
+async function setLastRevisionSynced(id: string, revisionNumber: number): Promise<void> {
+  await localDb.lastRevisionSynced.put({ id, revisionNumber });
+}
+
 // TODO also return titles of conflicted pages
 export enum PageSyncResult {
   Success,
@@ -142,18 +151,26 @@ export async function processQueuedUpdatesInternal(
         return;
       }
 
+      const lastRevisionSynced = await getLastRevisionSynced(queuedUpdate.id);
+
       try {
         if (isDevelopmentEnvironment) {
           console.time(`updatePageWithHistory ${queuedUpdate.title}`);
           console.log("processQueuedUpdatesInternal: updating page", queuedUpdate.title, "revision number", queuedUpdate.revisionNumber);
         }
 
+        const currentRevisionNumber =
+          lastRevisionSynced !== undefined &&
+          lastRevisionSynced > queuedUpdate.revisionNumber
+            ? lastRevisionSynced
+            : queuedUpdate.revisionNumber;
+
         const { revisionNumber, lastModified } = await updatePageWithHistory(
           queuedUpdate.id,
           queuedUpdate.value,
           queuedUpdate.title,
           queuedUpdate.deleted,
-          queuedUpdate.revisionNumber,
+          currentRevisionNumber,
           queuedUpdate.lastModified
         );
         if (isDevelopmentEnvironment) {
