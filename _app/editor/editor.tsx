@@ -116,7 +116,7 @@ function Editor({
     }
   }, [page.id, getPage, setBlockIdsForPage, page.title, setPageStatus, getPageStatus, page.revisionNumber]);
 
-  const debouncedSave = useDebouncedCallback(saveChange, 300);
+  const debouncedSave = useDebouncedCallback(saveChange, 1000);
 
   const onChange = useCallback((editorState: EditorState) => {
     if (!editorState || getPageStatus(page.id)?.status === PageStatus.EditFromSharedNodes) return;
