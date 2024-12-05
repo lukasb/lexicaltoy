@@ -84,8 +84,12 @@ export async function fetchUpdatedPagesInternal(
   let result = PageSyncResult.Success;
   await navigator.locks.request(
     "orangetask_main_table_sync",
+    { ifAvailable: true },
     async (lock: Lock | null) => {
-      if (!lock) return;
+      if (!lock) {
+        console.log("fetchUpdatedPagesInternal: no lock, abandoning");
+        return;
+      }
       try {
         const localPages = await _getLocalPagesByUserId(userId);
         const mostRecentLastModified = (localPages || []).reduce((max, page) => {
@@ -239,9 +243,12 @@ export async function processQueuedUpdatesInternal(
   }
   await navigator.locks.request(
     "orangetask_queued_updates",
-    //{ ifAvailable: true },
+    { ifAvailable: true },
     async (lock: Lock | null) => {
-      if (!lock) return;
+      if (!lock) {
+        console.log("processQueuedUpdatesInternal: no lock, abandoning");
+        return;
+      }
       const queuedUpdates = await _getQueuedUpdatesByUserId(userId);
       for (const queuedUpdate of queuedUpdates) {
         await processQueuedUpdate(queuedUpdate);
