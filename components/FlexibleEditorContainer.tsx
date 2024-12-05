@@ -35,15 +35,20 @@ function FlexibleEditorLayout ({
     if (pageIds.length === 0) return [];
     const pages = pageIds.map(id => currentPages.find(p => p.id === id)).filter(p => p !== undefined) as Page[];
     if (pages.length === 0) return [];
-    const firstPage = pages[0];
+
+    const pinnedPages = pages.filter(p => pinnedPageIds.includes(p.id));
+    const unpinnedPages = pages.filter(p => !pinnedPageIds.includes(p.id));
+
+    const firstPage = unpinnedPages[0] || pinnedPages[0];
     if (!firstPage) return [];
-    const pinnedPages = pages.filter(p => pinnedPageIds.includes(p.id) && p.id !== firstPage.id);
-    const unpinnedPages = pages.filter(p => !pinnedPageIds.includes(p.id) && p.id !== firstPage.id);
+
+    const remainingPinnedPages = pinnedPages.filter(p => p.id !== firstPage.id);
+    const remainingUnpinnedPages = unpinnedPages.filter(p => p.id !== firstPage.id);
 
     return [
       firstPage.id,
-      ...pinnedPages.map(p => p.id),
-      ...unpinnedPages.map(p => p.id)
+      ...remainingPinnedPages.map(p => p.id),
+      ...remainingUnpinnedPages.map(p => p.id)
     ];
   }, [currentPages, pinnedPageIds]);
 
