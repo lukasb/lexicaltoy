@@ -17,7 +17,9 @@
     "jest": "jest",
     "test:server": "NODE_ENV=test VERCEL_ENV=test next dev",
     "test:e2e": "NODE_ENV=test VERCEL_ENV=test npx playwright test",
-    "test:e2e:ui": "NODE_ENV=test VERCEL_ENV=test POSTGRES_URL=postgres://testuser:testpass@localhost:54320/testdb npx playwright test --ui"
+    "test:e2e:ui": "NODE_ENV=test VERCEL_ENV=test POSTGRES_URL=postgres://testuser:testpass@localhost:54320/testdb npx playwright test --ui",
+    "prune:dev": "node -r dotenv/config ./scripts/prune_history.js ./.env.development.local",
+    "prune:prod": "node -r dotenv/config ./scripts/prune_history.js ./.env.production.local"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",

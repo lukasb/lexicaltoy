@@ -1,6 +1,6 @@
 const envfile = process.argv[2] || './.env.development.local';
 require('dotenv').config({ path: envfile }); 
-const { db } = require('@/lib/dbwrapper');
+const { db } = require('../lib/dbwrapper');
 
 async function main() {
 

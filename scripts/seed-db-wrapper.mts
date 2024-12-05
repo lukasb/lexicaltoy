@@ -5,8 +5,13 @@ const { Pool } = pkg;
 if (process.env.NODE_ENV === 'test') {
   console.log("using test db");
   console.log("connection string:", process.env.POSTGRES_URL);
-} else {
+} else if (process.env.NODE_ENV === 'development') {
+  console.log("using development db");
+} else if (process.env.NODE_ENV === 'production') {
   console.log("using prod db");
+} else {
+  console.log("NODE_ENV not set");
+  process.exit(1);
 }
 
 const pool = new Pool({ connectionString: process.env.POSTGRES_URL});
