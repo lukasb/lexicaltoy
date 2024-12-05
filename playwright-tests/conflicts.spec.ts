@@ -59,14 +59,14 @@ test('detect conflicts between separate browsers', async ({ browser }) => {
   const context1 = await browser.newContext();
   const page1 = await context1.newPage();
   await page1.goto('/page');
-  await new Promise(r => setTimeout(r, 5000));
+  await new Promise(r => setTimeout(r, 1000));
   await createVilla(page1);
   //await page1.waitForTimeout(8000);
-  await new Promise(r => setTimeout(r, 15000));
+  await new Promise(r => setTimeout(r, 6000));
   const context2 = await browser.newContext();
   const page2 = await context2.newPage();
   await page2.goto('/page');
-  await new Promise(r => setTimeout(r, 15000));
+  await new Promise(r => setTimeout(r, 8000));
   const activePageTitle = await page2.locator('[data-testid="editable-title"]').first().textContent();
   if (activePageTitle !== 'villa') {
     const newSearch = page2.getByPlaceholder('Search or Create');
@@ -80,7 +80,7 @@ test('detect conflicts between separate browsers', async ({ browser }) => {
   await page1.keyboard.type('i want to make my own changes too!');
   await page1.waitForTimeout(1000);
   await context1.setOffline(false);
-  await new Promise(r => setTimeout(r, 10000));
+  await new Promise(r => setTimeout(r, 9000));
   await expect(
     page1.getByText('Your changes are based on an old version of this page.'))
     .toBeVisible();
