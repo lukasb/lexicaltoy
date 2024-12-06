@@ -41,7 +41,12 @@ jest.mock("./storage-context", () => {
 global.navigator = {
   onLine: true,
   locks: {
-    request: async (name: string, callback: (lock: any) => Promise<any>) => callback({})
+    request: async (name: string, options: any, callback?: Function) => {
+      // Handle both 2-argument and 3-argument versions
+      const actualCallback = callback || options;
+      const lock = { name };
+      return actualCallback(lock);
+    }
   }
 } as any;
 
@@ -55,7 +60,12 @@ const setNavigatorOnlineStatus = (isOnline: boolean) => {
       ...global.navigator,
       onLine: isOnline,
       locks: {
-        request: async (name: string, callback: (lock: any) => Promise<any>) => callback({})
+        request: async (name: string, options: any, callback?: Function) => {
+          // Handle both 2-argument and 3-argument versions
+          const actualCallback = callback || options;
+          const lock = { name };
+          return actualCallback(lock);
+        }
       }
     },
     configurable: true
