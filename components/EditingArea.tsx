@@ -88,30 +88,40 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     }
   }, [userId]);
   
-  const processUpdates = useCallback(async () => {
-    if (userId) {
-      console.log("processing queued updates");
-      await processQueuedUpdates(userId, handleConflict, updateRevisionNumber);
-    } else {
-      console.error("no user id, can't process queued updates");
-    }
-  }, [userId, handleConflict, updateRevisionNumber]);
+    const processUpdates = useCallback(async () => {
+      if (userId) {
+        console.log("processing queued updates");
+        await processQueuedUpdates(userId, handleConflict, updateRevisionNumber);
+      } else {
+        console.error("no user id, can't process queued updates");
+      }
+    }, [userId, handleConflict, updateRevisionNumber]);
 
-  useEffect(() => {
-    console.log("setting up fetch interval");
-    if (pages && !initialFetchComplete) fetch();
-    
-    const fetchIntervalId = setInterval(fetch, 30000);
-    const processIntervalId = setInterval(processUpdates, 8000);
-    
-    return () => {
-      console.log("clearing fetch interval");
-      clearInterval(fetchIntervalId);
-      clearInterval(processIntervalId);
-    };
-  }, [fetch, processUpdates, initialFetchComplete, pages]);
+    const fetchIntervalId = useRef<NodeJS.Timeout | null>(null);
+    const processIntervalId = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
+    // Set up intervals when pages is defined
+    useEffect(() => {
+      if (!pages || (fetchIntervalId.current && processIntervalId.current)) return;
+
+      // Do initial fetch and set up intervals
+      fetch();
+      
+      console.log("setting up fetch interval");
+      fetchIntervalId.current = setInterval(fetch, 30000);
+      processIntervalId.current = setInterval(processUpdates, 8000);
+    }, [pages, fetch, processUpdates]);
+
+    // Clear intervals on unmount only
+    useEffect(() => {
+      return () => {
+        console.log("clearing fetch interval");
+        if (fetchIntervalId.current) clearInterval(fetchIntervalId.current);
+        if (processIntervalId.current) clearInterval(processIntervalId.current);
+      };
+    }, []);
+
+    useEffect(() => {
     if (!hasInitializedSearch.current && pages && pages.length > 0 && initialFetchComplete) {
       initCount++;
       if (initCount > 1) console.error("MiniSearch initialized more than once, count:", initCount);
