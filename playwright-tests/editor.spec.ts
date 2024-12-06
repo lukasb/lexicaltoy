@@ -12,6 +12,7 @@ test('window title', async ({ page }) => {
 });
 
 test('should bring up search results', async ({ page }) => {
+  await page.waitForTimeout(100);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.pressSequentially('test');
   await expect(page.getByTestId('search-result')).toContainText('TestPage1');
