@@ -41,6 +41,7 @@ export const MiniSearchProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [initializeMiniSearch]);
 
   const slurpPages = useCallback((pages: Page[]) => {
+    console.log("slurping pages into MiniSearch", pages.length, pages[0].title);
     try {
       if (miniSearch) {
         miniSearch.addAll(pages);
@@ -78,7 +79,7 @@ export const MiniSearchProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       try {
         miniSearch.add(page);
       } catch (error) {
-        console.error("Error adding page to MiniSearch", error);
+        console.error("Error adding page to MiniSearch", error, page.title);
       }
     }
   }, [miniSearch]);

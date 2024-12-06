@@ -99,7 +99,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
 
   useEffect(() => {
     console.log("setting up fetch interval");
-    if (!initialFetchComplete) fetch();
+    if (pages && !initialFetchComplete) fetch();
     
     const fetchIntervalId = setInterval(fetch, 30000);
     const processIntervalId = setInterval(processUpdates, 8000);
@@ -109,7 +109,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
       clearInterval(fetchIntervalId);
       clearInterval(processIntervalId);
     };
-  }, [fetch, processUpdates, initialFetchComplete]);
+  }, [fetch, processUpdates, initialFetchComplete, pages]);
 
   useEffect(() => {
     if (!hasInitializedSearch.current && pages && pages.length > 0 && initialFetchComplete) {
@@ -207,13 +207,13 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   }, [userId, pages, msAddPage]);
 
   useEffect(() => {
-    if (initialFetchComplete && !setupDoneRef.current) {
+    if (initialFetchComplete && !setupDoneRef.current && pages) {
       executeJournalLogic();
       setupDoneRef.current = true;
     }
     const intervalId = setInterval(executeJournalLogic, 30000);
     return () => clearInterval(intervalId);
-  }, [executeJournalLogic, initialFetchComplete]);
+  }, [executeJournalLogic, initialFetchComplete, pages]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

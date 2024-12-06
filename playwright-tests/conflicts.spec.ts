@@ -62,11 +62,11 @@ test('detect conflicts between separate browsers', async ({ browser }) => {
   await new Promise(r => setTimeout(r, 1000));
   await createVilla(page1);
   //await page1.waitForTimeout(8000);
-  await new Promise(r => setTimeout(r, 6000));
+  await new Promise(r => setTimeout(r, 8000));
   const context2 = await browser.newContext();
   const page2 = await context2.newPage();
   await page2.goto('/page');
-  await new Promise(r => setTimeout(r, 8000));
+  await new Promise(r => setTimeout(r, 15000));
   const activePageTitle = await page2.locator('[data-testid="editable-title"]').first().textContent();
   if (activePageTitle !== 'villa') {
     const newSearch = page2.getByPlaceholder('Search or Create');
