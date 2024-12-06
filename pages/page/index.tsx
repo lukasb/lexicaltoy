@@ -66,6 +66,8 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
       .equals(session.id)
       .toArray();
 
+    if (!localPages || !queuedUpdates) return undefined;
+
     const mergedPages = [
       ...localPages
         // remove deleted pages
