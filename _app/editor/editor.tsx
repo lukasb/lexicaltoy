@@ -126,7 +126,7 @@ function Editor({
       if (localPageValue === undefined) return;
       const trimmedPageValue = localPageValue.replace(/\s$/, '');
 
-      const editorStateMarkdown = $myConvertToMarkdownString(TRANSFORMERS, undefined, true);
+      const editorStateMarkdown = $myConvertToMarkdownString(undefined, undefined, true);
       const editoContentsWithoutSharedNodes = stripSharedNodesFromMarkdown(editorStateMarkdown);
       const trimmedEditorContents = editoContentsWithoutSharedNodes.replace(/\s$/, '');
       
