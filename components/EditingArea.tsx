@@ -151,17 +151,17 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const [openPageIds, setOpenPageIds] = useState<string[]>([]);
 
   useEffect(() => {
-    if (initialFetchComplete && pages && pages.length > 0) {
+    if (openPageIds.length > 0 && pages && pages.length > 0) {
       for (const pageId of openPageIds) {
         if (!pages?.find(p => p.id === pageId)) {
           setOpenPageIds(prevIds => prevIds.filter(id => id !== pageId));
         }
       }
     }
-  }, [pages, openPageIds, initialFetchComplete]);
+  }, [pages, openPageIds]);
 
   useEffect(() => {
-    if (pages && pages.length > 0 && initialFetchComplete) {
+    if (pages && pages.length > 0) {
       if (!initializedPagesRef.current) {
         const initialPageId = findMostRecentlyEditedPage(pages)?.id;
         const lastWeekJournalPageIds = getLastWeekJournalPages(pages).map(page => page.id);
@@ -182,7 +182,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
         }
       }
     }
-  }, [pages, initialFetchComplete, openPageIds]);
+  }, [pages, openPageIds]);
 
   useEffect(() => {
     setOpenPageIds(prevIds => [...new Set([...prevIds, ...pinnedPageIds])]);
@@ -316,6 +316,9 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     };
   }, [userId]);
 
+  const isLoading = !initialFetchComplete && (!pages || pages.length === 0);
+  const hasNoPages = initialFetchComplete && (!pages || pages.length === 0);
+  const hasNoPagesOpen = pages && pages.length > 0 && openPageIds.length === 0;
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <PagesContext.Provider value={pages || []}>
@@ -329,21 +332,19 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
           ref={omnibarRef}
           openOrCreatePageByTitle={openOrCreatePageByTitle}
         />
-        {(!pages || pages.length === 0 || openPageIds.length === 0) ? (
+        {(isLoading || hasNoPages || hasNoPagesOpen) ? (
           <div className="w-full h-40 flex justify-center items-center flex-col gap-2">
-            {!initialFetchComplete ? (
+            {isLoading ? (
               <div className="text-sm text-muted-foreground">
                 Loading...<br />
               </div>
+            ) : hasNoPages ? (
+              <div>No pages found</div>
             ) : (
               <div>
-                <div>Debug info: {pages?.length} pages</div>
-              <Button onClick={() => handleNewPage("New Page")}>
-                Create New Page
-              </Button>
-              <Button onClick={() => console.log("test console")}>
-                Test console
-              </Button>
+                <Button onClick={() => handleNewPage("New Page")}>
+                  Create New Page
+                </Button>
               </div>
             )}
           </div>
