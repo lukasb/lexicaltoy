@@ -66,6 +66,7 @@ function PagesManager() {
   }, [savePagesToDatabase]);
 
   useEffect(() => {
+    const duration = performance.now();
     pages.forEach((page) => {
       const pageStatus = pageStatuses.get(page.id);
       if (
@@ -146,12 +147,15 @@ function PagesManager() {
         }
       }
     });
+    console.log("PagesManager useEffect 1", performance.now() - duration);
   }, [pages, pageStatuses, setPageStatus, addPageStatus, setPageRevisionNumber]);
 
   // TODO maybe use Redux or some kind of message bus so we don't have an O(n) operation here every time
   // TODO make this async
 
   useEffect(() => {
+
+    const duration = performance.now();
 
     // If shared nodes have been updated, update the pages
     // If pages have been updated, invalidate their shared nodes
@@ -214,6 +218,7 @@ function PagesManager() {
         }
       }
     }
+    console.log("PagesManager useEffect 2", performance.now() - duration);
   }, [sharedNodeMap, pages, setPageStatus, updatePagesResults, addPagesResults, pageStatuses, addPageStatus, removePageStatus]);
 
   return null;

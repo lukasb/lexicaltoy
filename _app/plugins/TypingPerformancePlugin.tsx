@@ -55,6 +55,7 @@ export function TypingPerformancePlugin({
   const benchmarkRef = useRef<TypingBenchmark | null>(null);
 
   useEffect(() => {
+
     if (!benchmarkRef.current) {
       benchmarkRef.current = new TypingBenchmark(sampleSize);
     }
@@ -64,9 +65,11 @@ export function TypingPerformancePlugin({
     return editor.registerCommand(
       KEY_DOWN_COMMAND,
       () => {
+        console.log("KEY_DOWN");
         const start = performance.now();
-        
+                
         $onUpdate(() => {
+          console.log("$onUpdate");
           const duration = performance.now() - start;
           benchmark.addMeasurement(duration);
           
