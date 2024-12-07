@@ -1,6 +1,6 @@
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {useEffect, useRef} from 'react';
-import {COMMAND_PRIORITY_CRITICAL, KEY_DOWN_COMMAND} from 'lexical';
+import {$onUpdate, COMMAND_PRIORITY_CRITICAL, KEY_DOWN_COMMAND} from 'lexical';
 
 type Props = {
   sampleSize?: number;

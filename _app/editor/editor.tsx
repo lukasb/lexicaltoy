@@ -50,6 +50,7 @@ import { AIGeneratorPlugin } from "../plugins/AIGeneratorPlugin";
 import { editorNodes } from "./shared-editor-config";
 import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blockids-index-context";
 import { usePageStatus } from "../context/page-update-context";
+import { TypingPerformancePlugin } from "../plugins/TypingPerformancePlugin";
 
 function onError(error: Error) {
   console.error("Editor error:", error);
@@ -126,7 +127,7 @@ function Editor({
       if (localPageValue === undefined) return;
       const trimmedPageValue = localPageValue.replace(/\s$/, '');
 
-      const editorStateMarkdown = $myConvertToMarkdownString(TRANSFORMERS, undefined, true);
+      const editorStateMarkdown = $myConvertToMarkdownString(undefined, undefined, true);
       const editoContentsWithoutSharedNodes = stripSharedNodesFromMarkdown(editorStateMarkdown);
       const trimmedEditorContents = editoContentsWithoutSharedNodes.replace(/\s$/, '');
       
@@ -179,6 +180,7 @@ function Editor({
         <AutoLinkPlugin />
         <AIGeneratorPlugin />
         <LexicalClickableLinkPlugin />
+        <TypingPerformancePlugin sampleSize={10} />
         <FormulaPlugin />
         <TodosPlugin />
         <WikilinkPlugin />
