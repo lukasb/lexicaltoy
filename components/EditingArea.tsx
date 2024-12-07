@@ -80,9 +80,21 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
 
   const fetch = useCallback(async () => {
     if (userId) {
-      console.log("fetching updated pages...");
-      await fetchUpdatedPages(userId);
-      setInitialFetchComplete(true);
+      try {
+        console.log("fetching updated pages...");
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Initial fetch timeout')), 5000)
+        );
+  
+        await Promise.race([
+          fetchUpdatedPages(userId),
+          timeoutPromise
+        ]);
+      } catch (error) {
+        console.error("Failed to fetch updates:", error);
+      } finally {
+        setInitialFetchComplete(true);
+      }
     } else {
       console.error("no user id, can't fetch updated pages");
     }
