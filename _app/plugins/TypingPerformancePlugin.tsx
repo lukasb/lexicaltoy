@@ -1,6 +1,6 @@
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {useEffect, useRef} from 'react';
-import {$onUpdate, COMMAND_PRIORITY_CRITICAL, KEY_DOWN_COMMAND} from 'lexical';
+import {$getRoot, $onUpdate, COMMAND_PRIORITY_CRITICAL, KEY_DOWN_COMMAND} from 'lexical';
 
 type Props = {
   sampleSize?: number;
@@ -65,11 +65,10 @@ export function TypingPerformancePlugin({
     return editor.registerCommand(
       KEY_DOWN_COMMAND,
       () => {
-        console.log("KEY_DOWN");
         const start = performance.now();
+        const root = $getRoot().getWritable();
                 
         $onUpdate(() => {
-          console.log("$onUpdate");
           const duration = performance.now() - start;
           benchmark.addMeasurement(duration);
           
@@ -79,13 +78,18 @@ export function TypingPerformancePlugin({
             if (onStats) {
               onStats(stats);
             } else {
-              console.log(`
-Performance Stats (${stats.count} samples):
-p50: ${stats.p50.toFixed(2)}ms
-p90: ${stats.p90.toFixed(2)}ms
-p99: ${stats.p99.toFixed(2)}ms
-mean: ${stats.mean.toFixed(2)}ms
-              `);
+              console.log(
+                '%cPerformance Stats%c (%d samples)\n' +
+                '%cp50:%c  %f ms\n' +
+                '%cp90:%c  %f ms\n' +
+                '%cp99:%c  %f ms\n' +
+                '%cmean:%c %f ms',
+                'color: #2ecc71; font-weight: bold; font-size: 1.1em;', '', stats.count,
+                'color: #3498db; font-weight: bold', 'color: inherit', stats.p50,
+                'color: #f1c40f; font-weight: bold', 'color: inherit', stats.p90,
+                'color: #e74c3c; font-weight: bold', 'color: inherit', stats.p99,
+                'color: #9b59b6; font-weight: bold', 'color: inherit', stats.mean
+              );
             }
           }
         });
