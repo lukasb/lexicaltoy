@@ -52,6 +52,7 @@ const Omnibar = forwardRef(({
 
   // TODO logic should match searchPages in pages-helpers
   const handleSearch = useCallback(async (term: string): Promise<Page[]> => {
+    
     if (miniSearch) {
       
       const results = miniSearch.search(
@@ -61,6 +62,7 @@ const Omnibar = forwardRef(({
           boost: { title: 2 },
           combineWith: 'AND',
         });
+      console.log('Search results count:', results.length);
 
       const pagesMap = new Map(pages.map(page => [page.id, page]));
       const filteredResults = results
