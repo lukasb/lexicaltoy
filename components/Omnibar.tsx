@@ -48,10 +48,13 @@ const Omnibar = forwardRef(({
   const { miniSearch } = useMiniSearch();
   const listRef = useRef<List>(null);
 
+  console.log('Omnibar render - pages length:', pages?.length);
+  
   type SearchResult = { id: string; [key: string]: any };
 
   // TODO logic should match searchPages in pages-helpers
   const handleSearch = useCallback(async (term: string): Promise<Page[]> => {
+    console.log('handleSearch called - miniSearch ready:', !!miniSearch);
     if (miniSearch) {
       
       const results = miniSearch.search(
@@ -61,6 +64,7 @@ const Omnibar = forwardRef(({
           boost: { title: 2 },
           combineWith: 'AND',
         });
+      console.log('Search results count:', results.length);
 
       const pagesMap = new Map(pages.map(page => [page.id, page]));
       const filteredResults = results
@@ -118,6 +122,7 @@ const Omnibar = forwardRef(({
   // see the next useEffect for some remaining display logic
   useEffect(() => {
     const searchPagesAsync = async () => {
+      console.log('searchPagesAsync called - term:', term, 'skip:', skipTermResolutionRef.current);
       if (skipTermResolutionRef.current === true) {
         skipTermResolutionRef.current = false;
         return;

@@ -111,13 +111,7 @@ export async function fetchUpdatedPagesInternal(
           return;
         }
 
-        for (const page of updatedPages) {
-          if (!isPage(page)) { 
-            throw new Error(`expected page, got ${JSON.stringify(page)}`);
-          }
-          console.log("fetchUpdatedPagesInternal: storing updated page", page.title, page.value);
-          await localDb.pages.put(page);
-        }
+        await localDb.pages.bulkPut(updatedPages);
       } catch (error) {
         // Rethrow validation errors
         if (error instanceof Error && error.message.startsWith('expected page')) {
