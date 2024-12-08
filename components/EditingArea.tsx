@@ -45,6 +45,7 @@ import { createConflictHandler } from "@/lib/conflict-manager";
 
 function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefined }) {
 
+  const [loadingMessage, setLoadingMessage] = useState<string | null>("Loading...");
   const [isClient, setIsClient] = useState(false)
   const [pinnedPageIds, setPinnedPageIds] = useState<string[]>([]);
   const [collapsedPageIds, setCollapsedPageIds] = useState<string[]>([]);
@@ -135,7 +136,14 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
 
   // Set up intervals when pages is defined
   useEffect(() => {
-    if (!pages || (fetchIntervalId.current && processIntervalId.current)) return;
+    if (!pages || (fetchIntervalId.current && processIntervalId.current)) {
+      if (!pages) {
+        setLoadingMessage("Pages undefined");
+      } else if (fetchIntervalId.current && processIntervalId.current) {
+        setLoadingMessage("Fetch and process intervals already set up");
+      }
+      return;
+    }
 
     // Do initial fetch and set up intervals
     fetch();
@@ -365,7 +373,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
                   {loadingState.isLoading ? (
                     <div className="w-full h-40 flex justify-center items-center flex-col gap-2">
                       <div className="text-sm text-muted-foreground">
-                        Loading...
+                        {loadingMessage}
                       </div>
                     </div>
                   ) : !pages || pages.length === 0 ? (

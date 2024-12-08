@@ -189,18 +189,27 @@ export const useFormulaResultService = () => {
   }
   
   const updatePagesResults = async (pagesToQuery: Page[]): Promise<void> => {
+    const startTime = performance.now();
+    
     getFormulaOutputs(nodeQueries.getUniqueQueries(), pagesToQuery)
       .then((outputMap) => {
+        const afterFormulaTime = performance.now();
+        console.log(`Formula outputs took ${afterFormulaTime - startTime}ms`);
+        
         if (compareSharedNodesToResults(outputMap)) {
+          const afterCompareTime = performance.now();
+          console.log(`Compare results took ${afterCompareTime - afterFormulaTime}ms`);
+          
           let updatedMap = new Map(sharedNodeMap);
 
           // Delete current results for pages we're querying
-          // TODO maybe just check which pages have changed
           for (const [key] of updatedMap.entries()) {
             const keyElements: SharedNodeKeyElements = getSharedNodeKeyElements(key);
             if (pagesToQuery.some((page) => page.title === keyElements.pageName))
               updatedMap.delete(key);
           }
+          const afterDeleteTime = performance.now();
+          console.log(`Deleting old results took ${afterDeleteTime - afterCompareTime}ms`);
 
           outputMap.forEach((formulaOutput, formula) => {
             if (
@@ -211,13 +220,16 @@ export const useFormulaResultService = () => {
               updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
             }
           });
+          const afterMergeTime = performance.now();
+          console.log(`Merging results took ${afterMergeTime - afterDeleteTime}ms`);
+          
           setSharedNodeMap(updatedMap);
+          console.log(`Total update time: ${performance.now() - startTime}ms`);
         }
       })
       .catch((error) => {
         console.error("Error:", error);
       });
-      
   };
 
   // we call this when we're updating from shared nodes
