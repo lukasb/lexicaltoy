@@ -78,10 +78,19 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     setPageRevisionNumber(pageId, revisionNumber);
   }, [setPageRevisionNumber]);
 
+  interface LoadingState {
+    isLoading: boolean;
+    error: Error | null;
+  }
+  
+  const [loadingState, setLoadingState] = useState<LoadingState>({
+    isLoading: true,
+    error: null
+  });
+  
   const fetch = useCallback(async () => {
     if (userId) {
       try {
-        console.log("fetching updated pages...");
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Initial fetch timeout')), 5000)
         );
@@ -90,50 +99,53 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
           fetchUpdatedPages(userId),
           timeoutPromise
         ]);
+        setLoadingState({ isLoading: false, error: null });
       } catch (error) {
         console.error("Failed to fetch updates:", error);
+        setLoadingState({ 
+          isLoading: false, 
+          error: error instanceof Error ? error : new Error('Unknown error occurred') 
+        });
       } finally {
         setInitialFetchComplete(true);
       }
-    } else {
-      console.error("no user id, can't fetch updated pages");
     }
   }, [userId]);
   
-    const processUpdates = useCallback(async () => {
-      if (userId) {
-        console.log("processing queued updates");
-        await processQueuedUpdates(userId, handleConflict, updateRevisionNumber);
-      } else {
-        console.error("no user id, can't process queued updates");
-      }
-    }, [userId, handleConflict, updateRevisionNumber]);
+  const processUpdates = useCallback(async () => {
+    if (userId) {
+      console.log("processing queued updates");
+      await processQueuedUpdates(userId, handleConflict, updateRevisionNumber);
+    } else {
+      console.error("no user id, can't process queued updates");
+    }
+  }, [userId, handleConflict, updateRevisionNumber]);
 
-    const fetchIntervalId = useRef<NodeJS.Timeout | null>(null);
-    const processIntervalId = useRef<NodeJS.Timeout | null>(null);
+  const fetchIntervalId = useRef<NodeJS.Timeout | null>(null);
+  const processIntervalId = useRef<NodeJS.Timeout | null>(null);
 
-    // Set up intervals when pages is defined
-    useEffect(() => {
-      if (!pages || (fetchIntervalId.current && processIntervalId.current)) return;
+  // Set up intervals when pages is defined
+  useEffect(() => {
+    if (!pages || (fetchIntervalId.current && processIntervalId.current)) return;
 
-      // Do initial fetch and set up intervals
-      fetch();
-      
-      console.log("setting up fetch interval");
-      fetchIntervalId.current = setInterval(fetch, 30000);
-      processIntervalId.current = setInterval(processUpdates, 8000);
-    }, [pages, fetch, processUpdates]);
+    // Do initial fetch and set up intervals
+    fetch();
+    
+    console.log("setting up fetch interval");
+    fetchIntervalId.current = setInterval(fetch, 30000);
+    processIntervalId.current = setInterval(processUpdates, 8000);
+  }, [pages, fetch, processUpdates]);
 
-    // Clear intervals on unmount only
-    useEffect(() => {
-      return () => {
-        console.log("clearing fetch interval");
-        if (fetchIntervalId.current) clearInterval(fetchIntervalId.current);
-        if (processIntervalId.current) clearInterval(processIntervalId.current);
-      };
-    }, []);
+  // Clear intervals on unmount only
+  useEffect(() => {
+    return () => {
+      console.log("clearing fetch interval");
+      if (fetchIntervalId.current) clearInterval(fetchIntervalId.current);
+      if (processIntervalId.current) clearInterval(processIntervalId.current);
+    };
+  }, []);
 
-    useEffect(() => {
+  useEffect(() => {
     if (!hasInitializedSearch.current && pages && pages.length > 0 && initialFetchComplete) {
       initCount++;
       if (initCount > 1) console.error("MiniSearch initialized more than once, count:", initCount);
@@ -335,53 +347,55 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <PagesContext.Provider value={pages || []}>
         <OpenWikilinkWithBlockIdProvider>
-        <SavedSelectionProvider>
-        <ActiveEditorProvider>
-        <SharedNodeProvider>
-        <SearchTermsProvider>
-        <PagesManager />
-        <Omnibar
-          ref={omnibarRef}
-          openOrCreatePageByTitle={openOrCreatePageByTitle}
-        />
-        {(isLoading || hasNoPages || hasNoPagesOpen) ? (
-          <div className="w-full h-40 flex justify-center items-center flex-col gap-2">
-            {isLoading ? (
-              <div className="text-sm text-muted-foreground">
-                Loading...<br />
-              </div>
-            ) : hasNoPages ? (
-              <div>No pages found</div>
-            ) : (
-              <div>
-                <Button onClick={() => handleNewPage("New Page")}>
-                  Create New Page
-                </Button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <FlexibleEditorLayout
-            openPageIds={openPageIds}
-            currentPages={pages || []}
-            closePage={(id) => {
-              setOpenPageIds(prevPageIds => prevPageIds.filter(pageId => pageId !== id));
-            }}
-            openOrCreatePageByTitle={openOrCreatePageByTitle}
-            pinnedPageIds={pinnedPageIds}
-            onPagePinToggle={handlePagePinToggle}
-            collapsedPageIds={collapsedPageIds}
-            onPageCollapseToggle={handlePageCollapseToggle}
-            />
-          )}
-          </SearchTermsProvider>
-          </SharedNodeProvider>
-        </ActiveEditorProvider>
-        </SavedSelectionProvider>
+          <SavedSelectionProvider>
+            <ActiveEditorProvider>
+              <SharedNodeProvider>
+                <SearchTermsProvider>
+                  <PagesManager />
+                  <Omnibar
+                    ref={omnibarRef}
+                    openOrCreatePageByTitle={openOrCreatePageByTitle}
+                  />
+                  {loadingState.isLoading ? (
+                    <div className="w-full h-40 flex justify-center items-center flex-col gap-2">
+                      <div className="text-sm text-muted-foreground">
+                        Loading...
+                      </div>
+                    </div>
+                  ) : !pages || pages.length === 0 ? (
+                    <div className="w-full h-40 flex justify-center items-center flex-col gap-2">
+                      <div>No pages found</div>
+                    </div>
+                  ) : openPageIds.length === 0 ? (
+                    <div className="w-full h-40 flex justify-center items-center flex-col gap-2">
+                      <Button onClick={() => handleNewPage("New Page")}>
+                        Create New Page
+                      </Button>
+                    </div>
+                  ) : (
+                    <FlexibleEditorLayout
+                      openPageIds={openPageIds}
+                      currentPages={pages || []}
+                      closePage={(id) => {
+                        setOpenPageIds((prevPageIds) =>
+                          prevPageIds.filter((pageId) => pageId !== id)
+                        );
+                      }}
+                      openOrCreatePageByTitle={openOrCreatePageByTitle}
+                      pinnedPageIds={pinnedPageIds}
+                      onPagePinToggle={handlePagePinToggle}
+                      collapsedPageIds={collapsedPageIds}
+                      onPageCollapseToggle={handlePageCollapseToggle}
+                    />
+                  )}
+                </SearchTermsProvider>
+              </SharedNodeProvider>
+            </ActiveEditorProvider>
+          </SavedSelectionProvider>
         </OpenWikilinkWithBlockIdProvider>
       </PagesContext.Provider>
     </div>
-  )  
+  );  
 }
 
 export default EditingArea;
