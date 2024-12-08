@@ -89,26 +89,35 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   });
   
   const fetch = useCallback(async () => {
-    if (userId) {
+    if (!userId) return;
+
+    try {
+      const fetchPromise = fetchUpdatedPages(userId);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Initial fetch timeout')), 5000)
+      );
+
       try {
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Initial fetch timeout')), 5000)
-        );
-  
-        await Promise.race([
-          fetchUpdatedPages(userId),
-          timeoutPromise
-        ]);
+        await Promise.race([fetchPromise, timeoutPromise]);
         setLoadingState({ isLoading: false, error: null });
       } catch (error) {
-        console.error("Failed to fetch updates:", error);
-        setLoadingState({ 
-          isLoading: false, 
-          error: error instanceof Error ? error : new Error('Unknown error occurred') 
-        });
-      } finally {
-        setInitialFetchComplete(true);
+        // If it's a timeout error, still try to continue with any data we have
+        if (error instanceof Error && error.message === 'Initial fetch timeout') {
+          console.warn('Initial fetch timed out, continuing with available data');
+          setLoadingState({ isLoading: false, error: null });
+        } else {
+          throw error; // Re-throw other errors to be caught by outer try-catch
+        }
       }
+    } catch (error) {
+      console.error("Failed to fetch updates:", error);
+      // Always transition out of loading state, even on error
+      setLoadingState({ 
+        isLoading: false, 
+        error: error instanceof Error ? error : new Error('Unknown error occurred') 
+      });
+    } finally {
+      setInitialFetchComplete(true);
     }
   }, [userId]);
   
@@ -340,9 +349,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     };
   }, [userId]);
 
-  const isLoading = !initialFetchComplete && (!pages || pages.length === 0);
-  const hasNoPages = initialFetchComplete && (!pages || pages.length === 0);
-  const hasNoPagesOpen = pages && pages.length > 0 && openPageIds.length === 0;
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
       <PagesContext.Provider value={pages || []}>
