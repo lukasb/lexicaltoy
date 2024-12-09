@@ -1,7 +1,9 @@
 import Dexie, { type EntityTable } from 'dexie';
 import { Page } from '@/lib/definitions';
 
-const localDb = new Dexie('orangetask-local', { cache: 'immutable'}) as Dexie & {
+Dexie.disableBfCache = true;
+
+const localDb = new Dexie('orangetask-local', { cache: 'immutable' }) as Dexie & {
   pages: EntityTable<Page, 'id'>;
   queuedUpdates: EntityTable<Page, 'id'>;
   lastRevisionSynced: EntityTable<{ id: string, revisionNumber: number }, 'id'>;
