@@ -333,6 +333,8 @@ export async function insertPage(
     console.log("localDb.pages", count);
   }
 
+  console.log("trying to get localPage");
+  
   // can't have two pages with the same title and user id
   try {
     const localPage = await localDb.pages
