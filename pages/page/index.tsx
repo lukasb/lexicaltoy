@@ -62,6 +62,9 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
     try {
 
       console.log("getting localPages for ", session.id);
+      console.log("localDb", localDb.isOpen());
+      console.log("localDb.pages", localDb.pages);
+      console.log("localDb.queuedUpdates", localDb.queuedUpdates);
 
       const localPages = await localDb.pages
         .where("userId")
