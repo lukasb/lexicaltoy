@@ -315,64 +315,72 @@ export async function insertPage(
   userId: string,
   isJournal: boolean
 ): Promise<[Page | undefined, PageSyncResult]> {
-
-  console.log("insertPage!", title, value, userId, isJournal);
-
-  if (!localDb) { 
-    console.error("localDb not found");
-  } else {
-    console.log("localDb found", localDb);
-  }
-  if (!localDb.isOpen()) {
-    console.error("localDb not open");
-  } else {
-    console.log("localDb open");
-    const test = localDb.hasFailed();
-    console.log("localDb.hasFailed", test);
-    try {
-      const count = await localDb.pages.count();
-      console.log("localDb.pages", count);
-    } catch (error) {
-      console.error("Error getting page count:", error);
-    }
-  }
-
-  console.log("trying to get localPage");
-
-  // can't have two pages with the same title and user id
   try {
-    const localPage = await localDb.pages
-      .filter((page) => page.title === title && page.userId === userId)
-      .first();
-    if (localPage) {
-      console.log("insertPage: localPage found", localPage);
-      return [undefined, PageSyncResult.Conflict];
+    console.log("insertPage!", title, value, userId, isJournal);
+
+    if (!localDb) {
+      console.error("localDb not found");
+    } else {
+      console.log("localDb found", localDb);
     }
+    if (!localDb.isOpen()) {
+      console.error("localDb not open");
+    } else {
+      console.log("localDb open");
+      const test = localDb.hasFailed();
+      console.log("localDb.hasFailed", test);
+      console.log("About to count pages...");
+      try {
+        console.log("localDb.pages type:", typeof localDb.pages);
+        console.log("localDb.pages properties:", Object.keys(localDb.pages));
+        const count = await localDb.pages.count();
+        console.log("Got page count:", count);
+      } catch (error) {
+        console.error("Error in count():", error);
+        return [undefined, PageSyncResult.Error];
+      }
+    }
+
+    console.log("trying to get localPage");
+
+    // can't have two pages with the same title and user id
+    try {
+      const localPage = await localDb.pages
+        .filter((page) => page.title === title && page.userId === userId)
+        .first();
+      if (localPage) {
+        console.log("insertPage: localPage found", localPage);
+        return [undefined, PageSyncResult.Conflict];
+      }
+    } catch (error) {
+      console.error("insertPage: error getting localPage", error);
+      return [undefined, PageSyncResult.Error];
+    }
+
+    console.log("inserting page", title);
+
+    const id = crypto.randomUUID();
+    const newPage = {
+      id: id,
+      title: title,
+      value: value,
+      userId: userId,
+      isJournal: isJournal,
+      deleted: false,
+      lastModified: new Date(new Date().toISOString()),
+      revisionNumber: 1,
+    };
+
+    const result = await localDb.queuedUpdates.put(newPage);
+    if (!result) {
+      throw new Error("failed to put newPage");
+    } else {
+      console.log("insertPage: put newPage", result);
+    }
+
+    return [newPage, PageSyncResult.Success];
   } catch (error) {
-    console.error("insertPage: error getting localPage", error);
+    console.error("=== Top level error in insertPage ===", error);
     return [undefined, PageSyncResult.Error];
   }
-
-  console.log("inserting page", title);
-
-  const id = crypto.randomUUID();
-  const newPage = {
-    id: id,
-    title: title,
-    value: value,
-    userId: userId,
-    isJournal: isJournal,
-    deleted: false,
-    lastModified: new Date(new Date().toISOString()),
-    revisionNumber: 1,
-  };
-
-  const result = await localDb.queuedUpdates.put(newPage);
-  if (!result) { 
-    throw new Error("failed to put newPage");
-  } else {
-    console.log("insertPage: put newPage", result);
-  }
-  
-  return [newPage, PageSyncResult.Success];
 }
