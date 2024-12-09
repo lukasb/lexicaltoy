@@ -54,7 +54,11 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
 
   const pages = useLiveQuery(async () => {
 
+    console.log("we in here");
+    
     if (!session || !session.id) return [];
+
+    console.log("useLiveQuery", session.id);
 
     const localPages = await localDb.pages
       .where("userId")

@@ -327,7 +327,8 @@ export async function insertPage(
     console.error("localDb not open");
   } else {
     console.log("localDb open");
-    console.log("localDb.pages", localDb.pages.count());
+    const count = await localDb.pages.count();
+    console.log("localDb.pages", count);
   }
 
   // can't have two pages with the same title and user id
