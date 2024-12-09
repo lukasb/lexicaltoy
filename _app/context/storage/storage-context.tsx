@@ -287,6 +287,9 @@ export async function updatePage(
   // in sync with local db / queued updates
 
   const localPage = await getLocalPageById(page.id);
+
+  if (!localPage) alert("localPage not found");
+
   if (localPage && localPage.lastModified > page.lastModified) {
     // our proposed update is based on an old version of the page
     return PageSyncResult.Conflict;
