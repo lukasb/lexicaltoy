@@ -288,7 +288,7 @@ export async function updatePage(
 
   const localPage = await getLocalPageById(page.id);
 
-  if (!localPage) alert("localPage not found");
+  if (!localPage) throw new Error("localPage not found");
 
   if (localPage && localPage.lastModified > page.lastModified) {
     // our proposed update is based on an old version of the page
@@ -305,7 +305,7 @@ export async function updatePage(
   };
   
   const result = await localDb.queuedUpdates.put(pageLocalUpdate);
-  if (!result) alert("failed to put pageLocalUpdate");
+  if (!result) throw new Error("failed to put pageLocalUpdate");
   return PageSyncResult.Success;
 }
 
