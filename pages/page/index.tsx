@@ -53,58 +53,62 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
   const pagesCount = useRef(-1);
 
   const pages = useLiveQuery(async () => {
-
     console.log("we in here");
 
     if (!session || !session.id) return [];
 
     console.log("useLiveQuery", session.id);
 
-    const localPages = await localDb.pages
-      .where("userId")
-      .equals(session.id)
-      .toArray();
+    try {
+      const localPages = await localDb.pages
+        .where("userId")
+        .equals(session.id)
+        .toArray();
 
-    const queuedUpdates = await localDb.queuedUpdates
-      .where("userId")
-      .equals(session.id)
-      .toArray();
+      const queuedUpdates = await localDb.queuedUpdates
+        .where("userId")
+        .equals(session.id)
+        .toArray();
 
-    if (!localPages || !queuedUpdates) {
-      if (!localPages) console.error("localPages not found");
-      if (!queuedUpdates) console.error("queuedUpdates not found");
+      if (!localPages || !queuedUpdates) {
+        if (!localPages) console.error("localPages not found");
+        if (!queuedUpdates) console.error("queuedUpdates not found");
+        return undefined;
+      }
+
+      console.log("localPages", localPages);
+      console.log("queuedUpdates", queuedUpdates);
+
+      const mergedPages = [
+        ...localPages
+          // remove deleted pages
+          .filter((page) => !page.deleted)
+          // remove pages with queued updates marking them as deleted
+          .filter((page) => {
+            const queuedUpdate = queuedUpdates.find(
+              (update) => update.id === page.id
+            );
+            return !queuedUpdate?.deleted;
+          })
+          // replace with queued updates if they exist
+          .map((page) => {
+            const queuedUpdate = queuedUpdates.find(
+              (update) => update.id === page.id
+            );
+            return queuedUpdate || page;
+          }),
+        // add queued updates that aren't in the main table
+        ...queuedUpdates.filter(
+          (update) =>
+            !localPages.some((page) => page.id === update.id) && !update.deleted
+        ),
+      ];
+      console.log("mergedPages", mergedPages);
+      return mergedPages;
+    } catch (error) {
+      console.error("error getting localPages or queuedUpdates", error);
       return undefined;
     }
-
-    console.log("localPages", localPages);
-    console.log("queuedUpdates", queuedUpdates);
-
-    const mergedPages = [
-      ...localPages
-        // remove deleted pages
-        .filter((page) => !page.deleted)
-        // remove pages with queued updates marking them as deleted
-        .filter((page) => {
-          const queuedUpdate = queuedUpdates.find(
-            (update) => update.id === page.id
-          );
-          return !queuedUpdate?.deleted;
-        })
-        // replace with queued updates if they exist
-        .map((page) => {
-          const queuedUpdate = queuedUpdates.find(
-            (update) => update.id === page.id
-          );
-          return queuedUpdate || page;
-        }),
-      // add queued updates that aren't in the main table
-      ...queuedUpdates.filter(
-        (update) =>
-          !localPages.some((page) => page.id === update.id) && !update.deleted
-      ),
-    ];
-    console.log("mergedPages", mergedPages);
-    return mergedPages;
   }, [session]);
 
   /*useEffect(() => {
