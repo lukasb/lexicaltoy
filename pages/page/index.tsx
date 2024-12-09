@@ -60,10 +60,15 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
     console.log("useLiveQuery", session.id);
 
     try {
+
+      console.log("getting localPages for ", session.id);
+
       const localPages = await localDb.pages
         .where("userId")
         .equals(session.id)
         .toArray();
+
+      console.log("getting queuedUpdates for ", session.id);
 
       const queuedUpdates = await localDb.queuedUpdates
         .where("userId")
