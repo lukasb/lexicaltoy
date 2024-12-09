@@ -318,6 +318,9 @@ export async function insertPage(
 
   console.log("insertPage", title, value, userId, isJournal);
 
+  if (!localDb) console.error("localDb not found");
+  if (!localDb.isOpen()) console.error("localDb not open");
+  
   // can't have two pages with the same title and user id
   try {
     const localPage = await localDb.pages
