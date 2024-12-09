@@ -304,7 +304,8 @@ export async function updatePage(
     deleted: deleted,
   };
   
-  await localDb.queuedUpdates.put(pageLocalUpdate);
+  const result = await localDb.queuedUpdates.put(pageLocalUpdate);
+  if (!result) alert("failed to put pageLocalUpdate");
   return PageSyncResult.Success;
 }
 
