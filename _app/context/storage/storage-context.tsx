@@ -316,7 +316,7 @@ export async function insertPage(
   isJournal: boolean
 ): Promise<[Page | undefined, PageSyncResult]> {
 
-  console.log("insertPage", title, value, userId, isJournal);
+  console.log("insertPage!", title, value, userId, isJournal);
 
   if (!localDb) { 
     console.error("localDb not found");
