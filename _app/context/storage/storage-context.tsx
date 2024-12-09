@@ -327,6 +327,8 @@ export async function insertPage(
     console.error("localDb not open");
   } else {
     console.log("localDb open");
+    const test = localDb.hasFailed();
+    console.log("localDb.hasFailed", test);
     const count = await localDb.pages.count();
     console.log("localDb.pages", count);
   }
