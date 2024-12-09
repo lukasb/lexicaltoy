@@ -336,6 +336,7 @@ export async function insertPage(
     revisionNumber: 1,
   };
 
-  await localDb.queuedUpdates.put(newPage);
+  const result = await localDb.queuedUpdates.put(newPage);
+  if (!result) throw new Error("failed to put newPage");
   return [newPage, PageSyncResult.Success];
 }

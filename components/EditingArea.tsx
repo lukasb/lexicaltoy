@@ -245,6 +245,8 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
         if (isPage(newPage)) {
           msAddPage(newPage);
           openPage(newPage);
+        } else {
+          console.error("error creating new journal page", todayJournalTitle, result);
         }
       } catch (error) {
         console.error("error creating new journal page", todayJournalTitle, error);
