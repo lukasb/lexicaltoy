@@ -66,7 +66,11 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
       .equals(session.id)
       .toArray();
 
-    if (!localPages || !queuedUpdates) return undefined;
+    if (!localPages || !queuedUpdates) {
+      if (!localPages) console.error("localPages not found");
+      if (!queuedUpdates) console.error("queuedUpdates not found");
+      return undefined;
+    }
 
     const mergedPages = [
       ...localPages
