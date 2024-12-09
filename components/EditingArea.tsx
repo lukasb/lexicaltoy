@@ -242,7 +242,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     if (!pages?.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
       try {
         const [newPage, result] = await insertNewJournalPage(todayJournalTitle, userId, today);
-        if (isPage(newPage)) {
+        if (isPage(newPage) && result === PageSyncResult.Success) {
           msAddPage(newPage);
           openPage(newPage);
         } else {
