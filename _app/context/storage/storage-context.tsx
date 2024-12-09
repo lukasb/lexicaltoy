@@ -317,13 +317,19 @@ export async function insertPage(
 ): Promise<[Page | undefined, PageSyncResult]> {
 
   console.log("insertPage", title, value, userId, isJournal);
+
   // can't have two pages with the same title and user id
-  const localPage = await localDb.pages
-    .filter((page) => page.title === title && page.userId === userId)
-    .first();
-  if (localPage) {
-    console.log("insertPage: localPage found", localPage);
-    return [undefined, PageSyncResult.Conflict];
+  try {
+    const localPage = await localDb.pages
+      .filter((page) => page.title === title && page.userId === userId)
+      .first();
+    if (localPage) {
+      console.log("insertPage: localPage found", localPage);
+      return [undefined, PageSyncResult.Conflict];
+    }
+  } catch (error) {
+    console.error("insertPage: error getting localPage", error);
+    return [undefined, PageSyncResult.Error];
   }
 
   console.log("inserting page", title);
