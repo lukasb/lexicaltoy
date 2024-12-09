@@ -55,7 +55,7 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
   const pages = useLiveQuery(async () => {
 
     console.log("we in here");
-    
+
     if (!session || !session.id) return [];
 
     console.log("useLiveQuery", session.id);
@@ -75,6 +75,9 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
       if (!queuedUpdates) console.error("queuedUpdates not found");
       return undefined;
     }
+
+    console.log("localPages", localPages);
+    console.log("queuedUpdates", queuedUpdates);
 
     const mergedPages = [
       ...localPages
@@ -100,6 +103,7 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
           !localPages.some((page) => page.id === update.id) && !update.deleted
       ),
     ];
+    console.log("mergedPages", mergedPages);
     return mergedPages;
   }, [session]);
 
