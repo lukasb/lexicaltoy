@@ -67,7 +67,8 @@ const Omnibar = forwardRef(({
       const pagesMap = new Map(pages.map(page => [page.id, page]));
       const filteredResults = results
         .map((result: SearchResult) => pagesMap.get(result.id))
-        .filter((page): page is Page => page !== undefined);
+        .filter((page): page is Page => page !== undefined)
+        .sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
 
       return filteredResults;
     }
