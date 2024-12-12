@@ -205,10 +205,10 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
         
         setOpenPageIds(prevIds => [...new Set([...prevIds, ...initialIds])]);
         initializedPagesRef.current = true;
-      } else if (openPageIds.length === 0) {
+      } else {
         const todayJournalTitle = getTodayJournalTitle();
         const todayJournalPage = pages.find(p => p.title === todayJournalTitle && p.isJournal);
-        if (todayJournalPage) {
+        if (todayJournalPage && !openPageIds.includes(todayJournalPage.id)) {
           setOpenPageIds([todayJournalPage.id]);
         }
       }
