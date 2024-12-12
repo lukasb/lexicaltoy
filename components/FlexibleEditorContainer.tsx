@@ -119,7 +119,15 @@ function FlexibleEditorLayout ({
       setSortedPageIds(sortPages(openPageIds));
       setIsLoading(false);
     } else {
-      // Add new pages to the top without re-sorting
+      // Check for closed pages and remove them
+      const closedPageIds = sortedPageIds.filter(id => !openPageIds.includes(id));
+      if (closedPageIds.length > 0) {
+        setSortedPageIds(prevSortedPageIds => 
+          prevSortedPageIds.filter(id => openPageIds.includes(id))
+        );
+      }
+      
+      // Add new pages to the top
       const newPageIds = openPageIds.filter(id => !sortedPageIds.includes(id));
       if (newPageIds.length > 0) {
         setSortedPageIds(prevSortedPageIds => [...newPageIds, ...prevSortedPageIds]);
