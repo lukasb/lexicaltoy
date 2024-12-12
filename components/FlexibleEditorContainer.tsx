@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useBreakpoint } from '@/lib/window-helpers';
 import EditorContainer from '@/_app/editor/editor-container';
 import { Page } from '@/lib/definitions';
+import { getJournalPageDate } from '@/lib/journal-helpers';
 
 function FlexibleEditorLayout ({
   openPageIds,
@@ -32,18 +33,77 @@ function FlexibleEditorLayout ({
   useBreakpoint(1537, isSmallWidthViewport, setIsSmallWidthViewport);
 
   const sortPages = useCallback((pageIds: string[]): string[] => {
+
+    console.log('sorting pages', pageIds);
+
     if (pageIds.length === 0) return [];
     const pages = pageIds.map(id => currentPages.find(p => p.id === id)).filter(p => p !== undefined) as Page[];
     if (pages.length === 0) return [];
 
+    console.log('pages', pages);
+
+    // Separate pinned and unpinned pages
     const pinnedPages = pages.filter(p => pinnedPageIds.includes(p.id));
     const unpinnedPages = pages.filter(p => !pinnedPageIds.includes(p.id));
 
-    const firstPage = unpinnedPages[0] || pinnedPages[0];
+    // Sort unpinned pages
+    const journalPages = unpinnedPages.filter(p => p.isJournal);
+    const nonJournalPages = unpinnedPages.filter(p => !p.isJournal);
+
+    // Sort journal pages by their date
+    const sortedJournalPages = journalPages.sort((a, b) => {
+      const dateA = getJournalPageDate(a);
+      const dateB = getJournalPageDate(b);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+    // Sort non-journal pages by lastModified
+    const sortedNonJournalPages = nonJournalPages.sort((a, b) => {
+      return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime();
+    });
+
+    // Merge journal and non-journal pages in reverse chronological order
+    const sortedUnpinnedPages: Page[] = [];
+    let journalIndex = 0;
+    let nonJournalIndex = 0;
+
+    console.log('sortedJournalPages', sortedJournalPages);
+    console.log('sortedNonJournalPages', sortedNonJournalPages);
+
+    while (journalIndex < sortedJournalPages.length || nonJournalIndex < sortedNonJournalPages.length) {
+      const journalPage = sortedJournalPages[journalIndex];
+      const nonJournalPage = sortedNonJournalPages[nonJournalIndex];
+
+      if (!journalPage) {
+        sortedUnpinnedPages.push(nonJournalPage);
+        nonJournalIndex++;
+      } else if (!nonJournalPage) {
+        sortedUnpinnedPages.push(journalPage);
+        journalIndex++;
+      } else {
+        const journalDate = new Date(journalPage.lastModified);
+        const nonJournalDate = new Date(nonJournalPage.lastModified);
+
+        if (nonJournalPage.title === 'horrorday') {
+          console.log('journalDate', journalDate);
+          console.log('nonJournalDate', nonJournalDate);
+        }
+
+        if (journalDate.getTime() > nonJournalDate.getTime()) {
+          sortedUnpinnedPages.push(journalPage);
+          journalIndex++;
+        } else {
+          sortedUnpinnedPages.push(nonJournalPage);
+          nonJournalIndex++;
+        }
+      }
+    }
+
+    const firstPage = sortedUnpinnedPages[0] || pinnedPages[0];
     if (!firstPage) return [];
 
     const remainingPinnedPages = pinnedPages.filter(p => p.id !== firstPage.id);
-    const remainingUnpinnedPages = unpinnedPages.filter(p => p.id !== firstPage.id);
+    const remainingUnpinnedPages = sortedUnpinnedPages.filter(p => p.id !== firstPage.id);
 
     return [
       firstPage.id,
@@ -55,9 +115,17 @@ function FlexibleEditorLayout ({
   const [sortedPageIds, setSortedPageIds] = useState<string[]>(() => sortPages(openPageIds));
 
   useEffect(() => {
-    setSortedPageIds(sortPages(openPageIds));
-    setIsLoading(false);
-  }, [openPageIds, currentPages, sortPages]);
+    if (isLoading) {
+      setSortedPageIds(sortPages(openPageIds));
+      setIsLoading(false);
+    } else {
+      // Add new pages to the top without re-sorting
+      const newPageIds = openPageIds.filter(id => !sortedPageIds.includes(id));
+      if (newPageIds.length > 0) {
+        setSortedPageIds(prevSortedPageIds => [...newPageIds, ...prevSortedPageIds]);
+      }
+    }
+  }, [openPageIds, currentPages, sortPages, isLoading, sortedPageIds]);
 
   if (isLoading || !sortedPageIds || sortedPageIds.length === 0) {
     return <div>Loading...</div>; // Or any loading indicator you prefer

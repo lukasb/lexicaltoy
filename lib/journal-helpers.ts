@@ -29,6 +29,10 @@ export function getJournalTitle(date: Date) {
   return dateString.replace(new RegExp(` ${day},`), ` ${day}${ordinalSuffix},`);
 }
 
+export function getJournalPageDate(page: Page) {
+  return parse(page.title, 'MMM do, yyyy', new Date());
+}
+
 export const insertNewJournalPage = async (
   title: string,
   userId: string,
