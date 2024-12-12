@@ -192,16 +192,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const [openPageIds, setOpenPageIds] = useState<string[]>([]);
 
   useEffect(() => {
-    if (openPageIds.length > 0 && pages && pages.length > 0) {
-      for (const pageId of openPageIds) {
-        if (!pages?.find(p => p.id === pageId)) {
-          setOpenPageIds(prevIds => prevIds.filter(id => id !== pageId));
-        }
-      }
-    }
-  }, [pages, openPageIds]);
-
-  useEffect(() => {
     if (pages && pages.length > 0) {
       if (!initializedPagesRef.current) {
         const initialPageId = findMostRecentlyEditedPage(pages)?.id;
