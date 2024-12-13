@@ -157,11 +157,14 @@ export async function processQueuedUpdatesInternal(
           console.log("processQueuedUpdatesInternal: updating page", queuedUpdate.title, "revision number", queuedUpdate.revisionNumber);
         }
 
-        const currentRevisionNumber =
-          lastRevisionSynced !== undefined &&
-          lastRevisionSynced > queuedUpdate.revisionNumber
-            ? lastRevisionSynced
-            : queuedUpdate.revisionNumber;
+        let currentRevisionNumber;
+        if (lastRevisionSynced !== undefined && lastRevisionSynced > queuedUpdate.revisionNumber) {
+          console.log(`Using lastRevisionSynced: ${lastRevisionSynced} (queuedUpdate revision was ${queuedUpdate.revisionNumber})`);
+          currentRevisionNumber = lastRevisionSynced;
+        } else {
+          console.log(`Using queuedUpdate revision: ${queuedUpdate.revisionNumber} (lastRevisionSynced was ${lastRevisionSynced})`);
+          currentRevisionNumber = queuedUpdate.revisionNumber;
+        }
 
         const { revisionNumber, lastModified } = await updatePageWithHistory(
           queuedUpdate.id,
