@@ -51,3 +51,17 @@ test('backspace searches again', async ({ page }) => {
   await page.keyboard.press('Backspace');
   await checkSearchResult(page, 'blue sasquatch');
 });
+
+test('can move to open non-active pages from omnibar', async ({ page }) => {
+  await page.goto('/page');
+  await createPage(page, 'blue sasquatch');
+  await createPage(page, 'toy sasquatch');
+  await page.waitForTimeout(1000);
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.pressSequentially('blue sasquatch');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
+  await page.keyboard.press('End');
+  await page.keyboard.type(' was a great man');
+  await expect(page.getByText('blue sasquatch was a great man')).toBeVisible();
+});

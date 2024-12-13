@@ -392,6 +392,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
                       onPagePinToggle={handlePagePinToggle}
                       collapsedPageIds={collapsedPageIds}
                       onPageCollapseToggle={handlePageCollapseToggle}
+                      topPageId={openPageIds[0]}
                     />
                   )}
                 </SearchTermsProvider>

@@ -15,7 +15,8 @@ function FlexibleEditorLayout ({
   pinnedPageIds,
   onPagePinToggle,
   collapsedPageIds,
-  onPageCollapseToggle
+  onPageCollapseToggle,
+  topPageId
 }: {
   openPageIds: string[];
   currentPages: Page[];
@@ -25,6 +26,7 @@ function FlexibleEditorLayout ({
   onPagePinToggle: (pageId: string) => void;
   collapsedPageIds: string[];
   onPageCollapseToggle: (pageId: string) => void;
+  topPageId?: string;
 }) {
 
   const [isSmallWidthViewport, setIsSmallWidthViewport] = useState<boolean>(false);
@@ -119,21 +121,26 @@ function FlexibleEditorLayout ({
       setSortedPageIds(sortPages(openPageIds));
       setIsLoading(false);
     } else {
-      // Check for closed pages and remove them
-      const closedPageIds = sortedPageIds.filter(id => !openPageIds.includes(id));
-      if (closedPageIds.length > 0) {
-        setSortedPageIds(prevSortedPageIds => 
-          prevSortedPageIds.filter(id => openPageIds.includes(id))
+      setSortedPageIds(prevSortedPageIds => {
+        // Remove closed pages
+        let newSortedPageIds = prevSortedPageIds.filter(id => openPageIds.includes(id));
+        
+        // Handle topPageId
+        if (topPageId) {
+          // Remove topPageId from its current position if it exists
+          newSortedPageIds = newSortedPageIds.filter(id => id !== topPageId);
+          // Add it to the front
+          newSortedPageIds = [topPageId, ...newSortedPageIds];
+        }
+        
+        // Add any new pages that aren't the topPageId
+        const newPageIds = openPageIds.filter(id => 
+          !newSortedPageIds.includes(id) && id !== topPageId
         );
-      }
-      
-      // Add new pages to the top
-      const newPageIds = openPageIds.filter(id => !sortedPageIds.includes(id));
-      if (newPageIds.length > 0) {
-        setSortedPageIds(prevSortedPageIds => [...newPageIds, ...prevSortedPageIds]);
-      }
+        return [...newSortedPageIds, ...newPageIds];
+      });
     }
-  }, [openPageIds, currentPages, sortPages, isLoading, sortedPageIds]);
+  }, [openPageIds, currentPages, isLoading, topPageId, sortPages]);
 
   if (isLoading || !sortedPageIds || sortedPageIds.length === 0) {
     return <div>Loading...</div>; // Or any loading indicator you prefer
