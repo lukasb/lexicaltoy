@@ -35,10 +35,16 @@ function FlexibleEditorLayout ({
   useBreakpoint(1537, isSmallWidthViewport, setIsSmallWidthViewport);
 
   const sortPages = useCallback((pageIds: string[], topPageId?: string): { pinnedIds: string[], unpinnedIds: string[] } => {
-    if (pageIds.length === 0 && !topPageId) return { pinnedIds: [], unpinnedIds: [] };
+    console.log('sortPages', pageIds, topPageId);
+    if (pageIds.length === 0 && topPageId === undefined) return { pinnedIds: [], unpinnedIds: [] };
     
+    if (topPageId) {
+      const topPage = currentPages.find(p => p.id === topPageId);
+      console.log('topPage found in currentPages:', topPage?.title);
+    }
+
     // Get all relevant page IDs including topPageId
-    const allPageIds = topPageId ? [...new Set([topPageId, ...pageIds])] : pageIds;
+    const allPageIds = topPageId !== undefined ? [...new Set([topPageId, ...pageIds])] : pageIds;
     
     const pages = allPageIds
       .map(id => currentPages.find(p => p.id === id))
@@ -49,6 +55,9 @@ function FlexibleEditorLayout ({
     // Separate pinned and unpinned pages
     const pinnedPages = pages.filter(p => pinnedPageIds.includes(p.id));
     const unpinnedPages = pages.filter(p => !pinnedPageIds.includes(p.id));
+
+    console.log('pinnedPages:', pinnedPages);
+    console.log('unpinnedPages:', unpinnedPages);
 
     // Sort unpinned pages
     const journalPages = unpinnedPages.filter(p => p.isJournal);
@@ -95,27 +104,40 @@ function FlexibleEditorLayout ({
       }
     }
 
-    const firstPage = topPageId !== undefined ? currentPages.find(p => p.id === topPageId) : sortedUnpinnedPages[0] || pinnedPages[0];
+    console.log('sortedUnpinnedPages:', sortedUnpinnedPages);
+    console.log("topPageId:", topPageId);
+
+    const topPage = pages.find(p => p.id === topPageId);
+    const firstPage = topPage || sortedUnpinnedPages[0] || pinnedPages[0];
     if (!firstPage) return { pinnedIds: [], unpinnedIds: [] };
+
+    console.log('firstPage:', firstPage.title);
 
     const remainingPinnedPages = pinnedPages.filter(p => p.id !== firstPage.id);
     const remainingUnpinnedPages = sortedUnpinnedPages.filter(p => p.id !== firstPage.id);
 
+    const pinnedIds = pinnedPageIds.includes(firstPage.id)
+      ? [firstPage.id, ...remainingPinnedPages.map(p => p.id)]
+      : remainingPinnedPages.map(p => p.id);
+    
+    const unpinnedIds = !pinnedPageIds.includes(firstPage.id)
+      ? [firstPage.id, ...remainingUnpinnedPages.map(p => p.id)]
+      : remainingUnpinnedPages.map(p => p.id);
+
+    console.log('pinnedIds:', pinnedIds);
+    console.log('unpinnedIds:', unpinnedIds);
+
     return {
-      pinnedIds: pinnedPageIds.includes(firstPage.id) 
-        ? [firstPage.id, ...remainingPinnedPages.map(p => p.id)]
-        : remainingPinnedPages.map(p => p.id),
-      unpinnedIds: !pinnedPageIds.includes(firstPage.id)
-        ? [firstPage.id, ...remainingUnpinnedPages.map(p => p.id)]
-        : remainingUnpinnedPages.map(p => p.id)
+      pinnedIds,
+      unpinnedIds
     };
   }, [currentPages, pinnedPageIds]);
 
-  const [sortedPages, setSortedPages] = useState<{ pinnedIds: string[], unpinnedIds: string[] }>(() => sortPages(openPageIds));
+  const [sortedPages, setSortedPages] = useState<{ pinnedIds: string[], unpinnedIds: string[] }>(() => sortPages(openPageIds, topPageId));
 
   useEffect(() => {
     if (isLoading) {
-      setSortedPages(sortPages(openPageIds));
+      setSortedPages(sortPages(openPageIds, topPageId));
       setIsLoading(false);
     } else {
       setSortedPages(prevSorted => {
@@ -125,18 +147,12 @@ function FlexibleEditorLayout ({
         // Remove closed pages
         let newIds = currentIds.filter(id => openPageIds.includes(id));
         
-        // Handle topPageId
-        if (topPageId) {
-          newIds = newIds.filter(id => id !== topPageId);
-          newIds = [topPageId, ...newIds];
-        }
-        
         // Add any new pages
         const newPageIds = openPageIds.filter(id => 
           !newIds.includes(id) && id !== topPageId
         );
         
-        return sortPages([...newIds, ...newPageIds]);
+        return sortPages([...newIds, ...newPageIds], topPageId);
       });
     }
   }, [openPageIds, currentPages, isLoading, topPageId, sortPages]);
