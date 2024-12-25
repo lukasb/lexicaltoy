@@ -36,13 +36,9 @@ function FlexibleEditorLayout ({
 
   const sortPages = useCallback((pageIds: string[]): string[] => {
 
-    console.log('sorting pages', pageIds);
-
     if (pageIds.length === 0) return [];
     const pages = pageIds.map(id => currentPages.find(p => p.id === id)).filter(p => p !== undefined) as Page[];
     if (pages.length === 0) return [];
-
-    console.log('pages', pages);
 
     // Separate pinned and unpinned pages
     const pinnedPages = pages.filter(p => pinnedPageIds.includes(p.id));
@@ -69,9 +65,6 @@ function FlexibleEditorLayout ({
     let journalIndex = 0;
     let nonJournalIndex = 0;
 
-    console.log('sortedJournalPages', sortedJournalPages);
-    console.log('sortedNonJournalPages', sortedNonJournalPages);
-
     while (journalIndex < sortedJournalPages.length || nonJournalIndex < sortedNonJournalPages.length) {
       const journalPage = sortedJournalPages[journalIndex];
       const nonJournalPage = sortedNonJournalPages[nonJournalIndex];
@@ -85,11 +78,6 @@ function FlexibleEditorLayout ({
       } else {
         const journalDate = new Date(journalPage.lastModified);
         const nonJournalDate = new Date(nonJournalPage.lastModified);
-
-        if (nonJournalPage.title === 'horrorday') {
-          console.log('journalDate', journalDate);
-          console.log('nonJournalDate', nonJournalDate);
-        }
 
         if (journalDate.getTime() > nonJournalDate.getTime()) {
           sortedUnpinnedPages.push(journalPage);
