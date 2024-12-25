@@ -35,13 +35,8 @@ function FlexibleEditorLayout ({
   useBreakpoint(1537, isSmallWidthViewport, setIsSmallWidthViewport);
 
   const sortPages = useCallback((pageIds: string[], topPageId?: string): { pinnedIds: string[], unpinnedIds: string[] } => {
-    console.log('sortPages', pageIds, topPageId);
-    if (pageIds.length === 0 && topPageId === undefined) return { pinnedIds: [], unpinnedIds: [] };
     
-    if (topPageId) {
-      const topPage = currentPages.find(p => p.id === topPageId);
-      console.log('topPage found in currentPages:', topPage?.title);
-    }
+    if (pageIds.length === 0 && topPageId === undefined) return { pinnedIds: [], unpinnedIds: [] };
 
     // Get all relevant page IDs including topPageId
     const allPageIds = topPageId !== undefined ? [...new Set([topPageId, ...pageIds])] : pageIds;
@@ -55,9 +50,6 @@ function FlexibleEditorLayout ({
     // Separate pinned and unpinned pages
     const pinnedPages = pages.filter(p => pinnedPageIds.includes(p.id));
     const unpinnedPages = pages.filter(p => !pinnedPageIds.includes(p.id));
-
-    console.log('pinnedPages:', pinnedPages);
-    console.log('unpinnedPages:', unpinnedPages);
 
     // Sort unpinned pages
     const journalPages = unpinnedPages.filter(p => p.isJournal);
@@ -104,14 +96,9 @@ function FlexibleEditorLayout ({
       }
     }
 
-    console.log('sortedUnpinnedPages:', sortedUnpinnedPages);
-    console.log("topPageId:", topPageId);
-
     const topPage = pages.find(p => p.id === topPageId);
     const firstPage = topPage || sortedUnpinnedPages[0] || pinnedPages[0];
     if (!firstPage) return { pinnedIds: [], unpinnedIds: [] };
-
-    console.log('firstPage:', firstPage.title);
 
     const remainingPinnedPages = pinnedPages.filter(p => p.id !== firstPage.id);
     const remainingUnpinnedPages = sortedUnpinnedPages.filter(p => p.id !== firstPage.id);
@@ -123,9 +110,6 @@ function FlexibleEditorLayout ({
     const unpinnedIds = !pinnedPageIds.includes(firstPage.id)
       ? [firstPage.id, ...remainingUnpinnedPages.map(p => p.id)]
       : remainingUnpinnedPages.map(p => p.id);
-
-    console.log('pinnedIds:', pinnedIds);
-    console.log('unpinnedIds:', unpinnedIds);
 
     return {
       pinnedIds,
