@@ -335,19 +335,33 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   };
 
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && userId) {
+    const handlePageStateChange = async () => {
+      if (!userId) return;
+
+      if (document.visibilityState === 'hidden') {
+        // Force process any pending updates before the page becomes hidden
+        console.log("tab becoming hidden, processing pending updates");
+        await processQueuedUpdates(userId, handleConflict, updateRevisionNumber);
+      } else if (document.visibilityState === 'visible') {
         console.log("tab became visible, fetching updated pages");
-        fetchUpdatedPages(userId);
+        await fetchUpdatedPages(userId);
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    const handlePageHide = async () => {
+      if (!userId) return;
+      console.log("page hide event, processing pending updates");
+      await processQueuedUpdates(userId, handleConflict, updateRevisionNumber);
+    };
+
+    document.addEventListener('visibilitychange', handlePageStateChange);
+    window.addEventListener('pagehide', handlePageHide);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handlePageStateChange);
+      window.removeEventListener('pagehide', handlePageHide);
     };
-  }, [userId]);
+  }, [userId, handleConflict, updateRevisionNumber]);
 
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
