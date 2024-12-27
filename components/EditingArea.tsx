@@ -93,6 +93,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     if (!userId) return;
 
     try {
+      console.log("fetching updated pages");
       const fetchPromise = fetchUpdatedPages(userId);
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Initial fetch timeout')), 5000)
@@ -231,6 +232,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     const todayJournalTitle = getJournalTitle(today);
     if (!pages?.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
       try {
+        console.log("inserting today's journal page");
         const [newPage, result] = await insertNewJournalPage(todayJournalTitle, userId, today);
         if (isPage(newPage) && result === PageSyncResult.Success) {
           msAddPage(newPage);
@@ -243,6 +245,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
       }
     }
     try {
+      console.log("deleting stale journal pages");
       await deleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, userId);
     } catch (error) {
       console.error("error deleting stale journal pages", error);

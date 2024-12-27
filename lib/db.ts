@@ -1,4 +1,4 @@
-import { Page } from '@/lib/definitions';
+import { isPage, Page } from '@/lib/definitions';
 
 export interface PageUpdateResponse {
     revisionNumber?: number;
@@ -113,13 +113,21 @@ export async function fetchPagesRemote(userId: string, fetchDeleted?: boolean): 
                 ...page,
                 lastModified: new Date(page.lastModified) // Convert lastModified to Date object
             }));
+            for (const page of pages) {
+              if (!isPage(page)) {
+                  throw new Error("expected page, got " + JSON.stringify(page));
+              }
+            }
             return pages;
         } else {
             return result.error || 'Unknown error occurred'; // Returning error as a string
         }
     } catch (error) {
-        console.error('Error fetching from API:', error);
-        return null;
+      if (error instanceof Error && error.message.startsWith('expected page')) {
+        throw error;
+      }
+      console.error('Error fetching from API:', error);
+      return null;
     }
   }
 
@@ -147,12 +155,20 @@ export async function fetchPagesRemote(userId: string, fetchDeleted?: boolean): 
                 ...page,
                 lastModified: new Date(page.lastModified) // Convert lastModified to Date object
             }));
+            for (const page of pages) {
+                if (!isPage(page)) {
+                    throw new Error("expected page, got " + JSON.stringify(page));
+                }
+            }
             return pages;
         } else {
             return result.error || 'Unknown error occurred'; // Returning error as a string
         }
     } catch (error) {
-        console.error('Error fetching from API:', error);
-        return null;
+      if (error instanceof Error && error.message.startsWith('expected page')) {
+        throw error;
+      }
+      console.error('Error fetching from API:', error);
+      return null;
     }
   }

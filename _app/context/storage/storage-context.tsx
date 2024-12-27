@@ -102,6 +102,9 @@ export async function fetchUpdatedPagesInternal(
             ? await _fetchUpdatesSince(userId, new Date(mostRecentLastModified)) ?? undefined
             : await _fetchPagesRemote(userId);
         } catch (error) {
+          if (error instanceof Error && error.message.startsWith('expected page')) {
+            throw error;
+          }
           result = PageSyncResult.Error;
           return;
         }
@@ -303,6 +306,7 @@ export async function updatePage(
     value: value,
     title: title,
     deleted: deleted,
+    lastModified: new Date(new Date().toISOString()),
   };
   
   const result = await localDb.queuedUpdates.put(pageLocalUpdate);
