@@ -61,17 +61,17 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
 
     try {
 
-      console.log("getting localPages for ", session.id);
-      console.log("localDb", localDb.isOpen());
-      console.log("localDb.pages", localDb.pages);
-      console.log("localDb.queuedUpdates", localDb.queuedUpdates);
+      //console.log("getting localPages for ", session.id);
+      //console.log("localDb", localDb.isOpen());
+      //console.log("localDb.pages", localDb.pages);
+      //console.log("localDb.queuedUpdates", localDb.queuedUpdates);
 
       const localPages = await localDb.pages
         .where("userId")
         .equals(session.id)
         .toArray();
 
-      console.log("getting queuedUpdates for ", session.id);
+      //console.log("getting queuedUpdates for ", session.id);
 
       const queuedUpdates = await localDb.queuedUpdates
         .where("userId")
@@ -84,8 +84,8 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
         return undefined;
       }
 
-      console.log("localPages", localPages);
-      console.log("queuedUpdates", queuedUpdates);
+      //console.log("localPages", localPages);
+      //console.log("queuedUpdates", queuedUpdates);
 
       const mergedPages = [
         ...localPages
@@ -111,7 +111,7 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
             !localPages.some((page) => page.id === update.id) && !update.deleted
         ),
       ];
-      console.log("mergedPages", mergedPages);
+      //console.log("mergedPages", mergedPages);
       return mergedPages;
     } catch (error) {
       console.error("error getting localPages or queuedUpdates", error);
