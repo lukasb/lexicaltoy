@@ -285,7 +285,8 @@ export async function updatePage(
   page: Page,
   value: string,
   title: string,
-  deleted: boolean
+  deleted: boolean,
+  lastModified: Date
 ): Promise<PageSyncResult> {
 
   // we don't do anything to check for a conflict with queued updates
@@ -306,7 +307,7 @@ export async function updatePage(
     value: value,
     title: title,
     deleted: deleted,
-    lastModified: new Date(new Date().toISOString()),
+    lastModified: lastModified,
   };
   
   const result = await localDb.queuedUpdates.put(pageLocalUpdate);

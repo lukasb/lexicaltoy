@@ -62,7 +62,7 @@ export const deleteStaleJournalPages = async (today: Date, defaultValue: string,
   });
   for (const page of stalePages) {
     console.log("deleting stale journal page", page.title);
-    await updatePage(page, page.value, page.title, true);
+    await updatePage(page, page.value, page.title, true, new Date(new Date().toISOString()));
   }
   const journalQueuedUpdates = await getJournalQueuedUpdatesByUserId(userId);
   const staleQueuedUpdates = journalQueuedUpdates.filter((queuedUpdate) => {

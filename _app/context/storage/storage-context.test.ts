@@ -184,7 +184,8 @@ describe("Page Sync Functions", () => {
         mockPage,
         "Updated content",
         "Updated Title",
-        false
+        false,
+        new Date(new Date().toISOString())
       );
 
       const queuedUpdate = await localDb.queuedUpdates.get(mockPage.id);
@@ -206,7 +207,8 @@ describe("Page Sync Functions", () => {
         mockPage, // Using older version
         "Updated content",
         "Updated Title",
-        false
+        false,
+        new Date(new Date().toISOString())
       );
 
       expect(result).toBe(PageSyncResult.Conflict);

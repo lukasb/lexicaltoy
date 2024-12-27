@@ -34,7 +34,7 @@ function PagesManager() {
       try {
         const title = newTitle !== undefined ? newTitle : page.title;
         const value = newValue !== undefined ? newValue : page.value;
-        const result = await updatePage(page, value, title, false);
+        const result = await updatePage(page, value, title, false, new Date(timestamp));
         if (result === PageSyncResult.Conflict) {
           console.log("conflict", page.title);
           setPageStatus(page.id, PageStatus.Conflict);
