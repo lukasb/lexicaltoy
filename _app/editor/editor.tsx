@@ -180,7 +180,6 @@ function Editor({
         <AutoLinkPlugin />
         <AIGeneratorPlugin />
         <LexicalClickableLinkPlugin />
-        <TypingPerformancePlugin sampleSize={10} />
         <FormulaPlugin />
         <TodosPlugin />
         <WikilinkPlugin />

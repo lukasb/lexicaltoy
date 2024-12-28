@@ -2,6 +2,9 @@ import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {useEffect, useRef} from 'react';
 import {$getRoot, $onUpdate, COMMAND_PRIORITY_CRITICAL, KEY_DOWN_COMMAND} from 'lexical';
 
+// for some reason this plugin causes some problems with arrow navigation around custom node types
+// eg if you have an AutoLinkNode that spans lines and you hit up from the bullet point below it, you get stuck and can't navigate up
+
 type Props = {
   sampleSize?: number;
   onStats?: (stats: {
