@@ -90,6 +90,8 @@ export function PageStatusProvider({
           throw new Error(
             `lastModified and either newValue or newTitle are required for status of type ${status}`
           );
+        } else if (existingUpdate.status === PageStatus.Conflict && status !== PageStatus.DroppingUpdate) {
+          throw new Error("Cannot update a conflict page to a non-dropping update status");
         }
         newMap.set(pageId, {
           ...existingUpdate,

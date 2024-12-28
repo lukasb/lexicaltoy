@@ -130,16 +130,20 @@ function PagesManager() {
             page.value
           );
         } else {
-          if (page.value !== pageStatus.newValue) {
+          if (page.value !== pageStatus.newValue && pageStatus.status !== PageStatus.Conflict) {
             console.log("page updated on server or locally, load new content", page.title);
             addPageStatus(page.id, PageStatus.UpdatedFromDisk, page.lastModified, page.revisionNumber, page.value);
-          } else {
+          } else if (pageStatus.status !== PageStatus.Conflict) {
             console.log("page updated on server, no change", page.title);
             addPageStatus(page.id, PageStatus.Quiescent, page.lastModified, page.revisionNumber);
+          } else {
+            console.log("received a new page while in conflict", page.title);
           }
         }
       } else if (page.revisionNumber > pageStatus.revisionNumber) {
-        if (page.lastModified === pageStatus.lastModified) {
+        if (pageStatus.status === PageStatus.Conflict) {
+          console.log("page updated on server, but in conflict", page.title);
+        } else if (page.lastModified === pageStatus.lastModified) {
           console.log("page updated on server, no change", page.title);
           addPageStatus(page.id, PageStatus.Quiescent, page.lastModified, page.revisionNumber);
         } else {

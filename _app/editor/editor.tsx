@@ -120,7 +120,13 @@ function Editor({
   const debouncedSave = useDebouncedCallback(saveChange, 300);
 
   const onChange = useCallback((editorState: EditorState) => {
-    if (!editorState || getPageStatus(page.id)?.status === PageStatus.EditFromSharedNodes) return;
+    if (
+      !editorState ||
+      getPageStatus(page.id)?.status === PageStatus.EditFromSharedNodes ||
+      getPageStatus(page.id)?.status === PageStatus.Conflict
+    ) {
+      return;
+    }
     editorState.read(() => {
 
       const localPageValue = getUpdatedPageValue(page);
