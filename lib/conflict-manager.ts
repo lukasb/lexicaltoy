@@ -7,8 +7,6 @@ import {
 import {
   getQueuedUpdateById,
   deleteQueuedUpdate,
-  insertPage,
-  PageSyncResult,
   deletePage
 } from "@/_app/context/storage/storage-context";
 import { DEFAULT_JOURNAL_CONTENTS } from "@/lib/journal-helpers";
@@ -24,22 +22,6 @@ export interface ConflictManagerDeps {
   ) => void;
   pages: Page[];
   userId: string;
-}
-
-function findUnusedTitle(startTitle: string, pages: Page[]): string {
-  // if startTitle is already unused, return it
-  if (!pages.find(page => page.title === startTitle)) {
-    return startTitle;
-  }
-  // otherwise, find the next unused title
-  for (let i = 1; i < 1000; i++) {
-    const title = `${startTitle} (conflict) ${i}`;
-    if (!pages.find(page => page.title === title)) {
-      return title;
-    }
-  }
-  // if we've exhausted the range, return a random UUID
-  return crypto.randomUUID();
 }
 
 export function createConflictHandler(deps: ConflictManagerDeps) {
@@ -83,10 +65,8 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
         await deleteQueuedUpdate(pageId);
       } else {
         // I tried inserting a conflict page, but when multiple tabs were open this resulted in multiple conflict pages
-        console.log("queued update with conflict is non-journal page with non-default value, deleting update");
+        console.log("queued update with conflict is non-journal page with non-default value");
         addPageStatus(pageId, PageStatus.Conflict, queuedUpdate.lastModified, queuedUpdate.revisionNumber);
-        //removePageUpdate(pageId);
-        await deleteQueuedUpdate(pageId);
       }
     }
   };
