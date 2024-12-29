@@ -33,10 +33,9 @@ import { List, AutoSizer, CellMeasurer, CellMeasurerCache } from 'react-virtuali
 // TODO figure out actual line height instead of hardcoding 30
 const editorLineHeight = 30;
 const menuLineHeight = 40;
-const mobileMaxHeight = 100;
-const desktopMaxHeight = 400;
+const mobileMaxHeight = 200;
+const desktopMaxHeight = 600;
 
-const ITEM_HEIGHT = 50; // Increased from 40
 const LIST_WIDTH = 250; // Matches minWidth from the component style
 
 type WikilinkResult = {
