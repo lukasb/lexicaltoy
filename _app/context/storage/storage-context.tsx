@@ -279,6 +279,7 @@ export async function processQueuedUpdates(
  * @param value - the new value for the page
  * @param title - the new title for the page
  * @param deleted - the new deleted status for the page
+ * @param lastModified - the new lastModified date for the page
  * @returns PageSyncResult
  */
 export async function updatePage(

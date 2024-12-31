@@ -22,11 +22,11 @@ function PagesManager() {
   const { setPageStatus, removePageStatus, addPageStatus, pageStatuses, setPageLastModified, setPageRevisionNumber } = usePageStatus();
   
   // Create a ref to store the save queue
-  const saveQueue = useRef<Map<string, { page: Page, timestamp: number, newValue?: string, newTitle?: string }>>(new Map());
+  const saveQueue = useRef<Map<string, { page: Page, timestamp: number, revisionNumber: number, newValue?: string, newTitle?: string }>>(new Map());
   const isSaving = useRef<Set<string>>(new Set());
 
   const savePagesToDatabase = useCallback(async () => {
-    for (const [pageId, { page, timestamp, newValue, newTitle }] of saveQueue.current.entries()) {
+    for (const [pageId, { page, timestamp, revisionNumber, newValue, newTitle }] of saveQueue.current.entries()) {
       if (isSaving.current.has(pageId)) continue;
 
       isSaving.current.add(pageId);
@@ -34,7 +34,7 @@ function PagesManager() {
       try {
         const title = newTitle !== undefined ? newTitle : page.title;
         const value = newValue !== undefined ? newValue : page.value;
-        const result = await updatePage(page, value, title, false, new Date(timestamp));
+        const result = await updatePage({...page, revisionNumber: revisionNumber}, value, title, false, new Date(timestamp));
         if (result === PageSyncResult.Conflict) {
           console.log("conflict", page.title);
           setPageStatus(page.id, PageStatus.Conflict);
@@ -79,6 +79,7 @@ function PagesManager() {
           saveQueue.current.set(page.id, {
             page,
             timestamp: pageStatus.lastModified.getTime(),
+            revisionNumber: pageStatus.revisionNumber,
             newValue: pageStatus.newValue,
             newTitle: pageStatus.newTitle,
           });
