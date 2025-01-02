@@ -43,7 +43,6 @@ function PagesManager() {
         } else {
           //removePageStatus(page.id);
           setPageStatus(page.id, PageStatus.Quiescent);
-          setPageRevisionNumber(page.id, page.revisionNumber + 1);
           msReplacePage({...page, lastModified: new Date(timestamp), value, title});
         }
       } catch (error) {
@@ -53,7 +52,7 @@ function PagesManager() {
         saveQueue.current.delete(pageId);
       }
     }
-  }, [msReplacePage, setPageStatus, setPageRevisionNumber]);
+  }, [msReplacePage, setPageStatus]);
 
   useEffect(() => {
     const interval = setInterval(() => {
