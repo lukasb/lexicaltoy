@@ -38,6 +38,9 @@ const desktopMaxHeight = 600;
 
 const LIST_WIDTH = 250; // Matches minWidth from the component style
 
+const BASE_ROW_HEIGHT = 50;
+const ROW_HEIGHT_WITH_DESCRIPTION = 100;
+
 type WikilinkResult = {
   title: string;
   description?: string;
@@ -410,6 +413,13 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
       );
     };
 
+    const calculateTotalHeight = useCallback(() => {
+      const totalHeight = results.reduce((acc, result) => {
+        return acc + (result.description ? ROW_HEIGHT_WITH_DESCRIPTION : BASE_ROW_HEIGHT);
+      }, 0);
+      return Math.min(totalHeight, isSmallWidthViewport(768) ? mobileMaxHeight : desktopMaxHeight);
+    }, [results]);
+
     return (
       <div
         ref={ref}
@@ -424,12 +434,12 @@ const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
           minWidth: LIST_WIDTH
         }}
       >
-        <div style={{ height: Math.min(results.length * 50, isSmallWidthViewport(768) ? mobileMaxHeight : desktopMaxHeight) }}>
+        <div style={{ height: calculateTotalHeight() }}>
           <List
-            height={Math.min(results.length * 50, isSmallWidthViewport(768) ? mobileMaxHeight : desktopMaxHeight)}
+            height={calculateTotalHeight()}
             width={LIST_WIDTH}
             rowCount={results.length}
-            rowHeight={cache.current.rowHeight}
+            rowHeight={({ index }) => results[index].description ? ROW_HEIGHT_WITH_DESCRIPTION : BASE_ROW_HEIGHT}
             deferredMeasurementCache={cache.current}
             rowRenderer={rowRenderer}
             scrollToIndex={selectedIndex}
