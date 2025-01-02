@@ -52,6 +52,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const { setBlockIdsForPage } = useBlockIdsIndex();
   const { msAddPage, msSlurpPages } = useMiniSearch();
   const hasInitializedSearch = useRef(false);
+  const [pagesDefined, setPagesDefined] = useState(false);
   let initCount = 0;
 
   const { addPageStatus, removePageStatus, setPageRevisionNumber } = usePageStatus();
@@ -61,6 +62,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const pagesRef = useRef(pages);
   useEffect(() => {
     pagesRef.current = pages;
+    if (pages) setPagesDefined(true);
   }, [pages]);
 
   const handleConflict = useCallback(
@@ -135,33 +137,18 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const fetchIntervalId = useRef<NodeJS.Timeout | null>(null);
   const processIntervalId = useRef<NodeJS.Timeout | null>(null);
 
-  // Set up intervals when pages is defined
   useEffect(() => {
-    if (!pages || (fetchIntervalId.current && processIntervalId.current)) {
-      if (!pages) {
-        setLoadingMessage("Pages undefined");
-      } else if (fetchIntervalId.current && processIntervalId.current) {
-        setLoadingMessage("Fetch and process intervals already set up");
-      }
-      return;
-    }
-
-    // Do initial fetch and set up intervals
-    fetch();
+    if (!pagesDefined) return;
     
-    console.log("setting up fetch interval");
+    fetch();
     fetchIntervalId.current = setInterval(fetch, 30000);
     processIntervalId.current = setInterval(processUpdates, 8000);
-  }, [pages, fetch, processUpdates]);
-
-  // Clear intervals on unmount only
-  useEffect(() => {
+    
     return () => {
-      console.log("clearing fetch interval");
       if (fetchIntervalId.current) clearInterval(fetchIntervalId.current);
       if (processIntervalId.current) clearInterval(processIntervalId.current);
     };
-  }, []);
+  }, [pagesDefined, fetch, processUpdates]);
 
   useEffect(() => {
     if (!hasInitializedSearch.current && pages && pages.length > 0 && initialFetchComplete) {

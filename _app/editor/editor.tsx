@@ -105,6 +105,10 @@ function Editor({
     const currentPage = getPage(page.id);
     if (currentPage) {
       const currentStatus = getPageStatus(page.id);
+      if (currentStatus?.status === PageStatus.Conflict) {
+        console.log("conflict detected, not saving");
+        return;
+      }
       setPageStatus(
         page.id,
         PageStatus.UserEdit,
