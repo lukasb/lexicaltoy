@@ -104,8 +104,6 @@ export function parseFormulaMarkdown(markdownString: string): ParseResult {
 }
 
 export function stripSharedNodesFromMarkdown(markdown: string): string {
-  console.log('Input markdown:', JSON.stringify(markdown));
-  console.log('Line endings:', markdown.includes('\r\n') ? 'CRLF' : 'LF');
   const lines = markdown.split('\n');
   const processedLines: string[] = [];
   let inFormula = false;

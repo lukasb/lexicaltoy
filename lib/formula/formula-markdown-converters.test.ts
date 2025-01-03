@@ -210,6 +210,34 @@ describe('stripSharedNodesFromMarkdown', () => {
     expect(stripSharedNodesFromMarkdown(markdown)).toBe(expected);
   });
 
+  test('not too greedy stripping formula results', () => {
+    const markdown = `
+- abc
+- def
+- =find("stuff") |||result:
+ @@childnodes
+|||
+    - [[horrorday]]
+        - some stuff here.
+
+some other stuff!
+
+- yeah
+`;
+    const expected = `
+- abc
+- def
+- =find("stuff") |||result:
+ @@childnodes
+|||
+
+some other stuff!
+
+- yeah
+`;
+    expect(stripSharedNodesFromMarkdown(markdown)).toBe(expected);
+  });
+
   test('handles nested list items', () => {
     const markdown = `
 - =find(something) |||result:
