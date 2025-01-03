@@ -3,7 +3,8 @@ import {
   $isRootNode, 
   $isRangeSelection, 
   $isNodeSelection,
-  $createTextNode
+  $createTextNode,
+  $isElementNode
 } from "lexical";
 import { 
   ListItemNode,
@@ -82,12 +83,37 @@ export function $getActiveListItemFromSelection(
 }
 
 export function $canIndentListItem(listItemNode: ListItemNode | null): boolean {
+  
   if (!listItemNode) return false;
+  
   // we can indent if we're a list item and we're not the first child of our parent
-  if (listItemNode.getIndexWithinParent() > 0) {
-    return true;
+  if (listItemNode.getIndexWithinParent() === 0) return false;
+  
+  // and if our previous sibling, if any, is not a formula node
+  const previousSibling = listItemNode.getPreviousSibling();
+  if (previousSibling && $isElementNode(previousSibling)) {
+    if (
+      previousSibling.getFirstChild()?.getType() === "formula-display" ||
+      previousSibling.getFirstChild()?.getType() === "formula-editor"
+    ) {
+      return false;
+    }
+    const previousSiblingOfPreviousSibling =
+      previousSibling.getPreviousSibling();
+    if (
+      previousSiblingOfPreviousSibling &&
+      $isElementNode(previousSiblingOfPreviousSibling)
+    ) {
+      if (
+        previousSiblingOfPreviousSibling.getFirstChild()?.getType() ===
+        "formula-display"
+      ) {
+        return false;
+      }
+    }
   }
-  return false;
+  
+  return true;
 }
 
 export function $canOutdentListItem(listItemNode: ListItemNode | null): boolean {
