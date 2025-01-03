@@ -99,8 +99,8 @@ export function PageStatusProvider({
           status,
           lastModified: lastModified || existingUpdate.lastModified,
           revisionNumber: revisionNumber || existingUpdate.revisionNumber,
-          newValue: newValue || existingUpdate.newValue,
-          newTitle: newTitle || existingUpdate.newTitle,
+          newValue: status === PageStatus.DroppingUpdate ? undefined : (newValue || existingUpdate.newValue),
+          newTitle: status === PageStatus.DroppingUpdate ? undefined : (newTitle || existingUpdate.newTitle),
         });
       } else {
         throw new Error(
