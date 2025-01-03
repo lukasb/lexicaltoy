@@ -104,6 +104,8 @@ export function parseFormulaMarkdown(markdownString: string): ParseResult {
 }
 
 export function stripSharedNodesFromMarkdown(markdown: string): string {
+  console.log('Input markdown:', JSON.stringify(markdown));
+  console.log('Line endings:', markdown.includes('\r\n') ? 'CRLF' : 'LF');
   const lines = markdown.split('\n');
   const processedLines: string[] = [];
   let inFormula = false;
@@ -141,10 +143,10 @@ export function stripSharedNodesFromMarkdown(markdown: string): string {
   
               if (
                 (nextMatch && nextMatch[1].length > formulaIndent.length) // skip any list item indented further than the formula
-                || (!nextMatch && line.trim())) { // or any multiline continuation of one of those list items
+                || (!nextMatch && nextLine.trim())) { // or any multiline continuation of one of those list items
   
                   i++;
-
+                  
               } else {
                 break;
               }
