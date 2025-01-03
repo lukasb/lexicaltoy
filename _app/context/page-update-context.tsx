@@ -114,7 +114,6 @@ export function PageStatusProvider({
   const getUpdatedPageValue = useCallback(
     (page: Page) => {
       const pageStatus = pageStatuses.get(page.id);
-      console.log("getUpdatedPageValue", pageStatus?.newValue, page.value);
       return pageStatus?.newValue || page.value;
     },
     [pageStatuses]

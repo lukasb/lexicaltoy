@@ -145,8 +145,6 @@ function Editor({
       const trimmedEditorContents = editoContentsWithoutSharedNodes.replace(/\s$/, '');
       
       if (trimmedEditorContents !== trimmedPageValue) {
-        console.log("trimmedEditorContents", trimmedEditorContents);
-        console.log("trimmedPageValue", trimmedPageValue);
         pendingChangeRef.current = editoContentsWithoutSharedNodes;
         debouncedSave(editoContentsWithoutSharedNodes);
         deleteSearchTerms(page.id);

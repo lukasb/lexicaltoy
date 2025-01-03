@@ -138,7 +138,7 @@ export function PageListenerPlugin({
               pageStatuses.get(pageId)?.status === PageStatus.EditorUpdateRequested
             ) {
               editor.setEditable(false); // prevent focus stealing
-              $myConvertFromMarkdownString(newValue, false);
+              $myConvertFromMarkdownString(newValue, true);
             } else {
               const selection = $getSelection();
               let anchorKey = undefined;
