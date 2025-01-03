@@ -86,6 +86,47 @@ test('detect conflicts between separate browsers', async ({ browser }) => {
     .toBeVisible();
 });
 
+test('can reload page with conflicts', async ({ browser }) => {
+  test.setTimeout(90000);
+  const context1 = await browser.newContext();
+  const page1 = await context1.newPage();
+  await page1.goto('/page');
+  await new Promise(r => setTimeout(r, 1000));
+  await createVilla(page1);
+  //await page1.waitForTimeout(8000);
+  await new Promise(r => setTimeout(r, 8000));
+  const context2 = await browser.newContext();
+  const page2 = await context2.newPage();
+  await page2.goto('/page');
+  await new Promise(r => setTimeout(r, 15000));
+  const activePageTitle = await page2.locator('[data-testid="editable-title"]').first().textContent();
+  if (activePageTitle !== 'villa') {
+    const newSearch = page2.getByPlaceholder('Search or Create');
+    await newSearch.fill('villa');
+    await page2.keyboard.press('Enter');
+    await page2.waitForTimeout(5000);
+  }
+  await context1.setOffline(true);
+  await page2.keyboard.type('i want to make my own changes.');
+  await page2.waitForTimeout(5000);
+  await page1.keyboard.type('i want to make my own changes too!');
+  await page1.waitForTimeout(1000);
+  await context1.setOffline(false);
+  await new Promise(r => setTimeout(r, 9000));
+  await expect(
+    page1.getByText('Your changes are based on an old version of this page.'))
+    .toBeVisible();
+  await new Promise(r => setTimeout(r, 31000));
+  await page1.getByRole('button', { name: 'Reload' }).click();
+  await page1.waitForTimeout(1000);
+  await expect(
+    page1.getByText('I want to make my own changes.'))
+    .toBeVisible();
+  await page1.waitForTimeout(8000);
+  await expect(page1.getByText('Your changes are based on an old version of this page.'))
+    .not.toBeVisible();
+});
+
 test('pull in changes from other tabs with network off', async ({ context }) => {
   test.setTimeout(70000);
   const page1 = await context.newPage();

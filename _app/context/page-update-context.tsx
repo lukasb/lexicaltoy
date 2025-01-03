@@ -83,6 +83,7 @@ export function PageStatusProvider({
       if (existingUpdate) {
         if (
           status !== PageStatus.DroppingUpdate &&
+          status !== PageStatus.EditorUpdateRequested &&
           status !== PageStatus.Conflict &&
           status !== PageStatus.Quiescent &&
           (newValue === undefined && newTitle === undefined && existingUpdate.newValue === undefined && existingUpdate.newTitle === undefined)
@@ -113,6 +114,7 @@ export function PageStatusProvider({
   const getUpdatedPageValue = useCallback(
     (page: Page) => {
       const pageStatus = pageStatuses.get(page.id);
+      console.log("getUpdatedPageValue", pageStatus?.newValue, page.value);
       return pageStatus?.newValue || page.value;
     },
     [pageStatuses]

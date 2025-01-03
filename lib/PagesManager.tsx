@@ -95,7 +95,10 @@ function PagesManager() {
       ) {
         deleteQueuedUpdate(page.id);
         setTimeout(  // make sure PageListener gets the updated page
-          () => setPageStatus(page.id, PageStatus.EditorUpdateRequested),
+          () => {
+            setPageStatus(page.id, PageStatus.EditorUpdateRequested, page.lastModified, page.revisionNumber);
+            console.log("~~~~~~~~setPageStatus to editor update requested");
+          },
         0);
       } else if (
         !pageStatus ||
@@ -146,8 +149,6 @@ function PagesManager() {
         } else if (page.lastModified === pageStatus.lastModified) {
           console.log("page updated on server, no change", page.title);
           addPageStatus(page.id, PageStatus.Quiescent, page.lastModified, page.revisionNumber);
-        } else {
-          console.error("page updated on server, but last modified is older", page.title, page.revisionNumber, pageStatus.revisionNumber);
         }
       }
     });

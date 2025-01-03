@@ -119,8 +119,7 @@ export function PageListenerPlugin({
   useEffect(() => {
       if (
         pageStatuses.get(pageId)?.status === PageStatus.EditFromSharedNodes ||
-        (pageStatuses.get(pageId)?.status === PageStatus.EditorUpdateRequested &&
-          pageStatuses.get(pageId)?.newValue !== undefined)
+        pageStatuses.get(pageId)?.status === PageStatus.EditorUpdateRequested
       ) {
         console.log("PageListenerPlugin: editor update requested");
         const page = pages?.find((page) => page.id === pageId);

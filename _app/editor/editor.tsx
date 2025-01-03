@@ -127,7 +127,10 @@ function Editor({
     if (
       !editorState ||
       getPageStatus(page.id)?.status === PageStatus.EditFromSharedNodes ||
-      getPageStatus(page.id)?.status === PageStatus.Conflict
+      getPageStatus(page.id)?.status === PageStatus.Conflict ||
+      getPageStatus(page.id)?.status === PageStatus.DroppingUpdate ||
+      getPageStatus(page.id)?.status === PageStatus.EditorUpdateRequested ||
+      getPageStatus(page.id)?.status === PageStatus.UpdatedFromDisk
     ) {
       return;
     }
@@ -142,6 +145,8 @@ function Editor({
       const trimmedEditorContents = editoContentsWithoutSharedNodes.replace(/\s$/, '');
       
       if (trimmedEditorContents !== trimmedPageValue) {
+        console.log("trimmedEditorContents", trimmedEditorContents);
+        console.log("trimmedPageValue", trimmedPageValue);
         pendingChangeRef.current = editoContentsWithoutSharedNodes;
         debouncedSave(editoContentsWithoutSharedNodes);
         deleteSearchTerms(page.id);
