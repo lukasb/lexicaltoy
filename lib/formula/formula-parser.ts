@@ -245,8 +245,14 @@ export class FormulaParser extends CstParser {
 
 const parser = new FormulaParser();
 
+const normalizeQuotes = (input: string): string => {
+  // Convert left/right curly quotes and other quote variants to straight quotes
+  return input.replace(/[\u201C\u201D\u201E\u201F\u2033\u2034\u2057]/g, '"');
+};
+
 export function parseFormula(input: string) {
-  const lexResult = FormulaLexer.tokenize(input);
+  const normalizedInput = normalizeQuotes(input);
+  const lexResult = FormulaLexer.tokenize(normalizedInput);
   parser.input = lexResult.tokens;
   const cst = parser.formula();
   
