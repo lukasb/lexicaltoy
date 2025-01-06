@@ -154,10 +154,10 @@ export async function processQueuedUpdatesInternal(
       const lastRevisionSynced = await getLastRevisionSynced(queuedUpdate.id);
 
       try {
-        if (isDevelopmentEnvironment) {
+        //if (isDevelopmentEnvironment) {
           console.time(`updatePageWithHistory ${queuedUpdate.title}`);
           console.log("processQueuedUpdatesInternal: updating page", queuedUpdate.title, "revision number", queuedUpdate.revisionNumber);
-        }
+        //}
 
         let currentRevisionNumber;
         if (lastRevisionSynced !== undefined && lastRevisionSynced > queuedUpdate.revisionNumber) {
@@ -176,12 +176,13 @@ export async function processQueuedUpdatesInternal(
           currentRevisionNumber,
           queuedUpdate.lastModified
         );
-        if (isDevelopmentEnvironment) {
-          console.timeEnd(`updatePageWithHistory ${queuedUpdate.title}`);
+        //if (isDevelopmentEnvironment) {
+          console.timeEnd(`updatePageWithHistory ${queuedUpdate.title} completed`);
           console.log("processQueuedUpdatesInternal: updated page", queuedUpdate.title, "new revision number", revisionNumber);
-        }
+        //}
 
         localDb.queuedUpdates.delete(queuedUpdate.id);
+        console.log("processQueuedUpdatesInternal: deleted queued update", queuedUpdate.title);
         if (revisionNumber === -1 || !revisionNumber || !lastModified) {
           console.log("failed to update page", queuedUpdate.title);
           result = PageSyncResult.Conflict;
@@ -199,6 +200,7 @@ export async function processQueuedUpdatesInternal(
         };
         setTimeout(() => {
           localDb.pages.put(pageUpdated);
+          console.log("processQueuedUpdatesInternal: updated page in local db", queuedUpdate.title);
         }, 0);
       } catch (error) {
         console.error("failed to update page", queuedUpdate.title, queuedUpdate.id, error);
