@@ -58,7 +58,14 @@ function FlexibleEditorLayout ({
           const journalPage = getPage(journalId);
           const nonJournalPage = getPage(nonJournalId);
           
-          if (!journalPage || !nonJournalPage) continue;
+          if (!journalPage) {
+            journalIndex++;
+            continue;
+          }
+          if (!nonJournalPage) {
+            nonJournalIndex++;
+            continue;
+          }
 
           const journalDate = new Date(journalPage.lastModified);
           const nonJournalDate = new Date(nonJournalPage.lastModified);
