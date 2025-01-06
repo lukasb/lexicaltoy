@@ -142,7 +142,7 @@ function FlexibleEditorLayout ({
         .map(p => p.id)
         .filter(id => id !== firstPageId);
       const remainingUnpinnedIds = sortedUnpinnedIds
-        .filter(id => id !== firstPageId && !pinnedPageIds.includes(id));
+        .filter(id => id !== firstPageId);
 
       return {
         pinnedIds: pinnedPageIds.includes(firstPageId)
@@ -157,23 +157,22 @@ function FlexibleEditorLayout ({
       const existingPinnedIds = stablePagesOrder.current.pinnedIds;
       const existingUnpinnedIds = stablePagesOrder.current.unpinnedIds;
       
-      // Filter out closed pages and ensure pinned pages are in correct array
-      const currentPinnedIds = pageIds.filter(id => pinnedPageIds.includes(id));
-      const currentUnpinnedIds = pageIds.filter(id => !pinnedPageIds.includes(id));
+      // Filter out closed pages
+      const currentPinnedIds = existingPinnedIds.filter(id => pageIds.includes(id));
+      const currentUnpinnedIds = existingUnpinnedIds.filter(id => pageIds.includes(id));
       
-      // Add new pages at the start of unpinned (excluding pinned pages)
+      // Add new pages at the start of unpinned
       const newPageIds = pageIds.filter(id => 
-        !existingPinnedIds.includes(id) && 
-        !existingUnpinnedIds.includes(id) &&
-        !pinnedPageIds.includes(id) &&
+        !currentPinnedIds.includes(id) && 
+        !currentUnpinnedIds.includes(id) &&
         id !== topPageId
       );
       
       return {
         pinnedIds: currentPinnedIds,
         unpinnedIds: topPageId 
-          ? [topPageId, ...newPageIds, ...currentUnpinnedIds.filter(id => id !== topPageId && !pinnedPageIds.includes(id))]
-          : [...newPageIds, ...currentUnpinnedIds.filter(id => !pinnedPageIds.includes(id))]
+          ? [topPageId, ...newPageIds, ...currentUnpinnedIds.filter(id => id !== topPageId)]
+          : [...newPageIds, ...currentUnpinnedIds]
       };
     }
   }, [currentPages, pinnedPageIds, isInitialLoad]);
