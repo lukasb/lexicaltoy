@@ -35,147 +35,188 @@ function FlexibleEditorLayout ({
 
   useBreakpoint(1537, isSmallWidthViewport, setIsSmallWidthViewport);
 
-  const sortPages = useCallback((pageIds: string[], topPageId?: string): { pinnedIds: string[], unpinnedIds: string[] } => {
+  const sortPages = useCallback(
+    (
+      pageIds: string[],
+      topPageId?: string
+    ): { pinnedIds: string[]; unpinnedIds: string[] } => {
+      const mergeSortedPageIds = (
+        journalIds: string[],
+        nonJournalIds: string[]
+      ): string[] => {
+        const merged: string[] = [];
+        let journalIndex = 0;
+        let nonJournalIndex = 0;
 
-    const mergeSortedPageIds = (journalIds: string[], nonJournalIds: string[]): string[] => {
-      const merged: string[] = [];
-      let journalIndex = 0;
-      let nonJournalIndex = 0;
+        const getPage = (id: string) => currentPages.find((p) => p.id === id);
 
-      const getPage = (id: string) => currentPages.find(p => p.id === id);
+        while (
+          journalIndex < journalIds.length ||
+          nonJournalIndex < nonJournalIds.length
+        ) {
+          const journalId = journalIds[journalIndex];
+          const nonJournalId = nonJournalIds[nonJournalIndex];
 
-      while (journalIndex < journalIds.length || nonJournalIndex < nonJournalIds.length) {
-        const journalId = journalIds[journalIndex];
-        const nonJournalId = nonJournalIds[nonJournalIndex];
-
-        if (!journalId) {
-          merged.push(nonJournalId);
-          nonJournalIndex++;
-        } else if (!nonJournalId) {
-          merged.push(journalId);
-          journalIndex++;
-        } else {
-          const journalPage = getPage(journalId);
-          const nonJournalPage = getPage(nonJournalId);
-          
-          if (!journalPage) {
-            console.log("journalPage not found");
-            journalIndex++;
-            continue;
-          }
-          if (!nonJournalPage) {
-            console.log("nonJournalPage not found");
+          if (!journalId) {
+            merged.push(nonJournalId);
             nonJournalIndex++;
-            continue;
-          }
-
-          const journalDate = new Date(journalPage.lastModified);
-          const nonJournalDate = new Date(nonJournalPage.lastModified);
-
-          if (journalDate.getTime() > nonJournalDate.getTime()) {
+          } else if (!nonJournalId) {
             merged.push(journalId);
             journalIndex++;
           } else {
-            merged.push(nonJournalId);
-            nonJournalIndex++;
+            const journalPage = getPage(journalId);
+            const nonJournalPage = getPage(nonJournalId);
+
+            if (!journalPage) {
+              console.log("journalPage not found");
+              journalIndex++;
+              continue;
+            }
+            if (!nonJournalPage) {
+              console.log("nonJournalPage not found");
+              nonJournalIndex++;
+              continue;
+            }
+
+            const journalDate = new Date(journalPage.lastModified);
+            const nonJournalDate = new Date(nonJournalPage.lastModified);
+
+            if (journalDate.getTime() > nonJournalDate.getTime()) {
+              merged.push(journalId);
+              journalIndex++;
+            } else {
+              merged.push(nonJournalId);
+              nonJournalIndex++;
+            }
           }
         }
+
+        return merged;
+      };
+
+      if (pageIds.length === 0 && topPageId === undefined)
+        return { pinnedIds: [], unpinnedIds: [] };
+
+      // Get all relevant page IDs including topPageId
+      const allPageIds =
+        topPageId !== undefined
+          ? [...new Set([topPageId, ...pageIds])]
+          : pageIds;
+
+      const pages = allPageIds
+        .map((id) => currentPages.find((p) => p.id === id))
+        .filter((p) => p !== undefined) as Page[];
+
+      if (pages.length === 0) return { pinnedIds: [], unpinnedIds: [] };
+
+      // Separate pinned and unpinned pages
+      const pinnedPages = pages.filter((p) => pinnedPageIds.includes(p.id));
+      const unpinnedPages = pages.filter((p) => !pinnedPageIds.includes(p.id));
+
+      // Only sort if this is the initial load
+      if (isInitialLoad) {
+        // Get IDs of journal and non-journal pages
+        const unpinnedIds = unpinnedPages.map((p) => p.id);
+        const journalIds = unpinnedIds.filter((id) => {
+          const page = currentPages.find((p) => p.id === id);
+          return page?.isJournal;
+        });
+        const nonJournalIds = unpinnedIds.filter((id) => {
+          const page = currentPages.find((p) => p.id === id);
+          return !page?.isJournal;
+        });
+
+        // Sort journal page IDs by their date
+        const sortedJournalIds = journalIds.sort((idA, idB) => {
+          const pageA = currentPages.find((p) => p.id === idA);
+          const pageB = currentPages.find((p) => p.id === idB);
+          if (!pageA || !pageB) return 0;
+          const dateA = getJournalPageDate(pageA);
+          const dateB = getJournalPageDate(pageB);
+          return dateB.getTime() - dateA.getTime();
+        });
+
+        // Sort non-journal page IDs by lastModified
+        const sortedNonJournalIds = nonJournalIds.sort((idA, idB) => {
+          const pageA = currentPages.find((p) => p.id === idA);
+          const pageB = currentPages.find((p) => p.id === idB);
+          if (!pageA || !pageB) return 0;
+          return (
+            new Date(pageB.lastModified).getTime() -
+            new Date(pageA.lastModified).getTime()
+          );
+        });
+
+        // Merge journal and non-journal page IDs
+        const sortedUnpinnedIds = mergeSortedPageIds(
+          sortedJournalIds,
+          sortedNonJournalIds
+        );
+
+        // Handle top page and first page
+        const firstPageId =
+          topPageId || sortedUnpinnedIds[0] || pinnedPages[0]?.id;
+        if (!firstPageId) return { pinnedIds: [], unpinnedIds: [] };
+
+        // If the first page is pinned, it should only appear in pinnedIds
+        if (pinnedPageIds.includes(firstPageId)) {
+          // Create set of all pinned IDs to ensure uniqueness
+          const pinnedSet = new Set([
+            firstPageId,
+            ...pinnedPages.map((p) => p.id),
+          ]);
+
+          return {
+            pinnedIds: Array.from(pinnedSet), // Guarantees unique pinned IDs
+            unpinnedIds: sortedUnpinnedIds.filter((id) => !pinnedSet.has(id)), // Excludes ALL pinned IDs
+          };
+        } else {
+          // If the first page is unpinned, it should only appear in unpinnedIds
+          return {
+            pinnedIds: pinnedPages.map((p) => p.id),
+            unpinnedIds: [
+              firstPageId,
+              ...sortedUnpinnedIds.filter((id) => id !== firstPageId),
+            ],
+          };
+        }
+      } else {
+        // After initial load, maintain the existing order and just handle additions/removals
+        const existingPinnedIds = stablePagesOrder.current.pinnedIds;
+        const existingUnpinnedIds = stablePagesOrder.current.unpinnedIds;
+
+        // Filter out closed pages
+        const currentPinnedIds = existingPinnedIds.filter((id) =>
+          pageIds.includes(id)
+        );
+        const currentUnpinnedIds = existingUnpinnedIds.filter((id) =>
+          pageIds.includes(id)
+        );
+
+        // Add new pages at the start of unpinned
+        const newPageIds = pageIds.filter(
+          (id) =>
+            !currentPinnedIds.includes(id) &&
+            !currentUnpinnedIds.includes(id) &&
+            id !== topPageId
+        );
+
+        const topPagePinned = pinnedPageIds.includes(topPageId || "");
+        
+        return {
+          pinnedIds: topPagePinned ? currentPinnedIds : currentPinnedIds.filter(id => (id !== topPageId)),
+          unpinnedIds: !topPagePinned
+            ? [
+                ...(topPageId ? [topPageId] : []),
+                ...newPageIds,
+                ...currentUnpinnedIds.filter((id) => id !== topPageId),
+              ]
+            : [...newPageIds, ...currentUnpinnedIds],
+        };
       }
-
-      return merged;
-    };
-
-    if (pageIds.length === 0 && topPageId === undefined) return { pinnedIds: [], unpinnedIds: [] };
-
-    // Get all relevant page IDs including topPageId
-    const allPageIds = topPageId !== undefined ? [...new Set([topPageId, ...pageIds])] : pageIds;
-    
-    const pages = allPageIds
-      .map(id => currentPages.find(p => p.id === id))
-      .filter(p => p !== undefined) as Page[];
-    
-    if (pages.length === 0) return { pinnedIds: [], unpinnedIds: [] };
-
-    // Separate pinned and unpinned pages
-    const pinnedPages = pages.filter(p => pinnedPageIds.includes(p.id));
-    const unpinnedPages = pages.filter(p => !pinnedPageIds.includes(p.id));
-
-    // Only sort if this is the initial load
-    if (isInitialLoad) {
-      // Get IDs of journal and non-journal pages
-      const unpinnedIds = unpinnedPages.map(p => p.id);
-      const journalIds = unpinnedIds.filter(id => {
-        const page = currentPages.find(p => p.id === id);
-        return page?.isJournal;
-      });
-      const nonJournalIds = unpinnedIds.filter(id => {
-        const page = currentPages.find(p => p.id === id);
-        return !page?.isJournal;
-      });
-
-      // Sort journal page IDs by their date
-      const sortedJournalIds = journalIds.sort((idA, idB) => {
-        const pageA = currentPages.find(p => p.id === idA);
-        const pageB = currentPages.find(p => p.id === idB);
-        if (!pageA || !pageB) return 0;
-        const dateA = getJournalPageDate(pageA);
-        const dateB = getJournalPageDate(pageB);
-        return dateB.getTime() - dateA.getTime();
-      });
-
-      // Sort non-journal page IDs by lastModified
-      const sortedNonJournalIds = nonJournalIds.sort((idA, idB) => {
-        const pageA = currentPages.find(p => p.id === idA);
-        const pageB = currentPages.find(p => p.id === idB);
-        if (!pageA || !pageB) return 0;
-        return new Date(pageB.lastModified).getTime() - new Date(pageA.lastModified).getTime();
-      });
-
-      // Merge journal and non-journal page IDs
-      const sortedUnpinnedIds = mergeSortedPageIds(sortedJournalIds, sortedNonJournalIds);
-
-      // Handle top page and first page
-      const firstPageId = topPageId || sortedUnpinnedIds[0] || pinnedPages[0]?.id;
-      if (!firstPageId) return { pinnedIds: [], unpinnedIds: [] };
-
-      const remainingPinnedIds = pinnedPages
-        .map(p => p.id)
-        .filter(id => id !== firstPageId);
-      const remainingUnpinnedIds = sortedUnpinnedIds
-        .filter(id => id !== firstPageId);
-
-      return {
-        pinnedIds: pinnedPageIds.includes(firstPageId)
-          ? [firstPageId, ...remainingPinnedIds]
-          : remainingPinnedIds,
-        unpinnedIds: !pinnedPageIds.includes(firstPageId)
-          ? [firstPageId, ...remainingUnpinnedIds]
-          : remainingUnpinnedIds
-      };
-    } else {
-      // After initial load, maintain the existing order and just handle additions/removals
-      const existingPinnedIds = stablePagesOrder.current.pinnedIds;
-      const existingUnpinnedIds = stablePagesOrder.current.unpinnedIds;
-      
-      // Filter out closed pages
-      const currentPinnedIds = existingPinnedIds.filter(id => pageIds.includes(id));
-      const currentUnpinnedIds = existingUnpinnedIds.filter(id => pageIds.includes(id));
-      
-      // Add new pages at the start of unpinned
-      const newPageIds = pageIds.filter(id => 
-        !currentPinnedIds.includes(id) && 
-        !currentUnpinnedIds.includes(id) &&
-        id !== topPageId
-      );
-      
-      return {
-        pinnedIds: currentPinnedIds,
-        unpinnedIds: topPageId 
-          ? [topPageId, ...newPageIds, ...currentUnpinnedIds.filter(id => id !== topPageId)]
-          : [...newPageIds, ...currentUnpinnedIds]
-      };
-    }
-  }, [currentPages, pinnedPageIds, isInitialLoad]);
+    },
+    [currentPages, pinnedPageIds, isInitialLoad]
+  );
 
   const [sortedPages, setSortedPages] = useState<{ pinnedIds: string[], unpinnedIds: string[] }>(() => {
     const initial = sortPages(openPageIds, topPageId);
@@ -203,6 +244,7 @@ function FlexibleEditorLayout ({
   }
 
   if (isSmallWidthViewport) {
+    console.log("sortedPages", sortedPages.pinnedIds, sortedPages.unpinnedIds);
     // Get the first unpinned page, followed by pinned pages, then remaining unpinned pages
     const firstUnpinnedPage = sortedPages.unpinnedIds[0];
     const remainingUnpinnedPages = sortedPages.unpinnedIds.slice(1);
@@ -215,6 +257,7 @@ function FlexibleEditorLayout ({
       </div>
     );
   } else {
+    console.log("sortedPages", sortedPages.pinnedIds, sortedPages.unpinnedIds);
     const leftColumnPages: string[] = [];
     const rightColumnPages: string[] = [...sortedPages.pinnedIds];
 
