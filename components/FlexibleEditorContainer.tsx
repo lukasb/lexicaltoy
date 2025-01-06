@@ -244,7 +244,6 @@ function FlexibleEditorLayout ({
   }
 
   if (isSmallWidthViewport) {
-    console.log("sortedPages", sortedPages.pinnedIds, sortedPages.unpinnedIds);
     // Get the first unpinned page, followed by pinned pages, then remaining unpinned pages
     const firstUnpinnedPage = sortedPages.unpinnedIds[0];
     const remainingUnpinnedPages = sortedPages.unpinnedIds.slice(1);
@@ -257,7 +256,6 @@ function FlexibleEditorLayout ({
       </div>
     );
   } else {
-    console.log("sortedPages", sortedPages.pinnedIds, sortedPages.unpinnedIds);
     const leftColumnPages: string[] = [];
     const rightColumnPages: string[] = [...sortedPages.pinnedIds];
 
