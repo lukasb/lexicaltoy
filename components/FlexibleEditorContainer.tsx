@@ -59,10 +59,12 @@ function FlexibleEditorLayout ({
           const nonJournalPage = getPage(nonJournalId);
           
           if (!journalPage) {
+            console.log("journalPage not found");
             journalIndex++;
             continue;
           }
           if (!nonJournalPage) {
+            console.log("nonJournalPage not found");
             nonJournalIndex++;
             continue;
           }
