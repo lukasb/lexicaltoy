@@ -299,6 +299,7 @@ export async function updatePage(
 
   if (localPage && localPage.lastModified > page.lastModified) {
     // our proposed update is based on an old version of the page
+    console.log("updatePage: conflict, local page last modified > proposed update last modified", page.title);
     return PageSyncResult.Conflict;
   }
 
