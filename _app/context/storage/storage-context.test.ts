@@ -208,7 +208,7 @@ describe("Page Sync Functions", () => {
         "Updated content",
         "Updated Title",
         false,
-        new Date(new Date().toISOString())
+        new Date("2024-01-01")
       );
 
       expect(result).toBe(PageSyncResult.Conflict);
