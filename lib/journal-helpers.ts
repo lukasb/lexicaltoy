@@ -4,7 +4,7 @@ import { insertPage, updatePage, PageSyncResult } from '@/_app/context/storage/s
 import { getJournalPagesByUserId, getJournalQueuedUpdatesByUserId, deleteQueuedUpdate } from '@/_app/context/storage/storage-context';
 
 export const DEFAULT_JOURNAL_CONTENTS = 
-`- =ask("Based on my recent journal entries, please provide three helpful journal prompts for me to consider.",[[journals/]])
+`- =ask("Based on my recent journal entries, create a journaling prompt that (1) references or builds on a meaningful theme, question or pattern you've observed in their recent entries (2) invites them to check in with with present moment experience, both external circumstances and internal state and (3) opens up exploration for what that would mean for their path forward. This prompt should be 2-3 sentences long, feel conversational rather than clinical, and maintain a supportive, curious tone. Avoid giving advice or making assumptions. Instead, ask open-ended questions that help them explore their own thoughts and feelings.",[[journals/]])
 - `;
 
 export function getTodayJournalTitle() {
