@@ -3,7 +3,9 @@ import { Page } from "@/lib/definitions";
 import { insertPage, updatePage, PageSyncResult } from '@/_app/context/storage/storage-context';
 import { getJournalPagesByUserId, getJournalQueuedUpdatesByUserId, deleteQueuedUpdate } from '@/_app/context/storage/storage-context';
 
-export const DEFAULT_JOURNAL_CONTENTS = '- ';
+export const DEFAULT_JOURNAL_CONTENTS = 
+`- =ask("Based on my recent journal entries, please provide three helpful journal prompts for me to consider.",[[journals/]])
+- `;
 
 export function getTodayJournalTitle() {
   return getJournalTitle(new Date());

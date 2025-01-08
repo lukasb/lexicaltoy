@@ -10,3 +10,4 @@ export const FLATTEN_FORMULA_OUTPUT: LexicalCommand <{displayNodeKey: string}> =
 export const CREATE_FORMULA_NODES: LexicalCommand <{displayNodeKey: string, nodesMarkdown: NodeElementMarkdown[]}> = createCommand('CREATE_FORMULA_NODES');
 export const ADD_FORMULA_NODES: LexicalCommand <{displayNodeKey: string, nodesMarkdown: NodeElementMarkdown[]}> = createCommand('ADD_FORMULA_NODES');
 export const EDIT_FORMULA_NODE_BLOCK_ID: LexicalCommand <{displayNodeKey: string, blockId: string}> = createCommand('EDIT_FORMULA_NODE_BLOCK_ID');
+export const PROCESS_TEMPLATE_INSTANTIATION: LexicalCommand <(void)> = createCommand('PROCESS_FORMULA_TEMPLATE');

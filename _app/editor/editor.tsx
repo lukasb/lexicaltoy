@@ -185,6 +185,7 @@ function Editor({
         />
         <ListPlugin />
         <OnChangePlugin onChange={onChange} ignoreSelectionChange={true} />
+        <FormulaPlugin />
         <PageListenerPlugin pageId={page.id} />
         <MarkdownShortcutPlugin transformers={[UNORDERED_LIST]} />
         <KeyboardShortcutsPlugin closePage={() => closePage(page.id)} />
@@ -193,7 +194,6 @@ function Editor({
         <AutoLinkPlugin />
         <AIGeneratorPlugin />
         <LexicalClickableLinkPlugin />
-        <FormulaPlugin />
         <TodosPlugin />
         <WikilinkPlugin />
         <WikilinkEventListenerPlugin

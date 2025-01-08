@@ -1,4 +1,4 @@
-import { useEffect, useContext } from "react";
+import { useEffect, useContext, useRef } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { PagesContext } from "../context/pages-context";
 import { 
@@ -28,6 +28,7 @@ import {
 import { $isFormulaDisplayNode } from "../nodes/FormulaNode";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
 import { usePageStatus } from "@/_app/context/page-update-context";
+import { PROCESS_TEMPLATE_INSTANTIATION } from "@/lib/formula-commands";
 
 const listItemRegex = /^(\s*)-\s*(.+)$/;
 
@@ -108,6 +109,7 @@ export function PageListenerPlugin({
   const [editor] = useLexicalComposerContext();
   const pages = useContext(PagesContext);
   const { pageStatuses, getUpdatedPageValue } = usePageStatus();
+  const templateProcessedRef = useRef(false);
 
   // make sure open editors update their contents when updates from shared nodes occur
 
@@ -162,6 +164,10 @@ export function PageListenerPlugin({
             }
           });
         });
+      } else if (pageStatuses.get(pageId)?.revisionNumber === 1 && !templateProcessedRef.current) {
+        console.log("PageListenerPlugin: dispatching PROCESS_TEMPLATE_INSTANTIATION");
+        editor.dispatchCommand(PROCESS_TEMPLATE_INSTANTIATION, undefined);
+        templateProcessedRef.current = true;
       }
   }, [editor, pageId, pages, pageStatuses, getUpdatedPageValue]);
 

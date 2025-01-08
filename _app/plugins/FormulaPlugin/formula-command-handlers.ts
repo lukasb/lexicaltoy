@@ -22,7 +22,10 @@ import {
   INSERT_PARAGRAPH_COMMAND,
   COPY_COMMAND,
   PASTE_COMMAND,
-  $createTextNode
+  $createTextNode,
+  COMMAND_PRIORITY_NORMAL,
+  $getRoot,
+  LexicalNode
 } from "lexical";
 import {
   ListItemNode,
@@ -45,7 +48,8 @@ import {
   PUT_CURSOR_NEXT_TO_FORMULA_DISPLAY,
   CREATE_AND_STORE_FORMULA_OUTPUT,
   FLATTEN_FORMULA_OUTPUT,
-  EDIT_FORMULA_NODE_BLOCK_ID
+  EDIT_FORMULA_NODE_BLOCK_ID,
+  PROCESS_TEMPLATE_INSTANTIATION
 } from "@/lib/formula-commands";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
 import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
@@ -409,6 +413,23 @@ export function registerFormulaCommandHandlers(
           return true;
         },
         COMMAND_PRIORITY_CRITICAL
+      ),
+      editor.registerCommand(
+        PROCESS_TEMPLATE_INSTANTIATION,
+        (payload) => {
+          const root = $getRoot();
+          const checkChildren = (node: LexicalNode) => {
+            if ($isFormulaEditorNode(node)) {
+              $replaceWithFormulaDisplayNode(node);
+            }
+            if ($isElementNode(node)) {
+              node.getChildren().forEach(child => checkChildren(child));
+            }
+          };
+          root.getChildren().forEach(node => checkChildren(node));
+          return true;
+        },
+        COMMAND_PRIORITY_NORMAL
       )
     );
   }
