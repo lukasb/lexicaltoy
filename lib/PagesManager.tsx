@@ -193,6 +193,7 @@ function PagesManager() {
       }));
 
     if (pagesToInvalidate.length > 0) {
+      console.log("PagesManager: updating pages results");
       updatePagesResults(pagesToInvalidate);
     }
     if (pagesToUpdate.size > 0) {

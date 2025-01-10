@@ -109,6 +109,7 @@ function Editor({
         console.log("conflict detected, not saving");
         return;
       }
+      console.log("Editor: saving change");
       setPageStatus(
         page.id,
         PageStatus.UserEdit,

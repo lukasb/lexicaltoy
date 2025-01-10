@@ -145,7 +145,7 @@ export const useFormulaResultService = () => {
   ): Promise<FormulaOutput | null> => {
     const output = await getFormulaOutput(query, pages, context, pageUpdateContext);
     if (!output) return null;
-
+    console.log("getFormulaResults", output);
     if (output.type === FormulaValueType.NodeMarkdown) {
       const resultNodes = output.output as NodeElementMarkdown[];
 

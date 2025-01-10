@@ -219,6 +219,8 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
   // we also check the title when matching, so if one substring is in the title and another
   // is in the line, we match
 
+  console.log("findCallback", defaultArgs, userArgs);
+
   if (!defaultArgs.pages || userArgs.length === 0) return null;
 
   // behavior is undefined if you provide more than one todo status argument
@@ -250,7 +252,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
   const output: NodeElementMarkdown[] = [];
 
   for (const page of defaultArgs.pages) {
-    //if (page.title === 'Oct 23rd, 2024') console.log("processing page", page.title, page.value);
+    if (page.title === 'Jan 6th, 2025') console.log("processing page", page.title, page.value);
     let unmatchedSubstringRegexps = [...substrings];
 
     // search terms can appear in the title or the content of the page
