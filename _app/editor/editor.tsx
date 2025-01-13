@@ -109,6 +109,7 @@ function Editor({
         console.log("conflict detected, not saving");
         return;
       }
+      console.log("Editor: saving change");
       setPageStatus(
         page.id,
         PageStatus.UserEdit,
@@ -141,7 +142,9 @@ function Editor({
       const trimmedPageValue = localPageValue.replace(/\s$/, '');
 
       const editorStateMarkdown = $myConvertToMarkdownString(undefined, undefined, true);
+      //if (page.title === 'to dos') console.log("markdown", editorStateMarkdown);
       const editoContentsWithoutSharedNodes = stripSharedNodesFromMarkdown(editorStateMarkdown);
+      //if (page.title === 'to dos') console.log("markdown minus shared nodes", editoContentsWithoutSharedNodes);
       const trimmedEditorContents = editoContentsWithoutSharedNodes.replace(/\s$/, '');
       
       if (trimmedEditorContents !== trimmedPageValue) {

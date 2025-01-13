@@ -152,7 +152,7 @@ function PagesManager() {
         }
       }
     });
-    console.log("PagesManager useEffect 1", performance.now() - duration);
+    //console.log("PagesManager useEffect 1", performance.now() - duration);
   }, [pages, pageStatuses, setPageStatus, addPageStatus, setPageRevisionNumber]);
 
   // TODO maybe use Redux or some kind of message bus so we don't have an O(n) operation here every time
@@ -193,6 +193,7 @@ function PagesManager() {
       }));
 
     if (pagesToInvalidate.length > 0) {
+      console.log("PagesManager: updating pages results", pagesToInvalidate);
       updatePagesResults(pagesToInvalidate);
     }
     if (pagesToUpdate.size > 0) {
@@ -223,7 +224,7 @@ function PagesManager() {
         }
       }
     }
-    console.log("PagesManager useEffect 2", performance.now() - duration);
+    //console.log("PagesManager useEffect 2", performance.now() - duration);
   }, [sharedNodeMap, pages, setPageStatus, updatePagesResults, addPagesResults, pageStatuses, addPageStatus, removePageStatus]);
 
   return null;

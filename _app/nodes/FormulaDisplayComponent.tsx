@@ -188,6 +188,7 @@ export default function FormulaDisplayComponent(
         }
         pageLineMarkdownMapRef.current = newPageLineMarkdownMap;
 
+        //console.log("about to dispatch CREATE_FORMULA_NODES", nodeKey, sharedNodes);
         editor.dispatchCommand(CREATE_FORMULA_NODES, {
           displayNodeKey: nodeKey,
           nodesMarkdown: sharedNodes,
