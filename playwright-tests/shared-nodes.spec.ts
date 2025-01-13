@@ -121,6 +121,24 @@ test('modifying shared node on source page propagates to find nodes', async ({ p
     .toBeVisible();
 });
 
+test('modifying shared node on source page propagates to find nodes even when edit causes node to no longer match query', async ({ page }) => {
+  await page.waitForTimeout(1000);
+  await createVilla(page);
+  await page.waitForTimeout(1000);
+  await createAston(page);
+  await page.waitForTimeout(1000);
+  const newerSearch = page.getByPlaceholder('Search or Create');
+  await newerSearch.pressSequentially('villa');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
+  await page.keyboard.press('Home');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Backspace');
+  await expect(
+    page.locator('li').filter({ hasText: '[[villa]]oratio hornblower' }))
+    .toBeVisible();
+});
+
 test('modifying shared node on find page propagates to source page', async ({ page }) => {
   await page.waitForTimeout(1000);
   await createVilla(page);
