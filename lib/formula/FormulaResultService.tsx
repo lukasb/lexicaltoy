@@ -42,11 +42,15 @@ export const useFormulaResultService = () => {
     query: string,
     nodeMap: Map<string, QueryNode>,
     updatedNeedsSyncToPage: boolean,
-    removeUnmatched: boolean = false
+    removeUnmatched: boolean = false,
+    pagesToCheck: Page[] = []
   ): Map<string, QueryNode> => {
     const updatedMap = new Map(nodeMap);
     const resultKeys = new Set<string>();
     resultNodes.forEach((result) => {
+      if (pagesToCheck.length > 0 && !pagesToCheck.some(p => p.title === result.baseNode.pageName)) {
+        return;
+      }
       const key = createSharedNodeKey(result);
       resultKeys.add(key);
 
@@ -71,6 +75,9 @@ export const useFormulaResultService = () => {
 
     if (removeUnmatched) {
       updatedMap.forEach((node, key) => {
+        if (pagesToCheck.length > 0 && !pagesToCheck.some(p => p.title === node.output.baseNode.pageName)) {
+          return;
+        }
         if (!resultKeys.has(key)) {
           node.queries = node.queries.filter((q) => q !== query);
           if (node.queries.length === 0) {
@@ -81,11 +88,11 @@ export const useFormulaResultService = () => {
         }
       });
     }
-
+    console.log("mergeResults", query, nodeMap, updatedMap);
     return updatedMap;
   };
 
-  const checkforChanges = (query: string, results: NodeElementMarkdown[], checkShouldRemove: boolean = false) => {
+  const checkforChanges = (query: string, results: NodeElementMarkdown[], checkShouldRemove: boolean = false, pagesToCheck: Page[] = []) => {
     const compareNodes = (existingNode: NodeElementMarkdown, newNode: NodeElementMarkdown): boolean => {
       if (existingNode.baseNode.nodeMarkdown !== newNode.baseNode.nodeMarkdown) return true;
       if (existingNode.baseNode.pageName !== newNode.baseNode.pageName) return true;
@@ -106,6 +113,11 @@ export const useFormulaResultService = () => {
 
     const resultKeys = new Set<string>();
     for (const result of results) {
+
+      if (pagesToCheck.length > 0 && !pagesToCheck.some(p => p.title === result.baseNode.pageName)) {
+        continue;
+      }
+
       const key = createSharedNodeKey(result);
       resultKeys.add(key);
       const existingNode = sharedNodeMap.get(key);
@@ -128,6 +140,9 @@ export const useFormulaResultService = () => {
     
     let needToRemove = false;
     sharedNodeMap.forEach((value, key) => {
+      if (pagesToCheck.length > 0 && !pagesToCheck.some(p => p.title === value.output.baseNode.pageName)) {
+        return;
+      }
       if (!resultKeys.has(key)) {
         if (value.queries.includes(query)) {
           //console.log("query needs to be removed from sharedNodeMap");
@@ -173,14 +188,14 @@ export const useFormulaResultService = () => {
   }
 
   // check if the results for any queries have changed
-  const compareSharedNodesToResults = (newResults: Map<string, FormulaOutput>, checkShouldRemove: boolean = false) => {
+  const compareSharedNodesToResults = (newResults: Map<string, FormulaOutput>, checkShouldRemove: boolean = false, pagesToCheck: Page[] = []) => {
     // get the set of formulas from the new results
     const newFormulas = new Set(newResults.keys());
     for (const formula of newFormulas) {
       const result = newResults.get(formula);
       if (result?.type === FormulaValueType.NodeMarkdown) {
         const resultNodes = result.output as NodeElementMarkdown[];
-        if (checkforChanges(formula, resultNodes, checkShouldRemove)) {
+        if (checkforChanges(formula, resultNodes, checkShouldRemove, pagesToCheck)) {
           return true;
         }
       }
@@ -196,7 +211,7 @@ export const useFormulaResultService = () => {
         const afterFormulaTime = performance.now();
         console.log(`Formula outputs took ${afterFormulaTime - startTime}ms`);
         
-        if (compareSharedNodesToResults(outputMap, true)) {
+        if (compareSharedNodesToResults(outputMap, true, pagesToQuery)) {
           const afterCompareTime = performance.now();
           console.log(`Compare results took ${afterCompareTime - afterFormulaTime}ms`);
           
@@ -217,7 +232,7 @@ export const useFormulaResultService = () => {
               formulaOutput.type === FormulaValueType.NodeMarkdown
             ) {
               const resultNodes = formulaOutput.output as NodeElementMarkdown[];
-              updatedMap = mergeResults(resultNodes, formula, updatedMap, false, true);
+              updatedMap = mergeResults(resultNodes, formula, updatedMap, false, true, pagesToQuery);
             }
           });
           const afterMergeTime = performance.now();

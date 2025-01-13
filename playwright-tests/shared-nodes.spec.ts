@@ -121,7 +121,7 @@ test('modifying shared node on source page propagates to find nodes', async ({ p
     .toBeVisible();
 });
 
-test('modifying shared node on source page propagates to find nodes even when edit causes node to no longer match query', async ({ page }) => {
+test('modifying shared node on source page removes from find if no longer matches query', async ({ page }) => {
   await page.waitForTimeout(1000);
   await createVilla(page);
   await page.waitForTimeout(1000);
@@ -134,8 +134,28 @@ test('modifying shared node on source page propagates to find nodes even when ed
   await page.keyboard.press('Home');
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Backspace');
+  await page.waitForTimeout(500);
   await expect(
-    page.locator('li').filter({ hasText: '[[villa]]oratio hornblower' }))
+    page.locator('li').filter({ hasText: '[[villa]]' }))
+    .not.toBeVisible();
+});
+
+test('modifying shared node on source page restores to find if it matches query again', async ({ page }) => {
+  await page.waitForTimeout(1000);
+  await createVilla(page);
+  await page.waitForTimeout(1000);
+  await createAston(page);
+  await page.waitForTimeout(1000);
+  const newerSearch = page.getByPlaceholder('Search or Create');
+  await newerSearch.pressSequentially('villa');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
+  await page.keyboard.press('Home');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('h');
+  await expect(
+    page.locator('li').filter({ hasText: '[[villa]]horatio hornblower' }))
     .toBeVisible();
 });
 
