@@ -196,7 +196,7 @@ export const useFormulaResultService = () => {
         const afterFormulaTime = performance.now();
         console.log(`Formula outputs took ${afterFormulaTime - startTime}ms`);
         
-        if (compareSharedNodesToResults(outputMap)) {
+        if (compareSharedNodesToResults(outputMap, true)) {
           const afterCompareTime = performance.now();
           console.log(`Compare results took ${afterCompareTime - afterFormulaTime}ms`);
           
@@ -217,7 +217,7 @@ export const useFormulaResultService = () => {
               formulaOutput.type === FormulaValueType.NodeMarkdown
             ) {
               const resultNodes = formulaOutput.output as NodeElementMarkdown[];
-              updatedMap = mergeResults(resultNodes, formula, updatedMap, false);
+              updatedMap = mergeResults(resultNodes, formula, updatedMap, false, true);
             }
           });
           const afterMergeTime = performance.now();
