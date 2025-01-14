@@ -169,10 +169,11 @@ function PagesManager() {
     const pagesToUpdate = new Map<string, string>();
 
     for (const [key, value] of sharedNodeMap.entries()) {
+      if (!value.needsSyncToPage) continue;
       const keyElements: SharedNodeKeyElements = getSharedNodeKeyElements(key);
       const page = pages.find((p) => p.title === keyElements.pageName);
       if (page) {
-        if (pageStatuses.get(page.id)?.status !== PageStatus.UserEdit && value.needsSyncToPage) {
+        if (pageStatuses.get(page.id)?.status !== PageStatus.UserEdit) {
           const lines = page.value.split("\n");
           const currentMarkdown = getNodeElementFullMarkdown(value.output);
           if (lines.slice(keyElements.lineNumberStart - 1, keyElements.lineNumberEnd).join("\n") !== currentMarkdown) {
@@ -180,7 +181,7 @@ function PagesManager() {
           }
           pagesToUpdate.set(keyElements.pageName, lines.join("\n"));
           sharedNodeMap.set(key, { ...value, needsSyncToPage: false });
-        } else if (pageStatuses.get(page.id)?.status === PageStatus.UserEdit && value.needsSyncToPage) {
+        } else if (pageStatuses.get(page.id)?.status === PageStatus.UserEdit) {
           console.error("Page has a user edit, but shared node also needs sync to page");
         } 
       }
