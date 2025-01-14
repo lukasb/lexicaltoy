@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "jsx": "react-jsx", // needed for formula-markdown-converters.test.ts
-    "module": "ESNext",
+    "module": "commonjs",
     "moduleResolution": "node",
     "allowImportingTsExtensions": true
   },

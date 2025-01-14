@@ -303,7 +303,7 @@ export async function updatePage(
     return PageSyncResult.Conflict;
   }
 
-  console.log("updatePage: storing queued update", page.title, "revision number", page.revisionNumber);
+  //console.log("updatePage: storing queued update", page.title, "revision number", page.revisionNumber);
 
   const pageLocalUpdate = {
     ...page,
@@ -325,16 +325,15 @@ export async function insertPage(
   isJournal: boolean
 ): Promise<[Page | undefined, PageSyncResult]> {
   try {
-    console.log("insertPage!", title, value, userId, isJournal);
 
     if (!localDb) {
       console.error("localDb not found");
-    } else {
-      console.log("localDb found", localDb);
     }
+
     if (!localDb.isOpen()) {
       console.error("localDb not open");
     } else {
+      /* Debug code removed
       console.log("localDb open");
       const test = localDb.hasFailed();
       console.log("localDb.hasFailed", test);
@@ -348,9 +347,8 @@ export async function insertPage(
         console.error("Error in count():", error);
         return [undefined, PageSyncResult.Error];
       }
+      */
     }
-
-    console.log("trying to get localPage");
 
     // can't have two pages with the same title and user id
     try {
@@ -365,8 +363,6 @@ export async function insertPage(
       console.error("insertPage: error getting localPage", error);
       return [undefined, PageSyncResult.Error];
     }
-
-    console.log("inserting page", title);
 
     const id = crypto.randomUUID();
     const newPage = {
@@ -383,8 +379,6 @@ export async function insertPage(
     const result = await localDb.queuedUpdates.put(newPage);
     if (!result) {
       throw new Error("failed to put newPage");
-    } else {
-      console.log("insertPage: put newPage", result);
     }
 
     return [newPage, PageSyncResult.Success];

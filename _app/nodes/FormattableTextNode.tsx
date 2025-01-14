@@ -55,7 +55,7 @@ export class FormattableTextNode extends TextNode {
     || !self.__strikeThrough && dom.classList.contains('PlaygroundEditorTheme__todoDoneText')) {
       return true;
     }
-    const update = super.updateDOM(prevNode, dom, config);
+    const update = super.updateDOM(prevNode as this, dom, config);
     return update;
   }
 
