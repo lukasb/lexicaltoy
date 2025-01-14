@@ -21,6 +21,8 @@ import { useMiniSearch } from "@/_app/context/minisearch-context";
 import { FixedSizeList as List } from 'react-window';
 import { useClickOutside } from "@/lib/window-helpers";
 
+// TODO probably we can refactor this, see https://react.dev/learn/you-might-not-need-an-effect
+
 const Omnibar = forwardRef(({
   openOrCreatePageByTitle
 }: { 
