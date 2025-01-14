@@ -35,7 +35,7 @@
     "@radix-ui/react-dropdown-menu": "^2.1.4",
     "@vercel/postgres": "^0.10.0",
     "axios": "^1.7.9",
-    "chevrotain": "^11.0.3",
+    "chevrotain": "^10.5.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dexie": "^4.0.10",
