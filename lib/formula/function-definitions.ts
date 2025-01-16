@@ -314,7 +314,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
         return output;
       }
 
-      const pageValue = defaultArgs.pageUpdateContext ? defaultArgs.pageUpdateContext.getUpdatedPageValue(page) : page.value;
+      const pageValue = defaultArgs.pageUpdateContext?.getUpdatedPageValue?.(page) ?? page.value;
       const nodesMarkdown = splitMarkdownByNodes(pageValue, page.title);
       output.push(
         ...processNodes(nodesMarkdown, unmatchedSubstringRegexps, orStatuses)

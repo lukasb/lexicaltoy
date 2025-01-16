@@ -7,8 +7,15 @@ import { myCreateHeadlessEditor } from "../editor-utils";
 import { LexicalNode, ElementNode, $getRoot } from 'lexical';
 import { ListNode, ListItemNode } from '@lexical/list';
 import { $getListContainingChildren } from "../list-utils";
+import { usePageStatusStore } from '@/lib/stores/page-status-store';
+import { Page, PageStatus } from '@/lib/definitions';
 
 describe('Markdown to Lexical Conversion', () => {
+  beforeEach(() => {
+    // Clear the Zustand store before each test
+    const store = usePageStatusStore.getState();
+    store.pageStatuses.clear();
+  });
 
   // Helper function to get the list item content
   const getListItemContent = (root: ElementNode, index: number): string | null => {
@@ -77,7 +84,7 @@ describe('Markdown to Lexical Conversion', () => {
           firstListItem: (headlessRoot.getFirstChild() as ListNode)?.getChildren(),
         });
       } else {
-      expect(nestedContent).toBe('boogie');
+        expect(nestedContent).toBe('boogie');
       }
     });
   });
@@ -92,6 +99,40 @@ describe('Markdown to Lexical Conversion', () => {
       
       expect(getListItemContent(headlessRoot, 0)).toBe('This is whatever for page 5.');
       expect(getListItemContent(headlessRoot, 1)).toBe('It contains some amazing keywords.\nThis is a multiline continuation');
+    });
+  });
+
+  test('converts markdown with page status updates', () => {
+    const pageId = 'test-page-1';
+    const store = usePageStatusStore.getState();
+    const date = new Date();
+    store.addPageStatus(pageId, PageStatus.UserEdit, date, 1, '- Updated content\n- With status');
+    
+    const markdownString = '- Original content\n- Without status';
+    const headlessEditor = myCreateHeadlessEditor();
+    
+    const testPage: Page = {
+      id: pageId,
+      userId: 'test-user',
+      title: 'Test Page',
+      value: markdownString,
+      lastModified: date,
+      revisionNumber: 1,
+      isJournal: false,
+      deleted: false
+    };
+    
+    headlessEditor.update(() => {
+      const headlessRoot = $getRoot();
+      $myConvertFromMarkdownString(markdownString, false, headlessRoot);
+      
+      // The original content should be converted
+      expect(getListItemContent(headlessRoot, 0)).toBe('Original content');
+      expect(getListItemContent(headlessRoot, 1)).toBe('Without status');
+      
+      // Now let's verify the store has the updated content
+      const updatedValue = store.getUpdatedPageValue(testPage);
+      expect(updatedValue).toBe('- Updated content\n- With status');
     });
   });
 });

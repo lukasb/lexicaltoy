@@ -4,7 +4,8 @@ import { DialogueElement } from "../ai";
 import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 import { askCallback, findCallback, getUrlCallback } from "./function-definitions";
 import { PageAndDialogueContext } from "./FormulaOutput";
-import { PageStatusContextType } from "@/_app/context/page-update-context";
+import { usePageStatusStore } from "@/lib/stores/page-status-store";
+import type { PageStatusState } from "@/lib/stores/page-status-store";
 
 interface NodeType {
   name: string;
@@ -82,7 +83,7 @@ export const possibleArguments: PossibleArguments[] = [
 export interface DefaultArguments {
   pages?: Page[];
   context?: PageAndDialogueContext;
-  pageUpdateContext?: PageStatusContextType;
+  pageUpdateContext?: PageStatusState;
 }
 
 // TODO I define these in like three places, need to consolidate

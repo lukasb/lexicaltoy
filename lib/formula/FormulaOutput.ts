@@ -17,7 +17,8 @@ import { IToken } from 'chevrotain';
 import { $getRoot } from 'lexical';
 import { getMarkdownUpTo } from './formula-context-helpers';
 import { getShortGPTResponse } from './gpt-formula-handlers';
-import { PageStatusContextType } from '@/_app/context/page-update-context';
+import { usePageStatusStore } from '@/lib/stores/page-status-store';
+import type { PageStatusState } from '@/lib/stores/page-status-store';
 
 const partialFormulaRegex = /=\s?[a-zA-z]+\(/;
 
@@ -25,7 +26,7 @@ export async function getFormulaOutput(
   formula: string,
   pages: Page[],
   context?: PageAndDialogueContext,
-  pageUpdateContext?: PageStatusContextType
+  pageUpdateContext?: PageStatusState
 ): Promise<FormulaOutput | null> {
   try {
     const formulaWithEqualSign = formula.startsWith("=") ? formula : `=${formula}`;
@@ -57,7 +58,7 @@ async function getFormulaOutputInner(
   cst: CstNodeWithChildren,
   pages: Page[],
   context?: PageAndDialogueContext,
-  pageUpdateContext?: PageStatusContextType
+  pageUpdateContext?: PageStatusState
 ): Promise<FormulaOutput | null> {
   const functionCallNode = cst.children.functionCall[0] as CstNodeWithChildren;
   const functionName = (functionCallNode.children.Identifier[0] as IToken).image;
@@ -86,8 +87,12 @@ async function getFormulaOutputInner(
   const funcDef = functionDefinitions.find((def: FunctionDefinition) => def.name === functionName);
 
   if (funcDef) {
-    // Prepare the default arguments
-    const defaultArgs = { pages, context, pageUpdateContext };
+    // Prepare the default arguments with proper typing
+    const defaultArgs = { 
+      pages, 
+      context, 
+      pageUpdateContext 
+    } as const;
     
     // Call the function's callback with the default arguments and parsed arguments
     return await funcDef.callback(defaultArgs, parsedArgs);
