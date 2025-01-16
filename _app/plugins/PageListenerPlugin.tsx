@@ -27,7 +27,7 @@ import {
 } from "@lexical/list";
 import { $isFormulaDisplayNode } from "../nodes/FormulaNode";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
-import { usePageStatus } from "@/_app/context/page-update-context";
+import { usePageStatusStore } from "@/lib/stores/page-status-store";
 import { PROCESS_TEMPLATE_INSTANTIATION } from "@/lib/formula-commands";
 
 const listItemRegex = /^(\s*)-\s*(.+)$/;
@@ -108,7 +108,7 @@ export function PageListenerPlugin({
 }): null {
   const [editor] = useLexicalComposerContext();
   const pages = useContext(PagesContext);
-  const { pageStatuses, getUpdatedPageValue } = usePageStatus();
+  const { pageStatuses, getUpdatedPageValue } = usePageStatusStore();
   const templateProcessedRef = useRef(false);
 
   // make sure open editors update their contents when updates from shared nodes occur

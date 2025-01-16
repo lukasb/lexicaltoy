@@ -11,7 +11,7 @@ import { useCallback } from "react";
 import { getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
 import { useMiniSearch } from '@/_app/context/minisearch-context';
 import { updatePage, PageSyncResult, deleteQueuedUpdate } from '@/_app/context/storage/storage-context';
-import { usePageStatus } from '@/_app/context/page-update-context';
+import { usePageStatusStore } from './stores/page-status-store';
 
 // TODO maybe use Redux so we don't have an O(n) operation here every time
 function PagesManager() {
@@ -19,7 +19,14 @@ function PagesManager() {
   const { sharedNodeMap } = useSharedNodeContext();
   const { updatePagesResults, addPagesResults } = useFormulaResultService();
   const { msReplacePage } = useMiniSearch();
-  const { setPageStatus, removePageStatus, addPageStatus, pageStatuses, setPageLastModified, setPageRevisionNumber } = usePageStatus();
+  const { 
+    setPageStatus, 
+    removePageStatus, 
+    addPageStatus, 
+    pageStatuses, 
+    setPageLastModified, 
+    setPageRevisionNumber 
+  } = usePageStatusStore();
   
   // Create a ref to store the save queue
   const saveQueue = useRef<Map<string, { page: Page, timestamp: number, revisionNumber: number, newValue?: string, newTitle?: string }>>(new Map());

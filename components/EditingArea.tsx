@@ -40,7 +40,7 @@ import {
   fetchUpdatedPages,
   processQueuedUpdates
 } from "@/_app/context/storage/storage-context";
-import { usePageStatus } from "@/_app/context/page-update-context";
+import { usePageStatusStore } from "@/lib/stores/page-status-store";
 import { createConflictHandler } from "@/lib/conflict-manager";
 
 function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefined }) {
@@ -55,7 +55,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const [pagesDefined, setPagesDefined] = useState(false);
   let initCount = 0;
 
-  const { addPageStatus, removePageStatus, setPageRevisionNumber } = usePageStatus();
+  const { addPageStatus, removePageStatus, setPageRevisionNumber } = usePageStatusStore();
 
   const [initialFetchComplete, setInitialFetchComplete] = useState(false);
 

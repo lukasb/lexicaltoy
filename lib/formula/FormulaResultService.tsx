@@ -16,7 +16,7 @@ import {
 } from "@/lib/formula/formula-definitions";
 import { QueryCounter } from './query-counter';
 import { getFormulaOutputType } from "./formula-parser";
-import { usePageStatus } from "@/_app/context/page-update-context";
+import { usePageStatusStore } from '@/lib/stores/page-status-store';
 
 export const nodeQueries = new QueryCounter();
 
@@ -35,7 +35,7 @@ export function unregisterFormula(formula: string): void {
 export const useFormulaResultService = () => {
   const { sharedNodeMap, setSharedNodeMap } = useSharedNodeContext();
   const pages = useContext(PagesContext);
-  const pageUpdateContext = usePageStatus();
+  const pageUpdateContext = usePageStatusStore();
 
   const mergeResults = (
     resultNodes: NodeElementMarkdown[],

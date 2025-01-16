@@ -17,7 +17,6 @@ import {
 import { MiniSearchProvider } from "@/_app/context/minisearch-context";
 import { useLiveQuery } from 'dexie-react-hooks';
 import { localDb } from '@/_app/context/storage/db';
-import { PageStatusProvider } from "@/_app/context/page-update-context";
 
 // Only Once in your app you can set whether to enable hooks tracking or not.
 // In CRA(create-react-app) e.g. this can be done in src/index.js
@@ -148,9 +147,7 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
         )}
           <BlockIdsIndexProvider>
             <MiniSearchProvider>
-              <PageStatusProvider>
-                <EditingArea userId={session.id} pages={pages} />
-              </PageStatusProvider>
+              <EditingArea userId={session.id} pages={pages} />
             </MiniSearchProvider>
           </BlockIdsIndexProvider>
         <SignoutButton />
