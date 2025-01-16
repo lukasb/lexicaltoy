@@ -49,7 +49,7 @@ import { useSearchTerms } from "../context/search-terms-context";
 import { AIGeneratorPlugin } from "../plugins/AIGeneratorPlugin";
 import { editorNodes } from "./shared-editor-config";
 import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blockids-index-context";
-import { usePageStatus } from "../context/page-update-context";
+import { usePageStatusStore } from "@/lib/stores/page-status-store";
 import { TypingPerformancePlugin } from "../plugins/TypingPerformancePlugin";
 
 function onError(error: Error) {
@@ -87,7 +87,7 @@ function Editor({
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
   const [shouldHighlight, setShouldHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
   const { setBlockIdsForPage } = useBlockIdsIndex();
-  const { setPageStatus, getUpdatedPageValue, getPageStatus } = usePageStatus();
+  const { setPageStatus, getUpdatedPageValue, getPageStatus } = usePageStatusStore();
 
   const getPage = useCallback((id: string) => {
     return pages.find((page) => page.id === id);

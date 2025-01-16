@@ -3,6 +3,8 @@ import { test, expect } from '@playwright/test';
 // TODO figure out per-browser users in db, then re-enable
 // parallelism is playwright.config.ts
 
+// TODO figure out how to mock Claude, then remove some of the await timeouts
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/page');
 });
@@ -90,6 +92,7 @@ test('renaming page reflected in search results', async ({ page }) => {
 });
 
 test('create new page', async ({ page }) => {
+  await page.waitForTimeout(200);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('avalon');
   await page.keyboard.press('Enter');
@@ -130,7 +133,9 @@ test('open page', async ({ page }) => {
 });
 
 test('keyboard shortcut for omnibar', async ({ page }) => {
+  await page.waitForTimeout(200);
   await page.keyboard.press('Meta+k');
+  await page.waitForTimeout(200);
   await expect(page.getByPlaceholder('Search or Create')).toBeFocused();
 });
 
