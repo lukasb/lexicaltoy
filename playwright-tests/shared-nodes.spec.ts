@@ -2,11 +2,13 @@ import { test, expect, Page } from '@playwright/test';
 import { cleanUp } from './tests.shared.ts';
 import { db } from '../scripts/seed-db-wrapper.mts';
 const { users } = require('./tests-placeholder-data.js');
+import { mockChatApi } from './mocks/chat-api.mock';
 
 // TODO figure out per-browser users in db, then re-enable
 // parallelism is playwright.config.ts
 
 test.beforeEach(async ({ page }) => {
+  await mockChatApi(page);
   await page.goto('/page');
 });
 
