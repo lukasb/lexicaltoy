@@ -100,13 +100,16 @@ function PagesManager() {
         pageStatus &&
         pageStatus.status === PageStatus.DroppingUpdate
       ) {
-        deleteQueuedUpdate(page.id);
-        setTimeout(  // make sure PageListener gets the updated page
-          () => {
-            setPageStatus(page.id, PageStatus.EditorUpdateRequested, page.lastModified, page.revisionNumber);
-            console.log("~~~~~~~~setPageStatus to editor update requested");
-          },
-        0);
+        console.log('dropping update', page.title);
+        (async () => {
+          await deleteQueuedUpdate(page.id);
+          setTimeout(  // make sure PageListener gets the updated page
+            () => {
+              setPageStatus(page.id, PageStatus.EditorUpdateRequested, page.lastModified, page.revisionNumber);
+              console.log("~~~~~~~~setPageStatus to editor update requested");
+            },
+          0);
+        })();
       } else if (
         !pageStatus ||
         (page.revisionNumber === pageStatus.revisionNumber &&
