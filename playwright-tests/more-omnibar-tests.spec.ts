@@ -5,6 +5,11 @@ const {
   users,
   pages
 } = require('./tests-placeholder-data.js');
+import { mockChatApi } from './mocks/chat-api.mock';
+
+test.beforeEach(async ({ page }) => {
+  await mockChatApi(page);
+});
 
 test.afterEach(async ({ page }) => {
   const client = await db.pool.connect();
