@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { mockChatApi } from './mocks/chat-api.mock';
 
 // TODO figure out per-browser users in db, then re-enable
 // parallelism is playwright.config.ts
@@ -6,6 +7,7 @@ import { test, expect } from '@playwright/test';
 // TODO figure out how to mock Claude, then remove some of the await timeouts
 
 test.beforeEach(async ({ page }) => {
+  await mockChatApi(page);
   await page.goto('/page');
 });
 
@@ -14,7 +16,6 @@ test('window title', async ({ page }) => {
 });
 
 test('should bring up search results', async ({ page }) => {
-  await page.waitForTimeout(100);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.pressSequentially('test');
   await expect(page.getByTestId('search-result')).toContainText('TestPage1');
@@ -51,6 +52,7 @@ test('search for start title match opens page', async ({ page }) => {
 });
 
 test('should select search result', async ({ page }) => {
+  await page.waitForTimeout(100);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.focus();
   await page.keyboard.press('t');
@@ -69,6 +71,7 @@ test('backspace deselects search result', async ({ page }) => {
 });
 
 test('escape closes search results', async ({ page }) => {
+  await page.waitForTimeout(100);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('test');
   await page.keyboard.press('Escape');
@@ -259,6 +262,7 @@ test('deleted page does not appear in search results', async ({ page }) => {
 });
 
 test('wiki page names autocomplete correctly when match is not at start of page title', async ({ page }) => {
+  await page.waitForTimeout(100);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
