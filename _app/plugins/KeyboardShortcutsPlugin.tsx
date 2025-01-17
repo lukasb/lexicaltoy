@@ -69,6 +69,7 @@ export function registerKeyboardShortcuts(editor: LexicalEditor, closePage: () =
     editor.registerCommand<KeyboardEvent>(
       KEY_TAB_COMMAND,
       (event) => {
+        console.log("KEY_TAB_COMMAND");
         const selection = $getSelection();
         const listItem = $getActiveListItemFromSelection(selection);
         if (!listItem) return false;
@@ -77,9 +78,11 @@ export function registerKeyboardShortcuts(editor: LexicalEditor, closePage: () =
           (!$canIndentListItem(listItem) && !event.shiftKey && isLast(listItem)) ||
           (event.shiftKey && isFirst(listItem))
         ) {
+          console.log("KEY_TAB_COMMAND returning false");
           return false;
         }
         event.preventDefault();
+        console.log("KEY_TAB_COMMAND dispatching command");
         const command: LexicalCommand<{listItem: ListItemNode}> = event.shiftKey
           ? OUTDENT_LISTITEM_COMMAND
           : INDENT_LISTITEM_COMMAND;

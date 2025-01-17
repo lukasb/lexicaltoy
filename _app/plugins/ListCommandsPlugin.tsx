@@ -87,7 +87,10 @@ export function registerListCommands(editor: LexicalEditor) {
       (payload) => {
         const { listItem } = payload;
         if ($canIndentListItem(listItem)) {
+          console.log("INDENT_LISTITEM_COMMAND running");
           indentOutdentListItemAndChildren(listItem, 1);
+        } else {
+          console.log("INDENT_LISTITEM_COMMAND can't indent");
         }
         return true;
       },

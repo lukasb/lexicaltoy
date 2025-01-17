@@ -83,12 +83,11 @@ export function $getActiveListItemFromSelection(
 }
 
 export function $canIndentListItem(listItemNode: ListItemNode | null): boolean {
-  
   if (!listItemNode) return false;
-  
+
   // we can indent if we're a list item and we're not the first child of our parent
   if (listItemNode.getIndexWithinParent() === 0) return false;
-  
+
   // and if our previous sibling, if any, is not a formula node
   const previousSibling = listItemNode.getPreviousSibling();
   if (previousSibling && $isElementNode(previousSibling)) {
@@ -97,22 +96,25 @@ export function $canIndentListItem(listItemNode: ListItemNode | null): boolean {
       previousSibling.getFirstChild()?.getType() === "formula-editor"
     ) {
       return false;
-    }
-    const previousSiblingOfPreviousSibling =
-      previousSibling.getPreviousSibling();
-    if (
-      previousSiblingOfPreviousSibling &&
-      $isElementNode(previousSiblingOfPreviousSibling)
-    ) {
+    } else if (previousSibling.getType() === "list") {
+      // previous sibling is children of previous previous sibling, 
+      // so we need to check if previous previous sibling is a formula
+      const previousSiblingOfPreviousSibling =
+        previousSibling.getPreviousSibling();
       if (
-        previousSiblingOfPreviousSibling.getFirstChild()?.getType() ===
-        "formula-display"
+        previousSiblingOfPreviousSibling &&
+        $isElementNode(previousSiblingOfPreviousSibling)
       ) {
-        return false;
+        if (
+          previousSiblingOfPreviousSibling.getFirstChild()?.getType() ===
+          "formula-display"
+        ) {
+          return false;
+        }
       }
     }
   }
-  
+
   return true;
 }
 
