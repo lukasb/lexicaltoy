@@ -4,7 +4,7 @@ import { mockChatApi } from './mocks/chat-api.mock';
 // TODO figure out per-browser users in db, then re-enable
 // parallelism is playwright.config.ts
 
-// TODO figure out how to mock Claude, then remove some of the await timeouts
+// TODO we're mocking the chat API, but the real API still gets called every once in a while for some reason
 
 test.beforeEach(async ({ page }) => {
   await mockChatApi(page);
@@ -16,6 +16,7 @@ test('window title', async ({ page }) => {
 });
 
 test('should bring up search results', async ({ page }) => {
+  await page.waitForTimeout(100);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.pressSequentially('test');
   await expect(page.getByTestId('search-result')).toContainText('TestPage1');

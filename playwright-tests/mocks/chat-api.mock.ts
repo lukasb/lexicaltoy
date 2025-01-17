@@ -2,11 +2,12 @@ import { Page } from '@playwright/test';
 import { DialogueElement } from '../../lib/ai';
 
 export async function mockChatApi(page: Page) {
-  await page.route('/api/ai/chat', async (route) => {
+  // Intercept all requests to the chat API endpoint
+  await page.route('**/api/ai/chat', async (route) => {
     const request = route.request();
     
-    if (request.method() === 'POST') {
-      try {
+    try {
+      if (request.method() === 'POST') {
         const body = JSON.parse(request.postData() || '{}');
         const { prompt, dialogueContext } = body;
 
@@ -18,7 +19,6 @@ export async function mockChatApi(page: Page) {
           return;
         }
 
-        // Mock a successful response
         await route.fulfill({
           status: 200,
           headers: {
@@ -28,14 +28,18 @@ export async function mockChatApi(page: Page) {
             response: `Mocked response`
           })
         });
-      } catch (error) {
+      } else {
+        // Handle any non-POST requests to the same endpoint
         await route.fulfill({ 
-          status: 500, 
-          body: 'Internal server error' 
+          status: 405, 
+          body: 'Method not allowed' 
         });
       }
-    } else {
-      await route.continue();
+    } catch (error) {
+      await route.fulfill({ 
+        status: 500, 
+        body: 'Internal server error' 
+      });
     }
   });
 } 
