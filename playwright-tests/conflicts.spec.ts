@@ -1,6 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { db } from '../scripts/seed-db-wrapper.mts';
 import { cleanUp } from './tests.shared.ts';
+import { mockChatApi } from './mocks/chat-api.mock';
 const {
   users,
   pages
@@ -17,6 +18,7 @@ test.afterEach(async ({ page }) => {
 });
 
 async function createVilla(page: Page) {
+  await mockChatApi(page);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
@@ -33,6 +35,7 @@ async function createVilla(page: Page) {
 test('just one villa page', async ({ browser }) => {
   const context = await browser.newContext();
   const page = await context.newPage();
+  await mockChatApi(page);
   await page.goto('/page');
   await page.waitForTimeout(1000);
   await createVilla(page);
@@ -58,6 +61,7 @@ test('detect conflicts between separate browsers', async ({ browser }) => {
   test.setTimeout(70000);
   const context1 = await browser.newContext();
   const page1 = await context1.newPage();
+  await mockChatApi(page1);
   await page1.goto('/page');
   await new Promise(r => setTimeout(r, 1000));
   await createVilla(page1);
@@ -65,6 +69,7 @@ test('detect conflicts between separate browsers', async ({ browser }) => {
   await new Promise(r => setTimeout(r, 8000));
   const context2 = await browser.newContext();
   const page2 = await context2.newPage();
+  await mockChatApi(page2);
   await page2.goto('/page');
   await new Promise(r => setTimeout(r, 15000));
   const activePageTitle = await page2.locator('[data-testid="editable-title"]').first().textContent();
@@ -90,6 +95,7 @@ test('can reload page with conflicts', async ({ browser }) => {
   test.setTimeout(90000);
   const context1 = await browser.newContext();
   const page1 = await context1.newPage();
+  await mockChatApi(page1);
   await page1.goto('/page');
   await new Promise(r => setTimeout(r, 1000));
   await createVilla(page1);
@@ -97,6 +103,7 @@ test('can reload page with conflicts', async ({ browser }) => {
   await new Promise(r => setTimeout(r, 8000));
   const context2 = await browser.newContext();
   const page2 = await context2.newPage();
+  await mockChatApi(page2);
   await page2.goto('/page');
   await new Promise(r => setTimeout(r, 15000));
   const activePageTitle = await page2.locator('[data-testid="editable-title"]').first().textContent();
@@ -130,10 +137,12 @@ test('can reload page with conflicts', async ({ browser }) => {
 test('pull in changes from other tabs with network off', async ({ context }) => {
   test.setTimeout(70000);
   const page1 = await context.newPage();
+  await mockChatApi(page1);
   await page1.goto('/page');
   await new Promise(r => setTimeout(r, 8000));
   await createVilla(page1);
   const page2 = await context.newPage();
+  await mockChatApi(page2);
   await page2.goto('/page');
   await new Promise(r => setTimeout(r, 2000));
   await context.setOffline(true);

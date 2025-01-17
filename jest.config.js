@@ -9,6 +9,7 @@ module.exports = {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: 'tsconfig.test.json'
     }],
+    '^.+\\.(js|jsx)$': ['babel-jest', { presets: ['next/babel'] }],
   },
   testMatch: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/', '/playwright-tests/', '/tests-examples/'],

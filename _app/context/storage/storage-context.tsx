@@ -66,7 +66,9 @@ export async function getJournalQueuedUpdatesByUserId(userId: string): Promise<P
 }
 
 export async function deleteQueuedUpdate(id: string): Promise<void> {
-  return localDb.queuedUpdates.delete(id);
+  const result = await localDb.queuedUpdates.delete(id);
+  console.log("deleteQueuedUpdate", id, result);
+  return result;
 }
 
 export async function deletePage(id: string): Promise<void> {
@@ -168,7 +170,7 @@ export async function processQueuedUpdatesInternal(
           currentRevisionNumber = queuedUpdate.revisionNumber;
         }
 
-        const { revisionNumber, lastModified } = await updatePageWithHistory(
+        const { revisionNumber, lastModified, error, status } = await updatePageWithHistory(
           queuedUpdate.id,
           queuedUpdate.value,
           queuedUpdate.title,
@@ -176,10 +178,22 @@ export async function processQueuedUpdatesInternal(
           currentRevisionNumber,
           queuedUpdate.lastModified
         );
+
         //if (isDevelopmentEnvironment) {
           console.timeEnd(`updatePageWithHistory ${queuedUpdate.title} completed`);
           console.log("processQueuedUpdatesInternal: updated page", queuedUpdate.title, "new revision number", revisionNumber);
         //}
+
+        if (error) {
+          if (status === 404) {
+            await handleConflict(queuedUpdate.id, ConflictErrorCode.NotFound);
+          } else if (status === 409) {
+            await handleConflict(queuedUpdate.id, ConflictErrorCode.StaleUpdate);
+          } else {
+            await handleConflict(queuedUpdate.id, ConflictErrorCode.Unknown);
+          }
+          return;
+        }
 
         localDb.queuedUpdates.delete(queuedUpdate.id);
         console.log("processQueuedUpdatesInternal: deleted queued update", queuedUpdate.title);
@@ -297,7 +311,7 @@ export async function updatePage(
 
   const localPage = await getLocalPageById(page.id);
 
-  if (localPage && localPage.lastModified > lastModified) {
+  if (localPage && new Date(localPage.lastModified).getTime() > new Date(lastModified).getTime()) {
     // our proposed update is based on an old version of the page
     console.log("updatePage: conflict, local page last modified > proposed update last modified", page.title);
     return PageSyncResult.Conflict;

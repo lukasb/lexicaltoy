@@ -4,6 +4,7 @@ export interface PageUpdateResponse {
     revisionNumber?: number;
     lastModified?: Date;
     error?: string;
+    status?: number;
 }
 
 export async function insertPageDb(
@@ -68,8 +69,10 @@ export async function updatePageWithHistory(id: string, value: string, title: st
       });
 
       if (!response.ok) {
-          // Convert non-2xx HTTP responses into throws to handle them in the catch block
-          throw new Error(`HTTP error! Status: ${response.status} revnum:${oldRevisionNumber}`);
+          return {
+              error: `HTTP error! Status: ${response.status} revnum:${oldRevisionNumber}`,
+              status: response.status
+          };
       }
 
       const result = await response.json();
@@ -79,13 +82,15 @@ export async function updatePageWithHistory(id: string, value: string, title: st
             lastModified: new Date(result.lastModified)
           };
       } else {
-          // If the server response does not include a revision number, throw an error
-          throw new Error('Failed to update page: ' + (result.error || 'Unknown error occurred'));
+          return {
+              error: 'Failed to update page: ' + (result.error || 'Unknown error occurred'),
+          };
       }
   } catch (error) {
       console.error('Error fetching from API:', error);
-      // Return a specific error code or throw an exception depending on your error handling strategy
-      throw error; // Here, we choose to propagate the exception further up
+      return {
+          error: error instanceof Error ? error.message : String(error)
+      };
   }
 }
 
