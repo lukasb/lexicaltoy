@@ -168,6 +168,7 @@ function EditorContainer({
                         ? "bg-gray-300 hover:bg-gray-400"
                         : "hover:bg-gray-700"
                     }`}
+                    onTouchStart={(e) => e.preventDefault()}
                   >
                     <MoreVertical
                       data-testid="page-menu-button"
