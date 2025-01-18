@@ -158,7 +158,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
       }
       hasInitializedSearch.current = true;
     }
-  }, [pages, initialFetchComplete]);
+  }, [pages, initialFetchComplete, initCount]);
 
   useEffect(() => {
     const pnnedPageIds = getPinnedPageIds();
@@ -237,7 +237,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     } catch (error) {
       console.error("error deleting stale journal pages", error);
     }
-  }, [userId, pages, miniSearchService]);
+  }, [userId, pages]);
 
   useEffect(() => {
     if (initialFetchComplete && !setupDoneRef.current && pages) {
