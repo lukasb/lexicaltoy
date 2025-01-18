@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef, useCallback } from 'react';
 import { PagesContext } from '@/_app/context/pages-context';
 import { Page, PageStatus } from "@/lib/definitions";
 import { 
@@ -7,18 +7,16 @@ import {
   getSharedNodeKeyElements
 } from '../_app/context/shared-node-context';
 import { useFormulaResultService } from './formula/FormulaResultService';
-import { useCallback } from "react";
-import { getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
-import { useMiniSearch } from '@/_app/context/minisearch-context';
+import { miniSearchService } from '@/_app/services/minisearch-service';
 import { updatePage, PageSyncResult, deleteQueuedUpdate } from '@/_app/context/storage/storage-context';
 import { usePageStatusStore } from './stores/page-status-store';
+import { getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
 
 // TODO maybe use Redux so we don't have an O(n) operation here every time
-function PagesManager() {
+export function PagesManager() {
   const pages = useContext(PagesContext);
   const { sharedNodeMap } = useSharedNodeContext();
   const { updatePagesResults, addPagesResults } = useFormulaResultService();
-  const { msReplacePage } = useMiniSearch();
   const { 
     setPageStatus, 
     removePageStatus, 
@@ -50,7 +48,7 @@ function PagesManager() {
         } else {
           //removePageStatus(page.id);
           setPageStatus(page.id, PageStatus.Quiescent);
-          msReplacePage({...page, lastModified: new Date(timestamp), value, title});
+          miniSearchService.replacePage({...page, lastModified: new Date(timestamp), value, title});
         }
       } catch (error) {
         alert(`Failed to save page ${page.title} - ${error}`);
@@ -59,7 +57,7 @@ function PagesManager() {
         saveQueue.current.delete(pageId);
       }
     }
-  }, [msReplacePage, setPageStatus]);
+  }, [setPageStatus]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -240,5 +238,3 @@ function PagesManager() {
 
   return null;
 }
-
-export default PagesManager;

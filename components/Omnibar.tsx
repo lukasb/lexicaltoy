@@ -17,7 +17,7 @@ import { getModifierKey } from "@/lib/utils";
 import { useBreakpoint } from "@/lib/window-helpers";
 import { highlightText } from "@/lib/text-helpers";
 import { useSearchTerms } from "@/_app/context/search-terms-context";
-import { useMiniSearch } from "@/_app/context/minisearch-context";
+import { miniSearchService } from "@/_app/services/minisearch-service";
 import { FixedSizeList as List } from 'react-window';
 import { useClickOutside } from "@/lib/window-helpers";
 
@@ -47,7 +47,6 @@ const Omnibar = forwardRef(({
   const storedTermRef = useRef("");
   const { searchTermsMap, setSearchTerms, getSearchTerms } = useSearchTerms();
   const filteredPagesRef = useRef<Page[]>([]);
-  const { miniSearch } = useMiniSearch();
   const listRef = useRef<List>(null);
 
   type SearchResult = { id: string; [key: string]: any };
@@ -55,27 +54,17 @@ const Omnibar = forwardRef(({
   // TODO logic should match searchPages in pages-helpers
   const handleSearch = useCallback(async (term: string): Promise<Page[]> => {
     
-    if (miniSearch) {
-      
-      const results = miniSearch.search(
-        term, 
-        { 
-          prefix: true, 
-          boost: { title: 2 },
-          combineWith: 'AND',
-        });
-      console.log('Search results count:', results.length);
+    const results = miniSearchService.search(term);
+    console.log('Search results count:', results.length);
 
-      const pagesMap = new Map(pages.map(page => [page.id, page]));
-      const filteredResults = results
-        .map((result: SearchResult) => pagesMap.get(result.id))
-        .filter((page): page is Page => page !== undefined)
-        .sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
+    const pagesMap = new Map(pages.map(page => [page.id, page]));
+    const filteredResults = results
+      .map((result: SearchResult) => pagesMap.get(result.id))
+      .filter((page): page is Page => page !== undefined)
+      .sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
 
-      return filteredResults;
-    }
-    return [];
-  }, [pages, miniSearch]);
+    return filteredResults;
+  }, [pages]);
 
   useEffect(() => {
     setModifierKey(getModifierKey());

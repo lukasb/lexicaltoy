@@ -14,7 +14,6 @@ import { BlockIdsIndexProvider } from "@/_app/context/page-blockids-index-contex
 import {
   setUseWhatChange,
 } from '@simbathesailor/use-what-changed';
-import { MiniSearchProvider } from "@/_app/context/minisearch-context";
 import { useLiveQuery } from 'dexie-react-hooks';
 import { localDb } from '@/_app/context/storage/db';
 
@@ -146,9 +145,7 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
           </div>
         )}
           <BlockIdsIndexProvider>
-            <MiniSearchProvider>
-              <EditingArea userId={session.id} pages={pages} />
-            </MiniSearchProvider>
+            <EditingArea userId={session.id} pages={pages} />
           </BlockIdsIndexProvider>
         <SignoutButton />
       </div>

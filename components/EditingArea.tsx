@@ -20,7 +20,7 @@ import {
   getTodayJournalTitle
  } from "@/lib/journal-helpers";
 import FlexibleEditorLayout from "./FlexibleEditorContainer";
-import PagesManager from "../lib/PagesManager";
+import { PagesManager } from "../lib/PagesManager";
 import { SharedNodeProvider } from "../_app/context/shared-node-context";
 import { ActiveEditorProvider } from "@/_app/context/active-editor-context";
 import { SearchTermsProvider } from "@/_app/context/search-terms-context";
@@ -33,7 +33,7 @@ import {
 import { SavedSelectionProvider } from "@/_app/context/saved-selection-context";
 import { OpenWikilinkWithBlockIdProvider } from "@/_app/context/wikilink-blockid-context";
 import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blockids-index-context";
-import { useMiniSearch } from "@/_app/context/minisearch-context";
+import { miniSearchService } from "@/_app/services/minisearch-service";
 import { 
   insertPage,
   PageSyncResult,
@@ -50,7 +50,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const [pinnedPageIds, setPinnedPageIds] = useState<string[]>([]);
   const [collapsedPageIds, setCollapsedPageIds] = useState<string[]>([]);
   const { setBlockIdsForPage } = useBlockIdsIndex();
-  const { msAddPage, msSlurpPages } = useMiniSearch();
   const hasInitializedSearch = useRef(false);
   const [pagesDefined, setPagesDefined] = useState(false);
   let initCount = 0;
@@ -154,11 +153,12 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     if (!hasInitializedSearch.current && pages && pages.length > 0 && initialFetchComplete) {
       initCount++;
       if (initCount > 1) console.error("MiniSearch initialized more than once, count:", initCount);
-      msSlurpPages(pages || []);
+      if (pages.length > 0) {
+        miniSearchService.slurpPages(pages);
+      }
       hasInitializedSearch.current = true;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pages, msSlurpPages, initialFetchComplete]);
+  }, [pages, initialFetchComplete]);
 
   useEffect(() => {
     const pnnedPageIds = getPinnedPageIds();
@@ -222,7 +222,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
         console.log("inserting today's journal page");
         const [newPage, result] = await insertNewJournalPage(todayJournalTitle, userId, today);
         if (isPage(newPage) && result === PageSyncResult.Success) {
-          msAddPage(newPage);
+          miniSearchService.addPage(newPage);
           openPage(newPage);
         } else {
           console.error("error creating new journal page", todayJournalTitle, result);
@@ -237,7 +237,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     } catch (error) {
       console.error("error deleting stale journal pages", error);
     }
-  }, [userId, pages, msAddPage]);
+  }, [userId, pages, miniSearchService]);
 
   useEffect(() => {
     if (initialFetchComplete && !setupDoneRef.current && pages) {
@@ -306,7 +306,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
       console.error("error creating page");
       return;
     } else if (isPage(newPage)) {
-      msAddPage(newPage);
+      miniSearchService.addPage(newPage);
       openPage(newPage);
     } else {
       console.error("expected page, got something else", result);

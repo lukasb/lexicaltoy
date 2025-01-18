@@ -19,7 +19,7 @@ import { EditDialog } from "@/_app/ui/edit-dialog";
 import { updatePage, PageSyncResult } from "@/_app/context/storage/storage-context"
 import { PageStatus } from "@/lib/definitions";
 import { usePageStatusStore } from "@/lib/stores/page-status-store";
-import { useMiniSearch } from "@/_app/context/minisearch-context";
+import { miniSearchService } from "@/_app/services/minisearch-service";
 
 function EditorContainer({
   page,
@@ -52,7 +52,6 @@ function EditorContainer({
   const [backlinks, setBacklinks] = useState<NodeElementMarkdown[]>([]);
   const [backlinksCollapsed, setBacklinksCollapsed] = useState(true);
   const { pageStatuses, getPageStatus, setPageStatus } = usePageStatusStore();
-  const { msReplacePage } = useMiniSearch();
 
   useEffect(() => {
     setModifierKey(getModifierKey());
@@ -98,7 +97,7 @@ function EditorContainer({
     if (result === PageSyncResult.Conflict || result === PageSyncResult.Error) {
       alert("Failed to update title");
     } else if (result === PageSyncResult.Success) {
-      msReplacePage({...page, title: newTitle});
+      miniSearchService.replacePage({...page, title: newTitle});
     }
     setIsRenameDialogOpen(false);
   };

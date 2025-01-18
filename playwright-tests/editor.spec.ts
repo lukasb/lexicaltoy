@@ -80,6 +80,7 @@ test('escape closes search results', async ({ page }) => {
 });
 
 test('renaming page reflected in search results', async ({ page }) => {
+  await page.waitForTimeout(200);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.focus();
   await newSearch.pressSequentially('TestPage1');
@@ -160,6 +161,7 @@ test('can create a wikilink', async ({ page }) => {
 });
 
 test('can open a wikilink', async ({ page }) => {
+  await page.waitForTimeout(200);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
