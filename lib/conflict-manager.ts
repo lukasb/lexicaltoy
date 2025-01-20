@@ -9,7 +9,7 @@ import {
   deleteQueuedUpdate,
   deletePage
 } from "@/_app/context/storage/storage-context";
-import { DEFAULT_JOURNAL_CONTENTS } from "@/lib/journal-helpers";
+import { isDefaultValueJournalPage } from "@/lib/journal-helpers";
 
 export interface ConflictManagerDeps {
   removePageStatus: (pageId: string) => void;
@@ -49,7 +49,7 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
       }
       else if (
         queuedUpdate.isJournal &&
-        (queuedUpdate.value === DEFAULT_JOURNAL_CONTENTS || queuedUpdate.revisionNumber < 3)
+        isDefaultValueJournalPage(queuedUpdate.revisionNumber)
       ) {
         console.log("queued update with conflict is journal page with default value, removing");
         removePageStatus(pageId);
