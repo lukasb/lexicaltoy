@@ -49,7 +49,7 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
       }
       else if (
         queuedUpdate.isJournal &&
-        queuedUpdate.value === DEFAULT_JOURNAL_CONTENTS
+        (queuedUpdate.value === DEFAULT_JOURNAL_CONTENTS || queuedUpdate.revisionNumber < 3)
       ) {
         console.log("queued update with conflict is journal page with default value, removing");
         removePageStatus(pageId);
@@ -65,7 +65,7 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
         await deleteQueuedUpdate(pageId);
       } else {
         // I tried inserting a conflict page, but when multiple tabs were open this resulted in multiple conflict pages
-        console.log("queued update with conflict is non-journal page with non-default value");
+        console.log("queued update with conflict is page with non-default value", queuedUpdate.title);
         addPageStatus(pageId, PageStatus.Conflict, queuedUpdate.lastModified, queuedUpdate.revisionNumber);
       }
     }
