@@ -52,6 +52,7 @@ function EditorContainer({
   const [backlinks, setBacklinks] = useState<NodeElementMarkdown[]>([]);
   const [backlinksCollapsed, setBacklinksCollapsed] = useState(true);
   const { pageStatuses, getPageStatus, setPageStatus } = usePageStatusStore();
+  const conflictNotificationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setModifierKey(getModifierKey());
@@ -66,6 +67,20 @@ function EditorContainer({
   useEffect(() => {
     setLocalIsCollapsed(isCollapsed);
   }, [isCollapsed]);
+
+  useEffect(() => {
+    if (getPageStatus(page.id)?.status === PageStatus.Conflict) {
+      setTimeout(() => {
+        const elementTop = conflictNotificationRef.current?.getBoundingClientRect().top;
+        const offsetPosition = (elementTop || 0) + window.pageYOffset - 100;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
+  }, [getPageStatus(page.id)?.status]);
 
   const handlePinToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -237,7 +252,10 @@ function EditorContainer({
         <NoSSRWrapper>
           <div className={`pl-[22px] pr-1 md:pl-[29px] mt-4 ${localIsCollapsed ? 'hidden' : 'pb-1'}`}>
             {getPageStatus(page.id)?.status === PageStatus.Conflict && (
-              <div className="mb-4 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 rounded-md flex justify-between items-center">
+              <div 
+                ref={conflictNotificationRef}
+                className="mb-4 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 rounded-md flex justify-between items-center"
+              >
                 <span>Your changes are based on an old version of this page. Click reload to get the latest version. Reloading will lose your changes, so copy anything you do not want to lose and paste it somewhere else.</span>
                 <button 
                   onClick={() => setPageStatus(page.id, PageStatus.DroppingUpdate, page.lastModified, page.revisionNumber, undefined)}
