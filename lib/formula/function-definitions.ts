@@ -67,7 +67,6 @@ function getBlockContext(page: Page, blockId: string): string {
 
   function findBlock(nodes: NodeElementMarkdown[], blockId: string): NodeElementMarkdown | null {
     for (const node of nodes) {
-      console.log("node", node.baseNode.nodeMarkdown);
       const match = node.baseNode.nodeMarkdown.match(BLOCK_ID_REGEX);
       if (match && match[1] === blockId) return node;
       const result = findBlock(node.children, blockId);
@@ -305,7 +304,6 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
 
     // title is an exact match for a negated wikilink, skip
     if (exactNegatedMatch) {
-      console.log("exactNegatedMatch", page.title);
       continue;
     } 
 
@@ -341,7 +339,6 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
             .filter(s => !s.isNegated)
             .every(substring => nodeMarkdown.includes(substring.value));
 
-          if (currentWikilinks.length > 0) console.log("unmatchedWikilinks", currentWikilinks, nodesMarkdown);
           const matchesAllWikilinks = currentWikilinks
             .filter(w => !w.isNegated)
             .every(wikilink => nodeMarkdown.includes(wikilink.value));
