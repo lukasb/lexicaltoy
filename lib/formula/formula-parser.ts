@@ -192,6 +192,7 @@ const LParen = createToken({ name: "LParen", pattern: /\(/ });
 const RParen = createToken({ name: "RParen", pattern: /\)/ });
 const Comma = createToken({ name: "Comma", pattern: /,/ });
 const Wikilink = createToken({ name: "Wikilink", pattern: /\[\[[^\]]+\]\]/ });
+const Not = createToken({ name: "Not", pattern: /!/ });
 
 const allTokens = [
   Equal,
@@ -199,6 +200,7 @@ const allTokens = [
   Wikilink,
   SpecialToken,
   TodoStatus,
+  Not,
   Identifier,
   LParen,
   RParen,
@@ -234,6 +236,9 @@ export class FormulaParser extends CstParser {
   });
 
   argument = this.RULE("argument", () => {
+    this.OPTION(() => {
+      this.CONSUME(Not);
+    });
     this.OR([
       { ALT: () => this.CONSUME(StringLiteral) },
       { ALT: () => this.CONSUME(SpecialToken) },
@@ -291,9 +296,12 @@ export function getFormulaOutputType(formula: string): FormulaValueType | null {
 }
 
 export function argumentTypeMatch(argumentValue: string, argumentType: FormulaValueType): boolean {
+  // Strip the NOT operator if present
+  const valueToCheck = argumentValue.startsWith('!') ? argumentValue.slice(1) : argumentValue;
+  
   const possibleArgumentsForType = possibleArguments.filter(arg => arg.type === argumentType);
   for (const arg of possibleArgumentsForType) {
-    if (arg.regex && arg.regex.test(argumentValue)) {
+    if (arg.regex && arg.regex.test(valueToCheck)) {
       return true;
     }
   }

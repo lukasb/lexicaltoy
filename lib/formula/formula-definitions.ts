@@ -38,7 +38,8 @@ const FormulaOutputSchema = z.object({
     z.string(),
     z.array(NodeElementMarkdownSchema),
   ]),
-  type: z.nativeEnum(FormulaValueType)
+  type: z.nativeEnum(FormulaValueType),
+  isNegated: z.boolean().optional()
 });
 
 export type FormulaOutput = z.infer<typeof FormulaOutputSchema>;

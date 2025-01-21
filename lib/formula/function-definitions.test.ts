@@ -381,21 +381,34 @@ describe('find() function in regexCallbacks', () => {
     const defaultArguments: DefaultArguments = {
       pages: mockPages
     };
-    const userArguments: FormulaOutput[] = terms.map(arg => ({
-      type: FormulaValueType.Text,
-      output: arg
-    }));
-    if (statuses) {
+    const userArguments: FormulaOutput[] = terms.map(arg => {
+      const isNegated = arg.startsWith('!');
+      const value = isNegated ? arg.slice(1) : arg;
+      return {
+        type: FormulaValueType.Text,
+        output: value,
+        isNegated
+      };
+    });
+    const statusesLength = statuses?.length ?? 0;
+    if (statuses &&statusesLength > 0) {
       userArguments.push({
         type: FormulaValueType.NodeTypeOrTypes,
-        output: statuses.join('|')
+        output: statuses.map(s => {
+          const isNegated = s.startsWith('!');
+          return isNegated ? s.slice(1) : s;
+        }).join('|'),
+        isNegated: statuses.every(s => s.startsWith('!'))
       });
     }
     if (wikilinks) {
-      wikilinks.map(wikilink => {
+      wikilinks.forEach(wikilink => {
+        const isNegated = wikilink.startsWith('!');
+        const value = isNegated ? wikilink.slice(1) : wikilink;
         userArguments.push({
           type: FormulaValueType.Wikilink,
-          output: wikilink
+          output: "[[" + value + "]]",
+          isNegated
         });
       });
     }
@@ -525,5 +538,50 @@ describe('find() function in regexCallbacks', () => {
     expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- more text [[Page 9#^block-id]]');
     expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
     expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- more text ^block-id');
+  });
+
+  test('can use not operator in find()', async () => {
+    const result = await testFindFunction(['!"Another"'], ["todos"],[]);
+    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
+    expect(result?.output).toHaveLength(1);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- NOW this is a todo.');
+  });
+
+  test('find() with negated todo status', async () => {
+    const result = await testFindFunction(['"todo"'], ['!now'], []);
+    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
+    expect(result?.output).toHaveLength(1);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- LATER Another todo.\nThis is a multiline continuation');
+  });
+
+  test('find() with negated wikilink', async () => {
+    const result = await testFindFunction([], [], ['!Page 1', 'Page 9']);
+    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
+    expect(result?.output).toHaveLength(2);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- [[Page 2]] some more stuff');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- more text ^block-id');
+  });
+
+  test('find() with multiple negated terms', async () => {
+    const result = await testFindFunction(['!"keywords"', '!"content"']);
+    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
+    expect(result?.output.length).toBeGreaterThan(0);
+    // None of the results should contain 'keywords' or 'content'
+    (result?.output as NodeElementMarkdown[]).forEach(node => {
+      expect(node.baseNode.nodeMarkdown.toLowerCase()).not.toContain('keywords');
+      expect(node.baseNode.nodeMarkdown.toLowerCase()).not.toContain('content');
+    });
+  });
+
+  test('find() with mixed negated and non-negated terms', async () => {
+    const result = await testFindFunction(['!"Another"', '"todo"']);
+    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
+    expect(result?.output).toHaveLength(1);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- NOW this is a todo.');
   });
 });

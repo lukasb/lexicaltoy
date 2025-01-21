@@ -67,20 +67,31 @@ async function getFormulaOutputInner(
   // TODO validate arguments against function definition
 
   const parsedArgs: FormulaOutput[] = await Promise.all(argumentListNode.children.argument.map(async (arg: any): Promise<FormulaOutput> => {
+    // Check for negation
+    const isNegated = arg.children.Not && arg.children.Not.length > 0;
+    
+    let output: FormulaOutput;
     if (arg.children.StringLiteral) {
-      return { output: arg.children.StringLiteral[0].image, type: FormulaValueType.Text };
+      output = { output: arg.children.StringLiteral[0].image, type: FormulaValueType.Text };
     } else if (arg.children.SpecialToken) {
-      return { output: arg.children.SpecialToken[0].image, type: FormulaValueType.Text };
+      output = { output: arg.children.SpecialToken[0].image, type: FormulaValueType.Text };
     } else if (arg.children.TodoStatus) {
-      return { output: arg.children.TodoStatus[0].image, type: FormulaValueType.NodeTypeOrTypes };
+      output = { output: arg.children.TodoStatus[0].image, type: FormulaValueType.NodeTypeOrTypes };
     } else if (arg.children.functionCall) {
       const nestedResult = await getFormulaOutputInner(arg as CstNodeWithChildren, pages, context, pageUpdateContext);
-      return nestedResult ? nestedResult : { output: '', type: FormulaValueType.Text };
+      output = nestedResult ? nestedResult : { output: '', type: FormulaValueType.Text };
     } else if (arg.children.Wikilink) {
-      // TODO should probably get the page contents here and pass them in
-      return { output: arg.children.Wikilink[0].image, type: FormulaValueType.Wikilink };
+      output = { output: arg.children.Wikilink[0].image, type: FormulaValueType.Wikilink };
+    } else {
+      output = { output: '', type: FormulaValueType.Text };
     }
-    return { output: '', type: FormulaValueType.Text };
+
+    // Add negation information to the output
+    if (isNegated) {
+      output.isNegated = true;
+    }
+
+    return output;
   }));
 
   // Find the corresponding function definition
