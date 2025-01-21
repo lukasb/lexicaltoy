@@ -231,6 +231,7 @@ test('editing shared nodes reflected on source page (same page, with GPT node)',
 test('changes propagate between shared nodes on different pages', async ({ page }) => {
   await page.waitForTimeout(1000);
   await createVilla(page);
+  await page.waitForTimeout(300);
   await closePage(page);
   await createAston(page);
   await createGemlike(page);
@@ -245,6 +246,7 @@ test('changes propagate between shared nodes on different pages', async ({ page 
 test('nested nodes picked up by find', async ({ page }) => {
   await page.waitForTimeout(1000);
   await createElla(page);
+  await page.waitForTimeout(300);
   await closePage(page);
   await createVilla(page);
   await page.keyboard.press('Enter');

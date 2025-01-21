@@ -122,9 +122,7 @@ function Editor({
     }
   }, [page.id, getPage, setBlockIdsForPage, page.title, setPageStatus, getPageStatus, page.revisionNumber]);
 
-  const debouncedSave = useDebouncedCallback(saveChange, 300);
-
-  const onChange = useCallback((editorState: EditorState) => {
+  const debouncedOnChange = useDebouncedCallback((editorState: EditorState) => {
     if (
       !editorState ||
       getPageStatus(page.id)?.status === PageStatus.EditFromSharedNodes ||
@@ -136,26 +134,27 @@ function Editor({
       return;
     }
     editorState.read(() => {
-
       const localPageValue = getUpdatedPageValue(page);
       if (localPageValue === undefined) return;
       const trimmedPageValue = localPageValue.replace(/\s$/, '');
 
       const editorStateMarkdown = $myConvertToMarkdownString(undefined, undefined, true);
-      //if (page.title === 'to dos') console.log("markdown", editorStateMarkdown);
       const editoContentsWithoutSharedNodes = stripSharedNodesFromMarkdown(editorStateMarkdown);
-      //if (page.title === 'to dos') console.log("markdown minus shared nodes", editoContentsWithoutSharedNodes);
       const trimmedEditorContents = editoContentsWithoutSharedNodes.replace(/\s$/, '');
       
       if (trimmedEditorContents !== trimmedPageValue) {
         pendingChangeRef.current = editoContentsWithoutSharedNodes;
-        debouncedSave(editoContentsWithoutSharedNodes);
+        saveChange(editoContentsWithoutSharedNodes);
         deleteSearchTerms(page.id);
       } else {
-        pendingChangeRef.current = null; // Clear pending change if content matches current page value
+        pendingChangeRef.current = null;
       }
     });
-  }, [debouncedSave, deleteSearchTerms, page, getUpdatedPageValue, getPageStatus]);
+  }, 300);
+
+  const onChange = useCallback((editorState: EditorState) => {
+    debouncedOnChange(editorState);
+  }, [debouncedOnChange]);
 
   const onBeforeUnload = useCallback(() => {
     if (pendingChangeRef.current) {
