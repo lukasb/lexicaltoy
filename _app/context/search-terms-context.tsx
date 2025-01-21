@@ -42,6 +42,9 @@ export const SearchTermsProvider: React.FC<SearchTermsProviderProps> = ({ childr
 
   const deleteSearchTerms = (pageId: string) => {
     setSearchTermsMap(prevMap => {
+      if (!(pageId in prevMap)) {
+        return prevMap;
+      }
       const newMap = { ...prevMap };
       delete newMap[pageId];
       return newMap;
