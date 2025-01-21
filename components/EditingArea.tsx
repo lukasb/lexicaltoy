@@ -265,13 +265,10 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   }, []);
 
   const openOrCreatePageByTitle = (title: string) => {
-    console.log("initial fetch complete", initialFetchComplete);
     const page = pages?.find((p) => p.title.toLowerCase() === title.toLowerCase());
     if (page) {
-      console.log("opening page", page.title, pages);
       openPage(page);
     } else {
-      console.log("creating new page", title, pages);
       handleNewPage(title);
     }
   }

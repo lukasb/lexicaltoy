@@ -88,7 +88,7 @@ export const useFormulaResultService = () => {
         }
       });
     }
-    console.log("mergeResults", query, nodeMap, updatedMap);
+  
     return updatedMap;
   };
 

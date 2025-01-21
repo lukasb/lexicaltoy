@@ -55,7 +55,6 @@ const Omnibar = forwardRef(({
   const handleSearch = useCallback(async (term: string): Promise<Page[]> => {
     
     const results = miniSearchService.search(term);
-    console.log('Search results count:', results.length);
 
     const pagesMap = new Map(pages.map(page => [page.id, page]));
     const filteredResults = results
