@@ -315,15 +315,15 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
       ): NodeElementMarkdown[] {
         const output: NodeElementMarkdown[] = [];
         for (let node of nodesMarkdown) {
-          const nodeMarkdown = node.baseNode.nodeMarkdown.toLowerCase();
+          const nodeMarkdown = node.baseNode.nodeMarkdown;
           
           // First check negated terms - if any match, skip this node
           const hasNegatedMatch = unmatchedSubstrings.some(substring => 
-            substring.isNegated && nodeMarkdown.includes(substring.value)
+            substring.isNegated && nodeMarkdown.toLowerCase().includes(substring.value)
           ) || currentWikilinks.some(wikilink =>
-            wikilink.isNegated && nodeMarkdown.includes(wikilink.value)
+            wikilink.isNegated && nodeMarkdown.toLowerCase().includes(wikilink.value)
           ) || orStatuses.some(status =>
-            status.isNegated && new RegExp(`^\\s*- ${status.value}`, 'i').test(nodeMarkdown)
+            status.isNegated && new RegExp(`^\\s*- ${status.value}`).test(nodeMarkdown)
           );
 
           if (hasNegatedMatch) {
@@ -337,11 +337,11 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
           // Now check non-negated terms
           const matchesAllSubstrings = unmatchedSubstrings
             .filter(s => !s.isNegated)
-            .every(substring => nodeMarkdown.includes(substring.value));
+            .every(substring => nodeMarkdown.toLowerCase().includes(substring.value));
 
           const matchesAllWikilinks = currentWikilinks
             .filter(w => !w.isNegated)
-            .every(wikilink => nodeMarkdown.includes(wikilink.value));
+            .every(wikilink => nodeMarkdown.toLowerCase().includes(wikilink.value));
 
           const nonNegatedStatuses = orStatuses.filter(s => !s.isNegated);
           const matchesStatus = nonNegatedStatuses.length === 0 || 

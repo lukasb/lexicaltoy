@@ -367,7 +367,7 @@ describe('find() function in regexCallbacks', () => {
     },
     {
       id: '10',
-      value: '- more text [[Page 9#^block-id]]',
+      value: '- more text [[Page 9#^block-id]]\n - Now we are ready\n- NOW are you ready?',
       userId: 'user1',
       title: 'Page 10',
       lastModified: new Date('2023-01-10'),
@@ -441,19 +441,23 @@ describe('find() function in regexCallbacks', () => {
   test('find() finds by todo status', async () => {
     const result = await testFindFunction([], ['now']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
-    expect(result?.output).toHaveLength(1);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('this is a todo');
+    expect(result?.output).toHaveLength(2);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 10');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('are you ready?');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('this is a todo');
   });
 
   test('find() matches OR clauses', async () => {
     const result = await testFindFunction([],['now|later']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
-    expect(result?.output).toHaveLength(2);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
+    expect(result?.output).toHaveLength(3);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 10');
     expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('this is a todo');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('Another todo');
+    expect((result?.output[2] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('are you ready?');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('this is a todo');
+    expect((result?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('Another todo');
   });
 
   test('find() matches in page title', async () => {
@@ -543,9 +547,11 @@ describe('find() function in regexCallbacks', () => {
   test('can use not operator in find()', async () => {
     const result = await testFindFunction(['!"Another"'], ["todos"],[]);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
-    expect(result?.output).toHaveLength(1);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- NOW this is a todo.');
+    expect(result?.output).toHaveLength(2);
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 10');
+    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('are you ready?');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
+    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('this is a todo');
   });
 
   test('find() with negated todo status', async () => {
@@ -583,5 +589,11 @@ describe('find() function in regexCallbacks', () => {
     expect(result?.output).toHaveLength(1);
     expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
     expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- NOW this is a todo.');
+  });
+
+  test('find() todos only match todos', async () => {
+    const result = await testFindFunction([], ['Page 10'], ['now']);
+    expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
+    expect(result?.output).toHaveLength(0);
   });
 });
