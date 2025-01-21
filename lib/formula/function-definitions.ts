@@ -346,7 +346,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
           const nonNegatedStatuses = orStatuses.filter(s => !s.isNegated);
           const matchesStatus = nonNegatedStatuses.length === 0 || 
             nonNegatedStatuses.some(status => 
-              new RegExp(`^\\s*- ${status.value}`, 'i').test(nodeMarkdown)
+              new RegExp(`^\\s*- ${status.value}`).test(nodeMarkdown)
             );
 
           const matchesBlockId = blockId ? markdownHasBlockId(nodeMarkdown, blockId) : true;
