@@ -216,7 +216,6 @@ export function sortFindOutput(output: NodeElementMarkdown[], pages: Page[]): No
 
 export const findCallback = async (defaultArgs: DefaultArguments, userArgs: FormulaOutput[]): Promise<FormulaOutput | null> => {
     
-  let negated = true;
   if (!defaultArgs.pages || userArgs.length === 0) return null;
 
   // behavior is undefined if you provide more than one todo status argument
@@ -255,7 +254,6 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
         isNegated
       });
     } else if (arg.type === FormulaValueType.Wikilink) {
-      if (!isNegated) negated = false;
       wikilinks.push({
         value: text.toLowerCase(),
         isNegated
@@ -263,13 +261,12 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
     }
   });
   
-  if (wikilinks.length > 0 && !negated) console.log("wikilinks pages", defaultArgs.pages);
   if (substrings.length === 0 && orStatuses.length === 0 && wikilinks.length === 0) return null;
 
   const output: NodeElementMarkdown[] = [];
 
   for (const page of defaultArgs.pages) {
-    if (wikilinks.length > 0 && !negated) console.log("page?", page.title);
+  
     let unmatchedSubstringRegexps = [...substrings];
 
     // search terms can appear in the title or the content of the page
@@ -278,7 +275,6 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
       substring.isNegated && page.title.toLowerCase().includes(substring.value)
     );
     if (hasNegatedMatch) {
-      if (!negated) console.log("hasNegatedMatch");
       continue; // Skip to next page
     }
 
@@ -289,7 +285,6 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
     });
 
     let unmatchedWikilinks = [...wikilinks];
-    if (wikilinks.length > 0 && !negated) console.log("unmatchedWikilinks1", page.title, unmatchedWikilinks);
     let blockId: string | undefined = undefined;
     let exactNegatedMatch = false;
     unmatchedWikilinks = unmatchedWikilinks.filter((wikilink) => {
@@ -314,18 +309,14 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
       continue;
     } 
 
-    if (!negated) console.log("unmatchedWikilinks2", page.title, unmatchedWikilinks);
-
     function processNodes(
         nodesMarkdown: NodeElementMarkdown[],
         unmatchedSubstrings: SearchTerm[],
         orStatuses: SearchTerm[],
         currentWikilinks: SearchTerm[]
       ): NodeElementMarkdown[] {
-        if (!negated) console.log("processNodes called with wikilinks:", currentWikilinks);
         const output: NodeElementMarkdown[] = [];
         for (let node of nodesMarkdown) {
-          if (!negated && page.title === "Page 1") console.log("node", node.baseNode.nodeMarkdown);
           const nodeMarkdown = node.baseNode.nodeMarkdown.toLowerCase();
           
           // First check negated terms - if any match, skip this node
@@ -337,13 +328,7 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
             status.isNegated && new RegExp(`^\\s*- ${status.value}`, 'i').test(nodeMarkdown)
           );
 
-
-          if (!negated && page.title === "Page 1" && hasNegatedMatch) { 
-            console.log("hasNegatedMatch", unmatchedSubstrings, currentWikilinks, orStatuses);
-          }
-
           if (hasNegatedMatch) {
-            //if (unmatchedWikilinks.length > 0 && negated) console.log("hasNegatedMatch", hasNegatedMatch, nodeMarkdown, unmatchedWikilinks);
             // If any negated term matches, skip this node and check children
             if (node.children && node.children.length > 0) {
               output.push(...processNodes(node.children, unmatchedSubstrings, orStatuses, currentWikilinks));
@@ -370,13 +355,11 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
           const matchesBlockId = blockId ? markdownHasBlockId(nodeMarkdown, blockId) : true;
           
           if (matchesAllSubstrings && matchesStatus && matchesAllWikilinks && matchesBlockId) {
-            if (!negated) console.log("should be good ...", page.title);
             if (!invalidFindResult(nodeMarkdown)) {
               removeInvalidNodesForFind(node);
               output.push(node);
             }
           } else {
-            if (!negated) console.log("should be bad ...", page.title);
             // didn't match, check children
             if (node.children && node.children.length > 0) {
               output.push(
@@ -389,11 +372,8 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
         return output;
       }
 
-      if (!negated) console.log("before processNodes:", unmatchedWikilinks);
       const pageValue = defaultArgs.pageUpdateContext?.getUpdatedPageValue?.(page) ?? page.value;
-      if (!negated) console.log("getting nodesMarkdown", page.title);
       const nodesMarkdown = splitMarkdownByNodes(pageValue, page.title);
-      if (!negated) console.log("page!", page.title, unmatchedWikilinks);
       output.push(
         ...processNodes(nodesMarkdown, unmatchedSubstringRegexps, orStatuses, unmatchedWikilinks)
       );
