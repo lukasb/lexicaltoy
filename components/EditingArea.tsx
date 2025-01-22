@@ -366,6 +366,9 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
                       <div className="text-sm text-muted-foreground">
                         {loadingMessage}
                       </div>
+                      <Button onClick={() => setLoadingState(prev => ({ ...prev, isLoading: false }))}>
+                        Skip Loading
+                      </Button>
                     </div>
                   ) : !pages || pages.length === 0 ? (
                     <div className="w-full h-40 flex justify-center items-center flex-col gap-2">

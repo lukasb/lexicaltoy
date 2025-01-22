@@ -1,5 +1,5 @@
 import MiniSearch from 'minisearch';
-import { Page } from '@/lib/definitions';
+import { Page } from '../../lib/definitions';
 
 class MiniSearchService {
   private static instance: MiniSearchService;
