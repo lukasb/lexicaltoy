@@ -83,7 +83,6 @@ function Editor({
   const pages = useContext(PagesContext);
   const [floatingAnchorElem, setFloatingAnchorElem] = useState<HTMLDivElement | null>(null);
   const [isSmallWidthViewport, setIsSmallWidthViewport] = useState<boolean>(false);
-  const pendingChangeRef = useRef<string | null>(null);
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
   const [shouldHighlight, setShouldHighlight] = useState<boolean>(getSearchTerms(page.id).length > 0);
   const { setBlockIdsForPage } = useBlockIdsIndex();
@@ -117,7 +116,6 @@ function Editor({
         newContent
       );
       ingestPageBlockIds(page.title, newContent, setBlockIdsForPage);
-      pendingChangeRef.current = null;
     }
   }, [page.id, getPage, setBlockIdsForPage, page.title, setPageStatus, getPageStatus, page.revisionNumber]);
 
@@ -142,11 +140,8 @@ function Editor({
       const trimmedEditorContents = editoContentsWithoutSharedNodes.replace(/\s$/, '');
       
       if (trimmedEditorContents !== trimmedPageValue) {
-        pendingChangeRef.current = editoContentsWithoutSharedNodes;
         saveChange(editoContentsWithoutSharedNodes);
         deleteSearchTerms(page.id);
-      } else {
-        pendingChangeRef.current = null;
       }
     });
   }, 300);
@@ -156,20 +151,16 @@ function Editor({
   }, [debouncedOnChange]);
 
   const onBeforeUnload = useCallback(() => {
-    if (pendingChangeRef.current) {
-      saveChange(pendingChangeRef.current);
-    }
-  }, [saveChange]);
+    debouncedOnChange.flush();
+  }, [debouncedOnChange]);
 
   React.useEffect(() => {
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => {
       window.removeEventListener('beforeunload', onBeforeUnload);
-      if (pendingChangeRef.current) {
-        saveChange(pendingChangeRef.current);
-      }
+      debouncedOnChange.flush();
     };
-  }, [onBeforeUnload, saveChange]);
+  }, [onBeforeUnload, debouncedOnChange]);
 
   return (
     <PromisesProvider>
