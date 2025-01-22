@@ -70,3 +70,13 @@ test('can move to open non-active pages from omnibar', async ({ page }) => {
   await page.keyboard.type(' was a great man');
   await expect(page.getByText('blue sasquatch was a great man')).toBeVisible();
 });
+
+test('exact title match at top of results list', async ({ page }) => {
+  await page.goto('/page');
+  await createPage(page, 'blue sasquatch');
+  await createPage(page, 'toy sasquatch');
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.pressSequentially('blue sasquatch');
+  await page.waitForTimeout(100);
+  await checkSearchResult(page, 'blue sasquatch');
+});
