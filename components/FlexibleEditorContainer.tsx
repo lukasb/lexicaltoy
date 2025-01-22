@@ -240,7 +240,7 @@ function FlexibleEditorLayout ({
   }, [openPageIds, currentPages, isInitialLoad, topPageId, sortPages]);
 
   if (isInitialLoad || !sortedPages || (sortedPages.pinnedIds.length === 0 && sortedPages.unpinnedIds.length === 0)) {
-    return <div>Loading...</div>;
+    return <div>Loading editors...</div>;
   }
 
   if (isSmallWidthViewport) {

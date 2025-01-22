@@ -45,7 +45,7 @@ import { createConflictHandler } from "@/lib/conflict-manager";
 
 function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefined }) {
 
-  const [loadingMessage, setLoadingMessage] = useState<string | null>("Loading...");
+  const [loadingMessage, setLoadingMessage] = useState<string | null>("Loading pages...");
   const [isClient, setIsClient] = useState(false)
   const [pinnedPageIds, setPinnedPageIds] = useState<string[]>([]);
   const [collapsedPageIds, setCollapsedPageIds] = useState<string[]>([]);
@@ -102,24 +102,22 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
 
       try {
         await Promise.race([fetchPromise, timeoutPromise]);
-        setLoadingState({ isLoading: false, error: null });
       } catch (error) {
         // If it's a timeout error, still try to continue with any data we have
         if (error instanceof Error && error.message === 'Initial fetch timeout') {
           console.warn('Initial fetch timed out, continuing with available data');
-          setLoadingState({ isLoading: false, error: null });
         } else {
           throw error; // Re-throw other errors to be caught by outer try-catch
         }
       }
     } catch (error) {
       console.error("Failed to fetch updates:", error);
-      // Always transition out of loading state, even on error
       setLoadingState({ 
         isLoading: false, 
         error: error instanceof Error ? error : new Error('Unknown error occurred') 
       });
     } finally {
+      setLoadingState(prevState => ({ ...prevState, isLoading: false }));
       setInitialFetchComplete(true);
     }
   }, [userId]);
