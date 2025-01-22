@@ -135,7 +135,8 @@ export function registerFormulaCommandHandlers(
         if (
           !(parentNode instanceof ListItemNode) ||
           node.getIndexWithinParent() !== 0 ||
-          node instanceof FormulaEditorNode
+          node instanceof FormulaEditorNode ||
+          !node.getTextContent().startsWith("=")
         ) {
           return;
         }
