@@ -38,6 +38,7 @@ const Omnibar = forwardRef(({
   const [showPageContent, setShowPageContent] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const ulRef = useRef<HTMLUListElement>(null);
+  const skipDisplayValueResolutionRef = useRef(false);
   const skipTermResolutionRef = useRef(false);
   const pages = useContext(PagesContext);
   const [todayJournalTitle, setTodayJournalTitle] = useState(getTodayJournalTitle());
@@ -161,6 +162,10 @@ const Omnibar = forwardRef(({
   // we also set the selected index for the results list
   useEffect(() => {
     const searchPagesAsync = async () => {
+      if (skipDisplayValueResolutionRef.current === true) {
+        skipDisplayValueResolutionRef.current = false;
+        return;
+      }
       const filteredPages = filteredPagesRef.current;
       const exactMatchIndex = filteredPages.findIndex(
         (page) => page.title.toLowerCase() === displayValue.toLowerCase()
@@ -196,6 +201,7 @@ const Omnibar = forwardRef(({
   const handleUpdatedSelectedIndex = (newIndex: number) => {
     const indexInResults = showCreatePageOption ? newIndex - 1 : newIndex;
     if (indexInResults > -1 && indexInResults < results.length) {
+      skipDisplayValueResolutionRef.current = true;
       setDisplayValue(results[indexInResults].title);
       if (!isTouchDevice()) {
         setShowPageContent(true);
