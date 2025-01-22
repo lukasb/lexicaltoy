@@ -54,20 +54,31 @@ const Omnibar = forwardRef(({
   // TODO logic should match searchPages in pages-helpers
   const handleSearch = useCallback(async (term: string): Promise<Page[]> => {
     const results = miniSearchService.search(term);
+    const searchTermLower = term.toLowerCase();
 
     const pagesMap = new Map(pages.map(page => [page.id, page]));
     const filteredResults = results
       .map((result: SearchResult) => pagesMap.get(result.id))
       .filter((page): page is Page => page !== undefined)
       .sort((a, b) => {
+        const aTitleLower = a.title.toLowerCase();
+        const bTitleLower = b.title.toLowerCase();
+
         // Check for exact title match (case-insensitive)
-        const aExactMatch = a.title.toLowerCase() === term.toLowerCase();
-        const bExactMatch = b.title.toLowerCase() === term.toLowerCase();
+        const aExactMatch = aTitleLower === searchTermLower;
+        const bExactMatch = bTitleLower === searchTermLower;
         
         if (aExactMatch && !bExactMatch) return -1;
         if (!aExactMatch && bExactMatch) return 1;
         
-        // If neither is an exact match, sort by lastModified as before
+        // Check if titles start with the search term
+        const aStartsWith = aTitleLower.startsWith(searchTermLower);
+        const bStartsWith = bTitleLower.startsWith(searchTermLower);
+        
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+        
+        // If neither starts with search term, sort by lastModified
         return b.lastModified.getTime() - a.lastModified.getTime();
       });
 

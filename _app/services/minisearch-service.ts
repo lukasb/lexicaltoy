@@ -55,9 +55,8 @@ class MiniSearchService {
   }
 
   public search(query: string) {
-    return this.miniSearch.search(query, {
+    return this.miniSearch.search(query, { // no field boosting since we sort results in the omnibar
       prefix: true,
-      boost: { title: 2 },
       combineWith: 'AND'
     });
   }
