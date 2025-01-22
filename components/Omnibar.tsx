@@ -39,7 +39,6 @@ const Omnibar = forwardRef(({
   const inputRef = useRef<HTMLInputElement>(null);
   const ulRef = useRef<HTMLUListElement>(null);
   const skipTermResolutionRef = useRef(false);
-  const skipDisplayValueResolutionRef = useRef(false);
   const pages = useContext(PagesContext);
   const [todayJournalTitle, setTodayJournalTitle] = useState(getTodayJournalTitle());
   const [modifierKey, setModifierKey] = useState("");
@@ -53,14 +52,23 @@ const Omnibar = forwardRef(({
 
   // TODO logic should match searchPages in pages-helpers
   const handleSearch = useCallback(async (term: string): Promise<Page[]> => {
-    
     const results = miniSearchService.search(term);
 
     const pagesMap = new Map(pages.map(page => [page.id, page]));
     const filteredResults = results
       .map((result: SearchResult) => pagesMap.get(result.id))
       .filter((page): page is Page => page !== undefined)
-      .sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
+      .sort((a, b) => {
+        // Check for exact title match (case-insensitive)
+        const aExactMatch = a.title.toLowerCase() === term.toLowerCase();
+        const bExactMatch = b.title.toLowerCase() === term.toLowerCase();
+        
+        if (aExactMatch && !bExactMatch) return -1;
+        if (!aExactMatch && bExactMatch) return 1;
+        
+        // If neither is an exact match, sort by lastModified as before
+        return b.lastModified.getTime() - a.lastModified.getTime();
+      });
 
     return filteredResults;
   }, [pages]);
@@ -111,11 +119,6 @@ const Omnibar = forwardRef(({
   // see the next useEffect for some remaining display logic
   useEffect(() => {
     const searchPagesAsync = async () => {
-      if (skipTermResolutionRef.current === true) {
-        skipTermResolutionRef.current = false;
-        return;
-      }
-  
       if (term) {
         const filteredPages = await handleSearch(term);
         filteredPagesRef.current = filteredPages;
@@ -123,13 +126,27 @@ const Omnibar = forwardRef(({
           page.title.toLowerCase().startsWith(term.toLowerCase())
         );
         
+        console.log("filteredPages in first useEffect", filteredPages);
+        setResults(filteredPages);
+
+        if (skipTermResolutionRef.current === true) {
+          skipTermResolutionRef.current = false;
+          return;
+        }
+
         if (startMatch && inputRef.current) {
+          if (startMatch.title === term) {
+            const startMatchIndex = filteredPages.findIndex(page => page.title === startMatch.title);
+            setSelectedIndex(startMatchIndex);
+            setShowCreatePageOption(false);
+          } else {
+            setShowCreatePageOption(true);
+          }
           setDisplayValue(startMatch.title);
         } else {
           setDisplayValue(term);
         }
-        
-        setResults(filteredPages);
+
       } else {
         resetSelf();
       }
@@ -144,29 +161,24 @@ const Omnibar = forwardRef(({
   // we also set the selected index for the results list
   useEffect(() => {
     const searchPagesAsync = async () => {
-      if (skipDisplayValueResolutionRef.current === true) {
-        skipDisplayValueResolutionRef.current = false;
-        return;
-      }
-
       const filteredPages = filteredPagesRef.current;
       const exactMatchIndex = filteredPages.findIndex(
         (page) => page.title.toLowerCase() === displayValue.toLowerCase()
       );
-  
       if (inputRef.current && exactMatchIndex !== -1) {
         if (displayValue !== term && displayValue.toLowerCase().startsWith(term.toLowerCase())) {
           const startPos = term.length;
           const endPos = displayValue.length;
           inputRef.current.setSelectionRange(startPos, endPos);
-          setSelectedIndex(exactMatchIndex);
           if (!isTouchDevice()) {
             setShowPageContent(true);
           }
         } else if (displayValue === term) {
           setShowCreatePageOption(false);
         }
+        setSelectedIndex(exactMatchIndex);
       } else {        
+        // TODO probably don't need this code any more? we moved exact match stuff to the previous useEffect
         if (exactMatchIndex === -1 && term.trim() !== "") {
           setShowCreatePageOption(true);
           setSelectedIndex(0);
@@ -184,7 +196,6 @@ const Omnibar = forwardRef(({
   const handleUpdatedSelectedIndex = (newIndex: number) => {
     const indexInResults = showCreatePageOption ? newIndex - 1 : newIndex;
     if (indexInResults > -1 && indexInResults < results.length) {
-      skipDisplayValueResolutionRef.current = true;
       setDisplayValue(results[indexInResults].title);
       if (!isTouchDevice()) {
         setShowPageContent(true);
@@ -271,7 +282,7 @@ const Omnibar = forwardRef(({
     } else if (
       (event.key === "Backspace" && !event.metaKey) || 
       event.key === "Delete") {
-      //skipTermResolutionRef.current = true;
+      skipTermResolutionRef.current = true;
       setSelectedIndex(-1);
     } else if (event.key === "Escape") {
       // tried also checking event.code === "Escape" to recognize
