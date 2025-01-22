@@ -45,6 +45,7 @@ async function checkSearchResult(page: Page, title: string) {
 
 test('backspace searches again', async ({ page }) => {
   await page.goto('/page');
+  await page.waitForTimeout(500);
   await createPage(page, 'blue sasquatch');
   await createPage(page, 'toy sasquatch');
   const newSearch = page.getByPlaceholder('Search or Create');
@@ -59,6 +60,7 @@ test('backspace searches again', async ({ page }) => {
 
 test('can move to open non-active pages from omnibar', async ({ page }) => {
   await page.goto('/page');
+  await page.waitForTimeout(500);
   await createPage(page, 'blue sasquatch');
   await createPage(page, 'toy sasquatch');
   await page.waitForTimeout(1000);
@@ -73,6 +75,7 @@ test('can move to open non-active pages from omnibar', async ({ page }) => {
 
 test('exact title match at top of results list', async ({ page }) => {
   await page.goto('/page');
+  await page.waitForTimeout(500);
   await createPage(page, 'blue sasquatch');
   await createPage(page, 'toy sasquatch');
   const newSearch = page.getByPlaceholder('Search or Create');
