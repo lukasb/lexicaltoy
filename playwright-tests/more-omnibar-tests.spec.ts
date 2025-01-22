@@ -83,3 +83,29 @@ test('exact title match at top of results list', async ({ page }) => {
   await page.waitForTimeout(100);
   await checkSearchResult(page, 'blue sasquatch');
 });
+
+test('can navigate search results with arrow keys', async ({ page }) => {
+  await page.goto('/page');
+  await page.waitForTimeout(500);
+  await createPage(page, 'blue sasquatch');
+  await createPage(page, 'toy sasquatch');
+  await createPage(page, 'red sasquatch');
+  
+  const newSearch = page.getByPlaceholder('Search or Create');
+  await newSearch.pressSequentially('sasquatch');
+  await page.waitForTimeout(100);
+  
+  await page.keyboard.press('ArrowDown');
+  let selectedItem = page.locator('.selected-item');
+  await expect(selectedItem).toContainText('toy sasquatch');
+
+  // Press down arrow again and verify third result is selected
+  await page.keyboard.press('ArrowDown');
+  selectedItem = page.locator('.selected-item');
+  await expect(selectedItem).toContainText('red sasquatch');
+
+  // Press up arrow and verify second result is selected again
+  await page.keyboard.press('ArrowUp');
+  selectedItem = page.locator('.selected-item');
+  await expect(selectedItem).toContainText('toy sasquatch');
+});
