@@ -149,12 +149,13 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
 
   useEffect(() => {
     if (!hasInitializedSearch.current && pages && pages.length > 0 && initialFetchComplete) {
+      // moving this to the end sometimes causes a duplicate id error in strict mode
+      hasInitializedSearch.current = true;
       initCount++;
       if (initCount > 1) console.error("MiniSearch initialized more than once, count:", initCount);
       if (pages.length > 0) {
         miniSearchService.slurpPages(pages);
       }
-      hasInitializedSearch.current = true;
     }
   }, [pages, initialFetchComplete, initCount]);
 

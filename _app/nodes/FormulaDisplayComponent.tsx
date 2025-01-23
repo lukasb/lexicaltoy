@@ -119,7 +119,11 @@ export default function FormulaDisplayComponent(
         })
         .catch(error => {
           console.error("Error in getFormulaResults:", error);
-          setOutput("Error occurred while processing formula");
+          const errorMessage = error instanceof Error 
+            ? error.message 
+            : "Unknown error occurred while processing formula";
+          setOutput(`Error: ${errorMessage}`);
+          setIsLoading(false);
           return null;
         })
         .finally(() => {
