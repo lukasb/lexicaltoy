@@ -83,7 +83,7 @@ export default async function handler(
       console.log("Chat Completion:", response);
       res.status(200).json({ response: response || undefined });
     } catch (error) {
-      console.error("Error processing chat completion:", error);
+      console.log("🛑 Error processing chat completion:", error);
       res.status(500).json({ error: "Failed to process the prompt" });
     }
   } else {

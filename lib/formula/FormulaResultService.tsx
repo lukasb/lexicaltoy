@@ -243,7 +243,7 @@ export const useFormulaResultService = () => {
         }
       })
       .catch((error) => {
-        console.error("Error:", error);
+        console.log("🛑Error:", error);
       });
   };
 
@@ -272,7 +272,7 @@ export const useFormulaResultService = () => {
         }
       })
       .catch((error) => {
-        console.error("Error:", error);
+        console.log("🛑 Error:", error);
       });
   };
 

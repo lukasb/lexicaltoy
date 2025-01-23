@@ -29,7 +29,7 @@ import { BacklinksViewerPlugin } from "../plugins/BacklinksViewerPlugin";
 import WikilinkEventListenerPlugin from "@/_app/plugins/WikilinkEventListenerPlugin";
 
 function onError(error: Error) {
-  console.error("Editor error:", error);
+  console.log("🛑 Editor error:", error);
 }
 
 type BacklinksViewerProps = {

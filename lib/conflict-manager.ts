@@ -44,7 +44,7 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
           await deletePage(pageId);
           await deleteQueuedUpdate(pageId);
         } catch (error) {
-          console.error("error handling queued delete of page that does not exist on server", error);
+          console.log("🛑 error handling queued delete of page that does not exist on server", error);
         }
       }
       else if (

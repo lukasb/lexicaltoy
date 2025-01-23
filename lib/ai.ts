@@ -19,7 +19,7 @@ async function fetchGPTChatResponse(prompt: string, dialogueContext: DialogueEle
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    throw new Error(`HTTP error in fetchGPTChatResponse! status: ${response.status}`);
   }
 
   const result = await response.json();
@@ -90,7 +90,7 @@ export async function getGPTGeneration(prompt: string): Promise<AIGenListItemTyp
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! in getGPTGeneration status: ${response.status}`);
     }
 
     const result = await response.json();

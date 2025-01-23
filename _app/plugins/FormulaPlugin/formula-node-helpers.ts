@@ -158,7 +158,7 @@ export function $deleteFormulaDisplayNodeChildren(node: FormulaDisplayNode) {
     const listItem = parent as ListItemNode;
     $deleteChildrenFromListItem(listItem);
   } else {
-    console.error("$deleteFormulaDisplayNodeChildren: node has no parent");
+    console.log("🛑 $deleteFormulaDisplayNodeChildren: node has no parent");
   }
 }
 

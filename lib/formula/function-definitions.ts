@@ -501,7 +501,7 @@ export const getUrlCallback = async (defaultArgs: DefaultArguments, userArgs: Fo
     }
   } catch (error) {
     pagesContents = "Error fetching or rendering content.";
-    console.error('Error fetching or rendering content:', error);
+    console.log('🛑 Error fetching or rendering content:', error);
   }
 
   return {

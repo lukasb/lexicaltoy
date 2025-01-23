@@ -10,7 +10,7 @@ export async function getUrl(urls: string[]): Promise<Map<string, string> | null
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    throw new Error(`HTTP error! in getUrl status: ${response.status}`);
   }
 
   const result = await response.json();

@@ -217,7 +217,7 @@ export async function processQueuedUpdatesInternal(
           console.log("processQueuedUpdatesInternal: updated page in local db", queuedUpdate.title);
         }, 0);
       } catch (error) {
-        console.error("failed to update page", queuedUpdate.title, queuedUpdate.id, error);
+        console.log("🛑 failed to update page", queuedUpdate.title, queuedUpdate.id, error);
         result = PageSyncResult.Error;
         if (error instanceof Error && error.message.includes("404")) {
           await handleConflict(queuedUpdate.id, ConflictErrorCode.NotFound);
@@ -341,11 +341,11 @@ export async function insertPage(
   try {
 
     if (!localDb) {
-      console.error("localDb not found");
+      console.log("🛑 localDb not found");
     }
 
     if (!localDb.isOpen()) {
-      console.error("localDb not open");
+      console.log("🛑 localDb not open");
     } else {
       /* Debug code removed
       console.log("localDb open");
@@ -374,7 +374,7 @@ export async function insertPage(
         return [undefined, PageSyncResult.Conflict];
       }
     } catch (error) {
-      console.error("insertPage: error getting localPage", error);
+      console.log("🛑 insertPage: error getting localPage", error);
       return [undefined, PageSyncResult.Error];
     }
 
@@ -397,7 +397,7 @@ export async function insertPage(
 
     return [newPage, PageSyncResult.Success];
   } catch (error) {
-    console.error("=== Top level error in insertPage ===", error);
+    console.log("🛑 === Top level error in insertPage ===", error);
     return [undefined, PageSyncResult.Error];
   }
 }

@@ -111,7 +111,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
         }
       }
     } catch (error) {
-      console.error("Failed to fetch updates:", error);
+      console.log("🛑 Failed to fetch updates:", error);
       setLoadingState({ 
         isLoading: false, 
         error: error instanceof Error ? error : new Error('Unknown error occurred') 
@@ -127,7 +127,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
       console.log("processing queued updates");
       await processQueuedUpdates(userId, handleConflict, updateRevisionNumber);
     } else {
-      console.error("no user id, can't process queued updates");
+      console.log("🛑 no user id, can't process queued updates");
     }
   }, [userId, handleConflict, updateRevisionNumber]);
 
@@ -152,7 +152,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
       // moving this to the end sometimes causes a duplicate id error in strict mode
       hasInitializedSearch.current = true;
       initCount++;
-      if (initCount > 1) console.error("MiniSearch initialized more than once, count:", initCount);
+      if (initCount > 1) console.log("🛑 MiniSearch initialized more than once, count:", initCount);
       if (pages.length > 0) {
         miniSearchService.slurpPages(pages);
       }
@@ -221,17 +221,17 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
           miniSearchService.addPage(newPage);
           openPage(newPage);
         } else {
-          console.error("error creating new journal page", todayJournalTitle, result);
+          console.log("🛑 error creating new journal page", todayJournalTitle, result);
         }
       } catch (error) {
-        console.error("error creating new journal page", todayJournalTitle, error);
+        console.log("🛑 error creating new journal page", todayJournalTitle, error);
       }
     }
     try {
       console.log("deleting stale journal pages");
       await deleteStaleJournalPages(today, DEFAULT_JOURNAL_CONTENTS, userId);
     } catch (error) {
-      console.error("error deleting stale journal pages", error);
+      console.log("🛑 error deleting stale journal pages", error);
     }
   }, [userId, pages]);
 
@@ -296,13 +296,13 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const handleNewPage = async (title: string) => {
     const [newPage, result] = await insertPage(title, DEFAULT_NONJOURNAL_PAGE_VALUE, userId, false);
     if (result === PageSyncResult.Conflict) {
-      console.error("error creating page");
+      console.log("🛑 error creating page");
       return;
     } else if (isPage(newPage)) {
       miniSearchService.addPage(newPage);
       openPage(newPage);
     } else {
-      console.error("expected page, got something else", result);
+      console.log("🛑 expected page, got something else", result);
     }
   };
 

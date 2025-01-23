@@ -60,7 +60,7 @@ export default async function handler(
       console.log("GPT Generation:", response);
       res.status(200).json({ response: response || undefined });
     } catch (error) {
-      console.error("Error processing GPT generation:", error);
+      console.log("🛑 Error processing GPT generation:", error);
       res.status(500).json({ error: "Failed to process the prompt" });
     }
   } else {

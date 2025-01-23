@@ -30,7 +30,7 @@ export async function insertPageDb(
       if (response.status === 409) {
         return "duplicate key value";
       } else {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        throw new Error(`HTTP error! in insertPageDb Status: ${response.status}`);
       }
     }
 
@@ -42,11 +42,11 @@ export async function insertPageDb(
         lastModified: new Date(result.page.lastModified) // Convert string to Date
       } as Page;
     } else {
-      console.error("Failed to insert page:", result.error);
+      console.log("🛑 Failed to insert page:", result.error);
       return result.error || "Unknown error occurred";
     }
   } catch (error) {
-    console.error("Error fetching from API:", error);
+    console.log("🛑 Error fetching from API:", error);
     if (error instanceof Error) {
       return `Error fetching from API: ${error.message}`;
     } else {
@@ -70,7 +70,7 @@ export async function updatePageWithHistory(id: string, value: string, title: st
 
       if (!response.ok) {
           return {
-              error: `HTTP error! Status: ${response.status} revnum:${oldRevisionNumber}`,
+              error: `HTTP error! in updatePageWithHistory Status: ${response.status} revnum:${oldRevisionNumber}`,
               status: response.status
           };
       }
@@ -87,7 +87,7 @@ export async function updatePageWithHistory(id: string, value: string, title: st
           };
       }
   } catch (error) {
-      console.error('Error fetching from API:', error);
+      console.log("🛑 Error fetching from API:", error);
       return {
           error: error instanceof Error ? error.message : String(error)
       };
@@ -108,7 +108,7 @@ export async function fetchPagesRemote(userId: string, fetchDeleted?: boolean): 
   
         if (!response.ok) {
             // Convert non-2xx HTTP responses into throws to handle them in the catch block
-            throw new Error(`HTTP error! Status: ${response.status}`);
+            throw new Error(`HTTP error! in fetchPagesRemote Status: ${response.status}`);
         }
   
         const result = await response.json();
@@ -131,7 +131,7 @@ export async function fetchPagesRemote(userId: string, fetchDeleted?: boolean): 
       if (error instanceof Error && error.message.startsWith('expected page')) {
         throw error;
       }
-      console.error('Error fetching from API:', error);
+      console.log("🛑 Error fetching from API:", error);
       return null;
     }
   }
@@ -150,7 +150,7 @@ export async function fetchPagesRemote(userId: string, fetchDeleted?: boolean): 
   
         if (!response.ok) {
             // Convert non-2xx HTTP responses into throws to handle them in the catch block
-            throw new Error(`HTTP error! Status: ${response.status}`);
+            throw new Error(`HTTP error! in fetchUpdatesSince Status: ${response.status}`);
         }
   
         const result = await response.json();
@@ -173,7 +173,7 @@ export async function fetchPagesRemote(userId: string, fetchDeleted?: boolean): 
       if (error instanceof Error && error.message.startsWith('expected page')) {
         throw error;
       }
-      console.error('Error fetching from API:', error);
+      console.log("🛑 Error fetching from API:", error);
       return null;
     }
   }

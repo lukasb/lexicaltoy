@@ -21,7 +21,7 @@ export function myCreateHeadlessEditor(): LexicalEditor {
       FormulaDisplayNode,
       FormattableTextNode
     ],
-    onError: console.error,
+    onError: console.log,
     namespace: "headless"
   });
   return editor;

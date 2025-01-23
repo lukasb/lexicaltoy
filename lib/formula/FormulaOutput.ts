@@ -49,7 +49,7 @@ export async function getFormulaOutput(
 
     return getFormulaOutputInner(cst, pages, context, pageUpdateContext);
   } catch (error) {
-    console.error("Error parsing or executing formula:", error);
+    console.log("🛑 Error parsing or executing formula:", error);
     return null;
   }
 }
@@ -108,7 +108,7 @@ async function getFormulaOutputInner(
     // Call the function's callback with the default arguments and parsed arguments
     return await funcDef.callback(defaultArgs, parsedArgs);
   } else {
-    console.error(`Unknown function: ${functionName}`);
+    console.log(`🛑 Unknown function: ${functionName}`);
     return null;
   }
 }

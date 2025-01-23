@@ -76,8 +76,8 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
         .toArray();
 
       if (!localPages || !queuedUpdates) {
-        if (!localPages) console.error("localPages not found");
-        if (!queuedUpdates) console.error("queuedUpdates not found");
+        if (!localPages) console.log("🛑 localPages not found");
+        if (!queuedUpdates) console.log("🛑 queuedUpdates not found");
         return undefined;
       }
 
@@ -114,7 +114,7 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
       });*/
       return mergedPages;
     } catch (error) {
-      console.error("error getting localPages or queuedUpdates", error);
+      console.log("🛑 error getting localPages or queuedUpdates", error);
       return undefined;
     }
   }, [session]);

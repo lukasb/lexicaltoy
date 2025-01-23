@@ -83,7 +83,7 @@ export default async function handler(
     
         markdownContent.set(url, markdown);
       } catch (error) {
-        console.error('Error fetching or converting content:', error);
+        console.log('🛑 Error fetching or converting content:', error);
       }
     }
     
@@ -93,7 +93,7 @@ export default async function handler(
         .status(200)
         .json({ response: serializedContent });
     } else {
-      console.error("Error getting URLs");
+      console.log("🛑 Error getting URLs");
       res.status(500).json({ error: "Error getting URLs" });
     }
   } else {

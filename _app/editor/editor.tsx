@@ -53,7 +53,7 @@ import { usePageStatusStore } from "@/lib/stores/page-status-store";
 import { TypingPerformancePlugin } from "../plugins/TypingPerformancePlugin";
 
 function onError(error: Error) {
-  console.error("Editor error:", error);
+  console.log("🛑 Editor error:", error);
 }
 
 type EditorProps = {

@@ -26,7 +26,7 @@ class MiniSearchService {
       this.miniSearch.addAll(pages);
       this.indexedRef = true;
     } catch (error) {
-      console.error("Error slurping pages into MiniSearch", error);
+      console.log("🛑 Error slurping pages into MiniSearch", error);
     }
   }
 
@@ -34,7 +34,7 @@ class MiniSearchService {
     try {
       this.miniSearch.discard(id);
     } catch (error) {
-      console.error("Error discarding page from MiniSearch", error);
+      console.log("🛑 Error discarding page from MiniSearch", error);
     }
   }
 
@@ -42,7 +42,7 @@ class MiniSearchService {
     try {
       this.miniSearch.replace(page);
     } catch (error) {
-      console.error("Error replacing page in MiniSearch", error);
+      console.log("🛑 Error replacing page in MiniSearch", error);
     }
   }
 
@@ -50,7 +50,7 @@ class MiniSearchService {
     try {
       this.miniSearch.add(page);
     } catch (error) {
-      console.error("Error adding page to MiniSearch", error, page.title);
+      console.log("🛑 Error adding page to MiniSearch", error, page.title);
     }
   }
 

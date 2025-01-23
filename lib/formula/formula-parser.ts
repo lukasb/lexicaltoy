@@ -286,7 +286,7 @@ export function getFormulaOutputType(formula: string): FormulaValueType | null {
           // Return the formula output type of the function
           return funcDef.formulaOutputType;
       } else {
-          console.error(`Unknown function: ${functionName}`);
+          console.log(`🛑 Unknown function: ${functionName}`);
           return null;
       }
   } catch (error) {

@@ -52,6 +52,7 @@ export default function FormulaDisplayComponent(
   const isAskFormula = formula.startsWith("ask(");
   const isFlattenable = formula.startsWith("ask(") || formula.startsWith("find(");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const hasRunRef = useRef(false);
 
   useEffect(() => {
     registerFormula(formula);
@@ -135,8 +136,9 @@ export default function FormulaDisplayComponent(
 
   //useWhatChanged([formula, output, getFormulaOutput]);
   useEffect(() => {
-    if ((output === "" || (output === "@@childnodes" && !fetchedNodes.current))
+    if (!hasRunRef.current && (output === "" || (output === "@@childnodes" && !fetchedNodes.current))
     ) {
+      hasRunRef.current = true;
       fetchedNodes.current = true;
       //if (output === "") setOutput("(getting response...)");
       
