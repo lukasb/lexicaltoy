@@ -188,6 +188,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
           initialIds.push(initialPageId);
         }
         initialIds.push(...lastWeekJournalPageIds);
+        initialIds.push(...pinnedPageIds);
         
         setOpenPageIds(prevIds => [...new Set([...prevIds, ...initialIds])]);
         initializedPagesRef.current = true;
@@ -200,10 +201,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
       }
     }
   }, [pages, openPageIds]);
-
-  useEffect(() => {
-    setOpenPageIds(prevIds => [...new Set([...prevIds, ...pinnedPageIds])]);
-  }, [pinnedPageIds]);
 
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
   const setupDoneRef = useRef(false);

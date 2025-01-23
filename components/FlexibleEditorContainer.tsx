@@ -204,7 +204,9 @@ function FlexibleEditorLayout ({
         const topPagePinned = topPageId ? pinnedPageIds.includes(topPageId) : false;
         
         return {
-          pinnedIds: topPagePinned ? currentPinnedIds : currentPinnedIds.filter(id => (id !== topPageId)),
+          pinnedIds: topPagePinned && topPageId
+            ? [...new Set([topPageId, ...currentPinnedIds])]
+            : currentPinnedIds.filter(id => (id !== topPageId)),
           unpinnedIds: !topPagePinned
             ? [
                 ...(topPageId ? [topPageId] : []),
