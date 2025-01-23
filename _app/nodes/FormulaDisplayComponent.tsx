@@ -230,6 +230,7 @@ export default function FormulaDisplayComponent(
 
   const handlePencilClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault(); // Prevent default selection behavior
     if (isFlattenable) {
       setShowMenu(!showMenu);
     } else {
@@ -293,6 +294,7 @@ export default function FormulaDisplayComponent(
           ref={buttonRef}
           className="inline-flex items-center justify-center p-1 text-xs hover:bg-gray-200 rounded" 
           onClick={handlePencilClick}
+          tabIndex={-1}
         >
           <span role="img" aria-label="Edit" className="transform scale-x-[-1] filter grayscale-[70%]">✏️</span>
         </button>
