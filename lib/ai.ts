@@ -32,7 +32,7 @@ export async function getGPTChatResponseForList(prompt: string, dialogueContext:
     const response = await fetchGPTChatResponse(prompt, dialogueContext);
     return convertToUnorderedList(response);
   } catch (error) {
-    console.error("Error fetching chat response for list:", error);
+    console.log("🛑 Error fetching chat response for list:", error);
     return null;
   }
 }
@@ -42,7 +42,7 @@ export async function getShortGPTChatResponse(prompt: string, dialogueContext: D
     const response = await fetchGPTChatResponse(prompt, dialogueContext);
     return sanitizeText(response);
   } catch (error) {
-    console.error("Error fetching short chat response:", error);
+    console.log("🛑 Error fetching short chat response:", error);
     return null;
   }
 }
@@ -72,7 +72,7 @@ export function parseListItems(jsonString: string): AIGenListItemType[] {
 
     return validatedData.listItems.map(processItem);
   } catch (error) {
-    console.error("Error parsing or validating ListItems:", error);
+    console.log("🛑 Error parsing or validating ListItems:", error);
     return [];
   }
 }
@@ -96,7 +96,7 @@ export async function getGPTGeneration(prompt: string): Promise<AIGenListItemTyp
     const result = await response.json();
     return parseListItems(result.response);
   } catch (error) {
-    console.error("Error fetching GPT generation:", error);
+    console.log("🛑 Error fetching GPT generation:", error);
     return null;
   }
 }
