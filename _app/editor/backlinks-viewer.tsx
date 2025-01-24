@@ -18,7 +18,6 @@ import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { AutoLinkPlugin } from "@/_app/plugins/AutoLinkPlugin";
 import LexicalClickableLinkPlugin from "@lexical/react/LexicalClickableLinkPlugin";
 import { WikilinkPlugin } from "@/_app/plugins/WikilinkPlugin";
-import { PagesContext } from "@/_app/context/pages-context";
 import { TodosPlugin } from "@/_app/plugins/TodosPlugin";
 import { FormulaPlugin } from "@/_app/plugins/FormulaPlugin";
 import { PromisesProvider } from "@/_app/context/formula-request-context";
@@ -48,7 +47,6 @@ function BacklinksViewer({ backlinks, openOrCreatePageByTitle, thisPageTitle }: 
     onError,
   };
 
-  const pages = useContext(PagesContext);
   const [isSmallWidthViewport, setIsSmallWidthViewport] = useState<boolean>(false);
 
   useBreakpoint(768, isSmallWidthViewport, setIsSmallWidthViewport);
