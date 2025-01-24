@@ -68,9 +68,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     async (pageId: string, errorCode: ConflictErrorCode) => {
       return createConflictHandler({
         removePageStatus: removePageStatus,
-        addPageStatus: addPageStatus,
-        pages: pagesRef.current || [],
-        userId, 
+        addPageStatus: addPageStatus
       })(pageId, errorCode);
     },
     [removePageStatus, addPageStatus, userId]

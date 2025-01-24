@@ -1,7 +1,6 @@
 import {
   DEFAULT_NONJOURNAL_PAGE_VALUE,
   ConflictErrorCode,
-  Page,
   PageStatus
 } from "@/lib/definitions";
 import {
@@ -20,8 +19,6 @@ export interface ConflictManagerDeps {
     revisionNumber: number,
     newValue?: string
   ) => void;
-  pages: Page[];
-  userId: string;
 }
 
 export function createConflictHandler(deps: ConflictManagerDeps) {
@@ -32,8 +29,6 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
     const {
       removePageStatus,
       addPageStatus,
-      pages,
-      userId,
     } = deps;
     const queuedUpdate = await getQueuedUpdateById(pageId);
     if (queuedUpdate) {
