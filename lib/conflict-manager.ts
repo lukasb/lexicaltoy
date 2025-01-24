@@ -63,7 +63,7 @@ export function createConflictHandler(deps: ConflictManagerDeps) {
         alert("A page with this title already exists. Please use a different title.");
         removePageStatus(pageId);
         await deleteQueuedUpdate(pageId);
-      } else {
+      } else if (errorCode === ConflictErrorCode.StaleUpdate) {
         // I tried inserting a conflict page, but when multiple tabs were open this resulted in multiple conflict pages
         console.log("queued update with conflict is page with non-default value", queuedUpdate.title);
         addPageStatus(pageId, PageStatus.Conflict, queuedUpdate.lastModified, queuedUpdate.revisionNumber);

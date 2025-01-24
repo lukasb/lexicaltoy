@@ -138,7 +138,7 @@ export async function processQueuedUpdatesInternal(
   let result = PageSyncResult.Success;
   async function processQueuedUpdate(queuedUpdate: Page) {
     
-    if (!navigator.onLine) return;
+    if (!navigator.onLine) return; // this might or might not be correct
     
     const localPage = await _getLocalPageById(queuedUpdate.id);
     if (localPage) {
@@ -180,8 +180,7 @@ export async function processQueuedUpdatesInternal(
         );
 
         //if (isDevelopmentEnvironment) {
-          console.timeEnd(`updatePageWithHistory ${queuedUpdate.title} completed`);
-          console.log("processQueuedUpdatesInternal: updated page", queuedUpdate.title, "new revision number", revisionNumber);
+          console.timeEnd(`updatePageWithHistory ${queuedUpdate.title}`);
         //}
 
         if (error) {
@@ -190,19 +189,20 @@ export async function processQueuedUpdatesInternal(
           } else if (status === 409) {
             await handleConflict(queuedUpdate.id, ConflictErrorCode.StaleUpdate);
           } else {
-            await handleConflict(queuedUpdate.id, ConflictErrorCode.Unknown);
+            console.log("🛑 failed to update page, unknown error", queuedUpdate.title, queuedUpdate.id, error);
           }
+          result = PageSyncResult.Error;
+          return;
+        }
+
+        if (revisionNumber === -1 || !revisionNumber || !lastModified) {
+          console.log("🔴 failed to update page", queuedUpdate.title);
+          result = PageSyncResult.Error;
           return;
         }
 
         localDb.queuedUpdates.delete(queuedUpdate.id);
         console.log("processQueuedUpdatesInternal: deleted queued update", queuedUpdate.title);
-        if (revisionNumber === -1 || !revisionNumber || !lastModified) {
-          console.log("failed to update page", queuedUpdate.title);
-          result = PageSyncResult.Conflict;
-          await handleConflict(queuedUpdate.id, ConflictErrorCode.Unknown);
-          return;
-        }
         
         setPageRevisionNumber(queuedUpdate.id, revisionNumber);
         setLastRevisionSynced(queuedUpdate.id, revisionNumber);
@@ -217,12 +217,15 @@ export async function processQueuedUpdatesInternal(
           console.log("processQueuedUpdatesInternal: updated page in local db", queuedUpdate.title);
         }, 0);
       } catch (error) {
-        console.log("🛑 failed to update page", queuedUpdate.title, queuedUpdate.id, error);
         result = PageSyncResult.Error;
         if (error instanceof Error && error.message.includes("404")) {
+          console.log("🛑 failed to update page - not found", queuedUpdate.title, queuedUpdate.id, error);
           await handleConflict(queuedUpdate.id, ConflictErrorCode.NotFound);
+        } else if (error instanceof Error && error.message.includes("409")) {
+          console.log("🛑 failed to update page - stale update", queuedUpdate.title, queuedUpdate.id, error);
+          await handleConflict(queuedUpdate.id, ConflictErrorCode.StaleUpdate);
         } else {
-          await handleConflict(queuedUpdate.id, ConflictErrorCode.Unknown);
+          console.log("🛑 failed to update page - unknown error", queuedUpdate.title, queuedUpdate.id, error);
         }
         return;
       }
