@@ -201,7 +201,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
         }
       }
     }
-  }, [pages, openPageIds]);
+  }, [pages, openPageIds, pinnedPageIds]);
 
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
   const setupDoneRef = useRef(false);
