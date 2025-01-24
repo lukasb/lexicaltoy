@@ -52,6 +52,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const { setBlockIdsForPage } = useBlockIdsIndex();
   const hasInitializedSearch = useRef(false);
   const [pagesDefined, setPagesDefined] = useState(false);
+  const hasIngestedBlockIds = useRef(false);
   let initCount = 0;
 
   const { addPageStatus, removePageStatus, setPageRevisionNumber } = usePageStatusStore();
@@ -168,9 +169,11 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   }, []);
 
   useEffect(() => {
+    if (hasIngestedBlockIds.current) return;
     for (const page of pages || []) {
       setTimeout(() => ingestPageBlockIds(page.title, page.value, setBlockIdsForPage), 0);
     }
+    hasIngestedBlockIds.current = true;
   }, [pages, setBlockIdsForPage]);
 
   const initializedPagesRef = useRef(false);
