@@ -49,7 +49,7 @@ import {
   CREATE_AND_STORE_FORMULA_OUTPUT,
   FLATTEN_FORMULA_OUTPUT,
   EDIT_FORMULA_NODE_BLOCK_ID,
-  PROCESS_TEMPLATE_INSTANTIATION
+  RUN_ALL_FORMULAS
 } from "@/lib/formula-commands";
 import { parseFormulaMarkdown } from "@/lib/formula/formula-markdown-converters";
 import { BaseNodeMarkdown, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
@@ -417,7 +417,7 @@ export function registerFormulaCommandHandlers(
         COMMAND_PRIORITY_CRITICAL
       ),
       editor.registerCommand(
-        PROCESS_TEMPLATE_INSTANTIATION,
+        RUN_ALL_FORMULAS,
         (payload) => {
           const root = $getRoot();
           const checkChildren = (node: LexicalNode) => {

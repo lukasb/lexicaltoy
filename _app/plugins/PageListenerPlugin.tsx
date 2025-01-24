@@ -28,7 +28,7 @@ import {
 import { $isFormulaDisplayNode } from "../nodes/FormulaNode";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
 import { usePageStatusStore } from "@/lib/stores/page-status-store";
-import { PROCESS_TEMPLATE_INSTANTIATION } from "@/lib/formula-commands";
+import { RUN_ALL_FORMULAS } from "@/lib/formula-commands";
 
 const listItemRegex = /^(\s*)-\s*(.+)$/;
 
@@ -165,8 +165,8 @@ export function PageListenerPlugin({
           });
         });
       } else if (pageStatuses.get(pageId)?.revisionNumber === 1 && !templateProcessedRef.current) {
-        console.log("PageListenerPlugin: dispatching PROCESS_TEMPLATE_INSTANTIATION");
-        editor.dispatchCommand(PROCESS_TEMPLATE_INSTANTIATION, undefined);
+        //console.log("PageListenerPlugin: dispatching RUN_ALL_FORMULAS");
+        //editor.dispatchCommand(RUN_ALL_FORMULAS, undefined);
         templateProcessedRef.current = true;
       }
   }, [editor, pageId, pages, pageStatuses, getUpdatedPageValue]);
