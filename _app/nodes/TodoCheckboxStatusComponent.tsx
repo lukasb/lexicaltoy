@@ -79,13 +79,16 @@ export default function TodoCheckboxStatusComponent(
         checked={isChecked}
         className="mr-2 PlaygroundEditorTheme__todoCheckbox"
         onChange={handleCheckboxChange}
+        readOnly
+        tabIndex={-1}
       />
-        <div 
-          className="text-sm font-semibold text-indigo-400 cursor-pointer PlaygroundEditorTheme__todoStatus"
-          onClick={handleStatusClick}
-        >
-          {!isChecked ? `${status}  ` : ' '}
-        </div>
+      <div 
+        className="text-sm font-semibold text-indigo-400 cursor-pointer PlaygroundEditorTheme__todoStatus"
+        onClick={handleStatusClick}
+        tabIndex={-1}
+      >
+        {!isChecked ? `${status}  ` : ' '}
+      </div>
     </div>
   );
 }
