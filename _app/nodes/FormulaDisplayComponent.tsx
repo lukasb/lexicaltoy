@@ -301,6 +301,7 @@ export default function FormulaDisplayComponent(
           className="inline-flex items-center justify-center p-1 text-xs hover:bg-gray-200 rounded" 
           onClick={handlePencilClick}
           tabIndex={-1}
+          onTouchStart={(e) => e.preventDefault()}
         >
           <span role="img" aria-label="Edit" className="transform scale-x-[-1] filter grayscale-[70%]">✏️</span>
         </button>
