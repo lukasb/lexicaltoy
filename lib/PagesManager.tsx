@@ -93,7 +93,7 @@ export function PagesManager() {
         pageStatus.status === PageStatus.PendingWrite &&
         pageStatus.newValue === undefined
       ) {
-        console.error("Pending write is missing value", page.title);
+        console.log("🛑 Pending write is missing value", page.title);
       } else if (
         pageStatus &&
         pageStatus.status === PageStatus.DroppingUpdate
@@ -190,7 +190,7 @@ export function PagesManager() {
           pagesToUpdate.set(keyElements.pageName, lines.join("\n"));
           sharedNodeMap.set(key, { ...value, needsSyncToPage: false });
         } else if (pageStatuses.get(page.id)?.status === PageStatus.UserEdit) {
-          console.error("Page has a user edit, but shared node also needs sync to page");
+          console.log("🛑 Page has a user edit, but shared node also needs sync to page");
         } 
       }
     }
