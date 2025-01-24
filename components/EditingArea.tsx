@@ -72,7 +72,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
         addPageStatus: addPageStatus
       })(pageId, errorCode);
     },
-    [removePageStatus, addPageStatus, userId]
+    [removePageStatus, addPageStatus]
   );
 
   const updateRevisionNumber = useCallback((pageId: string, revisionNumber: number) => {
