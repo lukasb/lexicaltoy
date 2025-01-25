@@ -119,7 +119,7 @@ export async function fetchUpdatedPagesInternal(
       } catch (error) {
         // Rethrow validation errors
         if (error instanceof Error && error.message.startsWith('expected page')) {
-          throw error;
+          console.log("🛑 fetchUpdatedPagesInternal: expected page", error);
         }
         result = PageSyncResult.Error;
       }
