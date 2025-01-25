@@ -73,6 +73,11 @@ export function PagesManager() {
     const duration = performance.now();
     pages.forEach((page) => {
       const pageStatus = pageStatuses.get(page.id);
+      if (page.title === 'Jan 24th, 2025') {
+        console.log("Jan 24th, 2025 local revnum", pageStatus?.revisionNumber, "server revnum", page.revisionNumber);
+        console.log("Jan 24th, 2025 local lastModified", pageStatus?.lastModified, "server lastModified", page.lastModified);
+        console.log("page status", pageStatus?.status);
+      }
       if (
         pageStatus &&
         pageStatus.status === PageStatus.PendingWrite &&
