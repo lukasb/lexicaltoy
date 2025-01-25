@@ -160,7 +160,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     return () => {
       clearIntervals();
     };
-  }, [pagesDefined, fetch, processUpdates, clearIntervals]);
+  }, [pagesDefined, fetch, processUpdates, clearIntervals, setupIntervals]);
 
   useEffect(() => {
     if (!hasInitializedSearch.current && pages && pages.length > 0 && initialFetchComplete) {
@@ -364,7 +364,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
       document.removeEventListener('visibilitychange', handlePageStateChange);
       window.removeEventListener('pagehide', handlePageHide);
     };
-  }, [userId, handleConflict, updateRevisionNumber]);
+  }, [userId, handleConflict, updateRevisionNumber, clearIntervals, setupIntervals]);
 
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
