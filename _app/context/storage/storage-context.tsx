@@ -115,6 +115,7 @@ export async function fetchUpdatedPagesInternal(
           result = PageSyncResult.Error;
           return;
         }
+        console.log("fetchUpdatedPagesInternal:", updatedPages.length, "pages to put");
         await localDb.pages.bulkPut(updatedPages);
       } catch (error) {
         // Rethrow validation errors
