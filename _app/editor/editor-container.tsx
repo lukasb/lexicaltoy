@@ -22,6 +22,7 @@ import { usePageStatusStore } from "@/lib/stores/page-status-store";
 import { miniSearchService } from "@/_app/services/minisearch-service";
 import { useLiveQuery } from "dexie-react-hooks";
 import { localDb } from "../context/storage/db";
+import { PROCESS_QUEUE_INTERVAL } from "@/components/EditingArea";
 
 function EditorContainer({
   page,
@@ -55,6 +56,8 @@ function EditorContainer({
   const [backlinksCollapsed, setBacklinksCollapsed] = useState(true);
   const { pageStatuses, getPageStatus, setPageStatus } = usePageStatusStore();
   const conflictNotificationRef = useRef<HTMLDivElement>(null);
+  const [queueStartTime, setQueueStartTime] = useState<number | null>(null);
+  const [showQueueIndicator, setShowQueueIndicator] = useState(false);
 
   useEffect(() => {
     setModifierKey(getModifierKey());
@@ -87,6 +90,31 @@ function EditorContainer({
   const queuedUpdates = useLiveQuery(
     () => localDb.queuedUpdates.where("id").equals(page.id).toArray()
   );  
+
+  useEffect(() => {
+    if (queuedUpdates && queuedUpdates.length > 0) {
+      if (queueStartTime === null) {
+        setQueueStartTime(Date.now());
+      }
+    } else {
+      setQueueStartTime(null);
+      setShowQueueIndicator(false);
+    }
+
+    let intervalId: NodeJS.Timeout;
+    if (queueStartTime !== null) {
+      intervalId = setInterval(() => {
+        const timeInQueue = Date.now() - queueStartTime;
+        setShowQueueIndicator(timeInQueue > PROCESS_QUEUE_INTERVAL);
+      }, 300);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [queuedUpdates, queueStartTime]);
 
   const handlePinToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -162,7 +190,7 @@ function EditorContainer({
               <EditablePageTitle
                 initialTitle={page.title}
               />
-              {queuedUpdates && queuedUpdates.length > 0 && (
+              {showQueueIndicator && (
                 <div className="w-2 h-2 rounded-full bg-orange-400 ml-2" />
               )}
             </div>
