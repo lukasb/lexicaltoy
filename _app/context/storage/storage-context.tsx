@@ -121,6 +121,8 @@ export async function fetchUpdatedPagesInternal(
         // Rethrow validation errors
         if (error instanceof Error && error.message.startsWith('expected page')) {
           console.log("🛑 fetchUpdatedPagesInternal: expected page", error);
+        } else {
+          console.log("🛑 fetchUpdatedPagesInternal: unknown error", error);
         }
         result = PageSyncResult.Error;
       }
