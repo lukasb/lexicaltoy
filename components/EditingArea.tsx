@@ -139,8 +139,14 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   }, [fetch, processUpdates]);
 
   const clearIntervals = useCallback(() => {
-    if (fetchIntervalId.current) clearInterval(fetchIntervalId.current);
-    if (processIntervalId.current) clearInterval(processIntervalId.current);
+    if (fetchIntervalId.current) {
+      clearInterval(fetchIntervalId.current);
+      fetchIntervalId.current = null;
+    }
+    if (processIntervalId.current) {
+      clearInterval(processIntervalId.current);
+      processIntervalId.current = null;
+    }
   }, []);
 
   useEffect(() => {
