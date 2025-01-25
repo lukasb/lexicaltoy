@@ -133,18 +133,26 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const fetchIntervalId = useRef<NodeJS.Timeout | null>(null);
   const processIntervalId = useRef<NodeJS.Timeout | null>(null);
 
+  const setupIntervals = useCallback(() => {
+    if (!fetchIntervalId.current) fetchIntervalId.current = setInterval(fetch, 30000);
+    if (!processIntervalId.current) processIntervalId.current = setInterval(processUpdates, 8000);
+  }, [fetch, processUpdates]);
+
+  const clearIntervals = useCallback(() => {
+    if (fetchIntervalId.current) clearInterval(fetchIntervalId.current);
+    if (processIntervalId.current) clearInterval(processIntervalId.current);
+  }, []);
+
   useEffect(() => {
     if (!pagesDefined) return;
     
     fetch();
-    fetchIntervalId.current = setInterval(fetch, 30000);
-    processIntervalId.current = setInterval(processUpdates, 8000);
+    setupIntervals();
     
     return () => {
-      if (fetchIntervalId.current) clearInterval(fetchIntervalId.current);
-      if (processIntervalId.current) clearInterval(processIntervalId.current);
+      clearIntervals();
     };
-  }, [pagesDefined, fetch, processUpdates]);
+  }, [pagesDefined, fetch, processUpdates, clearIntervals]);
 
   useEffect(() => {
     if (!hasInitializedSearch.current && pages && pages.length > 0 && initialFetchComplete) {
@@ -325,16 +333,19 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
       if (document.visibilityState === 'hidden') {
         // Force process any pending updates before the page becomes hidden
         console.log("tab becoming hidden, processing pending updates");
+        clearIntervals();
         await processQueuedUpdates(userId, handleConflict, updateRevisionNumber);
       } else if (document.visibilityState === 'visible') {
         console.log("tab became visible, fetching updated pages");
         await fetchUpdatedPages(userId);
+        setupIntervals();
       }
     };
 
     const handlePageHide = async () => {
       if (!userId) return;
       console.log("page hide event, processing pending updates");
+      clearIntervals();
       await processQueuedUpdates(userId, handleConflict, updateRevisionNumber);
     };
 
