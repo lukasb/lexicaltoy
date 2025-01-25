@@ -16,10 +16,12 @@ import { findCallback } from "@/lib/formula/function-definitions";
 import { FormulaValueType, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
 import BacklinksViewer from "./backlinks-viewer";
 import { EditDialog } from "@/_app/ui/edit-dialog";
-import { updatePage, PageSyncResult } from "@/_app/context/storage/storage-context"
+import { updatePage, PageSyncResult} from "@/_app/context/storage/storage-context"
 import { PageStatus } from "@/lib/definitions";
 import { usePageStatusStore } from "@/lib/stores/page-status-store";
 import { miniSearchService } from "@/_app/services/minisearch-service";
+import { useLiveQuery } from "dexie-react-hooks";
+import { localDb } from "../context/storage/db";
 
 function EditorContainer({
   page,
@@ -81,6 +83,10 @@ function EditorContainer({
       }, 100);
     }
   }, [getPageStatus(page.id)?.status]);
+
+  const queuedUpdates = useLiveQuery(
+    () => localDb.queuedUpdates.where("id").equals(page.id).toArray()
+  );  
 
   const handlePinToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -152,10 +158,13 @@ function EditorContainer({
           localIsCollapsed ? 'text-gray-500' : ''
         }`}>
           <div className="col-start-2 row-start-1 flex justify-between items-center">
-            <div onClick={handleTitleClick} className="cursor-pointer flex-grow">
+            <div onClick={handleTitleClick} className="cursor-pointer flex-grow flex items-center">
               <EditablePageTitle
                 initialTitle={page.title}
               />
+              {queuedUpdates && queuedUpdates.length > 0 && (
+                <div className="w-2 h-2 rounded-full bg-orange-400 ml-2" />
+              )}
             </div>
             <div className="flex items-center">
               <button
