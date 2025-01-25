@@ -43,6 +43,8 @@ import {
 import { usePageStatusStore } from "@/lib/stores/page-status-store";
 import { createConflictHandler } from "@/lib/conflict-manager";
 
+export const PROCESS_QUEUE_INTERVAL = 8000;
+
 function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefined }) {
 
   const [loadingMessage, setLoadingMessage] = useState<string | null>("Loading pages...");
@@ -135,7 +137,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
 
   const setupIntervals = useCallback(() => {
     if (!fetchIntervalId.current) fetchIntervalId.current = setInterval(fetch, 30000);
-    if (!processIntervalId.current) processIntervalId.current = setInterval(processUpdates, 8000);
+    if (!processIntervalId.current) processIntervalId.current = setInterval(processUpdates, PROCESS_QUEUE_INTERVAL);
   }, [fetch, processUpdates]);
 
   const clearIntervals = useCallback(() => {
