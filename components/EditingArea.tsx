@@ -55,19 +55,18 @@ function EditingArea({ userId }: { userId: string }) {
   const hasInitializedSearch = useRef(false);
   const [pagesDefined, setPagesDefined] = useState(false);
   const hasIngestedBlockIds = useRef(false);
+  const pages = localPagesRef.current;
   let initCount = 0;
 
   const { addPageStatus, removePageStatus, setPageRevisionNumber } = usePageStatusStore();
 
   const [initialFetchComplete, setInitialFetchComplete] = useState(false);
 
-  const pagesRef = useRef(localPagesRef.current);
   useEffect(() => {
-    if (localPagesRef.current) {
-      pagesRef.current = localPagesRef.current;
+    if (pages) {
       setPagesDefined(true);
     }
-  }, []);
+  }, [pages]);
 
   const handleConflict = useCallback(
     async (pageId: string, errorCode: ConflictErrorCode) => {
@@ -94,11 +93,11 @@ function EditingArea({ userId }: { userId: string }) {
   });
   
   const initializeOpenPages = useCallback(() => {
-    console.log("initializeOpenPages maybe", pagesRef.current?.length, initializedPagesRef.current);
-    if (!pagesRef.current || pagesRef.current.length === 0 || initializedPagesRef.current) return;
+    console.log("initializeOpenPages maybe", pages?.length, initializedPagesRef.current);
+    if (!pages || pages.length === 0 || initializedPagesRef.current) return;
     console.log("time to initialize open pages");
-    const initialPageId = findMostRecentlyEditedPage(pagesRef.current)?.id;
-    const lastWeekJournalPageIds = getLastWeekJournalPages(pagesRef.current).map(page => page.id);
+    const initialPageId = findMostRecentlyEditedPage(pages)?.id;
+    const lastWeekJournalPageIds = getLastWeekJournalPages(pages).map(page => page.id);
     
     const initialIds: string[] = [];
     if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) {
@@ -109,7 +108,7 @@ function EditingArea({ userId }: { userId: string }) {
     
     setOpenPageIds(prevIds => [...new Set([...prevIds, ...initialIds])]);
     initializedPagesRef.current = true;
-  }, [pinnedPageIds]);
+  }, [pinnedPageIds, pages]);
 
   const fetch = useCallback(async () => {
     if (!userId) return;
@@ -121,14 +120,14 @@ function EditingArea({ userId }: { userId: string }) {
         setTimeout(() => reject(new Error('Initial fetch timeout')), 5000)
       );
 
-      const oldPageIds = new Set(pagesRef.current?.map(p => p.id) || []);
+      const oldPageIds = new Set(pages?.map(p => p.id) || []);
       
       try {
         await Promise.race([fetchPromise, timeoutPromise]);
         
         // After fetch completes, handle minisearch updates
-        if (pagesRef.current) {
-          const newPageIds = new Set(pagesRef.current.map(p => p.id));
+        if (pages) {
+          const newPageIds = new Set(pages.map(p => p.id));
           
           // Find deleted pages (in old but not in new)
           for (const oldPageId of oldPageIds) {
@@ -139,7 +138,7 @@ function EditingArea({ userId }: { userId: string }) {
           }
           
           // Find new pages (in new but not in old)
-          const newPagesToAdd = pagesRef.current.filter(p => !oldPageIds.has(p.id));
+          const newPagesToAdd = pages.filter(p => !oldPageIds.has(p.id));
           if (newPagesToAdd.length > 0) {
             console.log("adding new pages to minisearch", newPagesToAdd.length);
             for (const page of newPagesToAdd) {
@@ -165,7 +164,7 @@ function EditingArea({ userId }: { userId: string }) {
       setLoadingState(prevState => ({ ...prevState, isLoading: false }));
       setTimeout(() => setInitialFetchComplete(true), 10);
     }
-  }, [userId]);
+  }, [userId, pages]);
   
   const processUpdates = useCallback(async () => {
     if (userId) {
@@ -210,24 +209,24 @@ function EditingArea({ userId }: { userId: string }) {
     console.log("Search initialization effect triggered", {
       hasInitialized: hasInitializedSearch.current,
       pagesDefined,
-      pagesLength: pagesRef.current?.length,
+      pagesLength: pages?.length,
       initialFetchComplete,
-      pages: pagesRef.current
+      pages: pages
     });
 
     if (!hasInitializedSearch.current && 
         pagesDefined && 
-        pagesRef.current && 
-        pagesRef.current.length > 0 && 
+        pages && 
+        pages.length > 0 && 
         initialFetchComplete) {
       hasInitializedSearch.current = true;
       initCount++;
       if (initCount > 1) console.log("🛑 MiniSearch initialized more than once, count:", initCount);
-      console.log("slurping pages", pagesRef.current);
-      miniSearchService.slurpPages(pagesRef.current);
+      console.log("slurping pages", pages);
+      miniSearchService.slurpPages(pages);
       initializeOpenPages();
     }
-  }, [initialFetchComplete, pagesDefined, initCount, pagesRef, initializeOpenPages]);
+  }, [initialFetchComplete, pagesDefined, initCount, initializeOpenPages, pages]);
 
   useEffect(() => {
     const pnnedPageIds = getPinnedPageIds();
@@ -241,27 +240,27 @@ function EditingArea({ userId }: { userId: string }) {
 
   useEffect(() => {
     if (hasIngestedBlockIds.current) return;
-    for (const page of pagesRef.current || []) {
+    for (const page of pages || []) {
       setTimeout(() => ingestPageBlockIds(page.title, page.value, setBlockIdsForPage), 0);
     }
     hasIngestedBlockIds.current = true;
-  }, [setBlockIdsForPage]);
+  }, [setBlockIdsForPage, pages]);
 
   const initializedPagesRef = useRef(false);
   const [openPageIds, setOpenPageIds] = useState<string[]>([]);
 
   useEffect(() => {
-    if (pagesRef.current && pagesRef.current.length > 0) {
+    if (pages && pages.length > 0) {
       initializeOpenPages();
       
       // Keep the today's journal page logic
       const todayJournalTitle = getTodayJournalTitle();
-      const todayJournalPage = pagesRef.current.find(p => p.title === todayJournalTitle && p.isJournal);
+      const todayJournalPage = pages.find(p => p.title === todayJournalTitle && p.isJournal);
       if (todayJournalPage && !openPageIds.includes(todayJournalPage.id)) {
         setOpenPageIds(prevIds => [todayJournalPage.id, ...prevIds]);
       }
     }
-  }, [openPageIds, initializeOpenPages]);
+  }, [openPageIds, initializeOpenPages, pages]);
 
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
   const setupDoneRef = useRef(false);
@@ -273,7 +272,7 @@ function EditingArea({ userId }: { userId: string }) {
   const executeJournalLogic = useCallback(async () => {
     const today = new Date();
     const todayJournalTitle = getJournalTitle(today);
-    if (!pagesRef.current?.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
+    if (!pages?.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
       try {
         console.log("inserting today's journal page");
         const [newPage, result] = await insertNewJournalPage(todayJournalTitle, userId, today);
@@ -293,16 +292,16 @@ function EditingArea({ userId }: { userId: string }) {
     } catch (error) {
       console.log("🛑 error deleting stale journal pages", error);
     }
-  }, [userId]);
+  }, [userId, pages]);
 
   useEffect(() => {
-    if (initialFetchComplete && !setupDoneRef.current && pagesRef.current) {
+    if (initialFetchComplete && !setupDoneRef.current && pages) {
       executeJournalLogic();
       setupDoneRef.current = true;
     }
     const intervalId = setInterval(executeJournalLogic, 30000);
     return () => clearInterval(intervalId);
-  }, [executeJournalLogic, initialFetchComplete]);
+  }, [executeJournalLogic, initialFetchComplete, pages]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -321,7 +320,7 @@ function EditingArea({ userId }: { userId: string }) {
   }, []);
 
   const openOrCreatePageByTitle = (title: string) => {
-    const page = pagesRef.current?.find((p) => p.title.toLowerCase() === title.toLowerCase());
+    const page = pages?.find((p) => p.title.toLowerCase() === title.toLowerCase());
     if (page) {
       openPage(page);
     } else {
