@@ -93,6 +93,24 @@ function EditingArea({ userId }: { userId: string }) {
     error: null
   });
   
+  const initializeOpenPages = useCallback(() => {
+    console.log("initializeOpenPages maybe", pagesRef.current?.length, initializedPagesRef.current);
+    if (!pagesRef.current || pagesRef.current.length === 0 || initializedPagesRef.current) return;
+    console.log("time to initialize open pages");
+    const initialPageId = findMostRecentlyEditedPage(pagesRef.current)?.id;
+    const lastWeekJournalPageIds = getLastWeekJournalPages(pagesRef.current).map(page => page.id);
+    
+    const initialIds: string[] = [];
+    if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) {
+      initialIds.push(initialPageId);
+    }
+    initialIds.push(...lastWeekJournalPageIds);
+    initialIds.push(...pinnedPageIds);
+    
+    setOpenPageIds(prevIds => [...new Set([...prevIds, ...initialIds])]);
+    initializedPagesRef.current = true;
+  }, [pinnedPageIds]);
+
   const fetch = useCallback(async () => {
     if (!userId) return;
 
@@ -103,46 +121,30 @@ function EditingArea({ userId }: { userId: string }) {
         setTimeout(() => reject(new Error('Initial fetch timeout')), 5000)
       );
 
-      const oldPages = new Set(pagesRef.current?.map(p => p.id) || []);
+      const oldPageIds = new Set(pagesRef.current?.map(p => p.id) || []);
       
       try {
         await Promise.race([fetchPromise, timeoutPromise]);
         
         // After fetch completes, handle minisearch updates
         if (pagesRef.current) {
-          const newPages = new Set(pagesRef.current.map(p => p.id));
+          const newPageIds = new Set(pagesRef.current.map(p => p.id));
           
           // Find deleted pages (in old but not in new)
-          for (const oldPageId of oldPages) {
-            if (!newPages.has(oldPageId)) {
+          for (const oldPageId of oldPageIds) {
+            if (!newPageIds.has(oldPageId)) {
               console.log("discarding deleted page from minisearch", oldPageId);
               miniSearchService.discardPage(oldPageId);
             }
           }
           
           // Find new pages (in new but not in old)
-          const newPagesToAdd = pagesRef.current.filter(p => !oldPages.has(p.id));
+          const newPagesToAdd = pagesRef.current.filter(p => !oldPageIds.has(p.id));
           if (newPagesToAdd.length > 0) {
             console.log("adding new pages to minisearch", newPagesToAdd.length);
             for (const page of newPagesToAdd) {
               miniSearchService.addPage(page);
             }
-          }
-
-          // If we previously had no pages but now we do, initialize open pages
-          if (oldPages.size === 0 && newPages.size > 0 && !initializedPagesRef.current) {
-            const initialPageId = findMostRecentlyEditedPage(pagesRef.current)?.id;
-            const lastWeekJournalPageIds = getLastWeekJournalPages(pagesRef.current).map(page => page.id);
-            
-            const initialIds: string[] = [];
-            if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) {
-              initialIds.push(initialPageId);
-            }
-            initialIds.push(...lastWeekJournalPageIds);
-            initialIds.push(...pinnedPageIds);
-            
-            setOpenPageIds(prevIds => [...new Set([...prevIds, ...initialIds])]);
-            initializedPagesRef.current = true;
           }
         }
       } catch (error) {
@@ -161,9 +163,9 @@ function EditingArea({ userId }: { userId: string }) {
       });
     } finally {
       setLoadingState(prevState => ({ ...prevState, isLoading: false }));
-      setInitialFetchComplete(true);
+      setTimeout(() => setInitialFetchComplete(true), 10);
     }
-  }, [userId, pinnedPageIds]);
+  }, [userId]);
   
   const processUpdates = useCallback(async () => {
     if (userId) {
@@ -205,13 +207,27 @@ function EditingArea({ userId }: { userId: string }) {
   }, [pagesDefined, fetch, processUpdates, clearIntervals, setupIntervals]);
 
   useEffect(() => {
-    if (!hasInitializedSearch.current && pagesDefined && pagesRef.current && pagesRef.current.length > 0 && initialFetchComplete) {
+    console.log("Search initialization effect triggered", {
+      hasInitialized: hasInitializedSearch.current,
+      pagesDefined,
+      pagesLength: pagesRef.current?.length,
+      initialFetchComplete,
+      pages: pagesRef.current
+    });
+
+    if (!hasInitializedSearch.current && 
+        pagesDefined && 
+        pagesRef.current && 
+        pagesRef.current.length > 0 && 
+        initialFetchComplete) {
       hasInitializedSearch.current = true;
       initCount++;
       if (initCount > 1) console.log("🛑 MiniSearch initialized more than once, count:", initCount);
+      console.log("slurping pages", pagesRef.current);
       miniSearchService.slurpPages(pagesRef.current);
+      initializeOpenPages();
     }
-  }, [initialFetchComplete, pagesDefined, initCount]);
+  }, [initialFetchComplete, pagesDefined, initCount, pagesRef, initializeOpenPages]);
 
   useEffect(() => {
     const pnnedPageIds = getPinnedPageIds();
@@ -236,28 +252,16 @@ function EditingArea({ userId }: { userId: string }) {
 
   useEffect(() => {
     if (pagesRef.current && pagesRef.current.length > 0) {
-      if (!initializedPagesRef.current) {
-        const initialPageId = findMostRecentlyEditedPage(pagesRef.current)?.id;
-        const lastWeekJournalPageIds = getLastWeekJournalPages(pagesRef.current).map(page => page.id);
-        
-        const initialIds: string[] = [];
-        if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) {
-          initialIds.push(initialPageId);
-        }
-        initialIds.push(...lastWeekJournalPageIds);
-        initialIds.push(...pinnedPageIds);
-        
-        setOpenPageIds(prevIds => [...new Set([...prevIds, ...initialIds])]);
-        initializedPagesRef.current = true;
-      } else {
-        const todayJournalTitle = getTodayJournalTitle();
-        const todayJournalPage = pagesRef.current.find(p => p.title === todayJournalTitle && p.isJournal);
-        if (todayJournalPage && !openPageIds.includes(todayJournalPage.id)) {
-          setOpenPageIds(prevIds => [todayJournalPage.id, ...prevIds]);
-        }
+      initializeOpenPages();
+      
+      // Keep the today's journal page logic
+      const todayJournalTitle = getTodayJournalTitle();
+      const todayJournalPage = pagesRef.current.find(p => p.title === todayJournalTitle && p.isJournal);
+      if (todayJournalPage && !openPageIds.includes(todayJournalPage.id)) {
+        setOpenPageIds(prevIds => [todayJournalPage.id, ...prevIds]);
       }
     }
-  }, [openPageIds, pinnedPageIds]);
+  }, [openPageIds, initializeOpenPages]);
 
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
   const setupDoneRef = useRef(false);
