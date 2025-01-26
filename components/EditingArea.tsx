@@ -42,8 +42,9 @@ import {
 } from "@/_app/context/storage/storage-context";
 import { usePageStatusStore } from "@/lib/stores/page-status-store";
 import { createConflictHandler } from "@/lib/conflict-manager";
+import { localPagesRef } from "@/_app/context/storage/dbPages";
 
-function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefined }) {
+function EditingArea({ userId }: { userId: string }) {
 
   const [loadingMessage, setLoadingMessage] = useState<string | null>("Loading pages...");
   const [isClient, setIsClient] = useState(false)
@@ -59,11 +60,11 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
 
   const [initialFetchComplete, setInitialFetchComplete] = useState(false);
 
-  const pagesRef = useRef(pages);
+  const pagesRef = useRef(localPagesRef.current);
   useEffect(() => {
-    pagesRef.current = pages;
-    if (pages) setPagesDefined(true);
-  }, [pages]);
+    pagesRef.current = localPagesRef.current;
+    if (localPagesRef.current) setPagesDefined(true);
+  }, [localPagesRef.current]);
 
   const handleConflict = useCallback(
     async (pageId: string, errorCode: ConflictErrorCode) => {
@@ -147,16 +148,16 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   }, [pagesDefined, fetch, processUpdates]);
 
   useEffect(() => {
-    if (!hasInitializedSearch.current && pages && pages.length > 0 && initialFetchComplete) {
+    if (!hasInitializedSearch.current && pagesRef.current && pagesRef.current.length > 0 && initialFetchComplete) {
       // moving this to the end sometimes causes a duplicate id error in strict mode
       hasInitializedSearch.current = true;
       initCount++;
       if (initCount > 1) console.log("🛑 MiniSearch initialized more than once, count:", initCount);
-      if (pages.length > 0) {
-        miniSearchService.slurpPages(pages);
+      if (pagesRef.current.length > 0) {
+        miniSearchService.slurpPages(pagesRef.current);
       }
     }
-  }, [pages, initialFetchComplete, initCount]);
+  }, [pagesRef.current, initialFetchComplete, initCount]);
 
   useEffect(() => {
     const pnnedPageIds = getPinnedPageIds();
@@ -170,20 +171,20 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
 
   useEffect(() => {
     if (hasIngestedBlockIds.current) return;
-    for (const page of pages || []) {
+    for (const page of pagesRef.current || []) {
       setTimeout(() => ingestPageBlockIds(page.title, page.value, setBlockIdsForPage), 0);
     }
     hasIngestedBlockIds.current = true;
-  }, [pages, setBlockIdsForPage]);
+  }, [pagesRef.current, setBlockIdsForPage]);
 
   const initializedPagesRef = useRef(false);
   const [openPageIds, setOpenPageIds] = useState<string[]>([]);
 
   useEffect(() => {
-    if (pages && pages.length > 0) {
+    if (pagesRef.current && pagesRef.current.length > 0) {
       if (!initializedPagesRef.current) {
-        const initialPageId = findMostRecentlyEditedPage(pages)?.id;
-        const lastWeekJournalPageIds = getLastWeekJournalPages(pages).map(page => page.id);
+        const initialPageId = findMostRecentlyEditedPage(pagesRef.current)?.id;
+        const lastWeekJournalPageIds = getLastWeekJournalPages(pagesRef.current).map(page => page.id);
         
         const initialIds: string[] = [];
         if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) {
@@ -196,13 +197,13 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
         initializedPagesRef.current = true;
       } else {
         const todayJournalTitle = getTodayJournalTitle();
-        const todayJournalPage = pages.find(p => p.title === todayJournalTitle && p.isJournal);
+        const todayJournalPage = pagesRef.current.find(p => p.title === todayJournalTitle && p.isJournal);
         if (todayJournalPage && !openPageIds.includes(todayJournalPage.id)) {
           setOpenPageIds(prevIds => [todayJournalPage.id, ...prevIds]);
         }
       }
     }
-  }, [pages, openPageIds, pinnedPageIds]);
+  }, [pagesRef.current, openPageIds, pinnedPageIds]);
 
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
   const setupDoneRef = useRef(false);
@@ -214,7 +215,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   const executeJournalLogic = useCallback(async () => {
     const today = new Date();
     const todayJournalTitle = getJournalTitle(today);
-    if (!pages?.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
+    if (!pagesRef.current?.some((page) => (page.title === todayJournalTitle && page.isJournal))) {
       try {
         console.log("inserting today's journal page");
         const [newPage, result] = await insertNewJournalPage(todayJournalTitle, userId, today);
@@ -234,16 +235,16 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
     } catch (error) {
       console.log("🛑 error deleting stale journal pages", error);
     }
-  }, [userId, pages]);
+  }, [userId, pagesRef.current]);
 
   useEffect(() => {
-    if (initialFetchComplete && !setupDoneRef.current && pages) {
+    if (initialFetchComplete && !setupDoneRef.current && pagesRef.current) {
       executeJournalLogic();
       setupDoneRef.current = true;
     }
     const intervalId = setInterval(executeJournalLogic, 30000);
     return () => clearInterval(intervalId);
-  }, [executeJournalLogic, initialFetchComplete, pages]);
+  }, [executeJournalLogic, initialFetchComplete, pagesRef.current]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -262,7 +263,7 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
   }, []);
 
   const openOrCreatePageByTitle = (title: string) => {
-    const page = pages?.find((p) => p.title.toLowerCase() === title.toLowerCase());
+    const page = pagesRef.current?.find((p) => p.title.toLowerCase() === title.toLowerCase());
     if (page) {
       openPage(page);
     } else {
@@ -349,7 +350,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
 
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
-      <PagesContext.Provider value={pages || []}>
         <OpenWikilinkWithBlockIdProvider>
           <SavedSelectionProvider>
             <ActiveEditorProvider>
@@ -369,9 +369,9 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
                         Skip Loading
                       </Button>
                     </div>
-                  ) : !pages || pages.length === 0 ? (
+                  ) : !pagesRef.current ? (
                     <div className="w-full h-40 flex justify-center items-center flex-col gap-2">
-                      <div>No pages found</div>
+                      <div>Can't connect to local database</div>
                     </div>
                   ) : openPageIds.length === 0 ? (
                     <div className="w-full h-40 flex justify-center items-center flex-col gap-2">
@@ -382,7 +382,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
                   ) : (
                     <FlexibleEditorLayout
                       openPageIds={openPageIds}
-                      currentPages={pages || []}
                       closePage={(id) => {
                         setOpenPageIds((prevPageIds) =>
                           prevPageIds.filter((pageId) => pageId !== id)
@@ -401,7 +400,6 @@ function EditingArea({ userId, pages }: { userId: string, pages: Page[] | undefi
             </ActiveEditorProvider>
           </SavedSelectionProvider>
         </OpenWikilinkWithBlockIdProvider>
-      </PagesContext.Provider>
     </div>
   );  
 }

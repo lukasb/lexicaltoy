@@ -14,8 +14,10 @@ import { BlockIdsIndexProvider } from "@/_app/context/page-blockids-index-contex
 import {
   setUseWhatChange,
 } from '@simbathesailor/use-what-changed';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { localDb } from '@/_app/context/storage/db';
+import { 
+  initLocalPagesObservable,
+  cleanupLocalPagesObservable
+} from "@/_app/context/storage/dbPages";
 
 // Only Once in your app you can set whether to enable hooks tracking or not.
 // In CRA(create-react-app) e.g. this can be done in src/index.js
@@ -48,84 +50,6 @@ export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, r
 
 const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideProps>> = ({session}) => {
 
-  const pagesCount = useRef(-1);
-
-  const pages = useLiveQuery(async () => {
-
-    if (!session || !session.id) return [];
-
-    console.log("useLiveQuery", session.id);
-
-    try {
-
-      //console.log("getting localPages for ", session.id);
-      //console.log("localDb", localDb.isOpen());
-      //console.log("localDb.pages", localDb.pages);
-      //console.log("localDb.queuedUpdates", localDb.queuedUpdates);
-
-      const localPages = await localDb.pages
-        .where("userId")
-        .equals(session.id)
-        .toArray();
-
-      //console.log("getting queuedUpdates for ", session.id);
-
-      const queuedUpdates = await localDb.queuedUpdates
-        .where("userId")
-        .equals(session.id)
-        .toArray();
-
-      if (!localPages || !queuedUpdates) {
-        if (!localPages) console.log("🛑 localPages not found");
-        if (!queuedUpdates) console.log("🛑 queuedUpdates not found");
-        return undefined;
-      }
-
-      //console.log("localPages", localPages);
-      //console.log("queuedUpdates", queuedUpdates);
-
-      const mergedPages = [
-        ...localPages
-          // remove deleted pages
-          .filter((page) => !page.deleted)
-          // remove pages with queued updates marking them as deleted
-          .filter((page) => {
-            const queuedUpdate = queuedUpdates.find(
-              (update) => update.id === page.id
-            );
-            return !queuedUpdate?.deleted;
-          })
-          // replace with queued updates if they exist
-          .map((page) => {
-            const queuedUpdate = queuedUpdates.find(
-              (update) => update.id === page.id
-            );
-            return queuedUpdate || page;
-          }),
-        // add queued updates that aren't in the main table
-        ...queuedUpdates.filter(
-          (update) =>
-            !localPages.some((page) => page.id === update.id) && !update.deleted
-        ),
-      ];
-      /*console.log("mergedPages", mergedPages);
-      mergedPages.forEach((page, index) => {
-        console.log(`Page ${index}:`, page);
-      });*/
-      return mergedPages;
-    } catch (error) {
-      console.log("🛑 error getting localPages or queuedUpdates", error);
-      return undefined;
-    }
-  }, [session]);
-
-  /*useEffect(() => {
-    if (pagesCount.current !== pages?.length) {
-      pagesCount.current = pages?.length || 0;
-      console.log("pages", pages);
-    }
-  }, [pages]);*/
-
   if (!session || !session.id) {
     console.log("Problem with session", session);
     return (
@@ -136,6 +60,13 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
     );
   }
 
+  useEffect(() => {
+    if (session && session.id) {
+      initLocalPagesObservable(session.id);
+    }
+    return () => cleanupLocalPagesObservable();
+  }, [session]);
+
   return (
     <div className="flex justify-center items-center">
       <div className="relative w-full">
@@ -145,7 +76,7 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
           </div>
         )}
           <BlockIdsIndexProvider>
-            <EditingArea userId={session.id} pages={pages} />
+            <EditingArea userId={session.id} />
           </BlockIdsIndexProvider>
         <SignoutButton />
       </div>

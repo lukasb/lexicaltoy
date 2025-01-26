@@ -22,7 +22,6 @@ import { usePageStatusStore } from "@/lib/stores/page-status-store";
 import { miniSearchService } from "@/_app/services/minisearch-service";
 
 function EditorContainer({
-  page,
   requestFocus,
   closePage,
   openOrCreatePageByTitle,
@@ -31,7 +30,6 @@ function EditorContainer({
   onPagePinToggle,
   onPageCollapseToggle,
 }: {
-  page: Page;
   requestFocus: boolean;
   closePage: (id: string) => void;
   openOrCreatePageByTitle: (title: string) => void;

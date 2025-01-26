@@ -6,10 +6,10 @@ import { useBreakpoint } from '@/lib/window-helpers';
 import EditorContainer from '@/_app/editor/editor-container';
 import { Page } from '@/lib/definitions';
 import { getJournalPageDate } from '@/lib/journal-helpers';
+import { localPagesRef } from '@/_app/context/storage/dbPages';
 
 function FlexibleEditorLayout ({
   openPageIds,
-  currentPages,
   closePage,
   openOrCreatePageByTitle,
   pinnedPageIds,
@@ -19,7 +19,6 @@ function FlexibleEditorLayout ({
   topPageId
 }: {
   openPageIds: string[];
-  currentPages: Page[];
   closePage: (id: string) => void;
   openOrCreatePageByTitle: (title: string) => void;
   pinnedPageIds: string[];
@@ -32,6 +31,11 @@ function FlexibleEditorLayout ({
   const [isSmallWidthViewport, setIsSmallWidthViewport] = useState<boolean>(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const stablePagesOrder = useRef<{ pinnedIds: string[], unpinnedIds: string[] }>({ pinnedIds: [], unpinnedIds: [] });
+  const currentPages = localPagesRef.current;
+
+  if (!currentPages) {
+    return <div>Error</div>;
+  }
 
   useBreakpoint(1537, isSmallWidthViewport, setIsSmallWidthViewport);
 
@@ -282,18 +286,15 @@ function FlexibleEditorLayout ({
   }
 
   function renderEditorContainer(pageId: string, requestFocus: boolean) {
-    const page = currentPages.find(p => p.id === pageId);
-    if (!page) return null;
     return (
       <EditorContainer
-        key={page.id}
-        page={page}
+        key={pageId}
         requestFocus={requestFocus}
         closePage={closePage}
         openOrCreatePageByTitle={openOrCreatePageByTitle}
         onPagePinToggle={onPagePinToggle}
-        isPinned={pinnedPageIds.includes(page.id)}
-        isCollapsed={collapsedPageIds.includes(page.id)}
+        isPinned={pinnedPageIds.includes(pageId)}
+        isCollapsed={collapsedPageIds.includes(pageId)}
         onPageCollapseToggle={onPageCollapseToggle}
       />
     );
