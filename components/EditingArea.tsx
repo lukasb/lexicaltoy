@@ -42,6 +42,8 @@ import {
 } from "@/_app/context/storage/storage-context";
 import { usePageStatusStore } from "@/lib/stores/page-status-store";
 import { createConflictHandler } from "@/lib/conflict-manager";
+
+export const PROCESS_QUEUE_INTERVAL = 8000;
 import { localPagesRef } from "@/_app/context/storage/dbPages";
 
 function EditingArea({ userId }: { userId: string }) {
@@ -134,18 +136,32 @@ function EditingArea({ userId }: { userId: string }) {
   const fetchIntervalId = useRef<NodeJS.Timeout | null>(null);
   const processIntervalId = useRef<NodeJS.Timeout | null>(null);
 
+  const setupIntervals = useCallback(() => {
+    if (!fetchIntervalId.current) fetchIntervalId.current = setInterval(fetch, 30000);
+    if (!processIntervalId.current) processIntervalId.current = setInterval(processUpdates, PROCESS_QUEUE_INTERVAL);
+  }, [fetch, processUpdates]);
+
+  const clearIntervals = useCallback(() => {
+    if (fetchIntervalId.current) {
+      clearInterval(fetchIntervalId.current);
+      fetchIntervalId.current = null;
+    }
+    if (processIntervalId.current) {
+      clearInterval(processIntervalId.current);
+      processIntervalId.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     if (!pagesDefined) return;
     
     fetch();
-    fetchIntervalId.current = setInterval(fetch, 30000);
-    processIntervalId.current = setInterval(processUpdates, 8000);
+    setupIntervals();
     
     return () => {
-      if (fetchIntervalId.current) clearInterval(fetchIntervalId.current);
-      if (processIntervalId.current) clearInterval(processIntervalId.current);
+      clearIntervals();
     };
-  }, [pagesDefined, fetch, processUpdates]);
+  }, [pagesDefined, fetch, processUpdates, clearIntervals, setupIntervals]);
 
   useEffect(() => {
     if (!hasInitializedSearch.current && pagesRef.current && pagesRef.current.length > 0 && initialFetchComplete) {
@@ -326,16 +342,19 @@ function EditingArea({ userId }: { userId: string }) {
       if (document.visibilityState === 'hidden') {
         // Force process any pending updates before the page becomes hidden
         console.log("tab becoming hidden, processing pending updates");
+        clearIntervals();
         await processQueuedUpdates(userId, handleConflict, updateRevisionNumber);
       } else if (document.visibilityState === 'visible') {
         console.log("tab became visible, fetching updated pages");
         await fetchUpdatedPages(userId);
+        setupIntervals();
       }
     };
 
     const handlePageHide = async () => {
       if (!userId) return;
       console.log("page hide event, processing pending updates");
+      clearIntervals();
       await processQueuedUpdates(userId, handleConflict, updateRevisionNumber);
     };
 
@@ -346,7 +365,7 @@ function EditingArea({ userId }: { userId: string }) {
       document.removeEventListener('visibilitychange', handlePageStateChange);
       window.removeEventListener('pagehide', handlePageHide);
     };
-  }, [userId, handleConflict, updateRevisionNumber]);
+  }, [userId, handleConflict, updateRevisionNumber, clearIntervals, setupIntervals]);
 
   return (
     <div className="md:p-4 lg:p-5 transition-spacing ease-linear duration-75">
