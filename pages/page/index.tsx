@@ -16,7 +16,8 @@ import {
 } from '@simbathesailor/use-what-changed';
 import { 
   initLocalPagesObservable,
-  cleanupLocalPagesObservable
+  cleanupLocalPagesObservable,
+  localPagesRef
 } from "@/_app/context/storage/dbPages";
 
 // Only Once in your app you can set whether to enable hooks tracking or not.
@@ -50,6 +51,26 @@ export const getServerSideProps: GetServerSideProps<PageProps> = (async ({req, r
 
 const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideProps>> = ({session}) => {
 
+  const [pagesLoaded, setPagesLoaded] = useState(false);
+
+  useEffect(() => {
+    if (session?.id) {
+      initLocalPagesObservable(session.id);
+      
+      const intervalId = setInterval(() => {
+        if (localPagesRef.current) {
+          setPagesLoaded(true);
+          clearInterval(intervalId);
+        }
+      }, 100);
+
+      return () => {
+        clearInterval(intervalId);
+        cleanupLocalPagesObservable();
+      };
+    }
+  }, [session]);
+
   if (!session || !session.id) {
     console.log("Problem with session", session);
     return (
@@ -60,13 +81,6 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
     );
   }
 
-  useEffect(() => {
-    if (session && session.id) {
-      initLocalPagesObservable(session.id);
-    }
-    return () => cleanupLocalPagesObservable();
-  }, [session]);
-
   return (
     <div className="flex justify-center items-center">
       <div className="relative w-full">
@@ -76,7 +90,7 @@ const Page: NextPageWithLayout<InferGetServerSidePropsType<typeof getServerSideP
           </div>
         )}
           <BlockIdsIndexProvider>
-            <EditingArea userId={session.id} />
+            {pagesLoaded && <EditingArea userId={session.id} />}
           </BlockIdsIndexProvider>
         <SignoutButton />
       </div>

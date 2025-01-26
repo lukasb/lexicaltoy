@@ -1,6 +1,5 @@
 import { useEffect, useContext, useRef } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { PagesContext } from "../context/pages-context";
 import { 
   $convertFromMarkdownString,
   $convertToMarkdownString,
@@ -28,8 +27,7 @@ import {
 import { $isFormulaDisplayNode } from "../nodes/FormulaNode";
 import { $myConvertFromMarkdownString } from "@/lib/markdown/markdown-import";
 import { usePageStatusStore } from "@/lib/stores/page-status-store";
-import { RUN_ALL_FORMULAS } from "@/lib/formula-commands";
-
+import { localPagesRef } from "@/_app/context/storage/dbPages";
 const listItemRegex = /^(\s*)-\s*(.+)$/;
 
 function $updateListItems(root: RootNode, markdownLines: string[]) {
@@ -107,7 +105,7 @@ export function PageListenerPlugin({
   pageId: string;
 }): null {
   const [editor] = useLexicalComposerContext();
-  const pages = useContext(PagesContext);
+  const pages = localPagesRef.current;
   const { pageStatuses, getUpdatedPageValue } = usePageStatusStore();
   const templateProcessedRef = useRef(false);
 

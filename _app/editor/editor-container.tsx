@@ -2,8 +2,7 @@
 
 import Editor from "./editor";
 import EditablePageTitle from "./pageTitle";
-import { useState, useEffect, useContext, useCallback, useRef } from "react";
-import { Page } from "@/lib/definitions";
+import { useState, useEffect, useRef } from "react";
 import { isTouchDevice } from "@/lib/window-helpers";
 import NoSSRWrapper from "./NoSSRWrapper";
 import { MoreVertical, ChevronDown, ChevronUp } from "lucide-react";
@@ -11,7 +10,6 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Pin } from 'lucide-react';
 import { useBreakpoint } from "@/lib/window-helpers";
 import { getModifierKey } from "@/lib/utils";
-import { PagesContext } from '@/_app/context/pages-context';
 import { findCallback } from "@/lib/formula/function-definitions";
 import { FormulaValueType, NodeElementMarkdown } from "@/lib/formula/formula-definitions";
 import BacklinksViewer from "./backlinks-viewer";
@@ -23,6 +21,7 @@ import { miniSearchService } from "@/_app/services/minisearch-service";
 import { useLiveQuery } from "dexie-react-hooks";
 import { localDb } from "../context/storage/db";
 import { PROCESS_QUEUE_INTERVAL } from "@/components/EditingArea";
+import { localPagesRef } from "@/_app/context/storage/dbPages";
 
 function EditorContainer({
   requestFocus,
@@ -32,6 +31,7 @@ function EditorContainer({
   isCollapsed,
   onPagePinToggle,
   onPageCollapseToggle,
+  pageId
 }: {
   requestFocus: boolean;
   closePage: (id: string) => void;
@@ -40,6 +40,7 @@ function EditorContainer({
   isCollapsed: boolean;
   onPagePinToggle: (pageId: string) => void;
   onPageCollapseToggle: (pageId: string) => void;
+  pageId: string;
 }) {
   const [showDebug, setShowDebug] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -49,7 +50,6 @@ function EditorContainer({
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [modifierKey, setModifierKey] = useState("");
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
-  const pages = useContext(PagesContext);
   const [backlinks, setBacklinks] = useState<NodeElementMarkdown[]>([]);
   const [backlinksCollapsed, setBacklinksCollapsed] = useState(true);
   const { pageStatuses, getPageStatus, setPageStatus } = usePageStatusStore();
@@ -72,7 +72,7 @@ function EditorContainer({
   }, [isCollapsed]);
 
   useEffect(() => {
-    if (getPageStatus(page.id)?.status === PageStatus.Conflict) {
+    if (getPageStatus(pageId)?.status === PageStatus.Conflict) {
       setTimeout(() => {
         const elementTop = conflictNotificationRef.current?.getBoundingClientRect().top;
         const offsetPosition = (elementTop || 0) + window.pageYOffset - 100;
@@ -83,11 +83,18 @@ function EditorContainer({
         });
       }, 100);
     }
-  }, [getPageStatus(page.id)?.status]);
+  }, [getPageStatus(pageId)?.status]);
 
   const queuedUpdates = useLiveQuery(
-    () => localDb.queuedUpdates.where("id").equals(page.id).toArray()
+    () => localDb.queuedUpdates.where("id").equals(pageId).toArray()
   );  
+
+  const page = useLiveQuery(
+    async () => {
+      const localPage = await localDb.pages.where("id").equals(pageId).toArray();
+      const queuedUpdate = await localDb.queuedUpdates.where("id").equals(pageId).toArray();
+      return queuedUpdate[0] || localPage[0];
+  }, [pageId]);
 
   useEffect(() => {
     if (queuedUpdates && queuedUpdates.length > 0) {
@@ -118,24 +125,26 @@ function EditorContainer({
     e.preventDefault();
     e.stopPropagation();
     setLocalIsPinned(!localIsPinned);
-    onPagePinToggle(page.id);
+    onPagePinToggle(pageId);
   };
 
   const handleCollapsedToggle = () => {
     setLocalIsCollapsed(!localIsCollapsed);
-    onPageCollapseToggle(page.id);
+    onPageCollapseToggle(pageId);
   };
 
   const handleTitleClick = () => {
     handleCollapsedToggle();
   };
 
+
   const handleDeletePage = async () => {
+    if (!page) return;
     const result = await updatePage(page, page.value, page.title, true, new Date(new Date().toISOString()));
     if (result === PageSyncResult.Conflict || result === PageSyncResult.Error) {
       alert("Failed to delete page");
     }
-    closePage(page.id);
+    closePage(pageId);
   }
 
   const handleRename = async (newTitle: string) => {
@@ -151,6 +160,9 @@ function EditorContainer({
 
   useEffect(() => {
     async function fetchBacklinks() {
+      if (!page) return;
+      const pages = localPagesRef.current;
+      if (!pages) return;
       const newBacklinks = await findCallback({ pages: pages }, [{ type: FormulaValueType.Text, output: `[[${page.title}]]` }]);
       if (newBacklinks && newBacklinks.output.length > 0 && newBacklinks.type === FormulaValueType.NodeMarkdown) {
         setBacklinks(newBacklinks.output as NodeElementMarkdown[]);
@@ -159,13 +171,14 @@ function EditorContainer({
       }
     }
     fetchBacklinks();
-  }, [page.title, pages]);
+  }, [page?.title, localPagesRef.current]);
 
   const toggleBacklinks = () => {
     setBacklinksCollapsed(!backlinksCollapsed);
   };
 
   // TODO maybe render a headless editor on the server to enable server-side rendering?
+  if (!page) return null;
   return (
     <div className="flex flex-col items-start md:mb-4">
       <div className={`relative border-solid shadow-md dark:shadow-gray-500/50 md:shadow-none md:border-4 md:rounded-lg m-0 pt-2 pr-2.5 md:pr-7 ${backlinks.length > 0 && !localIsCollapsed ? 'pb-3' : 'pb-5'} pl-0 w-full max-w-7xl ${
@@ -174,7 +187,7 @@ function EditorContainer({
         {!isMobile && !touchDevice && (
           <button
             className="absolute top-2 left-2 text-base text-indigo-600 py-0 px-1 rounded md:opacity-0 md:hover:opacity-100 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 z-40"
-            onClick={() => closePage(page.id)}
+            onClick={() => closePage(pageId)}
           >
             ✖
           </button>
@@ -244,7 +257,7 @@ function EditorContainer({
                     )}
                     <DropdownMenu.Item
                       className="text-sm px-3 py-2 outline-none cursor-pointer text-gray-200 hover:bg-gray-700"
-                      onClick={() => closePage(page.id)}
+                      onClick={() => closePage(pageId)}
                     >
                       Close {!isMobile && `(${modifierKey} + u)`}
                     </DropdownMenu.Item>
@@ -286,14 +299,14 @@ function EditorContainer({
         </div>
         <NoSSRWrapper>
           <div className={`pl-[22px] pr-1 md:pl-[29px] mt-4 ${localIsCollapsed ? 'hidden' : 'pb-1'}`}>
-            {getPageStatus(page.id)?.status === PageStatus.Conflict && (
+            {getPageStatus(pageId)?.status === PageStatus.Conflict && (
               <div 
                 ref={conflictNotificationRef}
                 className="mb-4 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 rounded-md flex justify-between items-center"
               >
                 <span>Your changes are based on an old version of this page. Click reload to get the latest version. Reloading will lose your changes, so copy anything you do not want to lose and paste it somewhere else.</span>
                 <button 
-                  onClick={() => setPageStatus(page.id, PageStatus.DroppingUpdate, page.lastModified, page.revisionNumber, undefined)}
+                  onClick={() => setPageStatus(pageId, PageStatus.DroppingUpdate, page.lastModified, page.revisionNumber, undefined)}
                   className="ml-4 px-4 py-2 bg-red-200 dark:bg-red-800 rounded-md hover:bg-red-300 dark:hover:bg-red-700"
                 >
                   Reload

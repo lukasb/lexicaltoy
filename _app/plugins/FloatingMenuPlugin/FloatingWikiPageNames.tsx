@@ -20,7 +20,6 @@ import {
 } from "lexical";
 import { $isAtNodeEnd } from "@lexical/selection";
 import { FloatingMenuCoords, FloatingMenuProps } from ".";
-import { PagesContext } from "@/_app/context/pages-context";
 import { isSmallWidthViewport } from "@/lib/window-helpers";
 import { createDOMRange } from "@lexical/selection";
 import { $isFormulaEditorNode } from "@/_app/nodes/FormulaNode";
@@ -29,7 +28,7 @@ import { possibleArguments } from "@/lib/formula/formula-parser";
 import { FormulaValueType } from "@/lib/formula/formula-definitions";
 import { useBlockIdsIndex } from "@/_app/context/page-blockids-index-context";
 import { List, AutoSizer, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
-
+import { localPagesRef } from "@/_app/context/storage/dbPages";
 // TODO figure out actual line height instead of hardcoding 30
 const editorLineHeight = 30;
 const menuLineHeight = 40;
@@ -158,7 +157,8 @@ function computeFloatingWikiPageNamesPositionInternal(editor: LexicalEditor) {
 
 const FloatingWikiPageNames = forwardRef<HTMLDivElement, FloatingMenuProps>(
   ({ editor, coords }, ref) => {
-    const pages = useContext(PagesContext);
+    const pages = localPagesRef.current;
+    if (!pages) return null;
     const [results, setResults] = useState<WikilinkResult[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [cancelled, setCancelled] = useState(false);

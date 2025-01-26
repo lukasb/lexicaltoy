@@ -33,10 +33,6 @@ function FlexibleEditorLayout ({
   const stablePagesOrder = useRef<{ pinnedIds: string[], unpinnedIds: string[] }>({ pinnedIds: [], unpinnedIds: [] });
   const currentPages = localPagesRef.current;
 
-  if (!currentPages) {
-    return <div>Error</div>;
-  }
-
   useBreakpoint(1537, isSmallWidthViewport, setIsSmallWidthViewport);
 
   const sortPages = useCallback(
@@ -52,6 +48,7 @@ function FlexibleEditorLayout ({
         let journalIndex = 0;
         let nonJournalIndex = 0;
 
+        if (!currentPages) return merged;
         const getPage = (id: string) => currentPages.find((p) => p.id === id);
 
         while (
@@ -98,6 +95,7 @@ function FlexibleEditorLayout ({
         return merged;
       };
 
+      if (!currentPages) return { pinnedIds: [], unpinnedIds: [] };
       if (pageIds.length === 0 && topPageId === undefined)
         return { pinnedIds: [], unpinnedIds: [] };
 
@@ -289,6 +287,7 @@ function FlexibleEditorLayout ({
     return (
       <EditorContainer
         key={pageId}
+        pageId={pageId}
         requestFocus={requestFocus}
         closePage={closePage}
         openOrCreatePageByTitle={openOrCreatePageByTitle}

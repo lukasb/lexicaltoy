@@ -8,7 +8,6 @@ import {
   getSharedNodeKeyElements,
 } from "@/_app/context/shared-node-context";
 import { getFormulaOutput, PageAndDialogueContext } from "@/lib/formula/FormulaOutput";
-import { PagesContext } from "@/_app/context/pages-context";
 import {
   NodeElementMarkdown,
   FormulaOutput,
@@ -17,7 +16,7 @@ import {
 import { QueryCounter } from './query-counter';
 import { getFormulaOutputType } from "./formula-parser";
 import { usePageStatusStore } from '@/lib/stores/page-status-store';
-
+import { localPagesRef } from '@/_app/context/storage/dbPages';
 export const nodeQueries = new QueryCounter();
 
 export function registerFormula(formula: string): void {
@@ -34,7 +33,7 @@ export function unregisterFormula(formula: string): void {
 
 export const useFormulaResultService = () => {
   const { sharedNodeMap, setSharedNodeMap } = useSharedNodeContext();
-  const pages = useContext(PagesContext);
+  const pages = localPagesRef.current;
   const pageUpdateContext = usePageStatusStore();
 
   const mergeResults = (
@@ -158,7 +157,7 @@ export const useFormulaResultService = () => {
     query: string,
     context?: PageAndDialogueContext
   ): Promise<FormulaOutput | null> => {
-    const output = await getFormulaOutput(query, pages, context, pageUpdateContext);
+    const output = await getFormulaOutput(query, pages || [], context, pageUpdateContext);
     if (!output) return null;
     console.log("getFormulaResults", output);
     if (output.type === FormulaValueType.NodeMarkdown) {

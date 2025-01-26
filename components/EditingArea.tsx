@@ -10,7 +10,6 @@ import Omnibar from "./Omnibar";
 import { findMostRecentlyEditedPage } from "@/lib/pages-helpers";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "../_app/ui/button";
-import { PagesContext } from '@/_app/context/pages-context';
 import { 
   DEFAULT_JOURNAL_CONTENTS,
   insertNewJournalPage,
@@ -64,9 +63,11 @@ function EditingArea({ userId }: { userId: string }) {
 
   const pagesRef = useRef(localPagesRef.current);
   useEffect(() => {
-    pagesRef.current = localPagesRef.current;
-    if (localPagesRef.current) setPagesDefined(true);
-  }, [localPagesRef.current]);
+    if (localPagesRef.current) {
+      pagesRef.current = localPagesRef.current;
+      setPagesDefined(true);
+    }
+  }, []);
 
   const handleConflict = useCallback(
     async (pageId: string, errorCode: ConflictErrorCode) => {
@@ -164,16 +165,13 @@ function EditingArea({ userId }: { userId: string }) {
   }, [pagesDefined, fetch, processUpdates, clearIntervals, setupIntervals]);
 
   useEffect(() => {
-    if (!hasInitializedSearch.current && pagesRef.current && pagesRef.current.length > 0 && initialFetchComplete) {
-      // moving this to the end sometimes causes a duplicate id error in strict mode
+    if (!hasInitializedSearch.current && pagesDefined && pagesRef.current && pagesRef.current.length > 0 && initialFetchComplete) {
       hasInitializedSearch.current = true;
       initCount++;
       if (initCount > 1) console.log("🛑 MiniSearch initialized more than once, count:", initCount);
-      if (pagesRef.current.length > 0) {
-        miniSearchService.slurpPages(pagesRef.current);
-      }
+      miniSearchService.slurpPages(pagesRef.current);
     }
-  }, [pagesRef.current, initialFetchComplete, initCount]);
+  }, [initialFetchComplete, pagesDefined, initCount]);
 
   useEffect(() => {
     const pnnedPageIds = getPinnedPageIds();
@@ -191,7 +189,7 @@ function EditingArea({ userId }: { userId: string }) {
       setTimeout(() => ingestPageBlockIds(page.title, page.value, setBlockIdsForPage), 0);
     }
     hasIngestedBlockIds.current = true;
-  }, [pagesRef.current, setBlockIdsForPage]);
+  }, [setBlockIdsForPage]);
 
   const initializedPagesRef = useRef(false);
   const [openPageIds, setOpenPageIds] = useState<string[]>([]);
@@ -219,7 +217,7 @@ function EditingArea({ userId }: { userId: string }) {
         }
       }
     }
-  }, [pagesRef.current, openPageIds, pinnedPageIds]);
+  }, [openPageIds, pinnedPageIds]);
 
   const omnibarRef = useRef<{ focus: () => void } | null>(null);
   const setupDoneRef = useRef(false);
@@ -251,7 +249,7 @@ function EditingArea({ userId }: { userId: string }) {
     } catch (error) {
       console.log("🛑 error deleting stale journal pages", error);
     }
-  }, [userId, pagesRef.current]);
+  }, [userId]);
 
   useEffect(() => {
     if (initialFetchComplete && !setupDoneRef.current && pagesRef.current) {
@@ -260,7 +258,7 @@ function EditingArea({ userId }: { userId: string }) {
     }
     const intervalId = setInterval(executeJournalLogic, 30000);
     return () => clearInterval(intervalId);
-  }, [executeJournalLogic, initialFetchComplete, pagesRef.current]);
+  }, [executeJournalLogic, initialFetchComplete]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -388,9 +386,9 @@ function EditingArea({ userId }: { userId: string }) {
                         Skip Loading
                       </Button>
                     </div>
-                  ) : !pagesRef.current ? (
+                  ) : !pagesDefined ? (
                     <div className="w-full h-40 flex justify-center items-center flex-col gap-2">
-                      <div>Can't connect to local database</div>
+                      <div>Cannot connect to local database</div>
                     </div>
                   ) : openPageIds.length === 0 ? (
                     <div className="w-full h-40 flex justify-center items-center flex-col gap-2">

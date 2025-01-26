@@ -1,7 +1,7 @@
 "use client";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { useContext, useCallback } from "react";
 import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -12,7 +12,6 @@ import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { 
   UNORDERED_LIST,
-  TRANSFORMERS
 } from "@lexical/markdown";
 import { $myConvertToMarkdownString } from "@/lib/markdown/markdown-export";
 import { KeyboardShortcutsPlugin } from "@/_app/plugins/KeyboardShortcutsPlugin";
@@ -32,7 +31,6 @@ import { shouldShowFloatingIndentButtons, computeFloatingIndentButtonsPosition }
 import FloatingWikiPageNames from "@/_app/plugins/FloatingMenuPlugin/FloatingWikiPageNames";
 import { shouldShowFloatingWikiPageNames, computeFloatingWikiPageNamesPosition } from "@/_app/plugins/FloatingMenuPlugin/FloatingWikiPageNames";
 import { Page, PageStatus } from "@/lib/definitions";
-import { PagesContext } from "@/_app/context/pages-context";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { TodosPlugin } from "@/_app/plugins/TodosPlugin";
 import FloatingSlashCommands from '@/_app/plugins/FloatingMenuPlugin/FloatingSlashCommands';
@@ -51,6 +49,7 @@ import { editorNodes } from "./shared-editor-config";
 import { useBlockIdsIndex, ingestPageBlockIds } from "@/_app/context/page-blockids-index-context";
 import { usePageStatusStore } from "@/lib/stores/page-status-store";
 import { TypingPerformancePlugin } from "../plugins/TypingPerformancePlugin";
+import { localPagesRef } from "@/_app/context/storage/dbPages";
 
 function onError(error: Error) {
   console.log("🛑 Editor error:", error);
@@ -80,7 +79,6 @@ function Editor({
     onError,
   };
 
-  const pages = useContext(PagesContext);
   const [floatingAnchorElem, setFloatingAnchorElem] = useState<HTMLDivElement | null>(null);
   const [isSmallWidthViewport, setIsSmallWidthViewport] = useState<boolean>(false);
   const { getSearchTerms, deleteSearchTerms } = useSearchTerms();
@@ -89,8 +87,10 @@ function Editor({
   const { setPageStatus, getUpdatedPageValue, getPageStatus } = usePageStatusStore();
 
   const getPage = useCallback((id: string) => {
+    const pages = localPagesRef.current;
+    if (!pages) return null;
     return pages.find((page) => page.id === id);
-  }, [pages]);
+  }, [localPagesRef.current]);
 
   useBreakpoint(768, isSmallWidthViewport, setIsSmallWidthViewport);
 

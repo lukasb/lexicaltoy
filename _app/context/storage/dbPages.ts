@@ -20,11 +20,6 @@ export function initLocalPagesObservable(userId: string) {
   
       try {
   
-        //console.log("getting localPages for ", session.id);
-        //console.log("localDb", localDb.isOpen());
-        //console.log("localDb.pages", localDb.pages);
-        //console.log("localDb.queuedUpdates", localDb.queuedUpdates);
-  
         const localPages = await localDb.pages
           .where("userId")
           .equals(userId)
@@ -42,9 +37,6 @@ export function initLocalPagesObservable(userId: string) {
           if (!queuedUpdates) console.log("🛑 queuedUpdates not found");
           return undefined;
         }
-  
-        //console.log("localPages", localPages);
-        //console.log("queuedUpdates", queuedUpdates);
   
         const mergedPages = [
           ...localPages
@@ -70,10 +62,7 @@ export function initLocalPagesObservable(userId: string) {
               !localPages.some((page) => page.id === update.id) && !update.deleted
           ),
         ];
-        /*console.log("mergedPages", mergedPages);
-        mergedPages.forEach((page, index) => {
-          console.log(`Page ${index}:`, page);
-        });*/
+        console.log("mergedPages", mergedPages.length);
         return mergedPages;
       } catch (error) {
         console.log("🛑 error getting localPages or queuedUpdates", error);

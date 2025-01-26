@@ -10,7 +10,6 @@ import React, {
   useContext
 } from "react";
 import { Page } from "@/lib/definitions";
-import { PagesContext } from "@/_app/context/pages-context";
 import { isTouchDevice } from "@/lib/window-helpers";
 import { getTodayJournalTitle } from "@/lib/journal-helpers";
 import { getModifierKey } from "@/lib/utils";
@@ -20,7 +19,7 @@ import { useSearchTerms } from "@/_app/context/search-terms-context";
 import { miniSearchService } from "@/_app/services/minisearch-service";
 import { FixedSizeList as List } from 'react-window';
 import { useClickOutside } from "@/lib/window-helpers";
-
+import { localPagesRef } from "@/_app/context/storage/dbPages";
 // TODO probably we can refactor this, see https://react.dev/learn/you-might-not-need-an-effect
 
 const Omnibar = forwardRef(({
@@ -40,7 +39,7 @@ const Omnibar = forwardRef(({
   const ulRef = useRef<HTMLUListElement>(null);
   const skipDisplayValueResolutionRef = useRef(false);
   const skipTermResolutionRef = useRef(false);
-  const pages = useContext(PagesContext);
+  const pages = localPagesRef.current;
   const [todayJournalTitle, setTodayJournalTitle] = useState(getTodayJournalTitle());
   const [modifierKey, setModifierKey] = useState("");
   const [isMobile, setIsMobile] = useState<boolean>(false);
@@ -56,7 +55,7 @@ const Omnibar = forwardRef(({
     const results = miniSearchService.search(term);
     const searchTermLower = term.toLowerCase();
 
-    const pagesMap = new Map(pages.map(page => [page.id, page]));
+    const pagesMap = pages ? new Map(pages.map(page => [page.id, page])) : new Map();
     const filteredResults = results
       .map((result: SearchResult) => pagesMap.get(result.id))
       .filter((page): page is Page => page !== undefined)
@@ -95,6 +94,7 @@ const Omnibar = forwardRef(({
   // TODO Escape sets focus back to last active editor
 
   const showReverseChronologicalList = useCallback(() => {
+    if (!pages) return;
     setResults(pages.sort((a, b) => {
       const dateA = new Date(a.lastModified);
       const dateB = new Date(b.lastModified);

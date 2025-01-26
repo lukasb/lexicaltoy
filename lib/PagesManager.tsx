@@ -1,5 +1,4 @@
-import { useContext, useEffect, useRef, useCallback } from 'react';
-import { PagesContext } from '@/_app/context/pages-context';
+import { useEffect, useRef, useCallback } from 'react';
 import { Page, PageStatus } from "@/lib/definitions";
 import { 
   useSharedNodeContext,
@@ -11,10 +10,11 @@ import { miniSearchService } from '@/_app/services/minisearch-service';
 import { updatePage, PageSyncResult, deleteQueuedUpdate } from '@/_app/context/storage/storage-context';
 import { usePageStatusStore } from './stores/page-status-store';
 import { getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
+import { localPagesRef } from '@/_app/context/storage/dbPages';
 
 // TODO maybe use Redux so we don't have an O(n) operation here every time
 export function PagesManager() {
-  const pages = useContext(PagesContext);
+  const pages = localPagesRef.current;
   const { sharedNodeMap } = useSharedNodeContext();
   const { updatePagesResults, addPagesResults } = useFormulaResultService();
   const { 
@@ -70,6 +70,7 @@ export function PagesManager() {
   }, [savePagesToDatabase]);
 
   useEffect(() => {
+    if (!pages) return;
     const duration = performance.now();
     pages.forEach((page) => {
       const pageStatus = pageStatuses.get(page.id);
@@ -168,6 +169,7 @@ export function PagesManager() {
 
   useEffect(() => {
 
+    if (!pages) return;
     const duration = performance.now();
 
     // If shared nodes have been updated, update the pages
