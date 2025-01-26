@@ -103,8 +103,48 @@ function EditingArea({ userId }: { userId: string }) {
         setTimeout(() => reject(new Error('Initial fetch timeout')), 5000)
       );
 
+      const oldPages = new Set(pagesRef.current?.map(p => p.id) || []);
+      
       try {
         await Promise.race([fetchPromise, timeoutPromise]);
+        
+        // After fetch completes, handle minisearch updates
+        if (pagesRef.current) {
+          const newPages = new Set(pagesRef.current.map(p => p.id));
+          
+          // Find deleted pages (in old but not in new)
+          for (const oldPageId of oldPages) {
+            if (!newPages.has(oldPageId)) {
+              console.log("discarding deleted page from minisearch", oldPageId);
+              miniSearchService.discardPage(oldPageId);
+            }
+          }
+          
+          // Find new pages (in new but not in old)
+          const newPagesToAdd = pagesRef.current.filter(p => !oldPages.has(p.id));
+          if (newPagesToAdd.length > 0) {
+            console.log("adding new pages to minisearch", newPagesToAdd.length);
+            for (const page of newPagesToAdd) {
+              miniSearchService.addPage(page);
+            }
+          }
+
+          // If we previously had no pages but now we do, initialize open pages
+          if (oldPages.size === 0 && newPages.size > 0 && !initializedPagesRef.current) {
+            const initialPageId = findMostRecentlyEditedPage(pagesRef.current)?.id;
+            const lastWeekJournalPageIds = getLastWeekJournalPages(pagesRef.current).map(page => page.id);
+            
+            const initialIds: string[] = [];
+            if (initialPageId && !lastWeekJournalPageIds.includes(initialPageId)) {
+              initialIds.push(initialPageId);
+            }
+            initialIds.push(...lastWeekJournalPageIds);
+            initialIds.push(...pinnedPageIds);
+            
+            setOpenPageIds(prevIds => [...new Set([...prevIds, ...initialIds])]);
+            initializedPagesRef.current = true;
+          }
+        }
       } catch (error) {
         // If it's a timeout error, still try to continue with any data we have
         if (error instanceof Error && error.message === 'Initial fetch timeout') {
@@ -123,7 +163,7 @@ function EditingArea({ userId }: { userId: string }) {
       setLoadingState(prevState => ({ ...prevState, isLoading: false }));
       setInitialFetchComplete(true);
     }
-  }, [userId]);
+  }, [userId, pinnedPageIds]);
   
   const processUpdates = useCallback(async () => {
     if (userId) {
