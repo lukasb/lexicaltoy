@@ -1,5 +1,4 @@
 import { 
-  splitMarkdownByNodes,
   removeInvalidNodesForFind,
 } from "./function-definitions";
 import { NodeElementMarkdown } from "./formula-definitions";
@@ -7,7 +6,7 @@ import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 import { Page, PageStatus } from "../definitions";
 import { findCallback } from "./function-definitions";
 import { DefaultArguments } from "./formula-parser";
-
+import { splitMarkdownByNodes } from "../markdown/markdown-helpers";
 // Helper function to create a BaseNodeMarkdown for comparison
 function createBaseNodeMarkdown(pageName: string, lineNumberStart: number, lineNumberEnd: number, nodeMarkdown: string) {
   return { pageName, lineNumberStart, lineNumberEnd, nodeMarkdown };
