@@ -104,11 +104,11 @@ function EditingArea({ userId }: { userId: string }) {
       initialIds.push(initialPageId);
     }
     initialIds.push(...lastWeekJournalPageIds);
-    initialIds.push(...pinnedPageIds);
+    initialIds.push(...getPinnedPageIds());
     
     setOpenPageIds(prevIds => [...new Set([...prevIds, ...initialIds])]);
     initializedPagesRef.current = true;
-  }, [pinnedPageIds, pages]);
+  }, [pages]);
 
   const fetch = useCallback(async () => {
     if (!userId) return;
