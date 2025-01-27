@@ -23,33 +23,6 @@ import {
 import { splitMarkdownByNodes } from "../markdown/markdown-helpers";
 import { getPagesContext } from "../context-helpers";
 
-export const instructionsWithContext = `
-# INSTRUCTIONS AND EXAMPLES
-You will receive user questions or instructions, and content from one or more pages. Pages will look like this:
-
-## Today's agenda
-Hmmm ... need to figure out meaning of life today.
-- TODO buy groceries
-- DOING prepare taxes
-- NOW call janet
-- =find("#parser")
-- =ask("What is the meaning of life?") |||result: There has been much debate on this topic.
-The most common answer is 42.
-|||
-- =why 42? |||result: Because 6*7=42|||
-- LATER write a letter to grandma
-- DONE make a cake
-- Who should I invite?
- - John
- - Jane
- - Mary
-## END OF PAGE CONTENTS
-
-Items that start with TODO, DOING, NOW, LATER, DONE, or WAITING are todos. Bullet points that start with = are formulas.
-Formulas that start with ask(), or don't have an explicit function, trigger a chat with GPT.
-# END OF INSTRUCTIONS AND EXAMPLES
-`;
-
 function stripOuterQuotes(s: string): string {
   return s.replace(/^"(.*)"$/, '$1');
 }
@@ -77,12 +50,6 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
 
   if (contextSpecs.length > 0 && defaultArgs.pages) {
     contextResults = getPagesContext(contextSpecs, defaultArgs.pages);
-  }
-  
-  if (
-    (contextResults.length > 0 || userArgs.filter(arg => arg.type === FormulaValueType.NodeMarkdown).length > 0)
-    || defaultArgs.context?.priorMarkdown.length > 0) {
-    prompt += instructionsWithContext;
   }
 
   for (const arg of userArgs) {

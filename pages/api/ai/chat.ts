@@ -3,6 +3,8 @@ import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { MODEL_NAME } from '@/lib/ai-config';
 import { getSessionServer } from '@/lib/getAuth';
+import { FormulaOutput, FormulaValueType } from '@/lib/formula/formula-definitions';
+import { DefaultArguments, possibleArguments } from '@/lib/formula/formula-parser';
 
 export const config = {
   maxDuration: 60,
@@ -24,7 +26,30 @@ const anthropic = new Anthropic({
   apiKey: process.env['ANTHROPIC_API_KEY'],
 });
 
-const shortChatResponseSystemPrompt = `You will be given a user prompt. Give a concise response.`;
+const instructionsWithContext = `
+You will receive user questions or instructions, and content from one or more user documents called pages. Pages will look like this:
+
+## Today's agenda
+Hmmm ... need to figure out meaning of life today.
+- TODO buy groceries
+- DOING prepare taxes
+- NOW call janet
+- =find("#parser")
+- =ask("What is the meaning of life?") |||result: There has been much debate on this topic.
+The most common answer is 42.
+|||
+- =why 42? |||result: Because 6*7=42|||
+- LATER write a letter to grandma
+- DONE make a cake
+- Who should I invite?
+ - John
+ - Jane
+ - Mary
+## END OF PAGE CONTENTS
+
+Bullet points that start with TODO, DOING, NOW, LATER, DONE, or WAITING are todos. Bullet points that start with = are formulas.
+Formulas that start with ask(), or don't have an explicit function, trigger a chat with GPT.
+`;
 
 export default async function handler(
   req: NextApiRequest,
@@ -44,7 +69,7 @@ export default async function handler(
     console.log("Received prompt:", prompt);
     console.log("Received context", dialogueContext);
 
-    const openAIMessages: OpenAI.ChatCompletionMessageParam[] = [{ role: "system", content: shortChatResponseSystemPrompt }];
+    const openAIMessages: OpenAI.ChatCompletionMessageParam[] = [{ role: "system", content: instructionsWithContext }];
     const anthropicMessages: Anthropic.MessageParam[] = [];
 
     for (const element of dialogueContext) {
@@ -63,7 +88,7 @@ export default async function handler(
           max_tokens: 1024,
           messages: anthropicMessages,
           model: 'claude-3-5-sonnet-latest',
-          system: shortChatResponseSystemPrompt,
+          system: instructionsWithContext,
         });
 
         response = message.content[0].type === 'text' 
