@@ -18,56 +18,7 @@ export function initLocalPagesObservable(userId: string) {
   
       console.log("liveQuery", userId);
   
-      try {
-  
-        const localPages = await localDb.pages
-          .where("userId")
-          .equals(userId)
-          .toArray();
-  
-        //console.log("getting queuedUpdates for ", session.id);
-  
-        const queuedUpdates = await localDb.queuedUpdates
-          .where("userId")
-          .equals(userId)
-          .toArray();
-  
-        if (!localPages || !queuedUpdates) {
-          if (!localPages) console.log("🛑 localPages not found");
-          if (!queuedUpdates) console.log("🛑 queuedUpdates not found");
-          return undefined;
-        }
-  
-        const mergedPages = [
-          ...localPages
-            // remove deleted pages
-            .filter((page) => !page.deleted)
-            // remove pages with queued updates marking them as deleted
-            .filter((page) => {
-              const queuedUpdate = queuedUpdates.find(
-                (update) => update.id === page.id
-              );
-              return !queuedUpdate?.deleted;
-            })
-            // replace with queued updates if they exist
-            .map((page) => {
-              const queuedUpdate = queuedUpdates.find(
-                (update) => update.id === page.id
-              );
-              return queuedUpdate || page;
-            }),
-          // add queued updates that aren't in the main table
-          ...queuedUpdates.filter(
-            (update) =>
-              !localPages.some((page) => page.id === update.id) && !update.deleted
-          ),
-        ];
-        console.log("mergedPages", mergedPages.length);
-        return mergedPages;
-      } catch (error) {
-        console.log("🛑 error getting localPages or queuedUpdates", error);
-        return undefined;
-      }
+      return getLocalPages(userId);
     }
   );
 
@@ -75,6 +26,59 @@ export function initLocalPagesObservable(userId: string) {
   currentSubscription = currentObservable.subscribe((newValue: Page[] | undefined) => {
     localPagesRef.current = newValue;
   });
+}
+
+async function getLocalPages(userId: string) {
+  try {
+  
+    const localPages = await localDb.pages
+      .where("userId")
+      .equals(userId)
+      .toArray();
+
+    //console.log("getting queuedUpdates for ", session.id);
+
+    const queuedUpdates = await localDb.queuedUpdates
+      .where("userId")
+      .equals(userId)
+      .toArray();
+
+    if (!localPages || !queuedUpdates) {
+      if (!localPages) console.log("🛑 localPages not found");
+      if (!queuedUpdates) console.log("🛑 queuedUpdates not found");
+      return undefined;
+    }
+
+    const mergedPages = [
+      ...localPages
+        // remove deleted pages
+        .filter((page) => !page.deleted)
+        // remove pages with queued updates marking them as deleted
+        .filter((page) => {
+          const queuedUpdate = queuedUpdates.find(
+            (update) => update.id === page.id
+          );
+          return !queuedUpdate?.deleted;
+        })
+        // replace with queued updates if they exist
+        .map((page) => {
+          const queuedUpdate = queuedUpdates.find(
+            (update) => update.id === page.id
+          );
+          return queuedUpdate || page;
+        }),
+      // add queued updates that aren't in the main table
+      ...queuedUpdates.filter(
+        (update) =>
+          !localPages.some((page) => page.id === update.id) && !update.deleted
+      ),
+    ];
+    console.log("mergedPages", mergedPages.length);
+    return mergedPages;
+  } catch (error) {
+    console.log("🛑 error getting localPages or queuedUpdates", error);
+    return undefined;
+  }
 }
 
 // Clean up function if you need it
