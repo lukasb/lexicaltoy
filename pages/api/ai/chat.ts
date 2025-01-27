@@ -48,10 +48,8 @@ export default async function handler(
     const anthropicMessages: Anthropic.MessageParam[] = [];
 
     for (const element of dialogueContext) {
-      openAIMessages.push({ role: 'user', content: element.userQuestion });
-      openAIMessages.push({ role: 'assistant', content: element.systemAnswer });
-      anthropicMessages.push({ role: 'user', content: element.userQuestion });
-      anthropicMessages.push({ role: 'assistant', content: element.systemAnswer });
+      openAIMessages.push({ role: element.role, content: element.content });
+      anthropicMessages.push({ role: element.role, content: element.content });
     }
 
     openAIMessages.push({ role: "user", content: prompt});

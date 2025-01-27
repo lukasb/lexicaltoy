@@ -113,16 +113,22 @@ async function getFormulaOutputInner(
   }
 }
 
-function $getGPTPair(listItem: ListItemNode): DialogueElement | undefined {
+function $getGPTPair(listItem: ListItemNode): DialogueElement[] | undefined {
   const child = listItem.getFirstChild();
   if (
     child && 
     $isFormulaDisplayNode(child)
   ) {
     if (child.getFormulaDisplayNodeType() === "simpleGptFormula") {
-      return { userQuestion: child.getFormula(), systemAnswer: child.getOutput() };
+      return [
+        { role: 'user', content: child.getFormula() },
+        { role: 'assistant', content: child.getOutput() }
+      ];
     } else if (child.getFormulaDisplayNodeType() === "complexGptFormula") {
-      return { userQuestion: child.getFormula(), systemAnswer: child.getOutput() };
+      return [
+        { role: 'user', content: child.getFormula() },
+        { role: 'assistant', content: child.getOutput() }
+      ];
     }
   }
   return undefined;
@@ -154,7 +160,7 @@ export function slurpPageAndDialogueContext(nodeKey: string, editor: LexicalEdit
       ) {
         const dialogue = $getGPTPair(prevListItem);
         if (dialogue) {
-          context.unshift(dialogue);
+          context.unshift(...dialogue);
         } else {
           const nextSibling = prevListItem.getNextSibling();
           if (nextSibling) {
