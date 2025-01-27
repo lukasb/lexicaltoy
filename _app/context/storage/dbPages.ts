@@ -15,9 +15,7 @@ export function initLocalPagesObservable(userId: string) {
   // Create new observable for this userId
   currentObservable = liveQuery(
     async () => {
-  
       console.log("liveQuery", userId);
-  
       return getLocalPages(userId);
     }
   );
@@ -28,9 +26,8 @@ export function initLocalPagesObservable(userId: string) {
   });
 }
 
-async function getLocalPages(userId: string) {
+export async function getLocalPages(userId: string) {
   try {
-  
     const localPages = await localDb.pages
       .where("userId")
       .equals(userId)

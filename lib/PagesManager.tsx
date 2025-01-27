@@ -10,11 +10,14 @@ import { miniSearchService } from '@/_app/services/minisearch-service';
 import { updatePage, PageSyncResult, deleteQueuedUpdate } from '@/_app/context/storage/storage-context';
 import { usePageStatusStore } from './stores/page-status-store';
 import { getNodeElementFullMarkdown } from '@/lib/formula/formula-definitions';
-import { localPagesRef } from '@/_app/context/storage/dbPages';
+import { getLocalPages } from '@/_app/context/storage/dbPages';
+import { useLiveQuery } from 'dexie-react-hooks';
 
 // TODO maybe use Redux so we don't have an O(n) operation here every time
-export function PagesManager() {
-  const pages = localPagesRef.current;
+export function PagesManager({ userId }: { userId: string }) {
+  const pages = useLiveQuery(
+    () => getLocalPages(userId)
+  );
   const { sharedNodeMap } = useSharedNodeContext();
   const { updatePagesResults, addPagesResults } = useFormulaResultService();
   const { 

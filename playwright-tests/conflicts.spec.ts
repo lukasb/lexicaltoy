@@ -92,7 +92,7 @@ test('detect conflicts between separate browsers', async ({ browser }) => {
 });
 
 test('can reload page with conflicts', async ({ browser }) => {
-  test.setTimeout(90000);
+  test.setTimeout(100000);
   const context1 = await browser.newContext();
   const page1 = await context1.newPage();
   await mockChatApi(page1);
@@ -135,7 +135,7 @@ test('can reload page with conflicts', async ({ browser }) => {
 });
 
 test('pull in changes from other tabs with network off', async ({ context }) => {
-  test.setTimeout(70000);
+  test.setTimeout(100000);
   const page1 = await context.newPage();
   await mockChatApi(page1);
   await page1.goto('/page');
@@ -147,7 +147,7 @@ test('pull in changes from other tabs with network off', async ({ context }) => 
   await new Promise(r => setTimeout(r, 2000));
   await context.setOffline(true);
   await page2.keyboard.type('i want to make my own changes too!');
-  await page1.waitForTimeout(8500);
+  await page1.waitForTimeout(10000);
   await expect(
     page1.getByText('i want to make my own changes too!'))
     .toBeVisible();

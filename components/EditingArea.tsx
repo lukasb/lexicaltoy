@@ -415,7 +415,7 @@ function EditingArea({ userId }: { userId: string }) {
             <ActiveEditorProvider>
               <SharedNodeProvider>
                 <SearchTermsProvider>
-                  <PagesManager />
+                  <PagesManager userId={userId} />
                   <Omnibar
                     ref={omnibarRef}
                     openOrCreatePageByTitle={openOrCreatePageByTitle}
