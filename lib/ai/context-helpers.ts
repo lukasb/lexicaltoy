@@ -1,17 +1,17 @@
-import { splitMarkdownByNodes } from "./markdown/markdown-helpers";
+import { splitMarkdownByNodes } from "../markdown/markdown-helpers";
 import { 
   nodeToString,
   nodeValueForFormula,
   getListItemContentsFromMarkdown,
-} from "./formula/formula-helpers";
-import { Page } from "./definitions";
-import { NodeElementMarkdown } from "./formula/formula-definitions";
+} from "../formula/formula-helpers";
+import { Page } from "../definitions";
+import { NodeElementMarkdown } from "../formula/formula-definitions";
 import { 
   BLOCK_ID_REGEX,
   BLOCK_REFERENCE_REGEX,
-} from "./blockref";
-import { stripBrackets } from "./transform-helpers";
-import { getLastSixWeeksJournalPages } from "./journal-helpers";
+} from "../blockref";
+import { stripBrackets } from "../transform-helpers";
+import { getLastSixWeeksJournalPages } from "../journal-helpers";
 
 function getPageContext(page: Page): string {
   return "## " + page.title + "\n" + page.value + "\n## END OF PAGE CONTENTS\n";

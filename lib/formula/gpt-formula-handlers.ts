@@ -1,5 +1,5 @@
-import { getShortGPTChatResponse, getGPTChatResponseForList } from "../ai";
-import { PageAndDialogueContext } from "./FormulaOutput";
+import { getShortGPTChatResponse, getGPTChatResponseForList } from "../ai/ai";
+import { PageAndDialogueContext } from "../ai/ai-context";
 import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 import { BLOCK_ID_REGEX } from '../blockref';
 

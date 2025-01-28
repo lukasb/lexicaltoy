@@ -3,12 +3,13 @@ import {
   FormulaValueType
 } from './formula-definitions';
 import { 
-  DialogueElement
- } from '@/lib/ai';
+  DialogueElement,
+  PageAndDialogueContext
+ } from '@/lib/ai/ai-context';
 import { Page } from '@/lib/definitions';
 import { functionDefinitions } from './formula-parser';
-import { LexicalEditor, $getNodeByKey, RootNode, ElementNode } from 'lexical';
-import { ListItemNode, $isListNode } from '@lexical/list';
+import { LexicalEditor, $getNodeByKey, } from 'lexical';
+import { ListItemNode } from '@lexical/list';
 import { $isFormulaDisplayNode } from '@/_app/nodes/FormulaNode';
 import { $isListItemNode } from '@lexical/list';
 import { CstNodeWithChildren } from './formula-parser';
@@ -17,7 +18,6 @@ import { IToken } from 'chevrotain';
 import { $getRoot } from 'lexical';
 import { getMarkdownUpTo } from './formula-context-helpers';
 import { getShortGPTResponse } from './gpt-formula-handlers';
-import { usePageStatusStore } from '@/lib/stores/page-status-store';
 import type { PageStatusState } from '@/lib/stores/page-status-store';
 
 const partialFormulaRegex = /=\s?[a-zA-z]+\(/;
@@ -132,11 +132,6 @@ function $getGPTPair(listItem: ListItemNode): DialogueElement[] | undefined {
     }
   }
   return undefined;
-}
-
-export type PageAndDialogueContext = {
-  dialogueContext: DialogueElement[];
-  priorMarkdown: string; // Markdown from nodes above provided dialogueContext
 }
 
 // return context for the current conversation (any dialogue for preceding list items)

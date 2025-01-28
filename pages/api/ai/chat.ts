@@ -1,10 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
-import { MODEL_NAME } from '@/lib/ai-config';
+import { MODEL_NAME } from '@/lib/ai/ai-config';
 import { getSessionServer } from '@/lib/getAuth';
-import { FormulaOutput, FormulaValueType } from '@/lib/formula/formula-definitions';
-import { DefaultArguments, possibleArguments } from '@/lib/formula/formula-parser';
 
 export const config = {
   maxDuration: 60,

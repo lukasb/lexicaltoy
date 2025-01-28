@@ -1,10 +1,6 @@
-import { sanitizeText, convertToUnorderedList } from "./text-helpers";
-import { AIGenListItems, AIGenListItemType } from "./ai/ai-commands";
-
-export type DialogueElement = {
-  role: 'user' | 'assistant';
-  content: string;
-}
+import { sanitizeText, convertToUnorderedList } from "../text-helpers";
+import { AIGenListItems, AIGenListItemType } from "./ai-commands";
+import { DialogueElement } from "./ai-context";
 
 async function fetchGPTChatResponse(prompt: string, dialogueContext: DialogueElement[]): Promise<string> {
   console.log("fetchGPTChatResponse prompt", prompt);

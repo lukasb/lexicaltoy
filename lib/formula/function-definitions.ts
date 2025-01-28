@@ -21,7 +21,7 @@ import {
   markdownHasBlockId
 } from "../blockref";
 import { splitMarkdownByNodes } from "../markdown/markdown-helpers";
-import { getPagesContext } from "../context-helpers";
+import { getPagesContext } from "../ai/context-helpers";
 
 function stripOuterQuotes(s: string): string {
   return s.replace(/^"(.*)"$/, '$1');

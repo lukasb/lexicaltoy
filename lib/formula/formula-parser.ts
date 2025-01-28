@@ -1,6 +1,6 @@
 import { createToken, Lexer, CstParser, TokenType, IToken, CstNode } from "chevrotain";
 import { Page } from "../definitions";
-import { DialogueElement } from "../ai";
+import { DialogueElement } from "../ai/ai";
 import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 import { askCallback, findCallback, getUrlCallback } from "./function-definitions";
 import { PageAndDialogueContext } from "./FormulaOutput";
