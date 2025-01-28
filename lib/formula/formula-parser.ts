@@ -1,11 +1,9 @@
 import { createToken, Lexer, CstParser, TokenType, IToken, CstNode } from "chevrotain";
 import { Page } from "../definitions";
-import { DialogueElement } from "../ai/ai";
 import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 import { askCallback, findCallback, getUrlCallback } from "./function-definitions";
-import { PageAndDialogueContext } from "./FormulaOutput";
-import { usePageStatusStore } from "@/lib/stores/page-status-store";
 import type { PageStatusState } from "@/lib/stores/page-status-store";
+import { PageAndDialogueContext } from "../ai/ai-context";
 
 interface NodeType {
   name: string;

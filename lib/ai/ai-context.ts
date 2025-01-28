@@ -1,12 +1,17 @@
-export type DocumentSource = {
+export type TextSource = {
   type: 'text';
   media_type: string;
   data: string;
 };
 
+export type CustomSource = {
+  type: 'content';
+  content: TextContent[];
+};
+
 export type DocumentContent = {
   type: 'document';
-  source: DocumentSource;
+  source: TextSource | CustomSource;
   title: string;
   context?: string;
   citations?: {

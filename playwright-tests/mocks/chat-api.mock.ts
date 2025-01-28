@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { DialogueElement } from '../../lib/ai/ai';
+import { DialogueElement } from '../../lib/ai/ai-context';
 
 export async function mockChatApi(page: Page) {
   // Intercept all requests to the chat API endpoint

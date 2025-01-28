@@ -12,12 +12,27 @@ import {
 } from "../blockref";
 import { stripBrackets } from "../transform-helpers";
 import { getLastSixWeeksJournalPages } from "../journal-helpers";
+import { DocumentContent, CustomSource, TextSource } from "./ai-context";
 
-function getPageContext(page: Page): string {
-  return "## " + page.title + "\n" + page.value + "\n## END OF PAGE CONTENTS\n";
+function getPageContext(page: Page, context?: string): DocumentContent {
+  const nodes = splitMarkdownByNodes(page.value, page.title);
+  const customSource: CustomSource = {
+    type: "content",
+    content: nodes.map(node => ({ type: "text", text: nodeToString(node) })),
+  };
+  const doc: DocumentContent = {
+    type: "document",
+    title: page.title,
+    citations: { enabled: true },
+    source: customSource,
+  };
+  if (context) {
+    doc.context = context;
+  }
+  return doc;
 }
 
-function getBlockContext(page: Page, blockId: string): string {
+function getBlockContext(page: Page, blockId: string): DocumentContent | undefined {
   const nodes = splitMarkdownByNodes(page.value, page.title);
 
   function findBlock(nodes: NodeElementMarkdown[], blockId: string): NodeElementMarkdown | null {
@@ -31,15 +46,49 @@ function getBlockContext(page: Page, blockId: string): string {
   }
 
   const blockNode = findBlock(nodes, blockId);
-  if (!blockNode) return "";
+  if (!blockNode) return undefined;
   const blockNodeMarkdown = nodeToString(blockNode);
   const blockNodeContents = getListItemContentsFromMarkdown(blockNodeMarkdown);
   const blockNodeValue = nodeValueForFormula(blockNodeContents);
-  return blockNodeValue;
+  
+  const textSource: TextSource = {
+    type: "text",
+    media_type: "text/markdown",
+    data: blockNodeValue,
+  };
+  return {
+    type: "document",
+    title: blockId,
+    citations: { enabled: true },
+    source: textSource,
+    context: "This is the content of the block with id " + blockId + " in the page " + page.title + ".",
+  };
 }
 
-export function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
-  let pagesContext: string[] = [];
+export function getNodesMarkdownContext(nodes: NodeElementMarkdown[]): DocumentContent[] {
+  let docs: DocumentContent[] = [];
+  for (const node of nodes) {
+    const nodeMarkdown = nodeToString(node);
+    const nodeMarkdownContents = getListItemContentsFromMarkdown(nodeMarkdown);
+    const nodeMarkdownValue = nodeValueForFormula(nodeMarkdownContents);
+    const textSource: TextSource = {
+      type: "text",
+      media_type: "text/markdown",
+      data: nodeMarkdownValue,
+    };
+    docs.push({
+      type: "document",
+      title: node.baseNode.pageName,
+      citations: { enabled: true },
+      source: textSource,
+      context: "This is the content of a specific node in the page " + node.baseNode.pageName + ".",
+    });
+  }
+  return docs;
+}
+
+export function getPagesContext(pageSpecs: string[], pages: Page[]): DocumentContent[] {
+  let pagesContext: DocumentContent[] = [];
 
   function addPages(pageSpec: string) {
     const pageTitle = stripBrackets(pageSpec);
@@ -47,9 +96,9 @@ export function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
     if (pageTitle.endsWith("/")) {
       if (pageTitle === "journals/") {
         const journalPages = getLastSixWeeksJournalPages(pages);
-        let journalPagesContext: string = "";
-        journalPages.forEach(page => journalPagesContext += getPageContext(page));
-        pagesContext.push(journalPagesContext);
+        let journalPagesContext: DocumentContent[] = [];
+        journalPages.forEach(page => journalPagesContext.push(getPageContext(page, "This is one of the user's daily journal pages.")));
+        pagesContext.push(...journalPagesContext);
       } else {
         pages
           .filter(p => p.title.startsWith(pageTitle.slice(0, -1)))

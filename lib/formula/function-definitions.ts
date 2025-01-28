@@ -14,14 +14,15 @@ import { stripBrackets } from "../transform-helpers";
 import { getOutputAsString } from "./formula-helpers";
 import { getUrl } from "../getUrl";
 import { sanitizeText } from "../text-helpers";
-import { getGPTResponseForList } from "./gpt-formula-handlers";
 import { 
   getBlockReferenceFromMarkdown,
   stripBlockReference,
   markdownHasBlockId
 } from "../blockref";
 import { splitMarkdownByNodes } from "../markdown/markdown-helpers";
-import { getPagesContext } from "../ai/context-helpers";
+import { getNodesMarkdownContext, getPagesContext } from "../ai/context-helpers";
+import { DialogueElement, DocumentContent } from "../ai/ai-context";
+import { getGPTChatResponseForList } from "../ai/ai";
 
 function stripOuterQuotes(s: string): string {
   return s.replace(/^"(.*)"$/, '$1');
@@ -31,9 +32,13 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
 
   if (!defaultArgs.context) return null;
 
-  let prompt: string = "";
+  let pastDialogue: DialogueElement[] = defaultArgs.context.dialogueContext;
   let contextSpecs: string[] = [];
-  let contextResults: string[] = [];
+  let contextResults: DocumentContent[][] = [];
+  let message: DialogueElement = {
+    role: "user",
+    content: [],
+  };
     
   // if a user arg is a wikilink variant, we need to get the relevant page contents if the page exists
   for (const arg of userArgs) {
@@ -49,32 +54,31 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
   }
 
   if (contextSpecs.length > 0 && defaultArgs.pages) {
-    contextResults = getPagesContext(contextSpecs, defaultArgs.pages);
+    contextResults.push(getPagesContext(contextSpecs, defaultArgs.pages));
   }
 
   for (const arg of userArgs) {
     const argString = getOutputAsString(arg);
     if (arg.type === FormulaValueType.Text) {
-      prompt += "\n" + stripOuterQuotes(argString) + "\n";
+      message.content.push({ type: "text", text: stripOuterQuotes(argString) });
     } else if (arg.type === FormulaValueType.Wikilink) { 
       for (const possibleArg of possibleArguments) {
         if (possibleArg.type === FormulaValueType.Wikilink && possibleArg.regex && argString.match(possibleArg.regex)) {
           if (contextResults.length > 0) {
-            prompt += "\n" + contextResults.shift() + "\n";
+            const context = contextResults.shift();
+            if (context) message.content.push(...context);
           }
           break;
         }
       }
     } else if (arg.type === FormulaValueType.NodeMarkdown) {
-      // TODO maybe include the page name
-      prompt += "\n" + argString + "\n";
+      message.content.push(...getNodesMarkdownContext(arg.output as NodeElementMarkdown[]));
     }
   }
 
-  const gptResponse = await getGPTResponseForList(prompt, defaultArgs.context);
+  const gptResponse = await getGPTChatResponseForList([...pastDialogue, message]);
   if (!gptResponse) return null;
-
-  return gptResponse;
+  return { output: gptResponse, type: FormulaValueType.Text };
 };
 
 export function sortFindOutput(output: NodeElementMarkdown[], pages: Page[]): NodeElementMarkdown[] {
