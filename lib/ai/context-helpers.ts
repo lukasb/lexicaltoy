@@ -26,9 +26,7 @@ function getPageContext(page: Page, context?: string): DocumentContent {
     citations: { enabled: true },
     source: customSource,
   };
-  if (context) {
-    doc.context = context;
-  }
+  doc.context = context + (context ? " " : "") + "This document is in Markdown format.";
   return doc;
 }
 
@@ -53,7 +51,7 @@ function getBlockContext(page: Page, blockId: string): DocumentContent | undefin
   
   const textSource: TextSource = {
     type: "text",
-    media_type: "text/markdown",
+    media_type: "text/plain",
     data: blockNodeValue,
   };
   return {
@@ -61,7 +59,7 @@ function getBlockContext(page: Page, blockId: string): DocumentContent | undefin
     title: blockId,
     citations: { enabled: true },
     source: textSource,
-    context: "This is the content of the block with id " + blockId + " in the page " + page.title + ".",
+    context: "This is the content of the block with id " + blockId + " in the page " + page.title + ". It is in Markdown format.",
   };
 }
 
@@ -73,7 +71,7 @@ export function getNodesMarkdownContext(nodes: NodeElementMarkdown[]): DocumentC
     const nodeMarkdownValue = nodeValueForFormula(nodeMarkdownContents);
     const textSource: TextSource = {
       type: "text",
-      media_type: "text/markdown",
+      media_type: "text/plain",
       data: nodeMarkdownValue,
     };
     docs.push({
@@ -81,7 +79,7 @@ export function getNodesMarkdownContext(nodes: NodeElementMarkdown[]): DocumentC
       title: node.baseNode.pageName,
       citations: { enabled: true },
       source: textSource,
-      context: "This is the content of a specific node in the page " + node.baseNode.pageName + ".",
+      context: "This is the content of a specific node in the page " + node.baseNode.pageName + ". It is in Markdown format.",
     });
   }
   return docs;

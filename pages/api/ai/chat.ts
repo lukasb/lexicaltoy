@@ -51,12 +51,14 @@ export default async function handler(
         system: instructionsWithContext,
       });
 
-      response = message.content[0].type === 'text' 
-        ? message.content[0].text 
-        : 'Non-text response received';
+      response = message.content;
 
-      console.log("Chat Completion:", response);
-      res.status(200).json({ response: response || undefined });
+      //response = message.content[0].type === 'text' 
+      //  ? message.content[0].text 
+      //   : 'Non-text response received';
+
+      console.log("Chat Completion:", JSON.stringify(response));
+      res.status(200).json({ response: JSON.stringify(response) || undefined });
     } catch (error) {
       console.log("🛑 Error processing chat completion:", error);
       res.status(500).json({ error: "Failed to process the prompt" });

@@ -1,3 +1,5 @@
+import { ChatContentItem } from "./formula/formula-definitions";
+
 export function highlightText(text: string, searchTerms: string): string {
   if (!searchTerms.trim()) return text;
   
@@ -61,6 +63,10 @@ export function convertToUnorderedList(markdown: string): string {
   }
 
   return result.trim();
+}
+
+export function convertChatResponsesToUnorderedList(chatResponses: ChatContentItem[]): string {
+  return chatResponses.map(item => convertToUnorderedList(item.text)).join('\n');
 }
 
 export function unescapeMarkdown(markdown: string): string {

@@ -10,7 +10,40 @@ export enum FormulaValueType {
   NodeMarkdown = 'nodeMarkdown',
   NodeTypeOrTypes = 'nodeTypeOrTypes',
   Wikilink = 'wikilink',
+  TextWithCitations = 'textWithCitations'
 }
+
+// Schema for the citation object
+const ChatCitationSchema = z.object({
+  type: z.literal('char_location'),
+  cited_text: z.string(),
+  document_index: z.number(),
+  document_title: z.string(),
+  start_char_index: z.number(),
+  end_char_index: z.number(),
+});
+
+// Schema for the content items
+const ChatContentItemSchema = z.union([
+  z.object({
+      type: z.literal('text'),
+      text: z.string(),
+  }),
+  z.object({
+      type: z.literal('text'),
+      text: z.string(),
+      citations: z.array(ChatCitationSchema),
+  }),
+]);
+
+export type ChatContentItem = z.infer<typeof ChatContentItemSchema>;
+
+// Schema for the entire JSON structure
+export const ChatContentSchema = z.object({
+  content: z.array(ChatContentItemSchema),
+});
+
+export type ChatContent = z.infer<typeof ChatContentSchema>;
 
 export const BaseNodeMarkdownSchema = z.object({
   nodeMarkdown: z.string(),
@@ -37,6 +70,7 @@ const FormulaOutputSchema = z.object({
   output: z.union([
     z.string(),
     z.array(NodeElementMarkdownSchema),
+    ChatContentSchema,
   ]),
   type: z.nativeEnum(FormulaValueType),
   isNegated: z.boolean().optional()

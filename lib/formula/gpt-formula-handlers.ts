@@ -16,7 +16,7 @@ function getPromptWithContextForChat(formula: string, priorMarkdown?: string): D
       citations: { enabled: true },
       source: {
       type: "text",
-      media_type: "text/markdown",
+      media_type: "text/plain",
       data: priorMarkdown,
     },
     context: "This is the current document. The question might or not be related to the document. If it's not related, ignore the document content when answering the user question, and do not mention that the document content is not relevant.",
