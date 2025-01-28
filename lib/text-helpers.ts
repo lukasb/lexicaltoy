@@ -27,6 +27,7 @@ export function sanitizeText(result: string): string {
     .trim();
 }
 
+// God forgive me for the funky escaping we're doing here
 export function convertToUnorderedList(markdown: string): string {
   // First, replace multiple newlines with a single newline
   const normalizedMarkdown = markdown.replace(/\n{2,}/g, '\n');
@@ -55,8 +56,13 @@ export function convertToUnorderedList(markdown: string): string {
         indent + lineIndent;
       result += `${'▵'.repeat(totalIndent)}‣ ${content}\n`;
     } else {
-      // turn paragraphs into list items
-      result += `‣ ${line.trim()}\n`;
+      const trimmedLine = line.trim();
+      if (trimmedLine.length > 0) {
+        // turn paragraphs into list items
+        result += `‣ ${trimmedLine}\n`;
+      } else {
+        result += '\n';
+      }
       indent = 1; // make sure that actual list items are indented below paragraphs
       inOrderedSublist = false;
     }
@@ -66,7 +72,9 @@ export function convertToUnorderedList(markdown: string): string {
 }
 
 export function convertChatResponsesToUnorderedList(chatResponses: ChatContentItem[]): string {
-  return chatResponses.map(item => convertToUnorderedList(item.text)).join('\n');
+  const unorderedList = chatResponses.map(item => convertToUnorderedList(item.text));
+  console.log("unorderedList", unorderedList);
+  return unorderedList.join('');
 }
 
 export function unescapeMarkdown(markdown: string): string {
