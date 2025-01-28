@@ -40,7 +40,7 @@ export default async function handler(
     }
 
     console.log("Received prompt:", prompt);
-    console.log("Received context", dialogueContext);
+    console.log("Received context", JSON.stringify(dialogueContext));
 
     const openAIMessages: OpenAI.ChatCompletionMessageParam[] = [{ role: "system", content: instructionsWithContext }];
     const anthropicMessages: Anthropic.MessageParam[] = [];

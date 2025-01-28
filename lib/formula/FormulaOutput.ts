@@ -121,13 +121,21 @@ function $getGPTPair(listItem: ListItemNode): DialogueElement[] | undefined {
   ) {
     if (child.getFormulaDisplayNodeType() === "simpleGptFormula") {
       return [
-        { role: 'user', content: child.getFormula() },
-        { role: 'assistant', content: child.getOutput() }
+        { role: 'user', content: [
+          { type: 'text', text: child.getFormula() }
+        ] },
+        { role: 'assistant', content: [
+          { type: 'text', text: child.getOutput() }
+        ] }
       ];
     } else if (child.getFormulaDisplayNodeType() === "complexGptFormula") {
       return [
-        { role: 'user', content: child.getFormula() },
-        { role: 'assistant', content: child.getOutput() }
+        { role: 'user', content: [
+          { type: 'text', text: child.getFormula() }
+        ] },
+        { role: 'assistant', content: [
+          { type: 'text', text: child.getOutput() }
+        ] }
       ];
     }
   }

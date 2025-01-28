@@ -1,8 +1,3 @@
-export type DialogueElement = {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
 export type DocumentSource = {
   type: 'text';
   media_type: string;
@@ -26,7 +21,7 @@ export type TextContent = {
 
 export type ContentElement = DocumentContent | TextContent;
 
-export type MultiContentDialogueElement = {
+export type DialogueElement = {
   role: 'user' | 'assistant';
   content: ContentElement[];
 };
