@@ -23,7 +23,7 @@
     "prune:prod": "node -r dotenv/config ./scripts/prune_history.js ./.env.production.local"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.33.1",
+    "@anthropic-ai/sdk": "^0.36.3",
     "@heroicons/react": "^2.2.0",
     "@lexical/clipboard": "^0.23.1",
     "@lexical/headless": "^0.23.1",

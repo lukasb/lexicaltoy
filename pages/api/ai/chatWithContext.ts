@@ -1,9 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
-import { MODEL_NAME } from '@/lib/ai/ai-config';
 import { getSessionServer } from '@/lib/getAuth';
 import { instructionsWithContext } from '@/lib/ai/ai-context';
+
 export const config = {
   maxDuration: 60,
 };
@@ -12,13 +11,6 @@ export type ApiResponse = {
   response?: string;
   error?: string;
 }
-
-// Boolean flag to switch between OpenAI and Claude
-const USE_CLAUDE = true;
-
-const openai = new OpenAI({
-  apiKey: process.env['OPENAI_API_KEY']
-});
 
 const anthropic = new Anthropic({
   apiKey: process.env['ANTHROPIC_API_KEY'],
@@ -34,47 +26,32 @@ export default async function handler(
   }
 
   if (req.method === "POST") {
-    const { prompt, dialogueContext } = req.body;
-    if (!prompt) {
-      return res.status(400).json({ error: "No prompt provided" });
+    const { dialogueContext } = req.body;
+    if (!dialogueContext || !dialogueContext.length) {
+      return res.status(400).json({ error: "No dialogue context provided" });
     }
-
-    console.log("Received prompt:", prompt);
+    
     console.log("Received context", dialogueContext);
 
-    const openAIMessages: OpenAI.ChatCompletionMessageParam[] = [{ role: "system", content: instructionsWithContext }];
     const anthropicMessages: Anthropic.MessageParam[] = [];
 
     for (const element of dialogueContext) {
-      openAIMessages.push({ role: element.role, content: element.content });
       anthropicMessages.push({ role: element.role, content: element.content });
     }
-
-    openAIMessages.push({ role: "user", content: prompt});
-    anthropicMessages.push({ role: "user", content: prompt});
     
     try {
       let response;
 
-      if (USE_CLAUDE) {
-        const message = await anthropic.messages.create({
-          max_tokens: 1024,
-          messages: anthropicMessages,
-          model: 'claude-3-5-sonnet-latest',
-          system: instructionsWithContext,
+      const message = await anthropic.messages.create({
+        max_tokens: 1024,
+        messages: anthropicMessages,
+        model: 'claude-3-5-sonnet-latest',
+        system: instructionsWithContext,
         });
 
         response = message.content[0].type === 'text' 
           ? message.content[0].text 
           : 'Non-text response received';
-      } else {
-        const chatCompletion = await openai.chat.completions.create({
-          messages: openAIMessages,
-          model: MODEL_NAME,
-        });
-
-        response = chatCompletion.choices[0].message.content;
-      }
 
       console.log("Chat Completion:", response);
       res.status(200).json({ response: response || undefined });

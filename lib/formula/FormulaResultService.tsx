@@ -1,4 +1,3 @@
-import { useContext } from "react";
 import { Page } from "@/lib/definitions";
 import {
   useSharedNodeContext,
@@ -7,7 +6,7 @@ import {
   SharedNodeKeyElements,
   getSharedNodeKeyElements,
 } from "@/_app/context/shared-node-context";
-import { getFormulaOutput, PageAndDialogueContext } from "@/lib/formula/FormulaOutput";
+import { getFormulaOutput } from "@/lib/formula/FormulaOutput";
 import {
   NodeElementMarkdown,
   FormulaOutput,
@@ -17,6 +16,8 @@ import { QueryCounter } from './query-counter';
 import { getFormulaOutputType } from "./formula-parser";
 import { usePageStatusStore } from '@/lib/stores/page-status-store';
 import { localPagesRef } from '@/_app/context/storage/dbPages';
+import { PageAndDialogueContext } from "@/lib/ai/ai-context";
+
 export const nodeQueries = new QueryCounter();
 
 export function registerFormula(formula: string): void {
