@@ -1,15 +1,27 @@
 import { remark } from 'remark';
 import { visit } from 'unist-util-visit';
 import type { Node, List, ListItem, Paragraph, Text, InlineCode } from 'mdast';
+import { ChatContentItem } from '../formula/formula-definitions';
 
-interface Citation {
-  type: string;
+export interface CharLocationCitation {
+  type: 'char_location';
+  cited_text: string;
+  document_index: number;
+  document_title: string;
+  start_char_index: number;
+  end_char_index: number;
+}
+
+export interface ContentBlockLocationCitation {
+  type: 'content_block_location';
   cited_text: string;
   document_index: number;
   document_title: string;
   start_block_index: number;
   end_block_index: number;
 }
+
+export type Citation = CharLocationCitation | ContentBlockLocationCitation;
 
 interface SubPoint {
   content: string;
@@ -55,16 +67,15 @@ function isSection(section: Section | null): section is Section {
   return section !== null;
 }
 
-export async function parseFragmentedMarkdown(blocks: any[]): Promise<Section[]> {
+export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Section[] {
   const processor = remark();
   const sections: Section[] = [];
   let currentSection: Section | null = null;
-  let pendingSectionContent: string[] = [];
 
   for (const block of blocks) {
     if (block.type !== 'text') continue;
 
-    const citations = block.citations || [];
+    const citations = 'citations' in block ? block.citations : [];
     const markdown = block.text;
     const ast = processor.parse(markdown);
 

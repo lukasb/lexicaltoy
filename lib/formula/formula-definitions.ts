@@ -14,7 +14,7 @@ export enum FormulaValueType {
 }
 
 // Schema for the citation object
-const ChatCitationSchema = z.object({
+const CharLocationCitationSchema = z.object({
   type: z.literal('char_location'),
   cited_text: z.string(),
   document_index: z.number(),
@@ -22,6 +22,17 @@ const ChatCitationSchema = z.object({
   start_char_index: z.number(),
   end_char_index: z.number(),
 });
+
+const ContentBlockLocationCitationSchema = z.object({
+  type: z.literal('content_block_location'),
+  cited_text: z.string(),
+  document_index: z.number(),
+  document_title: z.string(),
+  start_block_index: z.number(),
+  end_block_index: z.number(),
+});
+
+const ChatCitationSchema = z.union([CharLocationCitationSchema, ContentBlockLocationCitationSchema]);
 
 // Schema for the content items
 const ChatContentItemSchema = z.union([

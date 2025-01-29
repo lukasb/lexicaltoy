@@ -49,7 +49,8 @@ export function getFormulaMarkdown(formula: string, output?: string, blockId?: s
   let markdown = `=${formula}`;
   if (output) {
     output = output.replace(/\n+/g, '\n');
-    markdown += ` |||result:\n ${output}\n|||`;
+    const outputEndsWithNewline = output.endsWith('\n');
+    markdown += ` |||result:\n ${output}${outputEndsWithNewline ? '|||' : '\n|||'}`;
     if (match) {
       markdown += ` ${match[0]}`;
     }
@@ -57,6 +58,7 @@ export function getFormulaMarkdown(formula: string, output?: string, blockId?: s
   if (blockId) {
     markdown += ` ${blockId}`;
   }
+  console.log("markdown", markdown);
   return markdown;
 }
 

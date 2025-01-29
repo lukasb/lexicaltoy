@@ -1,4 +1,5 @@
 import { ChatContentItem } from "./formula/formula-definitions";
+import { parseFragmentedMarkdown } from "./ai/response-parser";
 
 export function highlightText(text: string, searchTerms: string): string {
   if (!searchTerms.trim()) return text;
@@ -72,9 +73,25 @@ export function convertToUnorderedList(markdown: string): string {
 }
 
 export function convertChatResponsesToUnorderedList(chatResponses: ChatContentItem[]): string {
-  const unorderedList = chatResponses.map(item => convertToUnorderedList(item.text));
-  console.log("unorderedList", unorderedList);
-  return unorderedList.join('');
+  const sections = parseFragmentedMarkdown(chatResponses);
+  const result: string[] = [];
+
+  for (const section of sections) {
+    // Add section title
+    result.push(`‣ ${section.title}\n`);
+    
+    // Add points
+    for (const point of section.points) {
+      result.push(`▵‣ ${point.content}\n`);
+      
+      // Add subpoints with additional indentation
+      for (const subpoint of point.subpoints) {
+        result.push(`▵▵‣ ${subpoint.content}\n`);
+      }
+    }
+  }
+
+  return result.join('');
 }
 
 export function unescapeMarkdown(markdown: string): string {
