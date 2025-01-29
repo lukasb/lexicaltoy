@@ -112,7 +112,7 @@ function Editor({
         page.id,
         PageStatus.UserEdit,
         new Date(new Date().toISOString()),
-        currentStatus?.revisionNumber ?? page.revisionNumber,
+        Math.max(currentStatus?.revisionNumber ?? 0, page.revisionNumber),
         newContent
       );
       ingestPageBlockIds(page.title, newContent, setBlockIdsForPage);
