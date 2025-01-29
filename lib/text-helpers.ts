@@ -1,5 +1,5 @@
 import { ChatContentItem } from "./formula/formula-definitions";
-import { parseFragmentedMarkdown } from "./ai/response-parser";
+import { parseFragmentedMarkdown, Point } from "./ai/response-parser";
 
 export function highlightText(text: string, searchTerms: string): string {
   if (!searchTerms.trim()) return text;
@@ -73,22 +73,22 @@ export function convertToUnorderedList(markdown: string): string {
 }
 
 export function convertChatResponsesToUnorderedList(chatResponses: ChatContentItem[]): string {
-  const sections = parseFragmentedMarkdown(chatResponses);
+  const points = parseFragmentedMarkdown(chatResponses);
+  console.log("points", points);
   const result: string[] = [];
 
-  for (const section of sections) {
-    // Add section title
-    result.push(`‣ ${section.title}\n`);
-    
-    // Add points
-    for (const point of section.points) {
-      result.push(`▵‣ ${point.content}\n`);
-      
-      // Add subpoints with additional indentation
-      for (const subpoint of point.subpoints) {
-        result.push(`▵▵‣ ${subpoint.content}\n`);
+  const processPoint = (point: Point, indent: number) => {
+    const trimmedContent = point.content.trim();
+    result.push(`▵${'▵'.repeat(indent)}‣ ${trimmedContent}\n`);
+    if (point.points) {
+      for (const subpoint of point.points) {
+        processPoint(subpoint, indent + 1);
       }
     }
+  }
+
+  for (const point of points) {
+    processPoint(point, 0);
   }
 
   return result.join('');

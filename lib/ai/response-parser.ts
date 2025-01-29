@@ -23,20 +23,10 @@ export interface ContentBlockLocationCitation {
 
 export type Citation = CharLocationCitation | ContentBlockLocationCitation;
 
-interface SubPoint {
+export interface Point {
   content: string;
-  citations: Citation[];
-}
-
-interface Point {
-  content: string;
-  subpoints: SubPoint[];
-  citations: Citation[];
-}
-
-interface Section {
-  title: string;
-  points: Point[];
+  citations?: Citation[];
+  points?: Point[];
 }
 
 // Type guard to check if a node is a List
@@ -62,121 +52,99 @@ function isInlineCode(node: Node): node is InlineCode {
   return node.type === 'inlineCode';
 }
 
-// Add this type guard function
-function isSection(section: Section | null): section is Section {
-  return section !== null;
-}
-
-export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Section[] {
+export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
   const processor = remark();
-  const sections: Section[] = [];
-  let currentSection: Section | null = null;
+  const rootPoints: Point[] = [];
+  const context: { 
+    currentParent: Point[],
+    lastPoint?: Point
+  } = { currentParent: rootPoints };
 
   for (const block of blocks) {
     if (block.type !== 'text') continue;
 
-    const citations = 'citations' in block ? block.citations : [];
+    const citations = block.citations;
     const markdown = block.text;
     const ast = processor.parse(markdown);
+    const hasCitations = citations && citations.length > 0;
 
-    // Handle section titles that might be split across blocks
-    let hasProcessedStructure = false;
+    // Process free-form text first
+    const freeText = extractFlowingText(ast);
+    if (freeText) {
+      const shouldCreateNewPoint = 
+        hasCitations ||
+        !context.lastPoint ||
+        (context.lastPoint.citations && context.lastPoint.citations.length > 0);
 
+      if (shouldCreateNewPoint) {
+        const newPoint: Point = {
+          content: freeText,
+          citations: citations,
+        };
+        context.currentParent.push(newPoint);
+        context.lastPoint = newPoint;
+      } else {
+        if (context.lastPoint) {
+          context.lastPoint.content += ` ${freeText}`;
+        }
+      }
+    }
+
+    // Then process lists
     visit(ast, (node: Node) => {
       if (isList(node)) {
-        hasProcessedStructure = true;
-        if (node.ordered) {
-          // Process numbered sections
-          node.children.forEach((listItemNode: ListItem) => {
-            const section = parseSection(listItemNode);
-            currentSection = section;
-            sections.push(section);
-          });
-        } else {
-          // Process points under current section
-          node.children.forEach((listItemNode: ListItem) => {
-            const point = parsePoint(listItemNode, citations);
-            if (isSection(currentSection)) {
-              currentSection.points.push(point);
-            }
-          });
-        }
+        context.lastPoint = undefined;
+        node.children.forEach((listItemNode: ListItem) => {
+          const point = parseListItem(listItemNode, citations);
+          context.currentParent.push(point);
+          
+          if (point.points) {
+            const prevParent = context.currentParent;
+            context.currentParent = point.points;
+            visit(listItemNode, (child: Node) => {
+              if (isList(child)) processListChild(child, context, citations);
+            });
+            context.currentParent = prevParent;
+          }
+        });
       }
     });
-
-    // Handle text that belongs to current section but isn't in list structure
-    if (!hasProcessedStructure && currentSection !== null) {
-      const content = extractFlowingText(ast);
-      const section: Section = currentSection;
-      
-      if (content) {
-        if (section.points.length === 0) {
-          // Add as section preamble text
-          section.points.push(createTextPoint(content, citations));
-        } else {
-          // Append to last point
-          const lastPoint = section.points[section.points.length - 1];
-          lastPoint.content += '\n' + content;
-        }
-      }
-    }
   }
 
-  return sections;
+  return rootPoints.filter(p => p.content.trim().length > 0);
 }
 
-function parseSection(listItem: ListItem): Section {
-  let title = '';
-  listItem.children.forEach(child => {
-    if (isParagraph(child)) {
-      title = getParagraphText(child);
+function processListChild(list: List, context: { currentParent: Point[] }, citations?: Citation[]) {
+  list.children.forEach(listItemNode => {
+    const point = parseListItem(listItemNode, citations);
+    context.currentParent.push(point);
+    if (point.points) {
+      const prevParent = context.currentParent;
+      context.currentParent = point.points;
+      visit(listItemNode, (child: Node) => {
+        if (isList(child)) processListChild(child, context, citations);
+      });
+      context.currentParent = prevParent;
     }
   });
-  return { title, points: [] };
 }
 
-function parsePoint(listItem: ListItem, citations: Citation[]): Point {
-  let content = '';
-  const subpoints: SubPoint[] = [];
-  
+function parseListItem(listItem: ListItem, citations?: Citation[]): Point {
+  const point: Point = {
+    content: '',
+    citations: citations,
+  };
+
   listItem.children.forEach(child => {
     if (isParagraph(child)) {
-      content = getParagraphText(child);
+      point.content = getParagraphText(child);
     } else if (isList(child)) {
-      subpoints.push(...parseSubpoints(child, citations));
+      point.points = [];
+      // Nested lists will be processed in processListChild
     }
   });
-  
-  return {
-    content,
-    subpoints,
-    citations: [...citations],
-  };
-}
 
-function parseSubpoints(list: List, citations: Citation[]): SubPoint[] {
-  return list.children.map(subItem => {
-    let content = '';
-    if (!('children' in subItem)) return { content: '', citations: [...citations] };
-    
-    subItem.children.forEach(child => {
-      if (isParagraph(child)) {
-        content = getParagraphText(child);
-      }
-    });
-    return {
-      content,
-      citations: [...citations],
-    };
-  });
-}
-
-function createTextPoint(content: string, citations: Citation[]): Point {
-  return {
-    content,
-    subpoints: [],
-    citations: [...citations]
-  };
+  return point;
 }
 
 function extractFlowingText(node: Node): string {

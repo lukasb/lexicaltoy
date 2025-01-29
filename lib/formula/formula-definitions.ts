@@ -35,17 +35,11 @@ const ContentBlockLocationCitationSchema = z.object({
 const ChatCitationSchema = z.union([CharLocationCitationSchema, ContentBlockLocationCitationSchema]);
 
 // Schema for the content items
-const ChatContentItemSchema = z.union([
-  z.object({
-      type: z.literal('text'),
-      text: z.string(),
-  }),
-  z.object({
-      type: z.literal('text'),
-      text: z.string(),
-      citations: z.array(ChatCitationSchema),
-  }),
-]);
+const ChatContentItemSchema = z.object({
+    type: z.literal('text'),
+    text: z.string(),
+    citations: z.array(ChatCitationSchema).optional(),
+});
 
 export type ChatContentItem = z.infer<typeof ChatContentItemSchema>;
 
