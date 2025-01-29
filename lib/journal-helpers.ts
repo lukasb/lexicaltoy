@@ -41,10 +41,9 @@ export function getJournalPageDate(page: Page) {
   return parse(page.title, 'MMM do, yyyy', new Date());
 }
 
-export function isDefaultValueJournalPage(revisionNumber: number) {
-  // TODO this will work for now ... the page loads with revisionnNumber 1, then the formulas run and it gets revisionNumber 2
-  // eventually we will want a better way to check if the page was edited by the user
-  return revisionNumber < 3;
+export function isStaleJournalPage(revisionNumber: number) {
+  // need to modify this is we run formulas on the page
+  return revisionNumber === 1;
 }
 
 export const insertNewJournalPage = async (
@@ -73,7 +72,7 @@ export const deleteStaleJournalPages = async (today: Date, defaultValue: string,
     const pageDateStartOfDay = startOfDay(pageDate);
     const todayStartOfDay = startOfDay(today);
     
-    return isBefore(pageDateStartOfDay, todayStartOfDay) && isDefaultValueJournalPage(page.revisionNumber);
+    return isBefore(pageDateStartOfDay, todayStartOfDay) && isStaleJournalPage(page.revisionNumber);
   });
   for (const page of stalePages) {
     console.log("deleting stale journal page", page.title);
