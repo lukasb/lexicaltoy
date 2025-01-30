@@ -8,6 +8,7 @@ function getPromptWithContextForChat(formula: string, priorMarkdown?: string): D
     role: "user",
     content: [],
   };
+  message.content.push({ type: "text", text: "You will be given a user question or instruction. Your response should be brief. The editor will be unable to display newlines or list items in your response, so do not use them." });
   message.content.push({ type: "text", text: formula });
   if (priorMarkdown) {
     const docContent: DocumentContent = {
