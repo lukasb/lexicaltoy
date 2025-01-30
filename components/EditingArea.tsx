@@ -169,7 +169,27 @@ function EditingArea({ userId }: { userId: string }) {
   const processUpdates = useCallback(async () => {
     if (userId) {
       console.log("processing queued updates");
-      await processQueuedUpdates(userId, handleConflict, updateRevisionNumber);
+      let attempts = 0;
+      const maxAttempts = 3;
+
+      while (attempts < maxAttempts) {
+        try {
+          // On final attempt, set stealLock to true
+          const stealLock = attempts === maxAttempts - 1;
+          await processQueuedUpdates(userId, handleConflict, updateRevisionNumber, stealLock);
+          break; // Success - exit the loop
+        } catch (error) {
+          attempts++;
+          console.log(`Failed to process updates (attempt ${attempts}/${maxAttempts})`, error);
+          
+          if (attempts === maxAttempts) {
+            console.error("Failed to process updates after all attempts");
+          } else {
+            // Wait a bit before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+      }
     } else {
       console.log("🛑 no user id, can't process queued updates");
     }

@@ -136,7 +136,8 @@ export async function processQueuedUpdatesInternal(
   handleConflict: (pageId: string, errorCode: ConflictErrorCode) => Promise<void>,
   setPageRevisionNumber: (pageId: string, revisionNumber: number) => void,
   _getQueuedUpdatesByUserId: (userId: string) => Promise<Page[]>,
-  _getLocalPageById: (id: string) => Promise<Page | undefined>
+  _getLocalPageById: (id: string) => Promise<Page | undefined>,
+  stealLock: boolean = false
 ): Promise<PageSyncResult> {
   let result = PageSyncResult.Success;
   async function processQueuedUpdate(queuedUpdate: Page) {
@@ -264,11 +265,10 @@ export async function processQueuedUpdatesInternal(
   }
   await navigator.locks.request(
     "orangetask_queued_updates",
-    { ifAvailable: true },
+    { ifAvailable: true, steal: stealLock },
     async (lock: Lock | null) => {
       if (!lock) {
-        console.log("processQueuedUpdatesInternal: no lock, abandoning");
-        return;
+        throw new Error("processQueuedUpdatesInternal: no lock, abandoning");
       }
       const queuedUpdates = await _getQueuedUpdatesByUserId(userId);
       for (const queuedUpdate of queuedUpdates) {
@@ -288,9 +288,10 @@ export async function fetchUpdatedPages(
 export async function processQueuedUpdates(
   userId: string,
   handleConflict: (pageId: string, errorCode: ConflictErrorCode) => Promise<void>,
-  setPageRevisionNumber: (pageId: string, revisionNumber: number) => void
+  setPageRevisionNumber: (pageId: string, revisionNumber: number) => void,
+  stealLock: boolean = false
 ): Promise<PageSyncResult> {
-  return processQueuedUpdatesInternal(userId, handleConflict, setPageRevisionNumber, getQueuedUpdatesByUserId, getLocalPageById);
+  return processQueuedUpdatesInternal(userId, handleConflict, setPageRevisionNumber, getQueuedUpdatesByUserId, getLocalPageById, stealLock);
 }
 
 /**
