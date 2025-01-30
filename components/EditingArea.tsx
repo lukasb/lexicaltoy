@@ -112,22 +112,24 @@ function EditingArea({ userId }: { userId: string }) {
 
   const fetch = useCallback(async () => {
     if (!userId) return;
-
+  
     let attempts = 0;
     const maxAttempts = 3;
-
+  
     while (attempts < maxAttempts) {
       try {
         console.log(`fetching updated pages (attempt ${attempts + 1}/${maxAttempts})`);
-        const fetchPromise = fetchUpdatedPages(userId, attempts === maxAttempts - 1); // Add stealLock on final attempt
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Initial fetch timeout')), 5000)
-        );
-
-        const oldPageIds = new Set(pages?.map(p => p.id) || []);
-        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          controller.abort();
+        }, 5000);
+  
         try {
-          await Promise.race([fetchPromise, timeoutPromise]);
+          // Add stealLock on final attempt
+          const result = await fetchUpdatedPages(userId, attempts === maxAttempts - 1);
+          clearTimeout(timeoutId);
+          
+          const oldPageIds = new Set(pages?.map(p => p.id) || []);
           
           // After fetch completes, handle minisearch updates
           if (pages) {
@@ -152,10 +154,20 @@ function EditingArea({ userId }: { userId: string }) {
           }
           break; // Success - exit the retry loop
         } catch (error) {
-          // If it's a timeout error, still try to continue with any data we have
-          if (error instanceof Error && error.message === 'Initial fetch timeout') {
-            console.warn('Initial fetch timed out, continuing with available data');
-            break;
+          clearTimeout(timeoutId);
+          if (error instanceof Error && error.name === 'AbortError') {
+            console.warn('Initial fetch timed out, retrying...');
+            attempts++;
+            if (attempts === maxAttempts) {
+              console.log("🛑 Failed to fetch updates after all attempts:", error);
+              setLoadingState({ 
+                isLoading: false, 
+                error: new Error('Failed to fetch updates after multiple attempts') 
+              });
+            } else {
+              // Wait a bit before retrying
+              await new Promise(resolve => setTimeout(resolve, 3000));
+            }
           } else {
             throw error; // Re-throw other errors to be caught by outer try-catch
           }
@@ -176,7 +188,7 @@ function EditingArea({ userId }: { userId: string }) {
         }
       }
     }
-
+  
     setLoadingState(prevState => ({ ...prevState, isLoading: false }));
     setTimeout(() => setInitialFetchComplete(true), 10);
   }, [userId, pages]);
@@ -186,7 +198,7 @@ function EditingArea({ userId }: { userId: string }) {
       console.log("processing queued updates");
       let attempts = 0;
       const maxAttempts = 3;
-
+  
       while (attempts < maxAttempts) {
         try {
           // On final attempt, set stealLock to true
