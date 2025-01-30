@@ -19,7 +19,7 @@ function getPromptWithContextForChat(formula: string, priorMarkdown?: string): D
       media_type: "text/plain",
       data: priorMarkdown,
     },
-    context: "This is the current document. The question might or not be related to the document. If it's not related, ignore the document content when answering the user question, and do not mention that the document content is not relevant.",
+    context: "This is the current document. The question might or not be related to the document. If it's not related, ignore the document content when answering the user question, and do not mention that the document content is not relevant. The dialogue the user is having with you is part of the document, with the location indicated by <current dialogue here>",
     };
     message.content.push(docContent);
   }
@@ -63,8 +63,8 @@ export async function getShortGPTResponse(prompt: string, context?: PageAndDialo
     // (unless the user excluded  it on purpose, in which case we also shouldn't send it)
   //  fullPrompt = formulaWithoutEqualSign;
   //} else {
-    if (context.priorMarkdown.trim().length > 0) {
-      fullPrompt = getPromptWithContextForChat(formulaWithoutEqualSign, context.priorMarkdown);
+    if (context.markdownAnnotatedForDialogue.trim().length > 0) {
+      fullPrompt = getPromptWithContextForChat(formulaWithoutEqualSign, context.markdownAnnotatedForDialogue);
     } else {
       fullPrompt = getPromptWithContextForChat(formulaWithoutEqualSign);
     }

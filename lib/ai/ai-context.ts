@@ -33,7 +33,7 @@ export type DialogueElement = {
 
 export type PageAndDialogueContext = {
   dialogueContext: DialogueElement[];
-  priorMarkdown: string; // Markdown from nodes above provided dialogueContext
+  markdownAnnotatedForDialogue: string; // Markdown with <current dialogue here> replacing the current dialogue
 }
 
 export const instructionsWithContext = `

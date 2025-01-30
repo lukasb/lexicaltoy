@@ -61,6 +61,24 @@ class LexicalListUtils {
 
     return markdown;
   }
+
+  static getMarkdownAfter(root: ListNode | ListItemNode, targetKey: string): string {
+    let markdown = "";
+    let foundTarget = false;
+
+    this.traverseListItemsDepthFirst(root, (node, depth) => {
+      if ($isListItemNode(node)) {
+        if (foundTarget) {
+          markdown += "  ".repeat(depth - 1) + "- " + this.getMarkdownForNode(node) + "\n";
+        } else if (node.__key === targetKey) {
+          foundTarget = true;
+        }
+      }
+      return false; // Continue traversal
+    });
+
+    return markdown;
+  }
 }
 
 export function getMarkdownUpTo(listItemKey: string, root: RootNode): string {
@@ -69,6 +87,25 @@ export function getMarkdownUpTo(listItemKey: string, root: RootNode): string {
     if ($isListNode(node)) {
       fullMarkdown += LexicalListUtils.getMarkdownUpTo(node, listItemKey);
     } else if ($isElementNode(node)) {
+      fullMarkdown += LexicalListUtils.getMarkdownForNode(node) + "\n";
+    }
+  });
+
+  return fullMarkdown;
+}
+
+export function getMarkdownAfter(listItemKey: string, root: RootNode): string {
+  let fullMarkdown = "";
+  let foundInAnyList = false;
+  
+  root.getChildren().forEach(node => {
+    if ($isListNode(node)) {
+      const listMarkdown = LexicalListUtils.getMarkdownAfter(node, listItemKey);
+      if (listMarkdown) {
+        foundInAnyList = true;
+        fullMarkdown += listMarkdown;
+      }
+    } else if (foundInAnyList && $isElementNode(node)) {
       fullMarkdown += LexicalListUtils.getMarkdownForNode(node) + "\n";
     }
   });

@@ -16,7 +16,7 @@ import { CstNodeWithChildren } from './formula-parser';
 import { FormulaLexer, FormulaParser, FunctionDefinition } from './formula-parser';
 import { IToken } from 'chevrotain';
 import { $getRoot } from 'lexical';
-import { getMarkdownUpTo } from './formula-context-helpers';
+import { getMarkdownUpTo, getMarkdownAfter } from './formula-context-helpers';
 import { getShortGPTResponse } from './gpt-formula-handlers';
 import type { PageStatusState } from '@/lib/stores/page-status-store';
 
@@ -143,11 +143,14 @@ function $getGPTPair(listItem: ListItemNode): DialogueElement[] | undefined {
 }
 
 // return context for the current conversation (any dialogue for preceding list items)
-// and the markdown from before the current list item
-// this will intentionally not include immediately preceding list items with GPT dialogue as part of the prior markdown, since they will be included with the DialogueContext
+// and the page markdown with <current dialogue here> replacing the current dialogue
+// this will intentionally not include immediately preceding list items with GPT dialogue as part of the markdown
+// since they will be included with the DialogueContext
 export function slurpPageAndDialogueContext(nodeKey: string, editor: LexicalEditor): PageAndDialogueContext {
   let context: DialogueElement[] = [];
   let priorMarkdown: string | undefined = undefined;
+  let afterMarkdown: string | undefined = undefined;
+  
   editor.getEditorState().read(() => {
     let listItem = $getNodeByKey(nodeKey);
     if (!listItem) return;
@@ -156,6 +159,12 @@ export function slurpPageAndDialogueContext(nodeKey: string, editor: LexicalEdit
     }
     const root = $getRoot();
     let prevListItem = listItem?.getPreviousSibling();
+    
+    // Get the markdown that comes after the current list item
+    if (listItem) {
+      afterMarkdown = getMarkdownAfter(listItem.__key, root);
+    }
+
     if (prevListItem) {
       while (
         prevListItem && 
@@ -174,11 +183,17 @@ export function slurpPageAndDialogueContext(nodeKey: string, editor: LexicalEdit
         prevListItem = prevListItem.getPreviousSibling();
       }
       if (!priorMarkdown) {
-        if (listItem) priorMarkdown = getMarkdownUpTo(listItem.__key, root);
+        if (listItem) {
+          priorMarkdown = getMarkdownUpTo(listItem.__key, root);
+        }
       }
     } else {
-      if (listItem) priorMarkdown = getMarkdownUpTo(listItem.__key, root);
+      if (listItem) {
+        priorMarkdown = getMarkdownUpTo(listItem.__key, root);
+      }
     }
   })
-  return { dialogueContext: context, priorMarkdown: priorMarkdown || "" };
+
+  const combinedMarkdown = `${priorMarkdown || ""}<current dialogue here>${afterMarkdown || ""}`;
+  return { dialogueContext: context, markdownAnnotatedForDialogue: combinedMarkdown };
 }
