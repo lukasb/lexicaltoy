@@ -237,15 +237,31 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
     if (arg.type === FormulaValueType.NodeTypeOrTypes) {
       if (text === "todos") {
         // "todos" is shorthand for "any todo type"
-        orStatuses = nodeTypes.map(nodeType => ({
+        const todoStatuses = nodeTypes.map(nodeType => ({
           value: nodeType.name.toUpperCase(),
           isNegated
         }));
+        todoStatuses.forEach(status => {
+          const existingIndex = orStatuses.findIndex(s => s.value === status.value);
+          if (existingIndex >= 0) {
+            orStatuses[existingIndex].isNegated = status.isNegated;
+          } else {
+            orStatuses.push(status);
+          }
+        });
       } else {
-        orStatuses = text.split("|").map(s => ({
+        const newStatuses = text.split("|").map(s => ({
           value: s.toUpperCase().trim(),
           isNegated
         }));
+        newStatuses.forEach(status => {
+          const existingIndex = orStatuses.findIndex(s => s.value === status.value);
+          if (existingIndex >= 0) {
+            orStatuses[existingIndex].isNegated = status.isNegated;
+          } else {
+            orStatuses.push(status);
+          }
+        });
       }
     } else if (arg.type === FormulaValueType.Text) {
       substrings.push({

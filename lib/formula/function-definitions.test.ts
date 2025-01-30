@@ -391,14 +391,15 @@ describe('find() function in regexCallbacks', () => {
       };
     });
     const statusesLength = statuses?.length ?? 0;
-    if (statuses &&statusesLength > 0) {
-      userArguments.push({
-        type: FormulaValueType.NodeTypeOrTypes,
-        output: statuses.map(s => {
-          const isNegated = s.startsWith('!');
-          return isNegated ? s.slice(1) : s;
-        }).join('|'),
-        isNegated: statuses.every(s => s.startsWith('!'))
+    if (statuses && statusesLength > 0) {
+      statuses.forEach(status => {
+        const isNegated = status.startsWith('!');
+        const value = isNegated ? status.slice(1) : status;
+        userArguments.push({
+          type: FormulaValueType.NodeTypeOrTypes,
+          output: value,
+          isNegated
+        });
       });
     }
     if (wikilinks) {
@@ -595,5 +596,23 @@ describe('find() function in regexCallbacks', () => {
     const result = await testFindFunction([], ['Page 10'], ['now']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(0);
+  });
+
+  test('find() combines multiple status arguments', async () => {
+    // First get all NOW todos
+    const result1 = await testFindFunction([], ['now']);
+    expect(result1?.output).toHaveLength(2);
+    
+    // Then get all todos except NOW todos (order matters - first add all todos, then negate NOW)
+    const result2 = await testFindFunction([], ['todos', '!now']);
+    expect(result2?.output).toHaveLength(1);
+    expect((result2?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- LATER Another todo.\nThis is a multiline continuation');
+    
+    // Then combine NOW and LATER explicitly
+    const result3 = await testFindFunction([], ['now', 'later']);
+    expect(result3?.output).toHaveLength(3);
+    expect((result3?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('NOW');
+    expect((result3?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('NOW');
+    expect((result3?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('LATER');
   });
 });
