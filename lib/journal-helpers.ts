@@ -8,7 +8,7 @@ import { getJournalPagesByUserId, getJournalQueuedUpdatesByUserId, deleteQueuedU
 - `;*/
 
 export const DEFAULT_JOURNAL_CONTENTS =
-`- How are you feeling?
+`- How are you feeling? How's it going?
     - 
 - What do you want to do today?
     - `;
