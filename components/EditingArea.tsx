@@ -113,57 +113,72 @@ function EditingArea({ userId }: { userId: string }) {
   const fetch = useCallback(async () => {
     if (!userId) return;
 
-    try {
-      console.log("fetching updated pages");
-      const fetchPromise = fetchUpdatedPages(userId);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Initial fetch timeout')), 5000)
-      );
+    let attempts = 0;
+    const maxAttempts = 3;
 
-      const oldPageIds = new Set(pages?.map(p => p.id) || []);
-      
+    while (attempts < maxAttempts) {
       try {
-        await Promise.race([fetchPromise, timeoutPromise]);
+        console.log(`fetching updated pages (attempt ${attempts + 1}/${maxAttempts})`);
+        const fetchPromise = fetchUpdatedPages(userId, attempts === maxAttempts - 1); // Add stealLock on final attempt
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Initial fetch timeout')), 5000)
+        );
+
+        const oldPageIds = new Set(pages?.map(p => p.id) || []);
         
-        // After fetch completes, handle minisearch updates
-        if (pages) {
-          const newPageIds = new Set(pages.map(p => p.id));
+        try {
+          await Promise.race([fetchPromise, timeoutPromise]);
           
-          // Find deleted pages (in old but not in new)
-          for (const oldPageId of oldPageIds) {
-            if (!newPageIds.has(oldPageId)) {
-              console.log("discarding deleted page from minisearch", oldPageId);
-              miniSearchService.discardPage(oldPageId);
+          // After fetch completes, handle minisearch updates
+          if (pages) {
+            const newPageIds = new Set(pages.map(p => p.id));
+            
+            // Find deleted pages (in old but not in new)
+            for (const oldPageId of oldPageIds) {
+              if (!newPageIds.has(oldPageId)) {
+                console.log("discarding deleted page from minisearch", oldPageId);
+                miniSearchService.discardPage(oldPageId);
+              }
+            }
+            
+            // Find new pages (in new but not in old)
+            const newPagesToAdd = pages.filter(p => !oldPageIds.has(p.id));
+            if (newPagesToAdd.length > 0) {
+              console.log("adding new pages to minisearch", newPagesToAdd.length);
+              for (const page of newPagesToAdd) {
+                miniSearchService.addPage(page);
+              }
             }
           }
-          
-          // Find new pages (in new but not in old)
-          const newPagesToAdd = pages.filter(p => !oldPageIds.has(p.id));
-          if (newPagesToAdd.length > 0) {
-            console.log("adding new pages to minisearch", newPagesToAdd.length);
-            for (const page of newPagesToAdd) {
-              miniSearchService.addPage(page);
-            }
+          break; // Success - exit the retry loop
+        } catch (error) {
+          // If it's a timeout error, still try to continue with any data we have
+          if (error instanceof Error && error.message === 'Initial fetch timeout') {
+            console.warn('Initial fetch timed out, continuing with available data');
+            break;
+          } else {
+            throw error; // Re-throw other errors to be caught by outer try-catch
           }
         }
       } catch (error) {
-        // If it's a timeout error, still try to continue with any data we have
-        if (error instanceof Error && error.message === 'Initial fetch timeout') {
-          console.warn('Initial fetch timed out, continuing with available data');
+        attempts++;
+        console.log(`Failed to fetch updates (attempt ${attempts}/${maxAttempts})`, error);
+        
+        if (attempts === maxAttempts) {
+          console.log("🛑 Failed to fetch updates after all attempts:", error);
+          setLoadingState({ 
+            isLoading: false, 
+            error: error instanceof Error ? error : new Error('Unknown error occurred') 
+          });
         } else {
-          throw error; // Re-throw other errors to be caught by outer try-catch
+          // Wait a bit before retrying
+          await new Promise(resolve => setTimeout(resolve, 3000));
         }
       }
-    } catch (error) {
-      console.log("🛑 Failed to fetch updates:", error);
-      setLoadingState({ 
-        isLoading: false, 
-        error: error instanceof Error ? error : new Error('Unknown error occurred') 
-      });
-    } finally {
-      setLoadingState(prevState => ({ ...prevState, isLoading: false }));
-      setTimeout(() => setInitialFetchComplete(true), 10);
     }
+
+    setLoadingState(prevState => ({ ...prevState, isLoading: false }));
+    setTimeout(() => setInitialFetchComplete(true), 10);
   }, [userId, pages]);
   
   const processUpdates = useCallback(async () => {

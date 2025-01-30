@@ -79,18 +79,18 @@ export async function fetchUpdatedPagesInternal(
   userId: string,
   _getLocalPagesByUserId: (userId: string) => Promise<Page[]>,
   _fetchUpdatesSince: (userId: string, date: Date) => Promise<Page[] | null>,
-  _fetchPagesRemote: (userId: string) => Promise<Page[] | null>
+  _fetchPagesRemote: (userId: string) => Promise<Page[] | null>,
+  stealLock: boolean = false
 ): Promise<PageSyncResult> {
   if (!navigator.onLine) return PageSyncResult.Success;
 
   let result = PageSyncResult.Success;
   await navigator.locks.request(
     "orangetask_main_table_sync",
-    { ifAvailable: true },
+    { ifAvailable: true, steal: stealLock },
     async (lock: Lock | null) => {
       if (!lock) {
-        console.log("fetchUpdatedPagesInternal: no lock, abandoning");
-        return;
+        throw new Error("fetchUpdatedPagesInternal: no lock, abandoning");
       }
       try {
         const localPages = await _getLocalPagesByUserId(userId);
@@ -281,8 +281,9 @@ export async function processQueuedUpdatesInternal(
 
 export async function fetchUpdatedPages(
   userId: string,
+  stealLock: boolean = false
 ): Promise<PageSyncResult> {
-  return fetchUpdatedPagesInternal(userId, getLocalPagesByUserId, fetchUpdatesSince, fetchPagesRemote);
+  return fetchUpdatedPagesInternal(userId, getLocalPagesByUserId, fetchUpdatesSince, fetchPagesRemote, stealLock);
 }
 
 export async function processQueuedUpdates(
