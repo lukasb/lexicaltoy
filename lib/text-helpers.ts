@@ -94,6 +94,27 @@ export function convertChatResponsesToUnorderedList(chatResponses: ChatContentIt
   return result.join('');
 }
 
+export function convertChatResponsesToText(chatResponses: ChatContentItem[]): string {
+  const points = parseFragmentedMarkdown(chatResponses);
+  const result: string[] = [];
+
+  const processPoint = (point: Point) => {
+    const trimmedContent = point.content.trim();
+    result.push(trimmedContent);
+    if (point.points) {
+      for (const subpoint of point.points) {
+        processPoint(subpoint);
+      }
+    }
+  }
+
+  for (const point of points) {
+    processPoint(point);
+  }
+
+  return result.join(' ');
+}
+
 export function unescapeMarkdown(markdown: string): string {
   return markdown.replace(/‣/g, "-").replace(/▵/g, "    ");
 }

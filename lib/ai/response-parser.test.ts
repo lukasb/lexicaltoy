@@ -1,5 +1,5 @@
-import { parseFragmentedMarkdown, ContentBlockLocationCitation, CharLocationCitation } from '../response-parser';
-import { ChatContentItem } from '../../formula/formula-definitions';
+import { parseFragmentedMarkdown, ContentBlockLocationCitation, CharLocationCitation } from './response-parser';
+import { ChatContentItem } from '../formula/formula-definitions';
 
 describe('parseFragmentedMarkdown', () => {
   it('should parse a simple numbered list into sections', () => {
@@ -11,10 +11,11 @@ describe('parseFragmentedMarkdown', () => {
     const result = parseFragmentedMarkdown(input);
     
     expect(result).toHaveLength(1);
-    expect(result[0].title).toBe('First Section');
-    expect(result[0].points).toHaveLength(2);
-    expect(result[0].points[0].content).toBe('Point 1');
-    expect(result[0].points[1].content).toBe('Point 2');
+    expect(result[0]?.content).toBe('First Section');
+    expect(result[0]?.points).toBeDefined();
+    expect(result[0]?.points?.length).toBe(2);
+    expect(result[0]?.points?.[0]?.content).toBe('Point 1');
+    expect(result[0]?.points?.[1]?.content).toBe('Point 2');
   });
 
   it('should handle citations in text blocks', () => {
@@ -33,8 +34,9 @@ describe('parseFragmentedMarkdown', () => {
 
     const result = parseFragmentedMarkdown(input);
     
-    expect(result[0].points[0].citations).toHaveLength(1);
-    expect(result[0].points[0].citations[0].cited_text).toBe('Cited point');
+    expect(result[0]?.points?.[0]?.citations).toBeDefined();
+    expect(result[0]?.points?.[0]?.citations?.length).toBe(1);
+    expect(result[0]?.points?.[0]?.citations?.[0]?.cited_text).toBe('Cited point');
   });
 
   it('should handle content block citations', () => {
@@ -55,12 +57,12 @@ describe('parseFragmentedMarkdown', () => {
 
     const result = parseFragmentedMarkdown(input);
     
-    const citation = result[0].points[0].citations[0] as ContentBlockLocationCitation;
-    expect(citation.type).toBe('content_block_location');
-    expect(citation.start_block_index).toBe(1);
+    const citation = result[0]?.points?.[0]?.citations?.[0] as ContentBlockLocationCitation;
+    expect(citation?.type).toBe('content_block_location');
+    expect(citation?.start_block_index).toBe(1);
   });
 
-  it('should handle subpoints in lists', () => {
+  it('should handle nested points in lists', () => {
     const input: ChatContentItem[] = [{
       type: 'text',
       text: '1. Section\n- Main point\n  - Subpoint 1\n  - Subpoint 2'
@@ -68,10 +70,11 @@ describe('parseFragmentedMarkdown', () => {
 
     const result = parseFragmentedMarkdown(input);
     
-    expect(result[0].points[0].content).toBe('Main point');
-    expect(result[0].points[0].subpoints).toHaveLength(2);
-    expect(result[0].points[0].subpoints[0].content).toBe('Subpoint 1');
-    expect(result[0].points[0].subpoints[1].content).toBe('Subpoint 2');
+    expect(result[0]?.points?.[0]?.content).toBe('Main point');
+    expect(result[0]?.points?.[0]?.points).toBeDefined();
+    expect(result[0]?.points?.[0]?.points?.length).toBe(2);
+    expect(result[0]?.points?.[0]?.points?.[0]?.content).toBe('Subpoint 1');
+    expect(result[0]?.points?.[0]?.points?.[1]?.content).toBe('Subpoint 2');
   });
 
   it('should handle multiple text blocks in the same section', () => {
@@ -93,10 +96,11 @@ describe('parseFragmentedMarkdown', () => {
     const result = parseFragmentedMarkdown(input);
     
     expect(result).toHaveLength(1);
-    expect(result[0].title).toBe('Combined Section');
-    expect(result[0].points).toHaveLength(2);
-    expect(result[0].points[0].content).toBe('First point');
-    expect(result[0].points[1].content).toBe('Second point');
+    expect(result[0]?.content).toBe('Combined Section');
+    expect(result[0]?.points).toBeDefined();
+    expect(result[0]?.points?.length).toBe(2);
+    expect(result[0]?.points?.[0]?.content).toBe('First point');
+    expect(result[0]?.points?.[1]?.content).toBe('Second point');
   });
 
   it('should handle non-list text in sections', () => {
@@ -107,9 +111,10 @@ describe('parseFragmentedMarkdown', () => {
 
     const result = parseFragmentedMarkdown(input);
     
-    expect(result[0].points).toHaveLength(2);
-    expect(result[0].points[0].content).toBe('Some preamble text');
-    expect(result[0].points[1].content).toBe('First point');
+    expect(result[0]?.points).toBeDefined();
+    expect(result[0]?.points?.length).toBe(2);
+    expect(result[0]?.points?.[0]?.content).toBe('Some preamble text');
+    expect(result[0]?.points?.[1]?.content).toBe('First point');
   });
 
   it('should ignore non-text blocks', () => {
@@ -127,6 +132,7 @@ describe('parseFragmentedMarkdown', () => {
     const result = parseFragmentedMarkdown(input);
     
     expect(result).toHaveLength(1);
-    expect(result[0].points).toHaveLength(1);
+    expect(result[0]?.points).toBeDefined();
+    expect(result[0]?.points?.length).toBe(1);
   });
 }); 

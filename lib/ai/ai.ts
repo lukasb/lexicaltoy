@@ -1,7 +1,7 @@
 import { 
   sanitizeText,
-  convertToUnorderedList,
-  convertChatResponsesToUnorderedList
+  convertChatResponsesToUnorderedList,
+  convertChatResponsesToText
 } from "../text-helpers";
 import { AIGenListItems, AIGenListItemType } from "./ai-commands";
 import { DialogueElement } from "./ai-context";
@@ -55,7 +55,7 @@ export async function getGPTChatResponseForList(dialogueContext: DialogueElement
 export async function getShortGPTChatResponse(dialogueContext: DialogueElement[]): Promise<string | null> {
   try {
     const response = await fetchGPTChatResponse(dialogueContext);
-    return sanitizeText(convertChatResponsesToUnorderedList(response));
+    return sanitizeText(convertChatResponsesToText(response));
   } catch (error) {
     console.log("🛑 Error fetching short chat response:", error);
     return null;
