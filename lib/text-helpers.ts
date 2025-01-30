@@ -79,7 +79,7 @@ export function convertChatResponsesToUnorderedList(chatResponses: ChatContentIt
 
   const processPoint = (point: Point, indent: number) => {
     const trimmedContent = point.content.trim();
-    result.push(`▵${'▵'.repeat(indent)}‣ ${trimmedContent}\n`);
+    result.push(`${'▵'.repeat(indent)}‣ ${trimmedContent}\n`);
     if (point.points) {
       for (const subpoint of point.points) {
         processPoint(subpoint, indent + 1);
@@ -99,8 +99,12 @@ export function convertChatResponsesToText(chatResponses: ChatContentItem[]): st
   const result: string[] = [];
 
   const processPoint = (point: Point) => {
-    const trimmedContent = point.content.trim();
-    result.push(trimmedContent);
+    let pointContent = point.content;
+    // TODO for some reason points lose their trailing space when they're converted to text
+    // so we add it back here with this ugly hack
+    // also see above
+    if (pointContent.endsWith('.') || pointContent.endsWith(':')) pointContent += ' ';
+    result.push(pointContent);
     if (point.points) {
       for (const subpoint of point.points) {
         processPoint(subpoint);
@@ -112,7 +116,7 @@ export function convertChatResponsesToText(chatResponses: ChatContentItem[]): st
     processPoint(point);
   }
 
-  return result.join(' ');
+  return result.join('');
 }
 
 export function unescapeMarkdown(markdown: string): string {

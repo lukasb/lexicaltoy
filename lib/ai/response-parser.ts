@@ -85,7 +85,7 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
         context.lastPoint = newPoint;
       } else {
         if (context.lastPoint) {
-          context.lastPoint.content += ` ${freeText}`;
+          context.lastPoint.content += `${freeText}`;
         }
       }
     }
@@ -151,13 +151,13 @@ function extractFlowingText(node: Node): string {
   let text = '';
   visit(node, (child: Node) => {
     if (isTextOrInlineCode(child)) {
-      text += child.value + ' ';
+      text += child.value;
     }
     if (child.type === 'paragraph') {
       text += '\n';
     }
   });
-  return text.trim();
+  return text.replace(/^\n+|\n+$/g, '');
 }
 
 function getParagraphText(paragraph: Paragraph): string {
