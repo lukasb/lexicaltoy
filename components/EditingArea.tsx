@@ -184,7 +184,7 @@ function EditingArea({ userId }: { userId: string }) {
           });
         } else {
           // Wait a bit before retrying
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          await new Promise(resolve => setTimeout(resolve, 3000*attempts));
         }
       }
     }
@@ -210,10 +210,10 @@ function EditingArea({ userId }: { userId: string }) {
           console.log(`Failed to process updates (attempt ${attempts}/${maxAttempts})`, error);
           
           if (attempts === maxAttempts) {
-            console.error("Failed to process updates after all attempts");
+            console.log("🛑 Failed to process updates after all attempts");
           } else {
             // Wait a bit before retrying
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 1000*attempts));
           }
         }
       }
