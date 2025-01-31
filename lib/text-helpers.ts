@@ -85,6 +85,9 @@ export function convertChatResponsesToUnorderedList(chatResponses: ChatContentIt
         processPoint(subpoint, indent + 1);
       }
     }
+    if (point.citations) {
+      result.push(`${'▵'.repeat(indent)}‣ Sources: ${point.citations.map(citation => "[[" + citation.document_title + "]]").join(', ')}\n`);
+    }
   }
 
   for (const point of points) {
