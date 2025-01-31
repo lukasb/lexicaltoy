@@ -58,7 +58,6 @@ export function getFormulaMarkdown(formula: string, output?: string, blockId?: s
   if (blockId) {
     markdown += ` ${blockId}`;
   }
-  console.log("markdown", markdown);
   return markdown;
 }
 

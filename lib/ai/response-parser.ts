@@ -89,24 +89,14 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
     for (const line of lines) {
       const trimmedLine = line.trim();
       
-      // Handle blank lines
-      if (!trimmedLine) {
-        if (lineBuffer.trim()) {
-          currentText = lineBuffer.trim();
-          currentCitations = citations;
-          flushCurrentText();
-          lineBuffer = '';
-        }
-        continue;
-      }
-      
-      // If we hit a section header
+      // If we hit a section header, flush any accumulated text first
       if (trimmedLine.match(/^\d+\./)) {
-        // Flush any accumulated text
         if (lineBuffer.trim()) {
-          currentText = lineBuffer.trim();
-          currentCitations = citations;
-          flushCurrentText();
+          // Create a new root point for accumulated text before numbered section
+          rootPoints.push({
+            content: lineBuffer.trim(),
+            citations: citations
+          });
           lineBuffer = '';
         }
         
@@ -118,9 +108,8 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
         };
         rootPoints.push(currentSection);
       }
-      // If we hit a list item
+      // If we hit a list item, flush any accumulated text first
       else if (trimmedLine.startsWith('-')) {
-        // Flush any accumulated text
         if (lineBuffer.trim()) {
           currentText = lineBuffer.trim();
           currentCitations = citations;
@@ -151,8 +140,9 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
           }
         }
       }
-      // Otherwise accumulate the text
+      // For regular text, accumulate in the buffer
       else {
+        // Only add newline if we have content and it doesn't end with one
         if (lineBuffer && !lineBuffer.endsWith('\n')) {
           lineBuffer += '\n';
         }
@@ -162,14 +152,17 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
 
     // Flush any remaining text in the buffer
     if (lineBuffer.trim()) {
-      currentText = lineBuffer.trim();
-      currentCitations = citations;
-      flushCurrentText();
+      // Always create a new root point for non-list text
+      rootPoints.push({
+        content: lineBuffer.trim(),
+        citations: citations
+      });
+      lineBuffer = '';
     }
   }
 
-  // Only return points that are actual sections (start with number)
-  return rootPoints.filter(p => p.content.match(/^\d+\./) || p.content.trim().length > 0);
+  // Return all points that have content
+  return rootPoints.filter(p => p.content.trim().length > 0);
 }
 
 function processListChild(list: List, context: { currentParent: Point[] }, citations?: Citation[]) {

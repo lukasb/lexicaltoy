@@ -117,7 +117,7 @@ describe('parseFragmentedMarkdown', () => {
     expect(result[0]?.points?.[1]?.content).toBe('First point');
   });
 
-  it('should include non-numbered sections', () => {
+  it('should include non-numbered sections after numbered sections', () => {
     const input: ChatContentItem[] = [
       {
         type: 'text',
@@ -136,3 +136,22 @@ describe('parseFragmentedMarkdown', () => {
     expect(result[0]?.points?.length).toBe(1);
   });
 }); 
+
+it('should include non-numbered sections before numbered sections', () => {
+  const input: ChatContentItem[] = [
+    {
+      type: 'text',
+      text: 'some non-numbered stuff'
+    },
+    {
+      type: 'text',
+      text: '1. Section\n- Point'
+    }
+  ];
+
+  const result = parseFragmentedMarkdown(input);
+  
+  expect(result).toHaveLength(2);
+  expect(result[1]?.points).toBeDefined();
+  expect(result[1]?.points?.length).toBe(1);
+});
