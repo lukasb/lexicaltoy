@@ -55,60 +55,103 @@ function isInlineCode(node: Node): node is InlineCode {
 export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
   const processor = remark();
   const rootPoints: Point[] = [];
-  const context: { 
-    currentParent: Point[],
-    lastPoint?: Point
-  } = { currentParent: rootPoints };
+  let currentSection: Point | null = null;
+  let currentText = '';
+  let currentCitations: Citation[] | undefined = undefined;
 
+  function flushCurrentText() {
+    if (currentText.trim()) {
+      const point: Point = {
+        content: currentText.trim(),
+        citations: currentCitations
+      };
+      if (currentSection) {
+        if (!currentSection.points) {
+          currentSection.points = [];
+        }
+        currentSection.points.push(point);
+      } else {
+        rootPoints.push(point);
+      }
+      currentText = '';
+      currentCitations = undefined;
+    }
+  }
+
+  console.log("blocks", blocks);
   for (const block of blocks) {
     if (block.type !== 'text') continue;
 
     const citations = block.citations;
     const markdown = block.text;
-    const ast = processor.parse(markdown);
-    const hasCitations = citations && citations.length > 0;
+    
+    // Split the text into lines and process each line
+    const lines = markdown.split('\n');
+    let lineBuffer = '';
 
-    // Process free-form text first
-    const freeText = extractFlowingText(ast);
-    if (freeText) {
-      const shouldCreateNewPoint = 
-        hasCitations ||
-        !context.lastPoint ||
-        (context.lastPoint.citations && context.lastPoint.citations.length > 0);
-
-      if (shouldCreateNewPoint) {
-        const newPoint: Point = {
-          content: freeText,
-          citations: citations,
-        };
-        context.currentParent.push(newPoint);
-        context.lastPoint = newPoint;
-      } else {
-        if (context.lastPoint) {
-          context.lastPoint.content += `${freeText}`;
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      
+      // If we hit a section header
+      if (trimmedLine.match(/^\d+\./)) {
+        // Flush any accumulated text
+        if (lineBuffer.trim()) {
+          currentText = lineBuffer.trim();
+          currentCitations = citations;
+          flushCurrentText();
+          lineBuffer = '';
         }
+        
+        // Start a new section
+        currentSection = {
+          content: trimmedLine.replace(/^\d+\.\s*/, ''),
+          citations: citations,
+          points: []
+        };
+        rootPoints.push(currentSection);
       }
-    }
+      // If we hit a list item
+      else if (trimmedLine.startsWith('-')) {
+        // Flush any accumulated text
+        if (lineBuffer.trim()) {
+          currentText = lineBuffer.trim();
+          currentCitations = citations;
+          flushCurrentText();
+          lineBuffer = '';
+        }
 
-    // Then process lists
-    visit(ast, (node: Node) => {
-      if (isList(node)) {
-        context.lastPoint = undefined;
-        node.children.forEach((listItemNode: ListItem) => {
-          const point = parseListItem(listItemNode, citations);
-          context.currentParent.push(point);
-          
-          if (point.points) {
-            const prevParent = context.currentParent;
-            context.currentParent = point.points;
-            visit(listItemNode, (child: Node) => {
-              if (isList(child)) processListChild(child, context, citations);
+        const ast = processor.parse(trimmedLine);
+        visit(ast, (node: Node) => {
+          if (isList(node)) {
+            node.children.forEach((listItemNode: ListItem) => {
+              const point = parseListItem(listItemNode, citations);
+              if (currentSection) {
+                if (!currentSection.points) {
+                  currentSection.points = [];
+                }
+                currentSection.points.push(point);
+              } else {
+                rootPoints.push(point);
+              }
             });
-            context.currentParent = prevParent;
           }
         });
       }
-    });
+      // Otherwise accumulate the text
+      else if (trimmedLine) {
+        if (lineBuffer && !lineBuffer.endsWith('\n')) {
+          lineBuffer += '\n';
+        }
+        lineBuffer += line;  // Keep original whitespace for non-empty lines
+      }
+    }
+
+    // Flush any remaining text in the buffer
+    if (lineBuffer.trim()) {
+      currentText = lineBuffer.trim();
+      currentCitations = citations;
+      flushCurrentText();
+    }
   }
 
   return rootPoints.filter(p => p.content.trim().length > 0);
