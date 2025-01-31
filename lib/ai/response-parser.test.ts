@@ -2,6 +2,46 @@ import { parseFragmentedMarkdown, ContentBlockLocationCitation, CharLocationCita
 import { ChatContentItem } from '../formula/formula-definitions';
 
 describe('parseFragmentedMarkdown', () => {
+  it('should parse rich content without citations', () => {
+    const input: ChatContentItem[] = [{
+      type: 'text',
+      text: 'While I don\'t see a specific recipe in the provided page content, I can help you with a gluten-free chocolate cake recipe. Here\'s a basic recipe:\n\nGluten-Free Chocolate Cake Recipe:\n\nIngredients:\n- 2 cups gluten-free all-purpose flour blend\n- 2 cups sugar\n- 3/4 cup unsweetened cocoa powder\n- 2 teaspoons baking soda\n- 1 teaspoon baking powder\n- 1 teaspoon salt\n- 2 eggs\n- 1 cup milk (or dairy-free alternative)\n- 1/2 cup vegetable oil\n- 2 teaspoons vanilla extract\n- 1 cup hot water\n\nInstructions:\n1. Preheat oven to 350°F (175°C). Grease and line two 9-inch cake pans.\n2. Mix all dry ingredients in a large bowl.\n3. Add eggs, milk, oil, and vanilla. Mix well.\n4. Stir in hot water. The batter will be thin.\n5. Pour into prepared pans.\n6. Bake for 30-35 minutes or until a toothpick comes out clean.\n7. Cool completely before frosting.\n\nNote: enjoy!'
+    }];
+
+
+    const result = parseFragmentedMarkdown(input);
+    
+    expect(result).toHaveLength(5);
+    expect(result[0]?.content).toBe('While I don\'t see a specific recipe in the provided page content, I can help you with a gluten-free chocolate cake recipe. Here\'s a basic recipe:');
+    expect(result[0]?.points).toBeUndefined();
+    expect(result[1]?.content).toBe('Gluten-Free Chocolate Cake Recipe:');
+    expect(result[1]?.points).toBeUndefined();
+    expect(result[2]?.content).toBe('Ingredients:');
+    expect(result[2]?.points).toBeDefined();
+    expect(result[2]?.points?.[0]?.content).toBe('2 cups gluten-free all-purpose flour blend');
+    expect(result[2]?.points?.[1]?.content).toBe('2 cups sugar');
+    expect(result[2]?.points?.[2]?.content).toBe('3/4 cup unsweetened cocoa powder');
+    expect(result[2]?.points?.[3]?.content).toBe('2 teaspoons baking soda');
+    expect(result[2]?.points?.[4]?.content).toBe('1 teaspoon baking powder');
+    expect(result[2]?.points?.[5]?.content).toBe('1 teaspoon salt');
+    expect(result[2]?.points?.[6]?.content).toBe('2 eggs');
+    expect(result[2]?.points?.[7]?.content).toBe('1 cup milk (or dairy-free alternative)');
+    expect(result[2]?.points?.[8]?.content).toBe('1/2 cup vegetable oil');
+    expect(result[2]?.points?.[9]?.content).toBe('2 teaspoons vanilla extract');
+    expect(result[2]?.points?.[10]?.content).toBe('1 cup hot water');
+    expect(result[3]?.content).toBe('Instructions:');
+    expect(result[3]?.points).toBeDefined();
+    expect(result[3]?.points?.[0]?.content).toBe('1. Preheat oven to 350°F (175°C). Grease and line two 9-inch cake pans.');
+    expect(result[3]?.points?.[1]?.content).toBe('2. Mix all dry ingredients in a large bowl.');
+    expect(result[3]?.points?.[2]?.content).toBe('3. Add eggs, milk, oil, and vanilla. Mix well.');
+    expect(result[3]?.points?.[3]?.content).toBe('4. Stir in hot water. The batter will be thin.');
+    expect(result[3]?.points?.[4]?.content).toBe('5. Pour into prepared pans.');
+    expect(result[3]?.points?.[5]?.content).toBe('6. Bake for 30-35 minutes or until a toothpick comes out clean.');
+    expect(result[3]?.points?.[6]?.content).toBe('7. Cool completely before frosting.');
+    expect(result[4]?.content).toBe('Note: enjoy!');
+    expect(result[4]?.points).toBeUndefined();
+  });
+
   it('should parse a simple numbered list into sections', () => {
     const input: ChatContentItem[] = [{
       type: 'text',
