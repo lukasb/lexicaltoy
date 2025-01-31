@@ -26,7 +26,7 @@ function getPageContext(page: Page, context?: string): DocumentContent {
     citations: { enabled: true },
     source: customSource,
   };
-  doc.context = context + (context ? " " : "") + "This document is in Markdown format.";
+  doc.context = (context ? context + " " : "") + "This document is in Markdown format.";
   return doc;
 }
 
