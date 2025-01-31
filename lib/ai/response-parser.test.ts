@@ -70,8 +70,8 @@ describe('parseFragmentedMarkdown', () => {
 
     const result = parseFragmentedMarkdown(input);
     
+    expect(result[0]?.points?.length).toBe(1);
     expect(result[0]?.points?.[0]?.content).toBe('Main point');
-    expect(result[0]?.points?.[0]?.points).toBeDefined();
     expect(result[0]?.points?.[0]?.points?.length).toBe(2);
     expect(result[0]?.points?.[0]?.points?.[0]?.content).toBe('Subpoint 1');
     expect(result[0]?.points?.[0]?.points?.[1]?.content).toBe('Subpoint 2');
@@ -204,5 +204,118 @@ describe('parseFragmentedMarkdown', () => {
     expect(combinedPoint?.citations?.length).toBe(2);
     expect(combinedPoint?.citations?.[0]).toEqual(citation1);
     expect(combinedPoint?.citations?.[1]).toEqual(citation2);
+  });
+
+  it('should parse complex multi-section document with citations', () => {
+    const input: ChatContentItem[] = [
+      {
+        type: 'text',
+        text: 'Based on the document, there are several high-priority tasks you could work on next. Here are the key MVP (Minimum Viable Product) items that seem most urgent:\n\n1. Database and System Issues:\n'
+      },
+      {
+        type: 'text',
+        text: 'There are some critical database-related tasks:\n- Release database lock when going into background\n- Fix logic error with the find function where find(\"lock\",todos,!done) is returning non-todos',
+        citations: [
+          {
+            type: 'content_block_location',
+            cited_text: 'some cited text',
+            document_index: 0,
+            document_title: 'orangetask top level',
+            start_block_index: 6,
+            end_block_index: 7
+          }
+        ]
+      },
+      {
+        type: 'text',
+        text: '\n\n2. User Experience Improvements:\n'
+      },
+      {
+        type: 'text',
+        text: 'Several UX issues need attention:\n- Address the confusion around the ask function not getting current page context\n- Fix the chronological sorting issue where new todos are being added to the end instead of the top of find node results\n- Implement page deletion confirmation\n- Build a nested chat interface',
+        citations: [
+          {
+            type: 'content_block_location',
+            cited_text: 'more cited text',
+            document_index: 0,
+            document_title: 'orangetask top level',
+            start_block_index: 6,
+            end_block_index: 7
+          }
+        ]
+      },
+      {
+        type: 'text',
+        text: '\n\n3. Security and Session Management:\n'
+      },
+      {
+        type: 'text',
+        text: 'There are important security-related tasks:\n- Implement proper localStorage cleanup when users log out',
+        citations: [
+          {
+            type: 'content_block_location',
+            cited_text: 'event more cited text',
+            document_index: 0,
+            document_title: 'orangetask top level',
+            start_block_index: 6,
+            end_block_index: 7
+          }
+        ]
+      },
+      {
+        type: 'text',
+        text: '\n\n4. Technical Debt:\n'
+      },
+      {
+        type: 'text',
+        text: 'There\'s a need to:\n- Refactor UI tests to be standalone and add more of them\n- Refactor formula-related code to make it less confusing',
+        citations: [
+          {
+            type: 'content_block_location',
+            cited_text: 'yes yes, cited text',
+            document_index: 0,
+            document_title: 'orangetask top level',
+            start_block_index: 3,
+            end_block_index: 4
+          }
+        ]
+      },
+      {
+        type: 'text',
+        text: '\n\n5. Testing:\n'
+      },
+      {
+        type: 'text',
+        text: 'Some testing tasks are pending:\n- Add tests for backlinks functionality\n- Review and update the save mechanism, particularly regarding queued updates and timing',
+        citations: [
+          {
+            type: 'content_block_location',
+            cited_text: 'and finally cited text',
+            document_index: 0,
+            document_title: 'orangetask top level',
+            start_block_index: 6,
+            end_block_index: 7
+          }
+        ]
+      },
+      {
+        type: 'text',
+        text: '\n\nSince these are all marked with #mvp tags or explicitly noted as technical debt, they represent the most important areas to focus on. I would recommend starting with either the database lock issues or the logic error with the find function, as these appear to be core functionality issues that could affect system stability.'
+      }
+    ];
+
+    const result = parseFragmentedMarkdown(input);
+    
+    // Verify we have seven root-level nodes
+    expect(result).toHaveLength(7);
+
+    // Verify sections 2-6 have child points with citations
+    for (let i = 1; i < 6; i++) {
+      expect(result[i]?.points).toBeDefined();
+      expect(result[i]?.points?.length).toBeGreaterThan(0);
+      expect(result[i]?.points?.[0]?.citations).toBeDefined();
+      expect(result[i]?.points?.[0]?.citations?.length).toBe(1);
+      expect(result[i]?.points?.[0]?.citations?.[0]?.type).toBe('content_block_location');
+    }
   });
 });

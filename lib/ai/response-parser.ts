@@ -29,6 +29,15 @@ export interface Point {
   points?: Point[];
 }
 
+function isPointWithPoints(value: any): value is Point & { points: Point[] } {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    typeof value.content === 'string' &&
+    Array.isArray(value.points)
+  );
+}
+
 // Type guard to check if a node is a List
 function isList(node: Node): node is List {
   return node.type === 'list';
@@ -53,209 +62,124 @@ function isInlineCode(node: Node): node is InlineCode {
 }
 
 export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
-  const processor = remark();
-  const rootPoints: Point[] = [];
-  let currentSection: Point | null = null;
+  const points: Point[] = [];
+  let currentPoint = null as Point | null;
   let currentText = '';
-  let currentCitations: Citation[] | undefined = undefined;
+  let currentCitations: Citation[] = [];
 
-  console.log("blocks", blocks); // DO NOT REMOVE
-
-  function flushCurrentText() {
-    if (currentText.trim()) {
-      const point: Point = {
-        content: currentText.trim(),
-        citations: currentCitations
-      };
-      if (currentSection) {
-        if (!currentSection.points) {
-          currentSection.points = [];
-        }
-        // If the last point is not a list item, combine with it
-        const lastPoint = currentSection.points[currentSection.points.length - 1];
-        if (lastPoint && !lastPoint.points && currentCitations) {
-          lastPoint.content = `${lastPoint.content}\n${point.content}`;
-          lastPoint.citations = lastPoint.citations || [];
-          if (point.citations) lastPoint.citations.push(...point.citations);
-        } else {
-          currentSection.points.push(point);
-        }
-      } else {
-        rootPoints.push(point);
-      }
-      currentText = '';
-      currentCitations = undefined;
-    }
-  }
-
-  for (const block of blocks) {
-    if (block.type !== 'text') continue;
-
-    const citations = block.citations;
-    const markdown = block.text;
-    
-    // Check if block starts with two newlines - if so, reset current section
-    if (markdown.startsWith('\n\n')) {
-      currentSection = null;
-      // Create a new root point with the trimmed content
-      rootPoints.push({
-        content: markdown.trim(),
-        citations: citations
-      });
-      continue;
-    }
-
-    // Split the text into lines and process each line
-    const lines = markdown.split('\n');
-    let lineBuffer = '';
-
-    // Check if this block contains a section header
-    const firstLine = lines[0]?.trim() || '';
-    const isNewSection = firstLine.match(/^\d+\./);
-    
-    // If this isn't a new section and we're not in a section, treat as new content
-    if (!isNewSection && !currentSection) {
-      currentSection = null;
-    }
-
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      
-      // If we hit a section header, flush any accumulated text first
-      if (trimmedLine.match(/^\d+\./)) {
-        if (lineBuffer.trim()) {
-          // Create a new root point for accumulated text before numbered section
-          rootPoints.push({
-            content: lineBuffer.trim(),
-            citations: citations
-          });
-          lineBuffer = '';
-        }
-        
-        // Start a new section
-        currentSection = {
-          content: trimmedLine.replace(/^\d+\.\s*/, ''),
-          citations: citations,
-          points: []
-        };
-        rootPoints.push(currentSection);
-      }
-      // If we hit a list item, flush any accumulated text first
-      else if (trimmedLine.startsWith('-')) {
-        if (lineBuffer.trim()) {
-          currentText = lineBuffer.trim();
-          currentCitations = citations;
-          flushCurrentText();
-          lineBuffer = '';
-        }
-
-        const ast = processor.parse(trimmedLine);
-        let lastPoint: Point | null = null;
-        
-        visit(ast, (node: Node) => {
-          if (isList(node)) {
-            const context = { currentParent: currentSection?.points || rootPoints };
-            processListChild(node, context, citations);
-            lastPoint = context.currentParent[context.currentParent.length - 1];
-          }
-        });
-
-        // Handle nested points based on indentation
-        if (lastPoint && line.match(/^\s{2,}-/)) {
-          const parentPoint = currentSection?.points?.[currentSection.points.length - 2];
-          if (parentPoint) {
-            if (!parentPoint.points) parentPoint.points = [];
-            parentPoint.points.push(lastPoint);
-            if (currentSection?.points) {
-              currentSection.points.pop(); // Remove from top level
-            }
-          }
-        }
-      }
-      // For regular text, accumulate in the buffer
-      else {
-        // Only add newline if we have content and it doesn't end with one
-        if (lineBuffer && !lineBuffer.endsWith('\n')) {
-          lineBuffer += '\n';
-        }
-        lineBuffer += line;
-      }
-    }
-
-    // Flush any remaining text in the buffer
-    if (lineBuffer.trim()) {
-      currentText = lineBuffer.trim();
-      currentCitations = citations;
-      flushCurrentText();
-      lineBuffer = '';
-    }
-  }
-
-  // Return all points that have content
-  return rootPoints.filter(p => p.content.trim().length > 0);
-}
-
-function processListChild(list: List, context: { currentParent: Point[] }, citations?: Citation[]) {
-  list.children.forEach(listItemNode => {
-    const point = parseListItem(listItemNode, citations);
-    context.currentParent.push(point);
-    if (point.points) {
-      const prevParent = context.currentParent;
-      context.currentParent = point.points;
-      visit(listItemNode, (child: Node) => {
-        if (isList(child)) processListChild(child, context, citations);
-      });
-      context.currentParent = prevParent;
-    }
-  });
-}
-
-function parseListItem(listItem: ListItem, citations?: Citation[]): Point {
-  const point: Point = {
-    content: '',
-    citations: citations,
+  const createPointFromText = (text: string, citations: Citation[] = []): Point | null => {
+    const trimmedText = text.trim();
+    if (!trimmedText) return null;
+    const point: Point = {
+      content: trimmedText,
+      citations: citations.length > 0 ? citations : undefined,
+      points: undefined
+    };
+    return point;
   };
 
-  listItem.children.forEach(child => {
-    if (isParagraph(child)) {
-      point.content = getParagraphText(child);
-    } else if (isList(child)) {
-      point.points = [];
-      // Nested lists will be processed in processListChild
-    }
-  });
+  const processTextBlock = (text: string, citations: Citation[] = []) => {
+    const lines = text.split('\n');
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const numberedSectionMatch = line.match(/^(\d+)\.\s+(.*)/);
 
-  // Remove empty points array if no nested items were added
-  if (point.points && point.points.length === 0) {
-    delete point.points;
+      if (numberedSectionMatch) {
+        // Start a new numbered section
+        if (currentText) {
+          const point = createPointFromText(currentText, currentCitations);
+          if (point && isPointWithPoints(currentPoint)) {
+            currentPoint.points.push(point);
+          } else if (point) {
+            points.push(point);
+          }
+          currentText = '';
+          currentCitations = [];
+        }
+
+        currentPoint = {
+          content: numberedSectionMatch[2].trim(),
+          points: [] as Point[]
+        };
+        points.push(currentPoint);
+      } else if (line.trim().startsWith('-')) {
+        // Handle bullet point
+        if (currentText) {
+          const point = createPointFromText(currentText, currentCitations);
+          if (point && isPointWithPoints(currentPoint)) {
+            currentPoint.points.push(point);
+          } else if (point) {
+            points.push(point);
+          }
+          currentText = '';
+          currentCitations = [];
+        }
+
+        const indentLevel = line.search(/\S/);
+        const bulletContent = line.replace(/^[\s-]*/, '').trim();
+        const bulletPoint: Point = {
+          content: bulletContent,
+          citations: citations.length > 0 ? citations : undefined,
+          points: undefined
+        };
+        
+        if (indentLevel > 0 && currentPoint?.points?.length) {
+          // This is a nested point
+          const lastPoint = currentPoint.points[currentPoint.points.length - 1];
+          if (!lastPoint.points) {
+            lastPoint.points = [];
+          }
+          lastPoint.points.push(bulletPoint);
+        } else if (currentPoint) {
+          if (!currentPoint.points) {
+            currentPoint.points = [] as Point[];
+          }
+          currentPoint.points.push(bulletPoint);
+        } else {
+          points.push(bulletPoint);
+        }
+      } else if (line.trim() === '' && i < lines.length - 1 && lines[i + 1].trim() === '') {
+        // Double newline - create new section from accumulated text
+        if (currentText) {
+          const point = createPointFromText(currentText, currentCitations);
+          if (point && isPointWithPoints(currentPoint)) {
+            currentPoint.points.push(point);
+          } else if (point) {
+            points.push(point);
+          }
+        }
+        currentText = '';
+        currentCitations = [];
+        currentPoint = null;
+        i++; // Skip the second newline
+      } else {
+        // Accumulate regular text
+        if (currentText && currentText.trim()) currentText += '\n';
+        currentText += line;
+        if (citations.length > 0 && !currentCitations.length) {
+          currentCitations = citations;
+        }
+      }
+    }
+
+    // Handle any text remaining in the block
+    if (currentText) {
+      const point = createPointFromText(currentText, currentCitations);
+      if (point && isPointWithPoints(currentPoint)) {
+        currentPoint.points.push(point);
+      } else if (point) {
+        points.push(point);
+      }
+      currentText = '';
+      currentCitations = [];
+    }
+  };
+
+  // Process each block
+  for (const block of blocks) {
+    processTextBlock(block.text, block.citations);
   }
 
-  return point;
-}
-
-function extractFlowingText(node: Node): string {
-  let text = '';
-  visit(node, (child: Node) => {
-    // Skip text content from list items to avoid duplication
-    if (child.type === 'list' || child.type === 'listItem') {
-      return 'skip';
-    }
-    if (isTextOrInlineCode(child)) {
-      text += child.value;
-    }
-    if (child.type === 'paragraph') {
-      text += '\n';
-    }
-  });
-  return text.replace(/^\n+|\n+$/g, '');
-}
-
-function getParagraphText(paragraph: Paragraph): string {
-  return paragraph.children
-    .map((child) => {
-      if (isText(child)) return child.value;
-      if (isInlineCode(child)) return `\`${child.value}\``;
-      return '';
-    })
-    .join('');
+  return points;
 }
