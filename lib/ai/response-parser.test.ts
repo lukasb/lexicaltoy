@@ -196,14 +196,15 @@ describe('parseFragmentedMarkdown', () => {
     expect(result).toHaveLength(1);
     expect(result[0]?.content).toBe('Section Header');
     expect(result[0]?.points).toBeDefined();
-    expect(result[0]?.points?.length).toBe(1);
-    
-    const combinedPoint = result[0]?.points?.[0];
-    expect(combinedPoint?.content).toBe('First cited text\nwith a newline\nSecond cited text\nwith another newline');
-    expect(combinedPoint?.citations).toBeDefined();
-    expect(combinedPoint?.citations?.length).toBe(2);
-    expect(combinedPoint?.citations?.[0]).toEqual(citation1);
-    expect(combinedPoint?.citations?.[1]).toEqual(citation2);
+    expect(result[0]?.points?.length).toBe(2);
+    expect(result[0]?.points?.[0]?.content).toBe('First cited text\nwith a newline');
+    expect(result[0]?.points?.[0]?.citations).toBeDefined();
+    expect(result[0]?.points?.[0]?.citations?.length).toBe(1);
+    expect(result[0]?.points?.[0]?.citations?.[0]?.cited_text).toBe('First cited text');
+    expect(result[0]?.points?.[1]?.content).toBe('Second cited text\nwith another newline');
+    expect(result[0]?.points?.[1]?.citations).toBeDefined();
+    expect(result[0]?.points?.[1]?.citations?.length).toBe(1);
+    expect(result[0]?.points?.[1]?.citations?.[0]?.cited_text).toBe('Second cited text');
   });
 
   it('should parse complex multi-section document with citations', () => {
