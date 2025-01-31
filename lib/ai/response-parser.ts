@@ -80,6 +80,8 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
 
   const processTextBlock = (text: string, citations: Citation[] = []) => {
     const lines = text.split('\n');
+    let bulletPoints: Point[] = [];
+    let pendingText = '';
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -98,17 +100,49 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
           currentCitations = [];
         }
 
+        // If there's pending text before the numbered section, create a point for it
+        if (pendingText) {
+          const point = createPointFromText(pendingText);
+          if (point) {
+            points.push(point);
+          }
+          pendingText = '';
+        }
+
         currentPoint = {
           content: numberedSectionMatch[2].trim(),
           points: [] as Point[]
         };
         points.push(currentPoint);
       } else if (line.trim().startsWith('-')) {
+        // If we have pending text before bullet points, create a parent point
+        if (pendingText) {
+          const parentPoint: Point = {
+            content: pendingText.trim(),
+            points: []
+          };
+          if (currentPoint && currentPoint.points) {
+            currentPoint.points.push(parentPoint);
+            // If this is the first point in a numbered section and we have citations, attach them
+            if (currentPoint.points.length === 1 && citations.length > 0) {
+              parentPoint.citations = citations;
+            }
+          } else {
+            points.push(parentPoint);
+          }
+          currentPoint = parentPoint;
+          pendingText = '';
+        }
+
         // Handle bullet point
-        if (currentText) {
+        if (currentText && !pendingText) {
           const point = createPointFromText(currentText, currentCitations);
           if (point && isPointWithPoints(currentPoint)) {
             currentPoint.points.push(point);
+            // If this is the first point in a numbered section and we have citations, attach them
+            if (currentPoint.points.length === 1 && citations.length > 0) {
+              point.citations = citations;
+            }
           } else if (point) {
             points.push(point);
           }
@@ -120,7 +154,6 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
         const bulletContent = line.replace(/^[\s-]*/, '').trim();
         const bulletPoint: Point = {
           content: bulletContent,
-          citations: citations.length > 0 ? citations : undefined,
           points: undefined
         };
         
@@ -131,13 +164,41 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
             lastPoint.points = [];
           }
           lastPoint.points.push(bulletPoint);
+          
+          // If this is the first point in a numbered section and we have citations, attach them
+          if (currentPoint.points.length === 1 && citations.length > 0) {
+            bulletPoint.citations = citations;
+          } else {
+            // If this is the last bullet point and we have citations, attach them
+            const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
+            if (citations.length > 0 && (!nextLine.startsWith('-') || i === lines.length - 1)) {
+              bulletPoint.citations = citations;
+            }
+          }
         } else if (currentPoint) {
           if (!currentPoint.points) {
             currentPoint.points = [] as Point[];
           }
           currentPoint.points.push(bulletPoint);
+          
+          // If this is the first point in a numbered section and we have citations, attach them
+          if (currentPoint.points.length === 1 && citations.length > 0) {
+            bulletPoint.citations = citations;
+          } else {
+            // If this is the last bullet point and we have citations, attach them
+            const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
+            if (citations.length > 0 && (!nextLine.startsWith('-') || i === lines.length - 1)) {
+              bulletPoint.citations = citations;
+            }
+          }
         } else {
           points.push(bulletPoint);
+          
+          // If this is the last bullet point and we have citations, attach them
+          const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
+          if (citations.length > 0 && (!nextLine.startsWith('-') || i === lines.length - 1)) {
+            bulletPoint.citations = citations;
+          }
         }
       } else if (line.trim() === '' && i < lines.length - 1 && lines[i + 1].trim() === '') {
         // Double newline - create new section from accumulated text
@@ -152,11 +213,14 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
         currentText = '';
         currentCitations = [];
         currentPoint = null;
+        pendingText = '';
         i++; // Skip the second newline
       } else {
         // Accumulate regular text
-        if (currentText && currentText.trim()) currentText += '\n';
-        currentText += line;
+        if (!line.trim().startsWith('-')) {
+          if (pendingText && pendingText.trim()) pendingText += '\n';
+          pendingText += line;
+        }
         if (citations.length > 0 && !currentCitations.length) {
           currentCitations = citations;
         }
@@ -164,14 +228,15 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
     }
 
     // Handle any text remaining in the block
-    if (currentText) {
-      const point = createPointFromText(currentText, currentCitations);
+    if (currentText || pendingText) {
+      const point = createPointFromText(currentText || pendingText, currentCitations);
       if (point && isPointWithPoints(currentPoint)) {
         currentPoint.points.push(point);
       } else if (point) {
         points.push(point);
       }
       currentText = '';
+      pendingText = '';
       currentCitations = [];
     }
   };

@@ -112,9 +112,9 @@ describe('parseFragmentedMarkdown', () => {
     const result = parseFragmentedMarkdown(input);
     
     expect(result[0]?.points).toBeDefined();
-    expect(result[0]?.points?.length).toBe(2);
+    expect(result[0]?.points?.length).toBe(1);
     expect(result[0]?.points?.[0]?.content).toBe('Some preamble text');
-    expect(result[0]?.points?.[1]?.content).toBe('First point');
+    expect(result[0]?.points?.[0]?.points?.[0]?.content).toBe('First point');
   });
 
   it('should include non-numbered sections after numbered sections', () => {
@@ -153,6 +153,42 @@ describe('parseFragmentedMarkdown', () => {
     expect(result).toHaveLength(2);
     expect(result[1]?.points).toBeDefined();
     expect(result[1]?.points?.length).toBe(1);
+  });
+
+  it('should attach citations to a single point', () => {
+    const input: ChatContentItem[] = [
+      {
+        type: 'text',
+        text: '\n\n3. Security and Session Management:\n'
+      },
+      {
+        type: 'text',
+        text: 'There are important security-related tasks:\n- Implement proper localStorage cleanup when users log out\n- Fix the logic error with the find function where find(\"lock\",todos,!done) is returning non-todos',
+        citations: [
+          {
+            type: 'content_block_location',
+            cited_text: 'event more cited text',
+            document_index: 0,
+            document_title: 'orangetask top level',
+            start_block_index: 6,
+            end_block_index: 7
+          }
+        ]
+      }
+    ];
+
+    const result = parseFragmentedMarkdown(input);
+    
+    expect(result).toHaveLength(1);
+    expect(result[0]?.points).toBeDefined();
+    expect(result[0]?.points?.length).toBe(1);
+    expect(result[0]?.points?.[0]?.content).toBe('There are important security-related tasks:');
+    expect(result[0]?.points?.[0]?.points).toBeDefined();
+    expect(result[0]?.points?.[0]?.points?.length).toBe(2);
+    expect(result[0]?.points?.[0]?.points?.[0]?.content).toBe('Implement proper localStorage cleanup when users log out');
+    expect(result[0]?.points?.[0]?.points?.[1]?.content).toBe('Fix the logic error with the find function where find(\"lock\",todos,!done) is returning non-todos');
+    expect(result[0]?.points?.[0]?.points?.[1]?.citations?.length).toBe(1);
+    expect(result[0]?.points?.[0]?.points?.[1]?.citations?.[0]?.cited_text).toBe('event more cited text');
   });
 
   it('should combine text blocks with citations after a numbered section', () => {
