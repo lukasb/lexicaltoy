@@ -244,6 +244,63 @@ describe('parseFragmentedMarkdown', () => {
     expect(result[0]?.points?.[1]?.citations?.[0]?.cited_text).toBe('Second cited text');
   });
 
+  it('should nest properly under a non-numbered section', () => {
+    const citation1: CharLocationCitation = {
+      type: 'char_location',
+      cited_text: 'First cited text',
+      document_index: 0,
+      document_title: 'Test Doc',
+      start_char_index: 0,
+      end_char_index: 15
+    };
+
+    const citation2: CharLocationCitation = {
+      type: 'char_location',
+      cited_text: 'Second cited text',
+      document_index: 0,
+      document_title: 'Test Doc',
+      start_char_index: 20,
+      end_char_index: 36
+    };
+
+    const input: ChatContentItem[] = [
+      {
+        type: 'text',
+        text: 'Section Header'
+      },
+      {
+        type: 'text',
+        text: '\n\n1. First cited text',
+      },
+      {
+        type: 'text',
+        text: '- Second cited text\n- with another newline',
+        citations: [citation2]
+      },
+      {
+        type: 'text',
+        text: '\n\nnon-numbered section'
+      },
+      {
+        type: 'text',
+        text: '- First point\n- Second point',
+        citations: [citation1]
+      },
+    ];
+
+    const result = parseFragmentedMarkdown(input);
+    
+    expect(result).toHaveLength(3);
+    expect(result[2]?.content).toBe('non-numbered section');
+    expect(result[2]?.points).toBeDefined();
+    expect(result[2]?.points?.length).toBe(2);
+    expect(result[2]?.points?.[0]?.content).toBe('- First point');
+    expect(result[2]?.points?.[1]?.content).toBe('- Second point');
+    expect(result[2]?.points?.[1]?.citations).toBeDefined();
+    expect(result[2]?.points?.[1]?.citations?.length).toBe(1);
+    expect(result[2]?.points?.[1]?.citations?.[0]?.cited_text).toBe('Second cited text');
+  });
+
   it('should parse complex multi-section document with citations', () => {
     const input: ChatContentItem[] = [
       {
