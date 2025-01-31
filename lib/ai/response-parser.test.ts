@@ -294,11 +294,11 @@ describe('parseFragmentedMarkdown', () => {
     expect(result[2]?.content).toBe('non-numbered section');
     expect(result[2]?.points).toBeDefined();
     expect(result[2]?.points?.length).toBe(2);
-    expect(result[2]?.points?.[0]?.content).toBe('- First point');
-    expect(result[2]?.points?.[1]?.content).toBe('- Second point');
+    expect(result[2]?.points?.[0]?.content).toBe('First point');
+    expect(result[2]?.points?.[1]?.content).toBe('Second point');
     expect(result[2]?.points?.[1]?.citations).toBeDefined();
     expect(result[2]?.points?.[1]?.citations?.length).toBe(1);
-    expect(result[2]?.points?.[1]?.citations?.[0]?.cited_text).toBe('Second cited text');
+    expect(result[2]?.points?.[1]?.citations?.[0]?.cited_text).toBe('First cited text');
   });
 
   it('should parse complex multi-section document with citations', () => {

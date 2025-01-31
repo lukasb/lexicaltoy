@@ -182,7 +182,17 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
             bulletPoint.citations = citations;
           }
         } else {
-          points.push(bulletPoint);
+          // If no current point exists, try to attach to the last point
+          const lastPoint = points[points.length - 1];
+          if (lastPoint && !lastPoint.points) {
+            lastPoint.points = [];
+            currentPoint = lastPoint;
+            if (isPointWithPoints(currentPoint)) {
+              currentPoint.points.push(bulletPoint);
+            }
+          } else {
+            points.push(bulletPoint);
+          }
           
           // Only attach citations to the last bullet point
           const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
