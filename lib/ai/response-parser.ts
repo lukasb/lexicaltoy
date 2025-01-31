@@ -144,12 +144,21 @@ function parseListItem(listItem: ListItem, citations?: Citation[]): Point {
     }
   });
 
+  // Remove empty points array if no nested items were added
+  if (point.points && point.points.length === 0) {
+    delete point.points;
+  }
+
   return point;
 }
 
 function extractFlowingText(node: Node): string {
   let text = '';
   visit(node, (child: Node) => {
+    // Skip text content from list items to avoid duplication
+    if (child.type === 'list' || child.type === 'listItem') {
+      return 'skip';
+    }
     if (isTextOrInlineCode(child)) {
       text += child.value;
     }

@@ -80,11 +80,11 @@ export function convertChatResponsesToUnorderedList(chatResponses: ChatContentIt
   const processPoint = (point: Point, indent: number) => {
     const trimmedContent = point.content.trim();
     result.push(`${'▵'.repeat(indent)}‣ ${trimmedContent}\n`);
-    if (point.points) {
-      for (const subpoint of point.points) {
-        processPoint(subpoint, indent + 1);
-      }
-    }
+    //if (point.points) {
+    //  for (const subpoint of point.points) {
+    //    processPoint(subpoint, indent + 1);
+   //   }
+    //}
   }
 
   for (const point of points) {
