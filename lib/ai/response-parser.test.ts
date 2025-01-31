@@ -301,6 +301,50 @@ describe('parseFragmentedMarkdown', () => {
     expect(result[2]?.points?.[1]?.citations?.[0]?.cited_text).toBe('First cited text');
   });
 
+  it('should deeply nest properly', () => {
+    const citation1: CharLocationCitation = {
+      type: 'char_location',
+      cited_text: 'First cited text',
+      document_index: 0,
+      document_title: 'Test Doc',
+      start_char_index: 0,
+      end_char_index: 15
+    };
+
+    const input: ChatContentItem[] = [
+      {
+        type: 'text',
+        text: 'Section Header'
+      },
+      {
+        type: 'text',
+        text: '\n\n1. First cited text',
+      },
+      {
+        type: 'text',
+        text: 'We need to:\n- Second cited text\n- with another newline',
+        citations: [citation1]
+      }
+    ];
+
+    const result = parseFragmentedMarkdown(input);
+    
+    expect(result).toHaveLength(2);
+    expect(result[1]?.content).toBe('First cited text');
+    expect(result[1]?.points).toBeDefined();
+    expect(result[1]?.citations).toBeUndefined();
+    expect(result[1]?.points?.length).toBe(1);
+    expect(result[1]?.points?.[0]?.content).toBe('We need to:');
+    expect(result[1]?.points?.[0]?.points).toBeDefined();
+    expect(result[1]?.points?.[0]?.citations).toBeUndefined();
+    expect(result[1]?.points?.[0]?.points?.length).toBe(2);
+    expect(result[1]?.points?.[0]?.points?.[0]?.content).toBe('Second cited text');
+    expect(result[1]?.points?.[0]?.points?.[1]?.content).toBe('with another newline');
+    expect(result[1]?.points?.[0]?.points?.[1]?.citations).toBeDefined();
+    expect(result[1]?.points?.[0]?.points?.[1]?.citations?.length).toBe(1);
+    expect(result[1]?.points?.[0]?.points?.[1]?.citations?.[0]?.cited_text).toBe('First cited text');
+  });
+
   it('should parse complex multi-section document with citations', () => {
     const input: ChatContentItem[] = [
       {
@@ -407,10 +451,13 @@ describe('parseFragmentedMarkdown', () => {
     // Verify sections 2-6 have child points with citations
     for (let i = 1; i < 6; i++) {
       expect(result[i]?.points).toBeDefined();
-      expect(result[i]?.points?.length).toBeGreaterThan(0);
-      expect(result[i]?.points?.[0]?.citations).toBeDefined();
-      expect(result[i]?.points?.[0]?.citations?.length).toBe(1);
-      expect(result[i]?.points?.[0]?.citations?.[0]?.type).toBe('content_block_location');
+      expect(result[i]?.points?.length).toBe(1);
+      expect(result[i]?.points?.[0]?.citations).toBeUndefined();
+      expect(result[i]?.points?.[0]?.points).toBeDefined();
+      expect(result[i]?.points?.[0]?.points?.length).toBeGreaterThan(0);
+      const length = result[i]?.points?.[0]?.points?.length;
+      expect(length).toBeGreaterThan(0);
+      if (length) expect(result[i]?.points?.[0]?.points?.[length - 1]?.citations).toBeDefined();
     }
   });
 });

@@ -123,10 +123,6 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
           };
           if (currentPoint && currentPoint.points) {
             currentPoint.points.push(parentPoint);
-            // If this is the first point in a numbered section and we have citations, attach them
-            if (currentPoint.points.length === 1 && citations.length > 0) {
-              parentPoint.citations = citations;
-            }
           } else {
             points.push(parentPoint);
           }
@@ -139,10 +135,6 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
           const point = createPointFromText(currentText, currentCitations);
           if (point && isPointWithPoints(currentPoint)) {
             currentPoint.points.push(point);
-            // If this is the first point in a numbered section and we have citations, attach them
-            if (currentPoint.points.length === 1 && citations.length > 0) {
-              point.citations = citations;
-            }
           } else if (point) {
             points.push(point);
           }
