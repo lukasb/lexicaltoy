@@ -70,8 +70,6 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
           currentSection.points = [];
         }
         currentSection.points.push(point);
-      } else {
-        rootPoints.push(point);
       }
       currentText = '';
       currentCitations = undefined;
@@ -93,7 +91,6 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
       
       // Handle blank lines
       if (!trimmedLine) {
-        // Flush any accumulated text
         if (lineBuffer.trim()) {
           currentText = lineBuffer.trim();
           currentCitations = citations;
@@ -132,38 +129,34 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
         }
 
         const ast = processor.parse(trimmedLine);
+        let lastPoint: Point | null = null;
+        
         visit(ast, (node: Node) => {
           if (isList(node)) {
-            node.children.forEach((listItemNode: ListItem) => {
-              const point = parseListItem(listItemNode, citations);
-              if (currentSection) {
-                if (!currentSection.points) {
-                  currentSection.points = [];
-                }
-                currentSection.points.push(point);
-              } else {
-                rootPoints.push(point);
-              }
-            });
+            const context = { currentParent: currentSection?.points || rootPoints };
+            processListChild(node, context, citations);
+            lastPoint = context.currentParent[context.currentParent.length - 1];
           }
         });
+
+        // Handle nested points based on indentation
+        if (lastPoint && line.match(/^\s{2,}-/)) {
+          const parentPoint = currentSection?.points?.[currentSection.points.length - 2];
+          if (parentPoint) {
+            if (!parentPoint.points) parentPoint.points = [];
+            parentPoint.points.push(lastPoint);
+            if (currentSection?.points) {
+              currentSection.points.pop(); // Remove from top level
+            }
+          }
+        }
       }
       // Otherwise accumulate the text
-      else if (trimmedLine) {
-        // If this is non-list text and not a section header, it should be at root level
-        if (!currentSection || !lineBuffer) {
-          if (lineBuffer.trim()) {
-            currentText = lineBuffer.trim();
-            currentCitations = citations;
-            flushCurrentText();
-            lineBuffer = '';
-          }
-          currentSection = null;
-        }
+      else {
         if (lineBuffer && !lineBuffer.endsWith('\n')) {
           lineBuffer += '\n';
         }
-        lineBuffer += line;  // Keep original whitespace for non-empty lines
+        lineBuffer += line;
       }
     }
 
@@ -175,7 +168,8 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
     }
   }
 
-  return rootPoints.filter(p => p.content.trim().length > 0);
+  // Only return points that are actual sections (start with number)
+  return rootPoints.filter(p => p.content.match(/^\d+\./) || p.content.trim().length > 0);
 }
 
 function processListChild(list: List, context: { currentParent: Point[] }, citations?: Citation[]) {
