@@ -78,7 +78,6 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
     }
   }
 
-  console.log("blocks", blocks);
   for (const block of blocks) {
     if (block.type !== 'text') continue;
 
@@ -91,6 +90,18 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
 
     for (const line of lines) {
       const trimmedLine = line.trim();
+      
+      // Handle blank lines
+      if (!trimmedLine) {
+        // Flush any accumulated text
+        if (lineBuffer.trim()) {
+          currentText = lineBuffer.trim();
+          currentCitations = citations;
+          flushCurrentText();
+          lineBuffer = '';
+        }
+        continue;
+      }
       
       // If we hit a section header
       if (trimmedLine.match(/^\d+\./)) {
@@ -139,6 +150,16 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
       }
       // Otherwise accumulate the text
       else if (trimmedLine) {
+        // If this is non-list text and not a section header, it should be at root level
+        if (!currentSection || !lineBuffer) {
+          if (lineBuffer.trim()) {
+            currentText = lineBuffer.trim();
+            currentCitations = citations;
+            flushCurrentText();
+            lineBuffer = '';
+          }
+          currentSection = null;
+        }
         if (lineBuffer && !lineBuffer.endsWith('\n')) {
           lineBuffer += '\n';
         }
