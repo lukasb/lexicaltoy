@@ -186,6 +186,7 @@ describe('parseFragmentedMarkdown', () => {
     expect(result[0]?.points?.[0]?.points).toBeDefined();
     expect(result[0]?.points?.[0]?.points?.length).toBe(2);
     expect(result[0]?.points?.[0]?.points?.[0]?.content).toBe('Implement proper localStorage cleanup when users log out');
+    expect(result[0]?.points?.[0]?.points?.[0]?.citations).toBeUndefined();
     expect(result[0]?.points?.[0]?.points?.[1]?.content).toBe('Fix the logic error with the find function where find(\"lock\",todos,!done) is returning non-todos');
     expect(result[0]?.points?.[0]?.points?.[1]?.citations?.length).toBe(1);
     expect(result[0]?.points?.[0]?.points?.[1]?.citations?.[0]?.cited_text).toBe('event more cited text');

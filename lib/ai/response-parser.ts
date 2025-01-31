@@ -165,15 +165,10 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
           }
           lastPoint.points.push(bulletPoint);
           
-          // If this is the first point in a numbered section and we have citations, attach them
-          if (currentPoint.points.length === 1 && citations.length > 0) {
+          // Only attach citations to the last bullet point
+          const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
+          if (citations.length > 0 && (!nextLine.startsWith('-') || i === lines.length - 1)) {
             bulletPoint.citations = citations;
-          } else {
-            // If this is the last bullet point and we have citations, attach them
-            const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
-            if (citations.length > 0 && (!nextLine.startsWith('-') || i === lines.length - 1)) {
-              bulletPoint.citations = citations;
-            }
           }
         } else if (currentPoint) {
           if (!currentPoint.points) {
@@ -181,20 +176,15 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
           }
           currentPoint.points.push(bulletPoint);
           
-          // If this is the first point in a numbered section and we have citations, attach them
-          if (currentPoint.points.length === 1 && citations.length > 0) {
+          // Only attach citations to the last bullet point
+          const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
+          if (citations.length > 0 && (!nextLine.startsWith('-') || i === lines.length - 1)) {
             bulletPoint.citations = citations;
-          } else {
-            // If this is the last bullet point and we have citations, attach them
-            const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
-            if (citations.length > 0 && (!nextLine.startsWith('-') || i === lines.length - 1)) {
-              bulletPoint.citations = citations;
-            }
           }
         } else {
           points.push(bulletPoint);
           
-          // If this is the last bullet point and we have citations, attach them
+          // Only attach citations to the last bullet point
           const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
           if (citations.length > 0 && (!nextLine.startsWith('-') || i === lines.length - 1)) {
             bulletPoint.citations = citations;
