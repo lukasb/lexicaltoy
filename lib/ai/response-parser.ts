@@ -59,6 +59,8 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
   let currentText = '';
   let currentCitations: Citation[] | undefined = undefined;
 
+  console.log("blocks", blocks); // DO NOT REMOVE
+
   function flushCurrentText() {
     if (currentText.trim()) {
       const point: Point = {
@@ -71,12 +73,10 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
         }
         // If the last point is not a list item, combine with it
         const lastPoint = currentSection.points[currentSection.points.length - 1];
-        if (lastPoint && !lastPoint.points) {
+        if (lastPoint && !lastPoint.points && currentCitations) {
           lastPoint.content = `${lastPoint.content}\n${point.content}`;
-          if (point.citations) {
-            lastPoint.citations = lastPoint.citations || [];
-            lastPoint.citations.push(...point.citations);
-          }
+          lastPoint.citations = lastPoint.citations || [];
+          if (point.citations) lastPoint.citations.push(...point.citations);
         } else {
           currentSection.points.push(point);
         }
@@ -94,9 +94,29 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
     const citations = block.citations;
     const markdown = block.text;
     
+    // Check if block starts with two newlines - if so, reset current section
+    if (markdown.startsWith('\n\n')) {
+      currentSection = null;
+      // Create a new root point with the trimmed content
+      rootPoints.push({
+        content: markdown.trim(),
+        citations: citations
+      });
+      continue;
+    }
+
     // Split the text into lines and process each line
     const lines = markdown.split('\n');
     let lineBuffer = '';
+
+    // Check if this block contains a section header
+    const firstLine = lines[0]?.trim() || '';
+    const isNewSection = firstLine.match(/^\d+\./);
+    
+    // If this isn't a new section and we're not in a section, treat as new content
+    if (!isNewSection && !currentSection) {
+      currentSection = null;
+    }
 
     for (const line of lines) {
       const trimmedLine = line.trim();
@@ -112,7 +132,7 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
           lineBuffer = '';
         }
         
-        // Reset current section and start a new one
+        // Start a new section
         currentSection = {
           content: trimmedLine.replace(/^\d+\.\s*/, ''),
           citations: citations,

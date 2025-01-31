@@ -125,7 +125,7 @@ describe('parseFragmentedMarkdown', () => {
       },
       {
         type: 'text',
-        text: 'not a valid section'
+        text: '\n\nshould be a new section'
       }
     ];
 
