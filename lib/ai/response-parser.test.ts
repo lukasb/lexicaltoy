@@ -135,23 +135,74 @@ describe('parseFragmentedMarkdown', () => {
     expect(result[0]?.points).toBeDefined();
     expect(result[0]?.points?.length).toBe(1);
   });
-}); 
 
-it('should include non-numbered sections before numbered sections', () => {
-  const input: ChatContentItem[] = [
-    {
-      type: 'text',
-      text: 'some non-numbered stuff'
-    },
-    {
-      type: 'text',
-      text: '1. Section\n- Point'
-    }
-  ];
+  it('should include non-numbered sections before numbered sections', () => {
+    const input: ChatContentItem[] = [
+      {
+        type: 'text',
+        text: 'some non-numbered stuff'
+      },
+      {
+        type: 'text',
+        text: '1. Section\n- Point'
+      }
+    ];
 
-  const result = parseFragmentedMarkdown(input);
-  
-  expect(result).toHaveLength(2);
-  expect(result[1]?.points).toBeDefined();
-  expect(result[1]?.points?.length).toBe(1);
+    const result = parseFragmentedMarkdown(input);
+    
+    expect(result).toHaveLength(2);
+    expect(result[1]?.points).toBeDefined();
+    expect(result[1]?.points?.length).toBe(1);
+  });
+
+  it('should combine text blocks with citations after a numbered section', () => {
+    const citation1: CharLocationCitation = {
+      type: 'char_location',
+      cited_text: 'First cited text',
+      document_index: 0,
+      document_title: 'Test Doc',
+      start_char_index: 0,
+      end_char_index: 15
+    };
+
+    const citation2: CharLocationCitation = {
+      type: 'char_location',
+      cited_text: 'Second cited text',
+      document_index: 0,
+      document_title: 'Test Doc',
+      start_char_index: 20,
+      end_char_index: 36
+    };
+
+    const input: ChatContentItem[] = [
+      {
+        type: 'text',
+        text: '1. Section Header'
+      },
+      {
+        type: 'text',
+        text: 'First cited text\nwith a newline',
+        citations: [citation1]
+      },
+      {
+        type: 'text',
+        text: 'Second cited text\nwith another newline',
+        citations: [citation2]
+      }
+    ];
+
+    const result = parseFragmentedMarkdown(input);
+    
+    expect(result).toHaveLength(1);
+    expect(result[0]?.content).toBe('Section Header');
+    expect(result[0]?.points).toBeDefined();
+    expect(result[0]?.points?.length).toBe(1);
+    
+    const combinedPoint = result[0]?.points?.[0];
+    expect(combinedPoint?.content).toBe('First cited text\nwith a newline\nSecond cited text\nwith another newline');
+    expect(combinedPoint?.citations).toBeDefined();
+    expect(combinedPoint?.citations?.length).toBe(2);
+    expect(combinedPoint?.citations?.[0]).toEqual(citation1);
+    expect(combinedPoint?.citations?.[1]).toEqual(citation2);
+  });
 });
