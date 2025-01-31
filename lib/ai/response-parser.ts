@@ -69,7 +69,19 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
         if (!currentSection.points) {
           currentSection.points = [];
         }
-        currentSection.points.push(point);
+        // If the last point is not a list item, combine with it
+        const lastPoint = currentSection.points[currentSection.points.length - 1];
+        if (lastPoint && !lastPoint.points) {
+          lastPoint.content = `${lastPoint.content}\n${point.content}`;
+          if (point.citations) {
+            lastPoint.citations = lastPoint.citations || [];
+            lastPoint.citations.push(...point.citations);
+          }
+        } else {
+          currentSection.points.push(point);
+        }
+      } else {
+        rootPoints.push(point);
       }
       currentText = '';
       currentCitations = undefined;
@@ -100,7 +112,7 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
           lineBuffer = '';
         }
         
-        // Start a new section
+        // Reset current section and start a new one
         currentSection = {
           content: trimmedLine.replace(/^\d+\.\s*/, ''),
           citations: citations,
@@ -152,11 +164,9 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
 
     // Flush any remaining text in the buffer
     if (lineBuffer.trim()) {
-      // Always create a new root point for non-list text
-      rootPoints.push({
-        content: lineBuffer.trim(),
-        citations: citations
-      });
+      currentText = lineBuffer.trim();
+      currentCitations = citations;
+      flushCurrentText();
       lineBuffer = '';
     }
   }
