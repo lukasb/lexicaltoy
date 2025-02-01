@@ -3,7 +3,7 @@ import { PageAndDialogueContext, DialogueElement, DocumentContent } from "../ai/
 import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 import { BLOCK_ID_REGEX } from '../blockref';
 
-function getPromptWithContextForChat(formula: string, priorMarkdown?: string): DialogueElement {
+function getPromptWithContextForShortChat(formula: string, priorMarkdown?: string): DialogueElement {
   const message: DialogueElement = {
     role: "user",
     content: [],
@@ -13,7 +13,7 @@ function getPromptWithContextForChat(formula: string, priorMarkdown?: string): D
   if (priorMarkdown) {
     const docContent: DocumentContent = {
       type: "document",
-      title: "Current document",
+      title: "!!current document",
       citations: { enabled: true },
       source: {
       type: "text",
@@ -26,6 +26,31 @@ function getPromptWithContextForChat(formula: string, priorMarkdown?: string): D
   }
   return message;
 }
+
+function getPromptWithContextForLongChat(formula: string, priorMarkdown?: string): DialogueElement {
+  const message: DialogueElement = {
+    role: "user",
+    content: [],
+  };
+  message.content.push({ type: "text", text: "You will be given a user question or instruction." });
+  message.content.push({ type: "text", text: formula });
+  if (priorMarkdown) {
+    const docContent: DocumentContent = {
+      type: "document",
+      title: "!!current document",
+      citations: { enabled: true },
+      source: {
+      type: "text",
+      media_type: "text/plain",
+      data: priorMarkdown,
+    },
+    context: "This is the current document. The question might or not be related to the document. If it's not related, ignore the document content when answering the user question, and do not mention that the document content is not relevant. The dialogue the user is having with you is part of the document, with the location indicated by <current dialogue here>",
+    };
+    message.content.push(docContent);
+  }
+  return message;
+}
+
 
 export function getPromptWithContextForGeneration(prompt: string, priorMarkdown: string): string {
   return `
@@ -53,6 +78,7 @@ export async function getShortGPTResponse(prompt: string, context?: PageAndDialo
   const formulaWithoutEqualSign = cleanFormulaForPrompt(prompt);
   if (!context) return null;
   let fullPrompt: DialogueElement;
+  const pastDialogue: DialogueElement[] = context.dialogueContext;
 
   // the prior dialogue as we receive it only has the user prompt
   // it doesn't have additional document context etc
@@ -65,12 +91,12 @@ export async function getShortGPTResponse(prompt: string, context?: PageAndDialo
   //  fullPrompt = formulaWithoutEqualSign;
   //} else {
     if (context.markdownAnnotatedForDialogue.trim().length > 0) {
-      fullPrompt = getPromptWithContextForChat(formulaWithoutEqualSign, context.markdownAnnotatedForDialogue);
+      fullPrompt = getPromptWithContextForShortChat(formulaWithoutEqualSign, context.markdownAnnotatedForDialogue);
     } else {
-      fullPrompt = getPromptWithContextForChat(formulaWithoutEqualSign);
+      fullPrompt = getPromptWithContextForShortChat(formulaWithoutEqualSign);
     }
   //}
-  const gptResponse = await getShortGPTChatResponse([fullPrompt]);
+  const gptResponse = await getShortGPTChatResponse([...pastDialogue, fullPrompt]);
   if (!gptResponse) return null;
   return { output: gptResponse, type: FormulaValueType.Text };
 }
