@@ -621,13 +621,13 @@ describe('find() function in regexCallbacks', () => {
     // Then get all todos except NOW todos (order matters - first add all todos, then negate NOW)
     const result2 = await testFindFunction([], ['todos', '!now']);
     expect(result2?.output).toHaveLength(1);
-    expect((result2?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- LATER Another todo.\nThis is a multiline continuation');
+    expect(((result2?.output as NodeElementMarkdown[])[0]).baseNode.nodeMarkdown).toBe('- LATER Another todo.\nThis is a multiline continuation');
     
     // Then combine NOW and LATER explicitly
     const result3 = await testFindFunction([], ['now', 'later']);
     expect(result3?.output).toHaveLength(3);
-    expect((result3?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('NOW');
-    expect((result3?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('NOW');
-    expect((result3?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('LATER');
+    expect(((result3?.output as NodeElementMarkdown[])[0]).baseNode.nodeMarkdown).toContain('NOW');
+    expect(((result3?.output as NodeElementMarkdown[])[1]).baseNode.nodeMarkdown).toContain('NOW');
+    expect(((result3?.output as NodeElementMarkdown[])[2]).baseNode.nodeMarkdown).toContain('LATER');
   });
 });
