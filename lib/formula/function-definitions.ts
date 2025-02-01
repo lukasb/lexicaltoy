@@ -23,6 +23,7 @@ import { splitMarkdownByNodes } from "../markdown/markdown-helpers";
 import { getNodesMarkdownContext, getPagesContext } from "../ai/context-helpers";
 import { DialogueElement, DocumentContent } from "../ai/ai-context";
 import { getGPTChatResponseForList } from "../ai/ai";
+import { getCurrentDocContextForLongChat } from "./gpt-formula-handlers";
 
 function stripOuterQuotes(s: string): string {
   return s.replace(/^"(.*)"$/, '$1');
@@ -76,7 +77,8 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
     }
   }
 
-  const gptResponse = await getGPTChatResponseForList([...pastDialogue, message]);
+  const currentDocumentContext = getCurrentDocContextForLongChat(defaultArgs.context.markdownAnnotatedForDialogue);
+  const gptResponse = await getGPTChatResponseForList([...pastDialogue, message, currentDocumentContext]);
   if (!gptResponse) return null;
   return { output: gptResponse, type: FormulaValueType.Text };
 };

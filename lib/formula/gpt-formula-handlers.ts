@@ -27,27 +27,25 @@ function getPromptWithContextForShortChat(formula: string, priorMarkdown?: strin
   return message;
 }
 
-function getPromptWithContextForLongChat(formula: string, priorMarkdown?: string): DialogueElement {
+export function getCurrentDocContextForLongChat(priorMarkdown: string): DialogueElement {
   const message: DialogueElement = {
     role: "user",
     content: [],
   };
-  message.content.push({ type: "text", text: "You will be given a user question or instruction." });
-  message.content.push({ type: "text", text: formula });
-  if (priorMarkdown) {
-    const docContent: DocumentContent = {
-      type: "document",
-      title: "!!current document",
-      citations: { enabled: true },
-      source: {
-      type: "text",
-      media_type: "text/plain",
-      data: priorMarkdown,
-    },
-    context: "This is the current document. The question might or not be related to the document. If it's not related, ignore the document content when answering the user question, and do not mention that the document content is not relevant. The dialogue the user is having with you is part of the document, with the location indicated by <current dialogue here>",
-    };
-    message.content.push(docContent);
-  }
+  
+  const docContent: DocumentContent = {
+    type: "document",
+    title: "!!current document",
+    citations: { enabled: true },
+    source: {
+    type: "text",
+    media_type: "text/plain",
+    data: priorMarkdown,
+  },
+  context: "This is the current document. The question might or not be related to the document. If it's not related, ignore the document content when answering the user question, and do not mention that the document content is not relevant. The dialogue the user is having with you is part of the document, with the location indicated by <current dialogue here>",
+  };
+  message.content.push(docContent);
+  
   return message;
 }
 

@@ -86,8 +86,14 @@ export function convertChatResponsesToUnorderedList(chatResponses: ChatContentIt
       }
     }
     if (point.citations) {
-      const uniqueTitles = new Set(point.citations.map(citation => citation.document_title));
-      result.push(`${'▵'.repeat(indent)}‣ Sources: ${Array.from(uniqueTitles).map(title => "[[" + title + "]]").join(', ')}\n`);
+      const uniqueTitles = new Set(
+        point.citations
+          .filter(citation => citation.document_title !== "!!current document")
+          .map(citation => citation.document_title)
+      );
+      if (uniqueTitles.size > 0) {
+        result.push(`${'▵'.repeat(indent)}‣ Sources: ${Array.from(uniqueTitles).map(title => "[[" + title + "]]").join(', ')}\n`);
+      }
     }
   }
 
