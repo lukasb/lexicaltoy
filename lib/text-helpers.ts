@@ -1,3 +1,6 @@
+import { ChatContentItem } from "./formula/formula-definitions";
+import { parseFragmentedMarkdown, Point } from "./ai/response-parser";
+
 export function highlightText(text: string, searchTerms: string): string {
   if (!searchTerms.trim()) return text;
   
@@ -25,6 +28,7 @@ export function sanitizeText(result: string): string {
     .trim();
 }
 
+// God forgive me for the funky escaping we're doing here
 export function convertToUnorderedList(markdown: string): string {
   // First, replace multiple newlines with a single newline
   const normalizedMarkdown = markdown.replace(/\n{2,}/g, '\n');
@@ -53,14 +57,70 @@ export function convertToUnorderedList(markdown: string): string {
         indent + lineIndent;
       result += `${'▵'.repeat(totalIndent)}‣ ${content}\n`;
     } else {
-      // turn paragraphs into list items
-      result += `‣ ${line.trim()}\n`;
+      const trimmedLine = line.trim();
+      if (trimmedLine.length > 0) {
+        // turn paragraphs into list items
+        result += `‣ ${trimmedLine}\n`;
+      } else {
+        result += '\n';
+      }
       indent = 1; // make sure that actual list items are indented below paragraphs
       inOrderedSublist = false;
     }
   }
 
   return result.trim();
+}
+
+export function convertChatResponsesToUnorderedList(chatResponses: ChatContentItem[]): string {
+  const points = parseFragmentedMarkdown(chatResponses);
+  console.log("points", points);
+  const result: string[] = [];
+
+  const processPoint = (point: Point, indent: number) => {
+    const trimmedContent = point.content.trim();
+    result.push(`${'▵'.repeat(indent)}‣ ${trimmedContent}\n`);
+    if (point.points) {
+      for (const subpoint of point.points) {
+        processPoint(subpoint, indent + 1);
+      }
+    }
+    if (point.citations) {
+      const uniqueTitles = new Set(point.citations.map(citation => citation.document_title));
+      result.push(`${'▵'.repeat(indent)}‣ Sources: ${Array.from(uniqueTitles).map(title => "[[" + title + "]]").join(', ')}\n`);
+    }
+  }
+
+  for (const point of points) {
+    processPoint(point, 0);
+  }
+
+  return result.join('');
+}
+
+export function convertChatResponsesToText(chatResponses: ChatContentItem[]): string {
+  const points = parseFragmentedMarkdown(chatResponses);
+  const result: string[] = [];
+
+  const processPoint = (point: Point) => {
+    let pointContent = point.content;
+    // TODO for some reason points lose their trailing space when they're converted to text
+    // so we add it back here with this ugly hack
+    // also see above
+    if (pointContent.endsWith('.') || pointContent.endsWith(':')) pointContent += ' ';
+    result.push(pointContent);
+    if (point.points) {
+      for (const subpoint of point.points) {
+        processPoint(subpoint);
+      }
+    }
+  }
+
+  for (const point of points) {
+    processPoint(point);
+  }
+
+  return result.join('');
 }
 
 export function unescapeMarkdown(markdown: string): string {

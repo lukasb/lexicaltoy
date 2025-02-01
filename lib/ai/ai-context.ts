@@ -1,0 +1,63 @@
+export type TextSource = {
+  type: 'text';
+  media_type: string;
+  data: string;
+};
+
+export type CustomSource = {
+  type: 'content';
+  content: TextContent[];
+};
+
+export type DocumentContent = {
+  type: 'document';
+  source: TextSource | CustomSource;
+  title: string;
+  context?: string;
+  citations?: {
+    enabled: boolean;
+  };
+};
+
+export type TextContent = {
+  type: 'text';
+  text: string;
+};
+
+export type ContentElement = DocumentContent | TextContent;
+
+export type DialogueElement = {
+  role: 'user' | 'assistant';
+  content: ContentElement[];
+};
+
+export type PageAndDialogueContext = {
+  dialogueContext: DialogueElement[];
+  markdownAnnotatedForDialogue: string; // Markdown with <current dialogue here> replacing the current dialogue
+}
+
+export const instructionsWithContext = `
+You will receive user questions or instructions, and content from one or more user documents called pages. Pages will look like this:
+
+# EXAMPLE PAGE CONTENTS
+Hmmm ... need to figure out meaning of life today.
+- TODO buy groceries
+- DOING prepare taxes
+- NOW call janet
+- =find("#parser")
+- =ask("What is the meaning of life?") |||result: There has been much debate on this topic.
+The most common answer is 42.
+|||
+- =why 42? |||result: Because 6*7=42|||
+- LATER write a letter to grandma
+- DONE make a cake
+- Who should I invite?
+ - John
+ - Jane
+ - Mary
+## END OF EXAMPLE PAGE CONTENTS
+
+Bullet points that start with TODO, DOING, NOW, LATER, DONE, or WAITING are todos. Bullet points that start with = are formulas.
+Formulas that start with ask(), or don't have an explicit function, trigger a chat with GPT.
+Do not use the example page contents in your response.
+`;

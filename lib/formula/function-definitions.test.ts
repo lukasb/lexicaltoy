@@ -1,5 +1,4 @@
 import { 
-  splitMarkdownByNodes,
   removeInvalidNodesForFind,
 } from "./function-definitions";
 import { NodeElementMarkdown } from "./formula-definitions";
@@ -7,7 +6,7 @@ import { FormulaOutput, FormulaValueType } from "./formula-definitions";
 import { Page, PageStatus } from "../definitions";
 import { findCallback } from "./function-definitions";
 import { DefaultArguments } from "./formula-parser";
-
+import { splitMarkdownByNodes } from "../markdown/markdown-helpers";
 // Helper function to create a BaseNodeMarkdown for comparison
 function createBaseNodeMarkdown(pageName: string, lineNumberStart: number, lineNumberEnd: number, nodeMarkdown: string) {
   return { pageName, lineNumberStart, lineNumberEnd, nodeMarkdown };
@@ -420,91 +419,100 @@ describe('find() function in regexCallbacks', () => {
     const result = await testFindFunction(['"content"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(4);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[2] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
-    expect((result?.output[3] as NodeElementMarkdown).baseNode.pageName).toBe('Page 2');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
-    expect((result?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
-    expect((result?.output[3] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.pageName).toBe('Page 1');
+    expect(output[1].baseNode.pageName).toBe('Page 1');
+    expect(output[2].baseNode.pageName).toBe('Page 2');
+    expect(output[3].baseNode.pageName).toBe('Page 2');
+    expect(output[0].baseNode.nodeMarkdown).toContain('content');
+    expect(output[1].baseNode.nodeMarkdown).toContain('content');
+    expect(output[2].baseNode.nodeMarkdown).toContain('content');
+    expect(output[3].baseNode.nodeMarkdown).toContain('content');
   });
 
   test('find() matches multiple keywords (AND logic)', async () => {
     const result = await testFindFunction(['"content"', '"keywords"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(1);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('content');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('keywords');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.pageName).toBe('Page 1');
+    expect(output[0].baseNode.nodeMarkdown).toContain('content');
+    expect(output[0].baseNode.nodeMarkdown).toContain('keywords');
   });
 
   test('find() finds by todo status', async () => {
     const result = await testFindFunction([], ['now']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(2);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 10');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('are you ready?');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('this is a todo');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.pageName).toBe('Page 10');
+    expect(output[0].baseNode.nodeMarkdown).toContain('are you ready?');
+    expect(output[1].baseNode.pageName).toBe('Page 6');
+    expect(output[1].baseNode.nodeMarkdown).toContain('this is a todo');
   });
 
   test('find() matches OR clauses', async () => {
     const result = await testFindFunction([],['now|later']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(3);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 10');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
-    expect((result?.output[2] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('are you ready?');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('this is a todo');
-    expect((result?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('Another todo');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.pageName).toBe('Page 10');
+    expect(output[1].baseNode.pageName).toBe('Page 6');
+    expect(output[2].baseNode.pageName).toBe('Page 6');
+    expect(output[0].baseNode.nodeMarkdown).toContain('are you ready?');
+    expect(output[1].baseNode.nodeMarkdown).toContain('this is a todo');
+    expect(output[2].baseNode.nodeMarkdown).toContain('Another todo');
   });
 
   test('find() matches in page title', async () => {
     const result = await testFindFunction(['"Page 1"','"keywords"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(2);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('keywords');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('keywords');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.nodeMarkdown).toContain('keywords');
+    expect(output[0].baseNode.pageName).toBe('Page 1');
+    expect(output[1].baseNode.nodeMarkdown).toContain('keywords');
+    expect(output[1].baseNode.pageName).toBe('Page 1');
   });
 
   test('find() returns nested children', async () => {
     const result = await testFindFunction(['"shuffle"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(1);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('Carolina');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 4');
-    expect((result?.output[0] as NodeElementMarkdown).children).toHaveLength(1);
-    expect((result?.output[0] as NodeElementMarkdown).children[0].baseNode.nodeMarkdown).toContain('boogie');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.nodeMarkdown).toContain('Carolina');
+    expect(output[0].baseNode.pageName).toBe('Page 4');
+    expect(output[0].children).toHaveLength(1);
+    expect(output[0].children[0].baseNode.nodeMarkdown).toContain('boogie');
   });
 
   test('find() includes multiline continuations', async () => {
     const result = await testFindFunction(['"amazing"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(1);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('amazing');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('\n');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('multiline');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 5');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.nodeMarkdown).toContain('amazing');
+    expect(output[0].baseNode.nodeMarkdown).toContain('\n');
+    expect(output[0].baseNode.nodeMarkdown).toContain('multiline');
+    expect(output[0].baseNode.pageName).toBe('Page 5');
   });
 
   test('find() finds by hashtag', async () => {
     const result = await testFindFunction(['"#hashtag"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(1);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('hashtag');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 7');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.nodeMarkdown).toContain('hashtag');
+    expect(output[0].baseNode.pageName).toBe('Page 7');
   });
 
   test('find() finds hashtag at beginning of line', async () => {
     const result = await testFindFunction(['"#starttag"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(1);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('starttag');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 8');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.nodeMarkdown).toContain('starttag');
+    expect(output[0].baseNode.pageName).toBe('Page 8');
   });
 
   test('find() returns empty array when no matches', async () => {
@@ -517,68 +525,74 @@ describe('find() function in regexCallbacks', () => {
     const result = await testFindFunction([], [], ['Page 1']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(4);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- This is content for page 1.');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- It contains some keywords.\nla la la');
-    expect((result?.output[2] as NodeElementMarkdown).baseNode.pageName).toBe('Page 1');
-    expect((result?.output[2] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- More text content with keywords here.');
-    expect((result?.output[3] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
-    expect((result?.output[3] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- [[Page 1]] some stuff');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.pageName).toBe('Page 1');
+    expect(output[0].baseNode.nodeMarkdown).toBe('- This is content for page 1.');
+    expect(output[1].baseNode.pageName).toBe('Page 1');
+    expect(output[1].baseNode.nodeMarkdown).toBe('- It contains some keywords.\nla la la');
+    expect(output[2].baseNode.pageName).toBe('Page 1');
+    expect(output[2].baseNode.nodeMarkdown).toBe('- More text content with keywords here.');
+    expect(output[3].baseNode.pageName).toBe('Page 9');
+    expect(output[3].baseNode.nodeMarkdown).toBe('- [[Page 1]] some stuff');
   });
 
   test('find() matches wikilinks passed as text', async () => {
     const result = await testFindFunction(['[[Page 2]]']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(1);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- [[Page 2]] some more stuff');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.pageName).toBe('Page 9');
+    expect(output[0].baseNode.nodeMarkdown).toBe('- [[Page 2]] some more stuff');
   });
 
   test('find() matches block references', async () => {
     const result = await testFindFunction([], [],['Page 9#^block-id']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(2);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 10');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- more text [[Page 9#^block-id]]');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- more text ^block-id');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.pageName).toBe('Page 10');
+    expect(output[0].baseNode.nodeMarkdown).toBe('- more text [[Page 9#^block-id]]');
+    expect(output[1].baseNode.pageName).toBe('Page 9');
+    expect(output[1].baseNode.nodeMarkdown).toBe('- more text ^block-id');
   });
 
   test('can use not operator in find()', async () => {
     const result = await testFindFunction(['!"Another"'], ["todos"],[]);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(2);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 10');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('are you ready?');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toContain('this is a todo');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.pageName).toBe('Page 10');
+    expect(output[0].baseNode.nodeMarkdown).toContain('are you ready?');
+    expect(output[1].baseNode.pageName).toBe('Page 6');
+    expect(output[1].baseNode.nodeMarkdown).toContain('this is a todo');
   });
 
   test('find() with negated todo status', async () => {
     const result = await testFindFunction(['"todo"'], ['!now'], []);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(1);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- LATER Another todo.\nThis is a multiline continuation');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.pageName).toBe('Page 6');
+    expect(output[0].baseNode.nodeMarkdown).toBe('- LATER Another todo.\nThis is a multiline continuation');
   });
 
   test('find() with negated wikilink', async () => {
     const result = await testFindFunction([], [], ['!Page 1', 'Page 9']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(2);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- [[Page 2]] some more stuff');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.pageName).toBe('Page 9');
-    expect((result?.output[1] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- more text ^block-id');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.pageName).toBe('Page 9');
+    expect(output[0].baseNode.nodeMarkdown).toBe('- [[Page 2]] some more stuff');
+    expect(output[1].baseNode.pageName).toBe('Page 9');
+    expect(output[1].baseNode.nodeMarkdown).toBe('- more text ^block-id');
   });
 
   test('find() with multiple negated terms', async () => {
     const result = await testFindFunction(['!"keywords"', '!"content"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
-    expect(result?.output.length).toBeGreaterThan(0);
-    // None of the results should contain 'keywords' or 'content'
-    (result?.output as NodeElementMarkdown[]).forEach(node => {
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output.length).toBeGreaterThan(0);
+    output.forEach(node => {
       expect(node.baseNode.nodeMarkdown.toLowerCase()).not.toContain('keywords');
       expect(node.baseNode.nodeMarkdown.toLowerCase()).not.toContain('content');
     });
@@ -588,8 +602,9 @@ describe('find() function in regexCallbacks', () => {
     const result = await testFindFunction(['!"Another"', '"todo"']);
     expect(result?.type).toBe(FormulaValueType.NodeMarkdown);
     expect(result?.output).toHaveLength(1);
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.pageName).toBe('Page 6');
-    expect((result?.output[0] as NodeElementMarkdown).baseNode.nodeMarkdown).toBe('- NOW this is a todo.');
+    const output = result!.output as NodeElementMarkdown[];
+    expect(output[0].baseNode.pageName).toBe('Page 6');
+    expect(output[0].baseNode.nodeMarkdown).toBe('- NOW this is a todo.');
   });
 
   test('find() todos only match todos', async () => {

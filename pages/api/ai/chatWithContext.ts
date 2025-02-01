@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import Anthropic from '@anthropic-ai/sdk';
 import { getSessionServer } from '@/lib/getAuth';
 import { instructionsWithContext } from '@/lib/ai/ai-context';
+
 export const config = {
   maxDuration: 60,
 };
@@ -27,13 +28,10 @@ export default async function handler(
   if (req.method === "POST") {
     const { dialogueContext } = req.body;
     if (!dialogueContext || !dialogueContext.length) {
-      return res.status(400).json({ error: "No prompt provided" });
+      return res.status(400).json({ error: "No dialogue context provided" });
     }
-
-    console.log("Received prompt:", JSON.stringify(dialogueContext[dialogueContext.length - 1].content));
-    if (dialogueContext.length > 1) {
-      console.log("Received context", JSON.stringify(dialogueContext.slice(0, -1)));
-    }
+    
+    console.log("Received context", dialogueContext);
 
     const anthropicMessages: Anthropic.MessageParam[] = [];
 
@@ -43,22 +41,20 @@ export default async function handler(
     
     try {
       let response;
-    
+
       const message = await anthropic.messages.create({
         max_tokens: 1024,
         messages: anthropicMessages,
         model: 'claude-3-5-sonnet-latest',
         system: instructionsWithContext,
-      });
+        });
 
-      response = message.content;
+        response = message.content[0].type === 'text' 
+          ? message.content[0].text 
+          : 'Non-text response received';
 
-      //response = message.content[0].type === 'text' 
-      //  ? message.content[0].text 
-      //   : 'Non-text response received';
-
-      console.log("Chat Completion:", JSON.stringify(response));
-      res.status(200).json({ response: JSON.stringify(response) || undefined });
+      console.log("Chat Completion:", response);
+      res.status(200).json({ response: response || undefined });
     } catch (error) {
       console.log("🛑 Error processing chat completion:", error);
       res.status(500).json({ error: "Failed to process the prompt" });

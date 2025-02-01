@@ -1,125 +1,28 @@
 import { 
   FormulaOutput,
-  createBaseNodeMarkdown,
   NodeElementMarkdown,
   FormulaValueType,
 } from "./formula-definitions";
 import { 
-  FORMULA_RESULTS_END_REGEX,
   isFindFormula,
   isFormula,
   isFormulaWithResults
 } from "./formula-markdown-converters";
 import { DefaultArguments, possibleArguments, nodeTypes } from "./formula-parser";
 import { Page } from "../definitions";
-import { getLastSixWeeksJournalPages } from "../journal-helpers";
 import { stripBrackets } from "../transform-helpers";
 import { getOutputAsString } from "./formula-helpers";
 import { getUrl } from "../getUrl";
 import { sanitizeText } from "../text-helpers";
-import { getGPTResponseForList } from "./gpt-formula-handlers";
 import { 
-  BLOCK_ID_REGEX,
-  BLOCK_REFERENCE_REGEX,
   getBlockReferenceFromMarkdown,
   stripBlockReference,
   markdownHasBlockId
 } from "../blockref";
-import { 
-  nodeToString,
-  nodeValueForFormula,
-  getListItemContentsFromMarkdown
-} from "./formula-helpers";
-
-const instructionsWithContext = `
-# INSTRUCTIONS AND EXAMPLES
-You will receive user questions or instructions, and content from one or more pages. Pages will look like this:
-
-## Today's agenda
-Hmmm ... need to figure out meaning of life today.
-- TODO buy groceries
-- DOING prepare taxes
-- NOW call janet
-- =find("#parser")
-- =ask("What is the meaning of life?") |||result: There has been much debate on this topic.
-The most common answer is 42.
-|||
-- =why 42? |||result: Because 6*7=42|||
-- LATER write a letter to grandma
-- DONE make a cake
-- Who should I invite?
- - John
- - Jane
- - Mary
-## END OF PAGE CONTENTS
-
-Items that start with TODO, DOING, NOW, LATER, DONE, or WAITING are todos. Bullet points that start with = are formulas.
-Formulas that start with ask(), or don't have an explicit function, trigger a chat with GPT.
-# END OF INSTRUCTIONS AND EXAMPLES
-`;
-
-function getPageContext(page: Page): string {
-  return "## " + page.title + "\n" + page.value + "\n## END OF PAGE CONTENTS\n";
-}
-
-function getBlockContext(page: Page, blockId: string): string {
-  const nodes = splitMarkdownByNodes(page.value, page.title);
-
-  function findBlock(nodes: NodeElementMarkdown[], blockId: string): NodeElementMarkdown | null {
-    for (const node of nodes) {
-      const match = node.baseNode.nodeMarkdown.match(BLOCK_ID_REGEX);
-      if (match && match[1] === blockId) return node;
-      const result = findBlock(node.children, blockId);
-      if (result) return result;
-    }
-    return null;
-  }
-
-  const blockNode = findBlock(nodes, blockId);
-  if (!blockNode) return "";
-  const blockNodeMarkdown = nodeToString(blockNode);
-  const blockNodeContents = getListItemContentsFromMarkdown(blockNodeMarkdown);
-  const blockNodeValue = nodeValueForFormula(blockNodeContents);
-  return blockNodeValue;
-}
-
-function getPagesContext(pageSpecs: string[], pages: Page[]): string[] {
-  let pagesContext: string[] = [];
-
-  function addPages(pageSpec: string) {
-    const pageTitle = stripBrackets(pageSpec);
-
-    if (pageTitle.endsWith("/")) {
-      if (pageTitle === "journals/") {
-        const journalPages = getLastSixWeeksJournalPages(pages);
-        let journalPagesContext: string = "";
-        journalPages.forEach(page => journalPagesContext += getPageContext(page));
-        pagesContext.push(journalPagesContext);
-      } else {
-        pages
-          .filter(p => p.title.startsWith(pageTitle.slice(0, -1)))
-          .forEach(page => pagesContext.push(getPageContext(page)));
-      }
-    } else if (BLOCK_REFERENCE_REGEX.test(pageTitle)) {
-      const match = pageTitle.match(BLOCK_REFERENCE_REGEX);
-      const cleanPageTitle = pageTitle.replace(BLOCK_REFERENCE_REGEX, "");
-      const page = pages.find(p => p.title === cleanPageTitle);
-      if (match && page) {
-        const blockContext = getBlockContext(page, match[1]);
-        if (blockContext) pagesContext.push(blockContext);
-      }
-    } else {
-      const page = pages.find(p => p.title === pageTitle);
-      if (page) pagesContext.push(getPageContext(page));
-    }
-  }
-
-  for (const pageSpec of pageSpecs) {
-    addPages(pageSpec);
-  }
-
-  return pagesContext;
-}
+import { splitMarkdownByNodes } from "../markdown/markdown-helpers";
+import { getNodesMarkdownContext, getPagesContext } from "../ai/context-helpers";
+import { DialogueElement, DocumentContent } from "../ai/ai-context";
+import { getGPTChatResponseForList } from "../ai/ai";
 
 function stripOuterQuotes(s: string): string {
   return s.replace(/^"(.*)"$/, '$1');
@@ -129,9 +32,13 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
 
   if (!defaultArgs.context) return null;
 
-  let prompt: string = "";
+  let pastDialogue: DialogueElement[] = defaultArgs.context.dialogueContext;
   let contextSpecs: string[] = [];
-  let contextResults: string[] = [];
+  let contextResults: DocumentContent[][] = [];
+  let message: DialogueElement = {
+    role: "user",
+    content: [],
+  };
     
   // if a user arg is a wikilink variant, we need to get the relevant page contents if the page exists
   for (const arg of userArgs) {
@@ -147,38 +54,31 @@ export const askCallback = async (defaultArgs: DefaultArguments, userArgs: Formu
   }
 
   if (contextSpecs.length > 0 && defaultArgs.pages) {
-    contextResults = getPagesContext(contextSpecs, defaultArgs.pages);
-  }
-  
-  if (
-    (contextResults.length > 0 || userArgs.filter(arg => arg.type === FormulaValueType.NodeMarkdown).length > 0)
-    || defaultArgs.context?.priorMarkdown.length > 0) {
-    prompt += instructionsWithContext;
+    contextResults.push(getPagesContext(contextSpecs, defaultArgs.pages));
   }
 
   for (const arg of userArgs) {
     const argString = getOutputAsString(arg);
     if (arg.type === FormulaValueType.Text) {
-      prompt += "\n" + stripOuterQuotes(argString) + "\n";
+      message.content.push({ type: "text", text: stripOuterQuotes(argString) });
     } else if (arg.type === FormulaValueType.Wikilink) { 
       for (const possibleArg of possibleArguments) {
         if (possibleArg.type === FormulaValueType.Wikilink && possibleArg.regex && argString.match(possibleArg.regex)) {
           if (contextResults.length > 0) {
-            prompt += "\n" + contextResults.shift() + "\n";
+            const context = contextResults.shift();
+            if (context) message.content.push(...context);
           }
           break;
         }
       }
     } else if (arg.type === FormulaValueType.NodeMarkdown) {
-      // TODO maybe include the page name
-      prompt += "\n" + argString + "\n";
+      message.content.push(...getNodesMarkdownContext(arg.output as NodeElementMarkdown[]));
     }
   }
 
-  const gptResponse = await getGPTResponseForList(prompt, defaultArgs.context);
+  const gptResponse = await getGPTChatResponseForList([...pastDialogue, message]);
   if (!gptResponse) return null;
-
-  return gptResponse;
+  return { output: gptResponse, type: FormulaValueType.Text };
 };
 
 export function sortFindOutput(output: NodeElementMarkdown[], pages: Page[]): NodeElementMarkdown[] {
@@ -403,82 +303,6 @@ export const findCallback = async (defaultArgs: DefaultArguments, userArgs: Form
 function invalidFindResult(markdown: string): boolean {
   return isFindFormula(markdown) || 
     (isFormula(markdown) && !isFormulaWithResults(markdown));
-}
-
-export function splitMarkdownByNodes(markdown: string, pageName: string): NodeElementMarkdown[] {
-  const lines = markdown.split("\n");
-  const rootNode: NodeElementMarkdown = {
-    baseNode: createBaseNodeMarkdown(pageName, 1, lines.length, ""),
-    children: []
-  };
-  const stack: NodeElementMarkdown[] = [rootNode];
-  let currentIndentation = 0;
-  let isProcessingListItems = false;
-  const indentStack: number[] = [];
-  let lastListItem;
-  let isProcessingFormula = false;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmedLine = line.trimStart();
-    const isListItem = trimmedLine.startsWith("-");
-    const indentation = line.length - trimmedLine.length;
-
-    if (isListItem && /- =\w+\(.*\) \|\|\|result:/.test(trimmedLine)) {
-      isProcessingFormula = true;
-    }
-
-    if ((trimmedLine === "" && !isProcessingFormula) || (isListItem && (!isProcessingFormula || /^\s*- =\w+\(.*\) \|\|\|result:/.test(trimmedLine)))) {
-      if (trimmedLine !== "") {
-        while (indentation < currentIndentation && stack.length > 1) {
-          stack.pop();
-          currentIndentation -= indentStack.pop() || 2;
-        }
-
-        const newNode: NodeElementMarkdown = {
-          baseNode: createBaseNodeMarkdown(pageName, i + 1, i + 1, line),
-          children: []
-        };
-
-        if (indentation > currentIndentation || (!isProcessingListItems && isListItem)) {
-          indentStack.push(indentation - currentIndentation);
-          if (lastListItem) stack.push(lastListItem);
-          currentIndentation = indentation;
-          isProcessingListItems = true;
-        }
-        
-        stack[stack.length - 1].children.push(newNode);
-        lastListItem = newNode;
-      } else if (!isProcessingFormula) {
-        if (isProcessingListItems) {
-          isProcessingListItems = false;
-          while (stack.length > 1) {
-            stack.pop();
-            currentIndentation -= indentStack.pop() || 2;
-          }
-          lastListItem = null;
-        }
-      }
-    } else {
-      if (isProcessingListItems) {
-        // handle multiline continuations of list items
-        const currentNode = stack[stack.length - 1].children[stack[stack.length - 1].children.length - 1] || stack[stack.length - 1];
-        currentNode.baseNode.nodeMarkdown += (currentNode.baseNode.nodeMarkdown ? "\n" : "") + line;
-        currentNode.baseNode.lineNumberEnd = i + 1;
-        if (isProcessingFormula && trimmedLine.match(FORMULA_RESULTS_END_REGEX)) {
-          isProcessingFormula = false;
-        }
-      } else {
-        const newNode: NodeElementMarkdown = {
-          baseNode: createBaseNodeMarkdown(pageName, i + 1, i + 1, trimmedLine),
-          children: []
-        };
-        stack[stack.length - 1].children.push(newNode);
-      }
-    }
-  }
-
-  return rootNode.children;
 }
 
 // for now, if we hit a find() node, or a formula without results, just remove it, any children, and any

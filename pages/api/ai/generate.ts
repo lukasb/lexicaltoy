@@ -2,8 +2,8 @@ import OpenAI from "openai";
 import { zodFunction, zodResponseFormat } from "openai/helpers/zod";
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getSessionServer } from '@/lib/getAuth';
-import { MODEL_NAME } from "@/lib/ai-config";
-import { AIGenListItems } from "@/lib/ai-commands";
+import { MODEL_NAME } from "@/lib/ai/ai-config";
+import { AIGenListItems } from "@/lib/ai/ai-commands";
 
 export const config = {
   maxDuration: 60,

@@ -21,6 +21,7 @@ import { validateBlockId } from '@/lib/blockref';
 import {
   useWhatChanged,
 } from '@simbathesailor/use-what-changed';
+import { NodeElementMarkdownSchema } from '@/lib/formula/formula-definitions';
 
 export default function FormulaDisplayComponent(
   { formula: initialFormula,
@@ -104,7 +105,7 @@ export default function FormulaDisplayComponent(
                   getNodeElementFullMarkdown(node));
               });
               pageLineMarkdownMapRef.current = markdownMap;
-              if (response.output.length > 0) {
+              if (NodeElementMarkdownSchema.array().safeParse(response.output).success) {
                 editor.dispatchCommand(CREATE_FORMULA_NODES, {
                   displayNodeKey: nodeKey,
                   nodesMarkdown: response.output as NodeElementMarkdown[],

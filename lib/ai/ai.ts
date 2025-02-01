@@ -1,21 +1,25 @@
-import { sanitizeText, convertToUnorderedList } from "./text-helpers";
+import { 
+  sanitizeText,
+  convertChatResponsesToUnorderedList,
+  convertChatResponsesToText
+} from "../text-helpers";
 import { AIGenListItems, AIGenListItemType } from "./ai-commands";
+import { DialogueElement } from "./ai-context";
+import { ChatContentSchema, ChatContentItem } from "../formula/formula-definitions";
 
-export type DialogueElement = {
-  userQuestion: string;
-  systemAnswer: string;
-}
 
-async function fetchGPTChatResponse(prompt: string, dialogueContext: DialogueElement[]): Promise<string> {
-  console.log("fetchGPTChatResponse prompt", prompt);
-  console.log("fetchGPTChatResponse context", dialogueContext);
+async function fetchGPTChatResponse(dialogueContext: DialogueElement[]): Promise<ChatContentItem[]> {
+  console.log("fetchGPTChatResponse prompt", dialogueContext[dialogueContext.length - 1].content);
+  if (dialogueContext.length > 1) {
+    console.log("fetchGPTChatResponse context", dialogueContext.slice(0, -1));
+  }
 
   const response = await fetch('/api/ai/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ prompt, dialogueContext }),
+    body: JSON.stringify({ dialogueContext }),
   });
 
   if (!response.ok) {
@@ -23,24 +27,35 @@ async function fetchGPTChatResponse(prompt: string, dialogueContext: DialogueEle
   }
 
   const result = await response.json();
-  console.log("chatCompletion", result.response);
-  return result.response;
+  console.log("chatCompletion", JSON.stringify(result.response));
+  
+  try {
+    const parsedContent = ChatContentSchema.parse({ content: JSON.parse(result.response) });
+    return parsedContent.content;
+  } catch (error) {
+    console.log("🛑 Error validating chat response:", error);
+    const contentItem: ChatContentItem = {
+      type: 'text',
+      text: result.response,
+    };
+    return [contentItem];
+  }
 }
 
-export async function getGPTChatResponseForList(prompt: string, dialogueContext: DialogueElement[]): Promise<string | null> {
+export async function getGPTChatResponseForList(dialogueContext: DialogueElement[]): Promise<string | null> {
   try {
-    const response = await fetchGPTChatResponse(prompt, dialogueContext);
-    return convertToUnorderedList(response);
+    const response = await fetchGPTChatResponse(dialogueContext);
+    return convertChatResponsesToUnorderedList(response);
   } catch (error) {
     console.log("🛑 Error fetching chat response for list:", error);
     return null;
   }
 }
 
-export async function getShortGPTChatResponse(prompt: string, dialogueContext: DialogueElement[]): Promise<string | null> {
+export async function getShortGPTChatResponse(dialogueContext: DialogueElement[]): Promise<string | null> {
   try {
-    const response = await fetchGPTChatResponse(prompt, dialogueContext);
-    return sanitizeText(response);
+    const response = await fetchGPTChatResponse(dialogueContext);
+    return sanitizeText(convertChatResponsesToText(response));
   } catch (error) {
     console.log("🛑 Error fetching short chat response:", error);
     return null;
