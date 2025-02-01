@@ -39,7 +39,7 @@ export type PageAndDialogueContext = {
 export const instructionsWithContext = `
 You will receive user questions or instructions, and content from one or more user documents called pages. Pages will look like this:
 
-## Today's agenda
+# EXAMPLE PAGE CONTENTS
 Hmmm ... need to figure out meaning of life today.
 - TODO buy groceries
 - DOING prepare taxes
@@ -55,8 +55,9 @@ The most common answer is 42.
  - John
  - Jane
  - Mary
-## END OF PAGE CONTENTS
+## END OF EXAMPLE PAGE CONTENTS
 
 Bullet points that start with TODO, DOING, NOW, LATER, DONE, or WAITING are todos. Bullet points that start with = are formulas.
 Formulas that start with ask(), or don't have an explicit function, trigger a chat with GPT.
+Do not use the example page contents in your response.
 `;
