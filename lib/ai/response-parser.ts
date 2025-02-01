@@ -1,5 +1,3 @@
-import { remark } from 'remark';
-import { visit } from 'unist-util-visit';
 import type { Node, List, ListItem, Paragraph, Text, InlineCode } from 'mdast';
 import { ChatContentItem } from '../formula/formula-definitions';
 
@@ -27,38 +25,6 @@ export interface Point {
   content: string;
   citations?: Citation[];
   points?: Point[];
-}
-
-function isPointWithPoints(value: any): value is Point & { points: Point[] } {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    typeof value.content === 'string' &&
-    Array.isArray(value.points)
-  );
-}
-
-// Type guard to check if a node is a List
-function isList(node: Node): node is List {
-  return node.type === 'list';
-}
-
-// Type guard to check if a node is a Text or InlineCode
-function isTextOrInlineCode(node: Node): node is Text | InlineCode {
-  return node.type === 'text' || node.type === 'inlineCode';
-}
-
-// Additional type guards
-function isParagraph(node: Node): node is Paragraph {
-  return node.type === 'paragraph';
-}
-
-function isText(node: Node): node is Text {
-  return node.type === 'text';
-}
-
-function isInlineCode(node: Node): node is InlineCode {
-  return node.type === 'inlineCode';
 }
 
 export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {

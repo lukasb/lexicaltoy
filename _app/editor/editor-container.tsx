@@ -164,7 +164,7 @@ function EditorContainer({
       const pages = localPagesRef.current;
       if (!pages) return;
       const newBacklinks = await findCallback({ pages: pages }, [{ type: FormulaValueType.Text, output: `[[${page.title}]]` }]);
-      if (newBacklinks && newBacklinks.output.length > 0 && newBacklinks.type === FormulaValueType.NodeMarkdown) {
+      if (newBacklinks && Array.isArray(newBacklinks.output) && newBacklinks.output.length > 0 && newBacklinks.type === FormulaValueType.NodeMarkdown) {
         setBacklinks(newBacklinks.output as NodeElementMarkdown[]);
       } else {
         setBacklinks([]);
