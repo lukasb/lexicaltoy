@@ -23,6 +23,7 @@ test('should bring up search results', async ({ page }) => {
 });
 
 test('page contents', async ({ page }) => {
+  await page.waitForTimeout(200);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.focus();
   await newSearch.pressSequentially('aTestPage2');
@@ -31,6 +32,7 @@ test('page contents', async ({ page }) => {
 });
 
 test('search for start title match opens page', async ({ page }) => {
+  await page.waitForTimeout(200);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.focus();
   await newSearch.pressSequentially('test');
@@ -117,6 +119,7 @@ test('create new page', async ({ page }) => {
 });
 
 test('open page', async ({ page }) => {
+  await page.waitForTimeout(200);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('TestPage1');
   await page.keyboard.press('Enter');
@@ -265,7 +268,7 @@ test('deleted page does not appear in search results', async ({ page }) => {
 });
 
 test('wiki page names autocomplete correctly when match is not at start of page title', async ({ page }) => {
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(300);
   const newSearch = page.getByPlaceholder('Search or Create');
   await newSearch.fill('villa');
   await page.keyboard.press('Enter');
