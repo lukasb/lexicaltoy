@@ -82,154 +82,158 @@ export function parseFragmentedMarkdown(blocks: ChatContentItem[]): Point[] {
     const lines = text.split('\n');
     let bulletPoints: Point[] = [];
     let pendingText = '';
+    let isNewSection = true;
+    let pendingCitations = citations;
+    let lastLineWasEmpty = false;
     
+    const flushPendingText = () => {
+      if (pendingText) {
+        const point = createPointFromText(pendingText, pendingCitations);
+        if (point) {
+          points.push(point);
+        }
+        pendingText = '';
+        pendingCitations = [];
+      }
+    };
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const numberedSectionMatch = line.match(/^(\d+)\.\s+(.*)/);
+      const prevLine = i > 0 ? lines[i - 1] : '';
+      const nextLine = i < lines.length - 1 ? lines[i + 1] : '';
+      const hasDoubleNewline = prevLine.trim() === '' && (i > 1 && lines[i - 2].trim() === '');
+      const isEndOfBlock = i === lines.length - 1 || (nextLine.trim() === '' && (i < lines.length - 2 && lines[i + 2].trim() === ''));
 
-      if (numberedSectionMatch) {
-        // Start a new numbered section
-        if (currentText) {
-          const point = createPointFromText(currentText, currentCitations);
-          if (point && isPointWithPoints(currentPoint)) {
-            currentPoint.points.push(point);
-          } else if (point) {
-            points.push(point);
-          }
-          currentText = '';
-          currentCitations = [];
+      if (line.trim() === '') {
+        if (lastLineWasEmpty) {
+          // Double newline - create new section from accumulated text
+          flushPendingText();
+          currentPoint = null;
+          isNewSection = true;
+          lastLineWasEmpty = false;
+          continue;
         }
+        lastLineWasEmpty = true;
+        continue;
+      } else {
+        const isAfterDoubleNewline = lastLineWasEmpty && prevLine.trim() === '';
+        lastLineWasEmpty = false;
 
-        // If there's pending text before the numbered section, create a point for it
-        if (pendingText) {
-          const point = createPointFromText(pendingText);
-          if (point) {
-            points.push(point);
-          }
-          pendingText = '';
-        }
-
-        currentPoint = {
-          content: numberedSectionMatch[2].trim(),
-          points: [] as Point[]
-        };
-        points.push(currentPoint);
-      } else if (line.trim().startsWith('-')) {
-        // If we have pending text before bullet points, create a parent point
-        if (pendingText) {
-          const parentPoint: Point = {
-            content: pendingText.trim(),
-            points: []
+        // Check for section breaks in text
+        if (line.includes(':') && !line.trim().startsWith('-') && !numberedSectionMatch) {
+          flushPendingText();
+          const newPoint = {
+            content: line.trim(),
+            points: [] as Point[]
           };
-          if (currentPoint && currentPoint.points) {
-            currentPoint.points.push(parentPoint);
+          // If we're after a numbered section and not after a double newline, nest under it
+          if (currentPoint && !isAfterDoubleNewline && points.length > 0 && points[points.length - 1] === currentPoint) {
+            if (!currentPoint.points) currentPoint.points = [];
+            currentPoint.points.push(newPoint);
           } else {
-            points.push(parentPoint);
+            points.push(newPoint);
           }
-          currentPoint = parentPoint;
-          pendingText = '';
+          currentPoint = newPoint;
+          continue;
         }
 
-        // Handle bullet point
-        if (currentText && !pendingText) {
-          const point = createPointFromText(currentText, currentCitations);
-          if (point && isPointWithPoints(currentPoint)) {
-            currentPoint.points.push(point);
-          } else if (point) {
-            points.push(point);
-          }
-          currentText = '';
-          currentCitations = [];
-        }
+        if (numberedSectionMatch) {
+          // Handle numbered items that should be sub-points
+          flushPendingText();
+          const bulletContent = numberedSectionMatch[2].trim();
+          const bulletPoint: Point = {
+            content: bulletContent,
+            points: undefined
+          };
 
-        const indentLevel = line.search(/\S/);
-        const bulletContent = line.replace(/^[\s-]*/, '').trim();
-        const bulletPoint: Point = {
-          content: bulletContent,
-          points: undefined
-        };
-        
-        if (indentLevel > 0 && currentPoint?.points?.length) {
-          // This is a nested point
-          const lastPoint = currentPoint.points[currentPoint.points.length - 1];
-          if (!lastPoint.points) {
-            lastPoint.points = [];
+          if (currentPoint && !isAfterDoubleNewline) {
+            if (!currentPoint.points) {
+              currentPoint.points = [] as Point[];
+            }
+            currentPoint.points.push(bulletPoint);
+            
+            // Only attach citations to the last bullet point
+            if (citations.length > 0 && isEndOfBlock) {
+              bulletPoint.citations = citations;
+            }
+          } else {
+            points.push(bulletPoint);
+            currentPoint = bulletPoint;
           }
-          lastPoint.points.push(bulletPoint);
+        } else if (line.trim().startsWith('-')) {
+          // If we have pending text before bullet points, create a parent point
+          if (pendingText) {
+            const parentPoint: Point = {
+              content: pendingText.trim(),
+              points: []
+            };
+            if (currentPoint && !isAfterDoubleNewline) {
+              if (!currentPoint.points) currentPoint.points = [];
+              currentPoint.points.push(parentPoint);
+            } else {
+              points.push(parentPoint);
+            }
+            currentPoint = parentPoint;
+            pendingText = '';
+            pendingCitations = [];
+          }
+
+          const indentLevel = line.search(/\S/);
+          const bulletContent = line.replace(/^[\s-]*/, '').trim();
+          const bulletPoint: Point = {
+            content: bulletContent,
+            points: undefined
+          };
           
-          // Only attach citations to the last bullet point
-          const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
-          if (citations.length > 0 && (!nextLine.startsWith('-') || i === lines.length - 1)) {
-            bulletPoint.citations = citations;
-          }
-        } else if (currentPoint) {
-          if (!currentPoint.points) {
-            currentPoint.points = [] as Point[];
-          }
-          currentPoint.points.push(bulletPoint);
-          
-          // Only attach citations to the last bullet point
-          const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
-          if (citations.length > 0 && (!nextLine.startsWith('-') || i === lines.length - 1)) {
-            bulletPoint.citations = citations;
-          }
-        } else {
-          // If no current point exists, try to attach to the last point
-          const lastPoint = points[points.length - 1];
-          if (lastPoint && !lastPoint.points) {
-            lastPoint.points = [];
-            currentPoint = lastPoint;
-            if (isPointWithPoints(currentPoint)) {
-              currentPoint.points.push(bulletPoint);
+          if (indentLevel > 0 && currentPoint?.points?.length) {
+            // This is a nested point
+            const lastPoint = currentPoint.points[currentPoint.points.length - 1];
+            if (!lastPoint.points) {
+              lastPoint.points = [];
+            }
+            lastPoint.points.push(bulletPoint);
+            
+            // Only attach citations to the last bullet point
+            if (citations.length > 0 && isEndOfBlock) {
+              bulletPoint.citations = citations;
+            }
+          } else if (currentPoint) {
+            if (!currentPoint.points) {
+              currentPoint.points = [] as Point[];
+            }
+            currentPoint.points.push(bulletPoint);
+            
+            // Only attach citations to the last bullet point
+            if (citations.length > 0 && isEndOfBlock) {
+              bulletPoint.citations = citations;
             }
           } else {
             points.push(bulletPoint);
           }
-          
-          // Only attach citations to the last bullet point
-          const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
-          if (citations.length > 0 && (!nextLine.startsWith('-') || i === lines.length - 1)) {
-            bulletPoint.citations = citations;
+        } else {
+          isNewSection = false;
+          // Accumulate regular text
+          if (!line.trim().startsWith('-')) {
+            if (pendingText && pendingText.trim()) pendingText += '\n';
+            pendingText += line;
+            if (isEndOfBlock) {
+              flushPendingText();
+              currentPoint = null;  // Reset current point after flushing
+            }
           }
-        }
-      } else if (line.trim() === '' && i < lines.length - 1 && lines[i + 1].trim() === '') {
-        // Double newline - create new section from accumulated text
-        if (currentText) {
-          const point = createPointFromText(currentText, currentCitations);
-          if (point && isPointWithPoints(currentPoint)) {
-            currentPoint.points.push(point);
-          } else if (point) {
-            points.push(point);
-          }
-        }
-        currentText = '';
-        currentCitations = [];
-        currentPoint = null;
-        pendingText = '';
-        i++; // Skip the second newline
-      } else {
-        // Accumulate regular text
-        if (!line.trim().startsWith('-')) {
-          if (pendingText && pendingText.trim()) pendingText += '\n';
-          pendingText += line;
-        }
-        if (citations.length > 0 && !currentCitations.length) {
-          currentCitations = citations;
         }
       }
     }
 
     // Handle any text remaining in the block
-    if (currentText || pendingText) {
-      const point = createPointFromText(currentText || pendingText, currentCitations);
-      if (point && isPointWithPoints(currentPoint)) {
-        currentPoint.points.push(point);
-      } else if (point) {
-        points.push(point);
+    flushPendingText();
+
+    // Clean up empty points arrays
+    for (const point of points) {
+      if (point.points && point.points.length === 0) {
+        point.points = undefined;
       }
-      currentText = '';
-      pendingText = '';
-      currentCitations = [];
     }
   };
 

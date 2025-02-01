@@ -31,13 +31,13 @@ describe('parseFragmentedMarkdown', () => {
     expect(result[2]?.points?.[10]?.content).toBe('1 cup hot water');
     expect(result[3]?.content).toBe('Instructions:');
     expect(result[3]?.points).toBeDefined();
-    expect(result[3]?.points?.[0]?.content).toBe('1. Preheat oven to 350°F (175°C). Grease and line two 9-inch cake pans.');
-    expect(result[3]?.points?.[1]?.content).toBe('2. Mix all dry ingredients in a large bowl.');
-    expect(result[3]?.points?.[2]?.content).toBe('3. Add eggs, milk, oil, and vanilla. Mix well.');
-    expect(result[3]?.points?.[3]?.content).toBe('4. Stir in hot water. The batter will be thin.');
-    expect(result[3]?.points?.[4]?.content).toBe('5. Pour into prepared pans.');
-    expect(result[3]?.points?.[5]?.content).toBe('6. Bake for 30-35 minutes or until a toothpick comes out clean.');
-    expect(result[3]?.points?.[6]?.content).toBe('7. Cool completely before frosting.');
+    expect(result[3]?.points?.[0]?.content).toBe('Preheat oven to 350°F (175°C). Grease and line two 9-inch cake pans.');
+    expect(result[3]?.points?.[1]?.content).toBe('Mix all dry ingredients in a large bowl.');
+    expect(result[3]?.points?.[2]?.content).toBe('Add eggs, milk, oil, and vanilla. Mix well.');
+    expect(result[3]?.points?.[3]?.content).toBe('Stir in hot water. The batter will be thin.');
+    expect(result[3]?.points?.[4]?.content).toBe('Pour into prepared pans.');
+    expect(result[3]?.points?.[5]?.content).toBe('Bake for 30-35 minutes or until a toothpick comes out clean.');
+    expect(result[3]?.points?.[6]?.content).toBe('Cool completely before frosting.');
     expect(result[4]?.content).toBe('Note: enjoy!');
     expect(result[4]?.points).toBeUndefined();
   });
@@ -61,7 +61,7 @@ describe('parseFragmentedMarkdown', () => {
   it('should handle citations in text blocks', () => {
     const input: ChatContentItem[] = [{
       type: 'text',
-      text: '1. Section with Citations\n- Cited point',
+      text: '\n\n1. Section with Citations\n- Cited point',
       citations: [{
         type: 'char_location',
         cited_text: 'Cited point',
@@ -91,7 +91,7 @@ describe('parseFragmentedMarkdown', () => {
 
     const input: ChatContentItem[] = [{
       type: 'text',
-      text: '1. Section\n- Block cited point',
+      text: '\n\n1. Section\n- Block cited point',
       citations: [blockCitation]
     }];
 
@@ -105,7 +105,7 @@ describe('parseFragmentedMarkdown', () => {
   it('should handle nested points in lists', () => {
     const input: ChatContentItem[] = [{
       type: 'text',
-      text: '1. Section\n- Main point\n  - Subpoint 1\n  - Subpoint 2'
+      text: '\n\n1. Section\n- Main point\n  - Subpoint 1\n  - Subpoint 2'
     }];
 
     const result = parseFragmentedMarkdown(input);
@@ -121,7 +121,7 @@ describe('parseFragmentedMarkdown', () => {
     const input: ChatContentItem[] = [
       {
         type: 'text',
-        text: '1. Combined Section'
+        text: '\n\n1. Combined Section'
       },
       {
         type: 'text',
@@ -146,7 +146,7 @@ describe('parseFragmentedMarkdown', () => {
   it('should handle non-list text in sections', () => {
     const input: ChatContentItem[] = [{
       type: 'text',
-      text: '1. Section\nSome preamble text\n- First point'
+      text: '\n\n1. Section\nSome preamble text\n- First point'
     }];
 
     const result = parseFragmentedMarkdown(input);
@@ -161,7 +161,7 @@ describe('parseFragmentedMarkdown', () => {
     const input: ChatContentItem[] = [
       {
         type: 'text',
-        text: '1. Section\n- Point'
+        text: '\n\n1. Section\n- Point'
       },
       {
         type: 'text',
@@ -184,7 +184,7 @@ describe('parseFragmentedMarkdown', () => {
       },
       {
         type: 'text',
-        text: '1. Section\n- Point'
+        text: '\n\n1. Section\n- Point'
       }
     ];
 
@@ -254,7 +254,7 @@ describe('parseFragmentedMarkdown', () => {
     const input: ChatContentItem[] = [
       {
         type: 'text',
-        text: '1. Section Header'
+        text: '\n\n1. Section Header'
       },
       {
         type: 'text',
